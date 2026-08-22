@@ -1,0 +1,62 @@
+sequenceDiagram
+    autonumber
+    
+    actor U as Usuario (Cajero/Admin)
+    box rgb(40, 44, 52) Frontend Offline
+        participant EM as Electron Main
+        participant ER as React Renderer
+    end
+    box rgb(30, 40, 60) Backend Local
+        participant FA as FastAPI (Identity: 3001)
+        participant DB as postgres-tenant (BD)
+    end
+
+    Note over U, DB: LEYENDA DE COLORES:<br/>Verde = Éxito | Rojo = Error<br/>Cajas = Capas de Arquitectura (Frontend Offline / Backend Local)
+
+    rect rgb(30, 40, 60)
+    Note over EM, FA: FASE 0: Inicialización Offline (Spawn)
+    EM->>+FA: child_process.spawn('uvicorn')
+    FA-->>-EM: Proceso en ejecución
+    loop Polling Healthcheck
+        EM->>+FA: GET http://127.0.0.1:3001/health
+        FA-->>-EM: 200 OK (Servicio Arriba)
+    end
+    EM->>+ER: win.show() (Carga Interfaz Web)
+    ER-->>-EM: Interfaz lista
+    end
+
+    rect rgb(40, 60, 40)
+    Note over U, DB: FASE 1: Autenticación (TI-01) y Validación
+    U->>+ER: Ingresa email y password
+    ER->>+FA: POST /auth/login (axios a localhost)
+
+    alt Formato Inválido (Pydantic)
+        rect rgb(80, 20, 20)
+        FA-->>ER: 422 Unprocessable Entity
+        ER-->>U: Muestra error de validación en UI
+        end
+    else Formato Válido
+        FA->>+DB: select(User).where(email=...) (SQLAlchemy Async)
+        DB-->>-FA: Retorna User + Hash bcrypt
+        
+        alt Credenciales Incorrectas / Usuario Inactivo
+            rect rgb(80, 20, 20)
+            FA-->>ER: 401 Unauthorized / 403 Forbidden
+            ER-->>U: Alerta: "Credenciales inválidas"
+            end
+        else Credenciales Correctas
+            rect rgb(20, 60, 20)
+            Note over FA: Verifica hash bcrypt.<br/>Genera JWT con {tenantId, sucursalId, rol, tenantConfig}.<br/>Genera refresh_token (UUID v4).
+            FA->>+DB: INSERT INTO refresh_tokens (user_id, token_hash, expires_at)
+            DB-->>-FA: Confirma persistencia
+            FA-->>ER: 200 OK (access_token + refresh_token)
+            
+            ER->>+EM: IPC: window.api.setToken()
+            EM-->>-ER: Guarda en electron-store
+            ER-->>U: Redirige a Dashboard Principal
+            end
+        end
+    end
+    deactivate FA
+    deactivate ER
+    end
