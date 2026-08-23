@@ -1,0 +1,41 @@
+@startuml
+title Estrategia de Testing — Pirámide de Pruebas
+
+skinparam defaultTextAlignment center
+skinparam ArrowColor #666666
+skinparam rectangle {
+  BorderColor #444444
+  FontSize 13
+}
+
+rectangle "**Capa 3 — E2E**\n----\nPlaywright\n_electron.launch()\n----\nFlujos completos en la app de escritorio\n----\nPocos tests · lentos · alta confianza" as E2E #FFB3B3
+
+rectangle "**Capa 2 — Integración**\n----\nxUnit + WebApplicationFactory<Program>\n----\nControllers + EF Core + PostgreSQL\n(in-memory o test DB)\n----\nCantidad media · velocidad media" as INTEGRATION #FFE699
+
+rectangle "**Capa 1 — Unitarios (base)**\n----\nxUnit + FluentAssertions + Moq\n----\nValue Objects · Services · Validators · Domain Logic\n----\nMuchos tests · rápidos · feedback inmediato" as UNIT #B3E6B3
+
+E2E -[hidden]down-> INTEGRATION
+INTEGRATION -[hidden]down-> UNIT
+
+note right of E2E
+  **Cobertura objetivo**
+  >= 70% backend
+  >= 60% frontend crítico
+end note
+
+rectangle "CI — GitHub Actions" as CI #E6E6E6 {
+  rectangle "Job: unit-tests\n(Capa 1)" as JobUnit #B3E6B3
+  rectangle "Job: integration-tests\n(Capa 2)" as JobInt #FFE699
+  rectangle "Job: e2e-tests\n(Capa 3)" as JobE2E #FFB3B3
+}
+
+note bottom of CI
+  Si la cobertura cae bajo el umbral,
+  el pipeline falla (build breaker)
+end note
+
+UNIT -right-> JobUnit : ejecuta
+INTEGRATION -right-> JobInt : ejecuta
+E2E -right-> JobE2E : ejecuta
+
+@enduml

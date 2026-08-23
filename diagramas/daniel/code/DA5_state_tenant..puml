@@ -1,0 +1,43 @@
+@startuml
+title DA5 — Ciclo de Vida de un Tenant
+
+skinparam state {
+  BackgroundColor<<activo>> #B3E6B3
+  BackgroundColor<<suspendido>> #FFE699
+  BackgroundColor<<inactivo>> #FFB3B3
+  BorderColor #444444
+  FontSize 13
+}
+
+[*] --> ACTIVO
+
+state ACTIVO <<activo>> {
+  ACTIVO : Efectos en cascada
+  ACTIVO : ✔ Usuarios pueden iniciar sesión
+  ACTIVO : ✔ Acceso completo a POS / Admin / Reportes
+  ACTIVO : ✔ Facturación y sincronización normales
+}
+
+state SUSPENDIDO <<suspendido>> {
+  SUSPENDIDO : Efectos en cascada
+  SUSPENDIDO : ✘ Usuarios NO pueden iniciar sesión
+  SUSPENDIDO : ✘ Operaciones de venta bloqueadas
+  SUSPENDIDO : ✔ Datos del tenant se conservan intactos
+  SUSPENDIDO : ⏸ Procesos en segundo plano en pausa (Kafka consumers)
+}
+
+state INACTIVO <<inactivo>> {
+  INACTIVO : Efectos en cascada
+  INACTIVO : ✘ Acceso deshabilitado permanentemente
+  INACTIVO : ✘ Usuarios y sesiones invalidados
+  INACTIVO : ⚠ Datos retenidos según política de retención
+  INACTIVO : ✘ No admite reactivación (estado final)
+}
+
+ACTIVO --> SUSPENDIDO : SUPER_ADMIN\nsuspende
+SUSPENDIDO --> ACTIVO : SUPER_ADMIN\nreactiva
+ACTIVO --> INACTIVO : SUPER_ADMIN\ndesactiva\ndefinitivamente
+
+INACTIVO --> [*]
+
+@enduml

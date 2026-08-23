@@ -1,0 +1,29 @@
+stateDiagram-v2
+    [*] --> PENDIENTE
+
+    PENDIENTE : PENDIENTE (carrito activo)
+    PENDIENTE : entry / crear carrito activo
+    PENDIENTE : entry / reservar stock temporalmente
+    PENDIENTE : exit / liberar reserva de stock
+
+    COMPLETADA : COMPLETADA
+    COMPLETADA : entry / POST /pos/ventas
+    COMPLETADA : entry / descontar stock definitivo
+    COMPLETADA : entry / emitir boleta
+    COMPLETADA : entry / iniciar ventana de anulación (X min)
+
+    CANCELADA : CANCELADA
+    CANCELADA : entry / liberar ítems reservados
+    CANCELADA : entry / sin impacto en stock ni boleta
+
+    ANULADA : ANULADA
+    ANULADA : entry / revertir impacto financiero
+    ANULADA : entry / restituir stock
+    ANULADA : entry / marcar venta como nula en historial
+
+    PENDIENTE --> COMPLETADA : confirmar cobro [pago validado]
+    PENDIENTE --> CANCELADA : cancelar sin cobrar
+    COMPLETADA --> ANULADA : solicitar anulación [dentro de X min AND autorizada por ADMINISTRADOR]
+
+    CANCELADA --> [*]
+    ANULADA --> [*]
