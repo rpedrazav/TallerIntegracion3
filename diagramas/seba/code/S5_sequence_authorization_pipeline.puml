@@ -1,0 +1,121 @@
+@startuml S5_Sequence_Authorization_Pipeline
+!theme plain
+skinparam sequenceMessageAlign center
+skinparam defaultFontSize 11
+skinparam defaultFontName Arial
+skinparam sequenceParticipantBackgroundColor #EBF5FB
+skinparam sequenceParticipantBorderColor #2980B9
+skinparam sequenceLifeLineBorderColor #2980B9
+skinparam sequenceGroupBackgroundColor #FEF9E7
+autonumber
+
+title GlobalMart OS - S5: Diagrama de Secuencia\nAutorizacion por Rol en ASP.NET Core
+
+legend top right
+  |= Color |= Significado |
+  |<back:#FADBD8>   </back>| Ruta de error (401 / 403) |
+  |<back:#D5F5E3>   </back>| Flujo exitoso (continua) |
+endlegend
+
+actor "Usuario" as Usuario
+participant "Electron" as Electron
+participant "Kong JWT Plugin" as Kong
+participant "ASP.NET Core\nMiddleware Pipeline" as Pipeline
+participant "JwtBearerHandler" as JwtHandler
+participant "TenantResolutionMiddleware" as TenantMw
+participant "[Authorize] Attribute" as Authorize
+participant "Controller Action" as ControllerAction
+
+Usuario -> Electron : Solicita accion protegida\n(ej: "Ver reporte fiscal")
+activate Electron
+
+Electron -> Kong : GET /api/v1/tax/reportes\nAuthorization: Bearer <JWT>
+activate Kong
+
+alt #FADBD8 Firma del JWT invalida
+  Kong --> Electron : 401 Unauthorized\n{"error":"Firma de token invalida"}
+  Electron --> Usuario : Redirige a /login
+
+else #D5F5E3 Firma valida (Kong deja pasar)
+
+  note right of Kong
+    El plugin "jwt" de Kong solo
+    verifica la firma criptografica
+    (con el shared secret / clave
+    publica). No valida expiracion,
+    issuer ni audience: eso lo hace
+    ASP.NET Core mas adelante
+    (defensa en profundidad).
+  end note
+
+  Kong -> Pipeline : Enruta a tenant-identity:5001\n(request + header Authorization)
+  activate Pipeline
+
+  Pipeline -> JwtHandler : Autenticar(request)
+  activate JwtHandler
+
+  JwtHandler -> JwtHandler : Validar firma (de nuevo),\nissuer, audience y\nexpiracion ("exp")
+
+  alt #FADBD8 Token expirado / issuer o audience incorrectos
+    JwtHandler --> Pipeline : AuthenticationFailure
+    Pipeline --> Kong : 401 Unauthorized\n{"error":"Token invalido o expirado"}
+    Kong --> Electron : 401 Unauthorized
+    Electron --> Usuario : Redirige a /login\n(o dispara flujo de refresh)
+
+  else #D5F5E3 Token valido
+
+    JwtHandler -> JwtHandler : Construir ClaimsPrincipal\n(tenantId, sucursalId, role, ...)
+    JwtHandler --> Pipeline : ClaimsPrincipal autenticado
+    deactivate JwtHandler
+
+    Pipeline -> TenantMw : Invoke(context)
+    activate TenantMw
+
+    TenantMw -> TenantMw : Extraer claim "tenantId"\ndel ClaimsPrincipal
+    TenantMw -> TenantMw : Inyectar tenantId en\nIRequestContext (scoped)
+
+    note right of TenantMw
+      IRequestContext queda disponible
+      por inyeccion de dependencias
+      durante el resto de la peticion
+      (repositorios, servicios, etc.
+      lo usan para filtrar por tenant).
+    end note
+
+    TenantMw --> Pipeline : next()
+    deactivate TenantMw
+
+    Pipeline -> Authorize : Evaluar antes de\nejecutar la accion
+
+    activate Authorize
+    Authorize -> Authorize : Verificar claim "role"\ncontra Roles="ADMINISTRADOR"
+
+    alt #FADBD8 Rol insuficiente (ej: CAJERO intenta acceder)
+      Authorize --> Pipeline : Forbid()
+      Pipeline --> Kong : 403 Forbidden\n{"error":"No tiene permisos\npara este recurso"}
+      Kong --> Electron : 403 Forbidden
+      Electron --> Usuario : Mostrar error\n"No tienes permisos"
+
+    else #D5F5E3 Rol valido (ADMINISTRADOR)
+
+      Authorize --> ControllerAction : Permite ejecucion
+      deactivate Authorize
+      activate ControllerAction
+
+      ControllerAction -> ControllerAction : Ejecuta logica de negocio\nusando IRequestContext.TenantId\n(datos ya filtrados por tenant)
+
+      ControllerAction --> Pipeline : 200 OK {datos}
+      deactivate ControllerAction
+
+      Pipeline --> Kong : 200 OK {datos}
+      deactivate Pipeline
+      Kong --> Electron : 200 OK {datos}
+      Electron --> Usuario : Muestra el reporte
+    end
+  end
+end
+
+deactivate Kong
+deactivate Electron
+
+@enduml

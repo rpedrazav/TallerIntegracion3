@@ -1,0 +1,175 @@
+@startuml S3_Sequence_Register_Tenant
+!theme plain
+skinparam sequenceMessageAlign center
+skinparam defaultFontSize 11
+skinparam defaultFontName Arial
+skinparam sequenceParticipantBackgroundColor #EBF5FB
+skinparam sequenceParticipantBorderColor #2980B9
+skinparam sequenceLifeLineBorderColor #2980B9
+skinparam sequenceGroupBackgroundColor #FEF9E7
+skinparam databaseBackgroundColor #E8F8F5
+skinparam databaseBorderColor #16A085
+skinparam queueBackgroundColor #F4ECF7
+skinparam queueBorderColor #8E44AD
+autonumber
+
+title GlobalMart OS - S3: Diagrama de Secuencia\nRegistro de Nuevo Tenant (Multi-Step)
+
+legend top right
+  |= Color |= Significado |
+  |<back:#FADBD8>   </back>| Ruta de error (409) |
+  |<back:#D5F5E3>   </back>| Flujo feliz (continua al siguiente paso) |
+endlegend
+
+actor "Usuario" as Usuario
+participant "Electron\n(RegisterPage)" as Electron
+participant "Kong 3.6" as Kong
+participant "TenantsController" as TenantsController
+participant "TenantService" as TenantService
+participant "SucursalesController" as SucursalesController
+participant "AuthController" as AuthController
+queue "Kafka Producer" as Kafka
+database "PostgreSQL" as DB
+
+Usuario -> Electron : Completa formulario\ny click "Registrar"
+activate Electron
+
+== Paso 1: Crear Tenant ==
+
+Electron -> Kong : POST /api/v1/tenants\n{name, countryCode, timezone,\ncurrencyCode, languageCode}
+activate Kong
+
+note right of Kong
+  Ruta publica (sin plugin JWT):
+  todavia no existe ningun
+  usuario autenticado en este
+  punto del flujo de onboarding.
+end note
+
+Kong -> TenantsController : Enruta
+activate TenantsController
+
+TenantsController -> TenantService : CreateAsync(request)
+activate TenantService
+
+TenantService -> DB : SELECT * FROM tenants\nWHERE name = ?
+activate DB
+DB --> TenantService : resultado
+deactivate DB
+
+alt #FADBD8 Tenant duplicado (Name ya existe)
+  TenantService --> TenantsController : ConflictException
+  TenantsController --> Kong : 409 Conflict\n{"error":"El tenant ya existe"}
+  Kong --> Electron : 409 Conflict
+  Electron --> Usuario : Mostrar error\n"Ya existe un tenant con ese nombre"
+
+else #D5F5E3 Tenant no existe
+
+  TenantService -> DB : INSERT INTO tenants\n(name, country_code, status='ACTIVE', ...)
+  activate DB
+  DB --> TenantService : tenantId generado
+  deactivate DB
+
+  TenantService -> Kafka : Publish("tenant.created",\n{tenantId, name, countryCode})
+  activate Kafka
+  Kafka --> TenantService : ack
+  deactivate Kafka
+
+  TenantService --> TenantsController : TenantDto {tenantId}
+  deactivate TenantService
+  TenantsController --> Kong : 201 Created {tenantId}
+  deactivate TenantsController
+  Kong --> Electron : 201 Created {tenantId}
+
+  == Paso 2: Crear Sucursal (Casa Matriz) ==
+
+  Electron -> Kong : POST /api/v1/sucursales\n{tenantId, name:"Casa Matriz",\nisHeadquarters:true}
+  Kong -> SucursalesController : Enruta
+  activate SucursalesController
+
+  SucursalesController -> DB : INSERT INTO sucursales\n(tenant_id, name, is_headquarters=true, ...)
+  activate DB
+  DB --> SucursalesController : sucursalId generado
+  deactivate DB
+
+  SucursalesController --> Kong : 201 Created {sucursalId}
+  deactivate SucursalesController
+  Kong --> Electron : 201 Created {sucursalId}
+
+  == Paso 3: Registrar Usuario Administrador ==
+
+  Electron -> Kong : POST /api/v1/auth/register\n{tenantId, sucursalId, email,\npassword, role: ADMINISTRADOR}
+  Kong -> AuthController : Enruta
+  activate AuthController
+
+  AuthController -> DB : SELECT * FROM users\nWHERE tenant_id = ? AND email = ?
+  activate DB
+  DB --> AuthController : resultado
+  deactivate DB
+
+  alt #FADBD8 Email duplicado
+    AuthController --> Kong : 409 Conflict\n{"error":"El email ya esta registrado"}
+    deactivate AuthController
+    Kong --> Electron : 409 Conflict
+
+    note over Electron, DB
+      **Rollback via Saga / Transaccion Compensatoria:**
+      Tenant y Sucursal ya se crearon en los pasos
+      anteriores (en otras tablas/servicios), por lo
+      que no existe un ROLLBACK de SQL unico posible.
+      Electron dispara llamadas DELETE compensatorias
+      para dejar el sistema consistente.
+    end note
+
+    Electron -> Kong : DELETE /api/v1/sucursales/{sucursalId}
+    Kong -> SucursalesController : Enruta
+    activate SucursalesController
+    SucursalesController -> DB : DELETE FROM sucursales\nWHERE id = ?
+    SucursalesController --> Kong : 204 No Content
+    deactivate SucursalesController
+    Kong --> Electron : 204 No Content
+
+    Electron -> Kong : DELETE /api/v1/tenants/{tenantId}
+    Kong -> TenantsController : Enruta
+    activate TenantsController
+    TenantsController -> TenantService : DeleteAsync(tenantId)
+    activate TenantService
+    TenantService -> DB : DELETE FROM tenants\nWHERE id = ?
+    TenantService --> TenantsController : OK
+    deactivate TenantService
+    TenantsController --> Kong : 204 No Content
+    deactivate TenantsController
+    Kong --> Electron : 204 No Content
+
+    Electron --> Usuario : Mostrar error "El email ya esta\nregistrado. Intenta nuevamente."
+
+  else #D5F5E3 Email disponible
+
+    AuthController -> AuthController : BCrypt.Net.BCrypt.HashPassword(password)
+
+    AuthController -> DB : INSERT INTO users\n(tenant_id, sucursal_id, email,\npassword_hash, role='ADMINISTRADOR')
+    activate DB
+    DB --> AuthController : userId generado
+    deactivate DB
+
+    AuthController -> Kafka : Publish("user.registered",\n{userId, tenantId, email, role})
+    activate Kafka
+    Kafka --> AuthController : ack
+    deactivate Kafka
+
+    AuthController --> Kong : 201 Created {userId}
+    deactivate AuthController
+    Kong --> Electron : 201 Created {userId}
+
+    == Paso 4: Confirmacion y redireccion ==
+
+    Electron -> Electron : Mostrar toast\n"Registro exitoso"
+    Electron -> Electron : router.navigate("/login")
+    Electron --> Usuario : Redirige a pantalla de Login
+  end
+end
+
+deactivate Kong
+deactivate Electron
+
+@enduml

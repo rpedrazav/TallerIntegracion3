@@ -1,0 +1,187 @@
+@startuml S1_Domain_Model_Tenant_Identity
+!theme plain
+skinparam classAttributeIconSize 0
+skinparam defaultFontSize 11
+skinparam defaultFontName Arial
+skinparam classBackgroundColor #EBF5FB
+skinparam classBorderColor #2980B9
+skinparam enumBackgroundColor #FEF9E7
+skinparam enumBorderColor #D4AC0D
+skinparam packageStyle rectangle
+skinparam nodesep 40
+skinparam ranksep 50
+
+title GlobalMart OS - S1: Diagrama de Clases de Dominio\nTenant & Identity Service (MS-1) - Version Multi-Rol (aprobada por equipo)
+
+legend top right
+  |= Estereotipo |= Significado |
+  | <<PK>> | Primary Key |
+  | <<FK>> | Foreign Key |
+  | <<NOT NULL>> | Campo obligatorio |
+  | <<NULLABLE>> | Campo opcional |
+  | <<UNIQUE>> | Valor unico (o unico compuesto) |
+  | <<CHECK>> | Restriccion de validez a nivel BD |
+endlegend
+
+' ==================== ENUMS ====================
+enum TenantStatus {
+  ACTIVE
+  SUSPENDED
+  INACTIVE
+}
+
+enum UserRole {
+  SUPER_ADMIN
+  ADMINISTRADOR
+  CAJERO
+  REPONEDOR
+}
+
+' ==================== AGGREGATE ROOT ====================
+class Tenant <<Aggregate Root>> {
+  + Id: Guid <<PK>>
+  + Name: string <<NOT NULL>>
+  + CountryCode: string <<NOT NULL>>
+  + Status: TenantStatus <<NOT NULL>>
+  + CreatedAt: DateTimeOffset <<NOT NULL>>
+  --
+  + Activate(): void
+  + Suspend(): void
+  + Deactivate(): void
+  + AddSucursal(sucursal: Sucursal): void
+  + AddUser(user: User): void
+}
+
+' ==================== VALUE OBJECT ====================
+class TenantConfig <<Value Object>> <<Owned Entity (EF Core)>> {
+  + Timezone: string
+  + CurrencyCode: string
+  + CurrencySymbol: string
+  + LanguageCode: string
+  + DateFormat: string
+}
+
+' ==================== ENTIDADES ====================
+class Sucursal <<Entity>> {
+  + Id: Guid <<PK>>
+  + TenantId: Guid <<FK, NOT NULL>>
+  + Name: string <<NOT NULL>>
+  + Address: string <<NOT NULL>>
+  + Phone: string
+  + IsHeadquarters: bool <<NOT NULL, CHECK>>
+  + IsActive: bool <<NOT NULL>>
+  + CreatedAt: DateTimeOffset <<NOT NULL>>
+}
+
+class User <<Entity>> {
+  + Id: Guid <<PK>>
+  + TenantId: Guid <<FK, NOT NULL>>
+  + SucursalId: Guid? <<FK, NULLABLE>>
+  + Email: string <<NOT NULL, UNIQUE (TenantId, Email)>>
+  + PasswordHash: string <<NOT NULL>>
+  + IsActive: bool <<NOT NULL>>
+  + LastLoginAt: DateTimeOffset? <<NULLABLE>>
+  + CreatedAt: DateTimeOffset <<NOT NULL>>
+  --
+  + AssignSucursal(sucursal: Sucursal): void
+  + Deactivate(): void
+  + RegisterLogin(): void
+  + AssignRole(role: UserRole): void
+  + SetActiveRole(role: UserRole): void
+  + EscalateRoleTemporarily(role: UserRole, until: DateTimeOffset): void
+}
+
+class UserRoleAssignment <<Entity>> {
+  + Id: Guid <<PK>>
+  + UserId: Guid <<FK, NOT NULL>>
+  + Role: UserRole <<NOT NULL>>
+  + IsActive: bool <<NOT NULL, CHECK (1 activo por User)>>
+  + IsTemporary: bool <<NOT NULL, DEFAULT false>>
+  + ExpiresAt: DateTimeOffset? <<NULLABLE, CHECK (requerido si IsTemporary = true)>>
+  + AssignedAt: DateTimeOffset <<NOT NULL>>
+  + AssignedByUserId: Guid <<FK, NOT NULL>>
+}
+
+class RefreshToken <<Entity>> {
+  + Id: Guid <<PK>>
+  + TokenHash: string <<NOT NULL, UNIQUE>>
+  + UserId: Guid <<FK, NOT NULL>>
+  + TenantId: Guid <<FK, NOT NULL>>
+  + ExpiresAt: DateTimeOffset <<NOT NULL, CHECK (ExpiresAt > CreatedAt)>>
+  + IsRevoked: bool <<NOT NULL, DEFAULT false>>
+  + CreatedAt: DateTimeOffset <<NOT NULL>>
+  --
+  + Revoke(): void
+  + IsExpired(): bool
+}
+
+' ==================== RELACIONES ====================
+Tenant             "1" *--  "1"    TenantConfig       : Config >>
+Tenant             "1" o--  "0..*" Sucursal           : posee >>
+Tenant             "1" o--  "0..*" User               : posee >>
+Sucursal           "1" o--  "0..*" User               : asignados a >>
+User               "1" o--  "0..*" RefreshToken       : emite >>
+User               "1" o--  "1..*" UserRoleAssignment : tiene >>
+UserRoleAssignment "*" -->  "1"    UserRole           : es de tipo >
+Tenant             "1" -->  "1"    TenantStatus       : tiene >
+
+' ==================== NOTAS / RESTRICCIONES ====================
+note right of TenantConfig
+  Value Object inmutable.
+  Se persiste como Owned Entity de
+  EF Core: sin tabla ni Id propios,
+  columnas embebidas en la tabla Tenant.
+end note
+
+note bottom of Sucursal
+  Restricciones:
+  - Name, Address: obligatorios (NOT NULL)
+  - Solo 1 Sucursal con IsHeadquarters = true
+    por Tenant
+  - Eliminacion logica via IsActive
+end note
+
+note left of User
+  CAMBIO vs. Opcion A:
+  se elimina la propiedad "Role: UserRole"
+  directa. Ahora el/los rol(es) de un
+  usuario viven en UserRoleAssignment.
+
+  Restricciones:
+  - Email: obligatorio, unico por Tenant
+  - PasswordHash: obligatorio, nunca en texto plano
+  - SucursalId: NULLABLE (Admin/Super_Admin
+    pueden no estar atados a 1 sola Sucursal)
+  - Debe tener AL MENOS 1 UserRoleAssignment
+    (multiplicidad 1..*)
+end note
+
+note bottom of UserRoleAssignment
+  Modela TI-20, TI-21 y TI-22 de D-1,
+  y al actor "Encargado de Tienda
+  (multi-rol)" de D-0.
+
+  Restricciones:
+  - Un usuario puede tener varios registros
+    (ej: CAJERO + REPONEDOR + ADMINISTRADOR)
+  - Solo UNO puede tener IsActive = true
+    a la vez (regla de negocio: "rol activo
+    en sesion", TI-21)
+  - IsTemporary = true junto con ExpiresAt
+    se usa para TI-22 "Escalar Rol
+    Temporalmente" (ej: Cajero que asume
+    Admin por 1 turno)
+  - AssignedByUserId permite auditoria
+    (quien otorgo el rol) - soporta TI-14
+end note
+
+note bottom of RefreshToken
+  Restricciones:
+  - TokenHash: obligatorio y unico
+  - ExpiresAt debe ser > CreatedAt
+  - IsRevoked: default false
+  - TenantId duplicado desde User para
+    permitir queries multi-tenant sin JOIN
+end note
+
+@enduml

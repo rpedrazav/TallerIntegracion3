@@ -1,0 +1,166 @@
+@startuml S4_Sequence_Refresh_Logout
+!theme plain
+skinparam sequenceMessageAlign center
+skinparam defaultFontSize 11
+skinparam defaultFontName Arial
+skinparam sequenceParticipantBackgroundColor #EBF5FB
+skinparam sequenceParticipantBorderColor #2980B9
+skinparam sequenceLifeLineBorderColor #2980B9
+skinparam sequenceGroupBackgroundColor #FEF9E7
+skinparam databaseBackgroundColor #E8F8F5
+skinparam databaseBorderColor #16A085
+autonumber
+
+title GlobalMart OS - S4: Diagrama de Secuencia\nRefresh Token y Logout
+
+legend top right
+  |= Color |= Significado |
+  |<back:#FADBD8>   </back>| Ruta de error (401) |
+  |<back:#D5F5E3>   </back>| Flujo exitoso (continua) |
+endlegend
+
+actor "Usuario" as Usuario
+participant "Electron\n(Axios Interceptor)" as Electron
+participant "Kong 3.6" as Kong
+participant "Recurso Protegido\n(cualquier microservicio)" as Recurso
+participant "AuthController" as AuthController
+participant "AuthService" as AuthService
+participant "JwtTokenGenerator" as JwtGen
+participant "UserRepository\n(EF Core)" as UserRepo
+database "PostgreSQL\n(postgres-tenant)" as DB
+
+== Flujo Refresh: Renovacion silenciosa del Access Token ==
+
+Electron -> Kong : GET /api/v1/<recurso>\nAuthorization: Bearer <accessToken vencido>
+activate Kong
+Kong -> Kong : Plugin JWT valida token\ny detecta "exp" vencido
+Kong --> Electron : 401 Unauthorized\n{"error":"Token expirado"}
+deactivate Kong
+
+Electron -> Electron : Interceptor de Axios\ndetecta respuesta 401
+
+note right of Electron
+  El interceptor pausa la peticion
+  original y dispara automaticamente
+  el flujo de refresh, sin que el
+  usuario note nada.
+end note
+
+Electron -> Kong : POST /api/v1/auth/refresh\n{refreshToken} (desde electron-store)
+activate Kong
+
+note right of Kong
+  Ruta publica (sin plugin JWT):
+  el accessToken ya vencio, por
+  lo que la validacion se hace
+  con el refreshToken del body.
+end note
+
+Kong -> AuthController : Enruta
+activate AuthController
+
+AuthController -> AuthService : RefreshTokenAsync(refreshToken)
+activate AuthService
+
+AuthService -> UserRepo : GetRefreshTokenByHashAsync(tokenHash)
+activate UserRepo
+
+UserRepo -> DB : SELECT * FROM refresh_tokens\nWHERE token_hash = ?
+activate DB
+DB --> UserRepo : fila (o vacio)
+deactivate DB
+
+UserRepo --> AuthService : RefreshToken? entity
+deactivate UserRepo
+
+alt #FADBD8 Token no existe / no encontrado
+  AuthService --> AuthController : UnauthorizedException
+  AuthController --> Kong : 401 Unauthorized\n{"error":"Refresh token invalido"}
+  Kong --> Electron : 401 Unauthorized
+
+else #FADBD8 Token revocado (IsRevoked = true)
+  AuthService --> AuthController : UnauthorizedException
+  AuthController --> Kong : 401 Unauthorized\n{"error":"Sesion revocada"}
+  Kong --> Electron : 401 Unauthorized
+
+else #FADBD8 Token expirado (ExpiresAt < now)
+  AuthService --> AuthController : UnauthorizedException
+  AuthController --> Kong : 401 Unauthorized\n{"error":"Sesion expirada"}
+  Kong --> Electron : 401 Unauthorized
+
+else #D5F5E3 Token valido (existe, activo, vigente)
+
+  AuthService -> JwtGen : CreateAccessToken(\n  userId, tenantId, sucursalId,\n  role, tenantConfig, exp: 8h)
+  activate JwtGen
+  JwtGen --> AuthService : nuevo accessToken (8h)
+  deactivate JwtGen
+
+  AuthService -> AuthService : Generar nuevo RefreshToken\n(exp: 7 dias)
+
+  AuthService -> UserRepo : RevokeAsync(oldRefreshTokenId)\n+ SaveNewRefreshTokenAsync(newRefreshToken)
+  activate UserRepo
+  UserRepo -> DB : UPDATE refresh_tokens\nSET is_revoked = true WHERE id = ?
+  activate DB
+  DB --> UserRepo : OK
+  deactivate DB
+  UserRepo -> DB : INSERT INTO refresh_tokens\n(nuevo registro)
+  activate DB
+  DB --> UserRepo : OK
+  deactivate DB
+  UserRepo --> AuthService : Rotacion completada
+  deactivate UserRepo
+
+  AuthService --> AuthController : {accessToken, refreshToken}
+  deactivate AuthService
+  AuthController --> Kong : 200 OK\n{accessToken, refreshToken}
+  deactivate AuthController
+  Kong --> Electron : 200 OK\n{accessToken, refreshToken}
+
+  Electron -> Electron : electron-store.set(\n  "auth", {accessToken, refreshToken})
+
+  Electron -> Kong : Reintenta peticion original\ncon el nuevo accessToken
+  Kong -> Recurso : Enruta (JWT valido)
+  activate Recurso
+  Recurso --> Kong : 200 OK (respuesta original)
+  deactivate Recurso
+  Kong --> Electron : 200 OK
+  Electron --> Usuario : Continua su flujo normal\n(sin haber notado el refresh)
+end
+
+deactivate Kong
+
+== Flujo Logout: Cierre de sesion seguro ==
+
+Usuario -> Electron : Click "Cerrar sesion"
+activate Electron
+
+Electron -> Kong : POST /api/v1/auth/logout\n{refreshToken}\nAuthorization: Bearer <accessToken>
+activate Kong
+Kong -> AuthController : Enruta (JWT valido)
+activate AuthController
+
+AuthController -> AuthService : LogoutAsync(refreshToken)
+activate AuthService
+
+AuthService -> UserRepo : RevokeAsync(refreshTokenId)
+activate UserRepo
+UserRepo -> DB : UPDATE refresh_tokens\nSET is_revoked = true WHERE token_hash = ?
+activate DB
+DB --> UserRepo : OK
+deactivate DB
+UserRepo --> AuthService : Token revocado
+deactivate UserRepo
+
+AuthService --> AuthController : OK
+deactivate AuthService
+AuthController --> Kong : 200 OK
+deactivate AuthController
+Kong --> Electron : 200 OK
+deactivate Kong
+
+Electron -> Electron : electron-store.clear()\n(elimina token + datos de tenant)
+Electron -> Electron : router.navigate("/login")
+Electron --> Usuario : Redirige a pantalla de Login
+deactivate Electron
+
+@enduml

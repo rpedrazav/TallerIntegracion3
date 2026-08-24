@@ -1,0 +1,166 @@
+@startuml S2_Sequence_Login_JWT
+!theme plain
+skinparam sequenceMessageAlign center
+skinparam defaultFontSize 11
+skinparam defaultFontName Arial
+skinparam sequenceParticipantBackgroundColor #EBF5FB
+skinparam sequenceParticipantBorderColor #2980B9
+skinparam sequenceLifeLineBorderColor #2980B9
+skinparam sequenceGroupBackgroundColor #FEF9E7
+skinparam databaseBackgroundColor #E8F8F5
+skinparam databaseBorderColor #16A085
+autonumber
+
+title GlobalMart OS - S2: Diagrama de Secuencia\nFlujo de Login JWT End-to-End
+
+legend top right
+  |= Color |= Significado |
+  |<back:#FADBD8>   </back>| Ruta de error (401 / 403) |
+  |<back:#D5F5E3>   </back>| Flujo feliz (200 OK) |
+endlegend
+
+actor "Usuario" as Usuario
+participant "Electron\n(React)" as Electron
+participant "Kong 3.6" as Kong
+participant "TenantsController" as TenantsController
+participant "TenantService" as TenantService
+participant "AuthController\n(ASP.NET Core)" as AuthController
+participant "AuthService" as AuthService
+participant "JwtTokenGenerator" as JwtGen
+participant "UserRepository\n(EF Core)" as UserRepo
+database "PostgreSQL\n(postgres-tenant)" as DB
+
+Usuario -> Electron : Abre la app
+activate Electron
+
+== Paso 0: Resolver Tenant (Selector de Empresa) ==
+
+Electron -> Usuario : Muestra pantalla\n"Selecciona tu empresa"
+Usuario -> Electron : Escribe/selecciona\nnombre o slug del tenant
+
+Electron -> Kong : GET /api/v1/tenants/resolve?slug=...
+activate Kong
+
+note right of Kong
+  Ruta publica (sin plugin JWT):
+  solo confirma que el tenant
+  existe y devuelve su Id, no
+  expone datos sensibles.
+end note
+
+Kong -> TenantsController : Enruta
+activate TenantsController
+TenantsController -> TenantService : ResolveBySlugAsync(slug)
+activate TenantService
+TenantService -> DB : SELECT id, name FROM tenants\nWHERE slug = ?
+activate DB
+DB --> TenantService : fila (o vacio)
+deactivate DB
+
+alt #FADBD8 Tenant no encontrado
+  TenantService --> TenantsController : NotFoundException
+  TenantsController --> Kong : 404 Not Found\n{"error":"Empresa no encontrada"}
+  Kong --> Electron : 404 Not Found
+  Electron --> Usuario : Mostrar error\n"Empresa no encontrada"
+
+else #D5F5E3 Tenant encontrado
+  TenantService --> TenantsController : {tenantId, name}
+  deactivate TenantService
+  TenantsController --> Kong : 200 OK {tenantId, name}
+  deactivate TenantsController
+  Kong --> Electron : 200 OK {tenantId, name}
+
+  Electron -> Electron : Guarda tenantId en\nestado local (sesion de login)
+  Electron -> Usuario : Muestra formulario\nde Login (email/password)
+
+  == Paso 1: Login ==
+
+  Usuario -> Electron : Click "Iniciar Sesion"
+
+  Electron -> Kong : POST http://localhost:8000/api/v1/auth/login\n{tenantId, email, password}
+
+  note right of Kong
+    Kong verifica que la ruta
+    "/auth/login" esta marcada
+    como publica (sin plugin JWT
+    aplicado), por lo tanto no
+    exige token de autenticacion.
+  end note
+
+  Kong -> AuthController : Enruta a\ntenant-identity:5001/api/v1/auth/login
+  activate AuthController
+
+AuthController -> AuthService : LoginAsync(request)
+activate AuthService
+
+AuthService -> UserRepo : GetByTenantAndEmailAsync(tenantId, email)
+activate UserRepo
+
+UserRepo -> DB : SELECT * FROM users\nWHERE tenant_id = ? AND email = ?
+activate DB
+DB --> UserRepo : fila de usuario (o vacio)
+deactivate DB
+
+UserRepo --> AuthService : User? entity
+deactivate UserRepo
+
+alt #FADBD8 Usuario no encontrado
+  AuthService --> AuthController : UnauthorizedException
+  AuthController --> Kong : 401 Unauthorized\n{"error":"Usuario no encontrado"}
+  Kong --> Electron : 401 Unauthorized
+  Electron --> Usuario : Mostrar error\n"Credenciales invalidas"
+
+else Usuario encontrado
+
+  AuthService -> AuthService : BCrypt.Net.BCrypt.Verify(\n  password, user.PasswordHash)
+
+  alt #FADBD8 Password incorrecta
+    AuthService --> AuthController : UnauthorizedException
+    AuthController --> Kong : 401 Unauthorized\n{"error":"Credenciales invalidas"}
+    Kong --> Electron : 401 Unauthorized
+    Electron --> Usuario : Mostrar error\n"Credenciales invalidas"
+
+  else Password correcta
+
+    alt #FADBD8 Usuario inactivo (IsActive = false)
+      AuthService --> AuthController : ForbiddenException
+      AuthController --> Kong : 403 Forbidden\n{"error":"Usuario inactivo"}
+      Kong --> Electron : 403 Forbidden
+      Electron --> Usuario : Mostrar error\n"Cuenta inactiva, contacte\nal administrador"
+
+    else #D5F5E3 Usuario activo (flujo feliz)
+
+      AuthService -> JwtGen : CreateAccessToken(\n  userId, tenantId, sucursalId,\n  role, tenantConfig)
+      activate JwtGen
+      JwtGen --> AuthService : accessToken (JWT firmado)
+      deactivate JwtGen
+
+      AuthService -> AuthService : Generar RefreshToken\n(GUID + hash SHA-256)
+
+      AuthService -> UserRepo : SaveRefreshTokenAsync(refreshToken)
+      activate UserRepo
+      UserRepo -> DB : INSERT INTO refresh_tokens\n(id, token_hash, user_id,\ntenant_id, expires_at)
+      activate DB
+      DB --> UserRepo : OK
+      deactivate DB
+      UserRepo --> AuthService : RefreshToken persistido
+      deactivate UserRepo
+
+      AuthService --> AuthController : {accessToken, refreshToken, user}
+      AuthController --> Kong : 200 OK\n{accessToken, refreshToken, user}
+      Kong --> Electron : 200 OK\n{accessToken, refreshToken, user}
+
+      Electron -> Electron : IPC -> electron-store.set(\n  "auth", {accessToken, refreshToken})
+      Electron -> Electron : router.navigate("#/dashboard")
+      Electron --> Usuario : Mostrar Dashboard
+    end
+  end
+end
+end
+
+deactivate AuthService
+deactivate AuthController
+deactivate Kong
+deactivate Electron
+
+@enduml
