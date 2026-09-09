@@ -1,0 +1,139 @@
+%%{init: {"flowchart": {"curve": "linear", "nodeSpacing": 45, "rankSpacing": 70, "padding": 15, "useMaxWidth": false}} }%%
+flowchart LR
+    classDef actor  fill:#1565C0,stroke:#0D47A1,color:#fff,font-weight:bold
+    classDef sys    fill:#37474F,stroke:#263238,color:#fff,font-weight:bold
+    classDef must   fill:#E8F5E9,stroke:#388E3C,color:#1B5E20,font-weight:bold
+    classDef should fill:#FFF8E1,stroke:#F9A825,color:#5D4037,font-weight:bold
+    classDef could  fill:#F3E5F5,stroke:#7B1FA2,color:#4A148C,font-weight:bold
+
+    subgraph ACTORES["Actores"]
+        direction TB
+        CAJ["Cajero"]:::actor
+        REP["Reponedor"]:::actor
+        ADM["Administrador"]:::actor
+        SA["Super_Admin"]:::actor
+        SIS["Sistema Interno"]:::sys
+        SFX["Servicio FX"]:::sys
+        EF["Entidad Fiscal"]:::sys
+    end
+
+    subgraph SERVICIOS["Microservicios"]
+        direction TB
+
+        %% ─── MS-1 ───────────────────────────────────────────────────────────
+        subgraph MS1["MS-1 · Tenant & Identity Service"]
+            direction TB
+
+            %% ROW 1 — Casos que incluyen otros (más complejos, arriba)
+            subgraph M1R1["Configuración & FX — Incluyen sub-casos"]
+                direction LR
+                TI07(["TI-07 · Configurar Tenant"]):::must
+                TI16(["TI-16 · Actualizar Tabla FX"]):::could
+                TI17(["TI-17 · Convertir Monto entre Monedas"]):::could
+                TI20(["TI-20 · Asignar Múltiples Roles"]):::should
+            end
+
+            %% ROW 2 — Sub-casos incluidos por ROW 1 (abajo de sus includers)
+            subgraph M1R2["Sub-casos Incluidos"]
+                direction LR
+                TI08(["TI-08 · Definir Idioma"]):::should
+                TI09(["TI-09 · Configurar Moneda Base"]):::must
+                TI10(["TI-10 · País & Zona Horaria"]):::must
+                TI15(["TI-15 · Obtener Tipo de Cambio"]):::could
+                TI19(["TI-19 · Registrar Historial FX"]):::could
+                TI06(["TI-06 · Asignar Roles y Permisos"]):::must
+            end
+
+            %% ROW 3 — Autenticación & Sesión (TI-03 extiende TI-01, misma fila)
+            subgraph M1R3["Autenticación & Cambio de Rol"]
+                direction LR
+                TI01(["TI-01 · Iniciar Sesión"]):::must
+                TI02(["TI-02 · Cerrar Sesión"]):::must
+                TI03(["TI-03 · Autenticar con MFA"]):::should
+                TI21(["TI-21 · Cambiar Rol Activo"]):::should
+                TI22(["TI-22 · Escalar Rol Temporalmente"]):::should
+            end
+
+            %% ROW 4 — Gestión de usuarios y auditoría
+            subgraph M1R4["Usuarios, Tenant & Auditoría"]
+                direction LR
+                TI04(["TI-04 · Gestionar Perfil"]):::must
+                TI05(["TI-05 · Crear / Editar / Desactivar Usuario"]):::must
+                TI11(["TI-11 · Gestionar Sucursales"]):::should
+                TI14(["TI-14 · Auditar Log de Accesos"]):::should
+                TI18(["TI-18 · Configurar Umbral FX"]):::could
+                TI23(["TI-23 · Separación de Funciones"]):::should
+            end
+        end
+
+        %% ─── MS-2 ───────────────────────────────────────────────────────────
+        subgraph MS2["MS-2 · Tax & Compliance Service"]
+            direction TB
+
+            %% ROW 1 — TC-09 incluye TC-06 y TC-08 (más complejo arriba)
+            subgraph M2R1["Generación DTE — Incluye sub-casos"]
+                TC09(["TC-09 · Generar Boleta / Factura Electrónica"]):::must
+            end
+
+            %% ROW 2 — Incluidos por TC-09; TC-08 también incluye TC-07
+            subgraph M2R2["Folio & Emisión DTE"]
+                direction LR
+                TC06(["TC-06 · Solicitar Folio Electrónico"]):::must
+                TC08(["TC-08 · Emitir DTE"]):::must
+            end
+
+            %% ROW 3 — Incluido por TC-08; TC-10 extiende TC-07 (misma fila)
+            subgraph M2R3["Validación Folio & Manejo Rechazo"]
+                direction LR
+                TC07(["TC-07 · Validar Folio con Entidad Fiscal"]):::must
+                TC10(["TC-10 · Manejar Rechazo de Folio"]):::should
+            end
+
+            %% ROW 4 — Cálculo de impuestos (TC-01 base; TC-02/03/04 extienden)
+            subgraph M2R4["Cálculo de Impuestos & Config"]
+                direction LR
+                TC01(["TC-01 · Calcular Impuesto de Venta"]):::must
+                TC02(["TC-02 · IVA Compuesto en Cascada"]):::must
+                TC03(["TC-03 · Exención Fiscal por Producto"]):::should
+                TC04(["TC-04 · Exención Fiscal por Cliente"]):::should
+                TC05(["TC-05 · Configurar Reglas Fiscales"]):::must
+            end
+
+            %% ROW 5 — Reportes y consultas standalone
+            subgraph M2R5["📊 Reportes & Consultas"]
+                direction LR
+                TC11(["TC-11 · Consultar Estado de DTE"]):::should
+                TC12(["TC-12 · Reporte Declaración Fiscal"]):::should
+            end
+        end
+    end
+
+    %% ── Actores → Casos de Uso ──
+    CAJ --> TI01 & TI02 & TI21 & TI22 & TC04 & TC09
+    REP --> TI01 & TI02 & TI21 & TI22
+    ADM --> TI01 & TI04 & TI05 & TI06 & TI07 & TI11 & TI14
+    ADM --> TI17 & TI18 & TI20 & TI21 & TI22 & TI23
+    ADM --> TC03 & TC05 & TC11 & TC12
+    SA  --> TI07 & TI11 & TI14 & TI20 & TI23 & TC05
+    SFX --> TI15 & TI16
+    SIS --> TI16 & TI17 & TI19 & TC01 & TC02 & TC06 & TC08 & TC10
+    EF  --> TC07
+
+    %% ── «include» — todos fluyen hacia abajo entre filas ──
+    TI07 -->|"«include»"| TI08
+    TI07 -->|"«include»"| TI09
+    TI07 -->|"«include»"| TI10
+    TI16 -->|"«include»"| TI15
+    TI17 -->|"«include»"| TI19
+    TI20 -->|"«include»"| TI06
+    TC09 -->|"«include»"| TC06
+    TC09 -->|"«include»"| TC08
+    TC08 -->|"«include»"| TC07
+
+    %% ── «extend» — en la misma fila que su base ──
+    TI03 -.->|"«extend»\n[si MFA activo en tenant]"| TI01
+    TI22 -.->|"«extend»\n[para una sola acción]"| TI21
+    TC02 -.->|"«extend»\n[si IVA en cascada]"| TC01
+    TC03 -.->|"«extend»\n[si producto exento]"| TC01
+    TC04 -.->|"«extend»\n[si cliente exento]"| TC01
+    TC10 -.->|"«extend»\n[si folio rechazado]"| TC07

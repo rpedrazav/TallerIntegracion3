@@ -1,0 +1,78 @@
+%%{init: {"flowchart": {"curve": "linear", "nodeSpacing": 45, "rankSpacing": 70, "padding": 15, "useMaxWidth": false}} }%%
+flowchart LR
+    classDef actor  fill:#1565C0,stroke:#0D47A1,color:#fff,font-weight:bold
+    classDef sys    fill:#37474F,stroke:#263238,color:#fff,font-weight:bold
+    classDef hw     fill:#BF360C,stroke:#8D2900,color:#fff,font-weight:bold
+    classDef must   fill:#E8F5E9,stroke:#388E3C,color:#1B5E20,font-weight:bold
+    classDef should fill:#FFF8E1,stroke:#F9A825,color:#5D4037,font-weight:bold
+    classDef could  fill:#F3E5F5,stroke:#7B1FA2,color:#4A148C,font-weight:bold
+
+    subgraph ACTORES["Actores"]
+        direction TB
+        CAJ["Cajero"]:::actor
+        ADM["Administrador"]:::actor
+        CLT["Cliente Afiliado"]:::actor
+        BAL["Balanza Física"]:::hw
+    end
+
+    subgraph MS5A["MS-5 · POS — Turno & Carrito"]
+        direction TB
+
+        %% ROW 1 — Casos que incluyen otros (más complejos, arriba)
+        subgraph R1["Casos con Sub-casos Incluidos"]
+            direction LR
+            PC01(["PC-01 · Abrir Turno de Caja"]):::must
+            PC03(["PC-03 · Cerrar Turno de Caja"]):::must
+            PC09(["PC-09 · Agregar Producto a Granel"]):::should
+        end
+
+        %% ROW 2 — Sub-casos incluidos por ROW 1
+        subgraph R2["Sub-casos Incluidos"]
+            direction LR
+            PC02(["PC-02 · Registrar Fondo de Apertura"]):::must
+            PC04(["PC-04 · Cuadre de Caja"]):::must
+            PC05(["PC-05 · Declarar Billetes y Monedas"]):::must
+            PC10(["PC-10 · Integrar Peso desde Balanza"]):::should
+        end
+
+        %% ROW 3 — Carrito (PC-07 y PC-08 base; PC-09, PC-13 extienden, misma fila)
+        subgraph R3["Carrito de Compra"]
+            direction LR
+            PC06(["PC-06 · Iniciar Nueva Venta"]):::must
+            PC07(["PC-07 · Agregar Producto por Escaneo"]):::must
+            PC08(["PC-08 · Agregar Producto por Búsqueda"]):::must
+            PC11(["PC-11 · Modificar Cantidad"]):::must
+            PC12(["PC-12 · Eliminar Ítem del Carrito"]):::must
+            PC13(["PC-13 · Aplicar Descuento Manual"]):::should
+        end
+
+        %% ROW 4 — Venta en espera y cliente afiliado
+        subgraph R4["Venta en Espera & Cliente Afiliado"]
+            direction LR
+            PC22(["PC-22 · Poner Venta en Espera"]):::could
+            PC23(["PC-23 · Recuperar Venta de Espera"]):::could
+            PC35(["PC-35 · Identificar Cliente Afiliado"]):::could
+            PC36(["PC-36 · Aplicar Beneficios de Membresía"]):::could
+        end
+    end
+
+    %% ── Actores → Casos de Uso ──
+    CAJ --> PC01 & PC03 & PC06 & PC07 & PC08 & PC09 & PC11 & PC12 & PC13 & PC22 & PC23 & PC35
+    ADM --> PC04
+    CLT --> PC35
+    BAL --> PC10
+
+    %% ── «include» — fluyen hacia abajo entre filas ──
+    PC01 -->|"«include»"| PC02
+    PC03 -->|"«include»"| PC04
+    PC03 -->|"«include»"| PC05
+    PC09 -->|"«include»"| PC10
+
+    %% ── «extend» — en la misma fila que su base ──
+    PC09 -.->|"«extend»\n[si producto vendido por peso]"| PC07
+    PC13 -.->|"«extend»\n[si permiso discount.apply]"| PC07
+    PC13 -.->|"«extend»\n[si permiso discount.apply]"| PC08
+    PC22 -.->|"«extend»\n[si cliente espera]"| PC06
+    PC23 -.->|"«extend»\n[si existe venta en espera]"| PC22
+    PC35 -.->|"«extend»\n[si cliente tiene membresía]"| PC06
+    PC36 -.->|"«extend»\n[si cliente identificado]"| PC35

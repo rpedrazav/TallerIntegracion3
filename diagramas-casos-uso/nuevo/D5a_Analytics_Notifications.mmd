@@ -1,0 +1,104 @@
+%%{init: {"flowchart": {"curve": "linear", "nodeSpacing": 45, "rankSpacing": 70, "padding": 15, "useMaxWidth": false}} }%%
+flowchart LR
+    classDef actor  fill:#1565C0,stroke:#0D47A1,color:#fff,font-weight:bold
+    classDef sys    fill:#37474F,stroke:#263238,color:#fff,font-weight:bold
+    classDef ext    fill:#1B5E20,stroke:#003300,color:#fff,font-weight:bold
+    classDef should fill:#FFF8E1,stroke:#F9A825,color:#5D4037,font-weight:bold
+    classDef could  fill:#F3E5F5,stroke:#7B1FA2,color:#4A148C,font-weight:bold
+
+    subgraph ACTORES["Actores"]
+        direction TB
+        ADM["Administrador"]:::actor
+        REP["Reponedor"]:::actor
+        SA["Super_Admin"]:::actor
+        KFK["Kafka"]:::sys
+        PM["Proveedor Mensajería"]:::ext
+    end
+
+    subgraph MS7["MS-7 · Analytics & Notification Service"]
+        direction TB
+
+        %% ROW 1 — AN-01 y AN-06 incluyen AN-02 (más complejos, arriba)
+        subgraph A1["Dashboards & Reportes — Incluyen Filtros"]
+            direction LR
+            AN01(["AN-01 · Dashboard de Ventas"]):::should
+            AN06(["AN-06 · Generar Reporte de Ventas"]):::should
+            AN04(["AN-04 · Dashboard de Inventario"]):::should
+            AN05(["AN-05 · Dashboard Financiero"]):::should
+        end
+
+        %% ROW 2 — Sub-caso incluido por AN-01 y AN-06; AN-03 extiende AN-01 (misma área)
+        subgraph A2["Filtros — Sub-casos Incluidos"]
+            direction LR
+            AN02(["AN-02 · Filtrar por Período"]):::should
+            AN03(["AN-03 · Filtrar por Sucursal"]):::should
+        end
+
+        %% ROW 3 — Reportes adicionales y KPIs (AN-09 extiende AN-06/AN-04, misma fila)
+        subgraph A3["Reportes Adicionales & KPIs"]
+            direction LR
+            AN07(["AN-07 · Top Productos Más Vendidos"]):::should
+            AN08(["AN-08 · Reporte de Mermas"]):::should
+            AN09(["AN-09 · Exportar PDF / Excel"]):::could
+            AN16(["AN-16 · KPIs en Tiempo Real"]):::should
+            AN17(["AN-17 · Auditar Log de Eventos"]):::should
+        end
+
+        %% ROW 4 — Consumo de Kafka (base para alertas de ROW 5)
+        subgraph A4["Consumo Kafka & Config Umbrales"]
+            direction LR
+            AN10(["AN-10 · Consumir sale.completed"]):::should
+            AN11(["AN-11 · Consumir stock.updated"]):::should
+            AN14(["AN-14 · Configurar Umbrales de Alerta"]):::should
+            AN24(["AN-24 · Alerta Variación FX"]):::could
+        end
+
+        %% ROW 5 — Alertas generadas al consumir Kafka (extends de AN-11)
+        subgraph A5["Alertas Generadas por Kafka"]
+            direction LR
+            AN12(["AN-12 · Alerta Stock Mínimo"]):::should
+            AN13(["AN-13 · Alerta Próxima Caducidad"]):::should
+        end
+
+        %% ROW 6 — Orquestador de notificaciones (extend de AN-12 y AN-13)
+        subgraph A6["Orquestador de Notificaciones"]
+            direction LR
+            AN15(["AN-15 · Despachar Notificación"]):::could
+            AN21(["AN-21 · Configurar Plantillas"]):::could
+            AN22(["AN-22 · Historial de Envíos"]):::could
+        end
+
+        %% ROW 7 — Canales de mensajería (extends de AN-15)
+        subgraph A7["Canales de Mensajería"]
+            direction LR
+            AN18(["AN-18 · Enviar SMS — Twilio"]):::could
+            AN19(["AN-19 · Enviar Email — SendGrid"]):::could
+            AN20(["AN-20 · Enviar Push — Firebase"]):::could
+            AN23(["AN-23 · Manejar Fallo de Entrega"]):::could
+        end
+    end
+
+    %% ── Actores → Casos de Uso ──
+    ADM --> AN01 & AN04 & AN05 & AN06 & AN07 & AN08 & AN09 & AN14 & AN16 & AN17
+    REP --> AN04 & AN12 & AN13
+    SA  --> AN17
+    KFK --> AN10 & AN11
+    PM  --> AN18 & AN19 & AN20
+
+    %% ── «include» — fluyen hacia abajo ──
+    AN01 -->|"«include»"| AN02
+    AN06 -->|"«include»"| AN02
+
+    %% ── «extend» — en la misma fila o fila adyacente ──
+    AN03 -.->|"«extend»\n[si filtro por sucursal]"| AN01
+    AN09 -.->|"«extend»\n[si se solicita exportar]"| AN06
+    AN09 -.->|"«extend»\n[si se solicita exportar]"| AN04
+    AN12 -.->|"«extend»\n[si stock < umbral]"| AN11
+    AN13 -.->|"«extend»\n[si caducidad próxima]"| AN11
+    AN15 -.->|"«extend»\n[al generarse alerta stock]"| AN12
+    AN15 -.->|"«extend»\n[al generarse alerta caducidad]"| AN13
+    AN18 -.->|"«extend»\n[canal SMS activo]"| AN15
+    AN19 -.->|"«extend»\n[canal email activo]"| AN15
+    AN20 -.->|"«extend»\n[canal push activo]"| AN15
+    AN23 -.->|"«extend»\n[fallo en entrega]"| AN15
+    AN24 -.->|"«extend»\n[variación FX > umbral]"| AN10

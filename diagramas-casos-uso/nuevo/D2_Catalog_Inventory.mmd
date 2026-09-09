@@ -1,0 +1,123 @@
+%%{init: {"flowchart": {"curve": "linear", "nodeSpacing": 45, "rankSpacing": 70, "padding": 15, "useMaxWidth": false}} }%%
+flowchart LR
+    classDef actor  fill:#1565C0,stroke:#0D47A1,color:#fff,font-weight:bold
+    classDef sys    fill:#37474F,stroke:#263238,color:#fff,font-weight:bold
+    classDef hw     fill:#BF360C,stroke:#8D2900,color:#fff,font-weight:bold
+    classDef must   fill:#E8F5E9,stroke:#388E3C,color:#1B5E20,font-weight:bold
+    classDef should fill:#FFF8E1,stroke:#F9A825,color:#5D4037,font-weight:bold
+    classDef could  fill:#F3E5F5,stroke:#7B1FA2,color:#4A148C,font-weight:bold
+
+    subgraph ACTORES["Actores"]
+        direction TB
+        CAJ["Cajero"]:::actor
+        REP["Reponedor"]:::actor
+        ADM["Administrador"]:::actor
+        SIS["Sistema Interno"]:::sys
+        BAL["Balanza Física"]:::hw
+        KFK["Kafka"]:::sys
+    end
+
+    subgraph SERVICIOS[""]
+        direction TB
+
+        %% ─── MS-3 ───────────────────────────────────────────────────────────
+        subgraph MS3["MS-3 · Catalog & Pricing Service"]
+            direction TB
+
+            %% ROW 1 — CP-08 incluye CP-09 y CP-07 (más complejo, arriba)
+            subgraph C3R1["Granel — Incluye sub-casos de pesaje"]
+                CP08(["CP-08 · Registrar Producto a Granel"]):::should
+            end
+
+            %% ROW 2 — Sub-casos incluidos por CP-08
+            subgraph C3R2["Sub-casos de Granel & Conversión"]
+                direction LR
+                CP09(["CP-09 · Capturar Peso desde Balanza"]):::should
+                CP07(["CP-07 · Convertir Unidades kg↔lb / L↔gal"]):::should
+                CP06(["CP-06 · Configurar UOM"]):::should
+            end
+
+            %% ROW 3 — Catálogo base
+            subgraph C3R3["Catálogo de Productos"]
+                direction LR
+                CP01(["CP-01 · Crear Producto"]):::must
+                CP02(["CP-02 · Editar Producto"]):::must
+                CP03(["CP-03 · Asignar Código Barras / QR"]):::must
+                CP04(["CP-04 · Escanear Código Barras / QR"]):::must
+                CP05(["CP-05 · Buscar Producto por Nombre"]):::must
+                CP15(["CP-15 · Gestionar Categorías"]):::must
+            end
+
+            %% ROW 4 — Precios (CP-10 base; CP-11, CP-12, CP-14 extienden, misma fila)
+            subgraph C3R4["Precios & Promociones"]
+                direction LR
+                CP10(["CP-10 · Definir Precio Base"]):::must
+                CP11(["CP-11 · Precio Dinámico"]):::should
+                CP12(["CP-12 · Aplicar Descuento / Promoción"]):::should
+                CP13(["CP-13 · Rango de Fechas Promoción"]):::should
+                CP14(["CP-14 · Precio por Sucursal"]):::should
+            end
+        end
+
+        %% ─── MS-4 ───────────────────────────────────────────────────────────
+        subgraph MS4["MS-4 · Warehouse & Inventory Service"]
+            direction TB
+
+            %% ROW 1 — WI-04, WI-12, WI-14 incluyen otros (más complejos arriba)
+            subgraph W4R1["📥 Casos que Incluyen Sub-casos"]
+                direction LR
+                WI04(["WI-04 · Registrar Recepción de Mercancía"]):::must
+                WI12(["WI-12 · Conciliar Inventario Físico vs Sistema"]):::should
+                WI14(["WI-14 · Descontar Stock por Venta — Async"]):::must
+            end
+
+            %% ROW 2 — Sub-casos incluidos por ROW 1
+            subgraph W4R2["Sub-casos Incluidos"]
+                direction LR
+                WI05(["WI-05 · Aplicar Regla FEFO"]):::must
+                WI06(["WI-06 · Ingresar Fecha de Caducidad"]):::must
+                WI11(["WI-11 · Realizar Conteo Físico"]):::should
+                WI13(["WI-13 · Procesar Evento sale.completed"]):::must
+            end
+
+            %% ROW 3 — Control de stock, alertas y nevera (standalone + extends)
+            subgraph W4R3["Stock, Alertas & Refrigeración"]
+                direction LR
+                WI01(["WI-01 · Consultar Stock Actual"]):::must
+                WI02(["WI-02 · Ajustar Stock Manualmente"]):::should
+                WI03(["WI-03 · Registrar Merma / Pérdida"]):::should
+                WI07(["WI-07 · Asignar Lote a Nevera"]):::should
+                WI08(["WI-08 · Controlar Volumen de Nevera"]):::should
+                WI09(["WI-09 · Alerta Stock Mínimo"]):::should
+                WI10(["WI-10 · Alerta Próxima Caducidad"]):::should
+                WI15(["WI-15 · Transferir Stock entre Sucursales"]):::should
+            end
+        end
+    end
+
+    %% ── Actores → Casos de Uso ──
+    CAJ --> CP04 & CP05 & CP08 & CP12 & WI01
+    REP --> CP03 & CP04 & WI01 & WI02 & WI03 & WI04 & WI06 & WI07 & WI11 & WI12
+    ADM --> CP01 & CP02 & CP03 & CP05 & CP06 & CP10 & CP11 & CP13 & CP14 & CP15
+    ADM --> WI01 & WI02 & WI12 & WI15
+    SIS --> CP07 & WI05 & WI08 & WI09 & WI10 & WI14
+    BAL --> CP09
+    KFK --> WI13
+
+    %% ── «include» — fluyen hacia abajo entre filas ──
+    CP08 -->|"«include»"| CP09
+    CP08 -->|"«include»"| CP07
+    WI04 -->|"«include»"| WI05
+    WI04 -->|"«include»"| WI06
+    WI12 -->|"«include»"| WI11
+    WI14 -->|"«include»"| WI13
+
+    %% ── «extend» — en la misma fila que su base ──
+    CP07 -.->|"«extend»\n[si diferente UOM]"| CP06
+    CP11 -.->|"«extend»\n[si precio dinámico activo]"| CP10
+    CP12 -.->|"«extend»\n[si promoción activa]"| CP10
+    CP14 -.->|"«extend»\n[si precios por sucursal]"| CP10
+    WI07 -.->|"«extend»\n[si producto refrigerado]"| WI04
+    WI08 -.->|"«extend»\n[si control nevera activo]"| WI07
+    WI09 -.->|"«extend»\n[si stock < umbral mínimo]"| WI14
+    WI10 -.->|"«extend»\n[si fecha < umbral]"| WI06

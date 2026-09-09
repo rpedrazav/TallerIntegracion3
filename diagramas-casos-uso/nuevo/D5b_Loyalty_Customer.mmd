@@ -1,0 +1,84 @@
+%%{init: {"flowchart": {"curve": "linear", "nodeSpacing": 45, "rankSpacing": 70, "padding": 15, "useMaxWidth": false}} }%%
+flowchart LR
+    classDef actor  fill:#1565C0,stroke:#0D47A1,color:#fff,font-weight:bold
+    classDef sys    fill:#37474F,stroke:#263238,color:#fff,font-weight:bold
+    classDef ext    fill:#1B5E20,stroke:#003300,color:#fff,font-weight:bold
+    classDef could  fill:#EDE7F6,stroke:#7B1FA2,color:#4A148C,font-weight:bold
+
+    %% ── Actores agrupados verticalmente a la izquierda ──
+    subgraph ACTORES["Actores"]
+        direction TB
+        CAJ["Cajero"]:::actor
+        ADM["Administrador"]:::actor
+        CLT["Cliente Afiliado"]:::actor
+        KFK["Kafka"]:::sys
+        PM["Mensajería"]:::ext
+    end
+
+    %% ── MS-8 organizado en filas verticales (TB) ──
+    %% Las filas están ordenadas de MÁS COMPLEJO (arriba) a MÁS SIMPLE (abajo)
+    %% para que todos los «include» fluyan hacia abajo de forma natural.
+    subgraph MS8["MS-8 · Loyalty & Customer Service"]
+        direction TB
+
+        subgraph ROW1["Canje & Cupones"]
+            direction LR
+            LC07(["LC-07 · Canjear por Descuento"]):::could
+            LC08(["LC-08 · Canjear por Producto Gratis"]):::could
+            LC11(["LC-11 · Validar Cupón en POS"]):::could
+        end
+
+        subgraph ROW2["Puntos & Tiers"]
+            direction LR
+            LC06(["LC-06 · Acumular Puntos"]):::could
+            LC17(["LC-17 · Publicar points.updated"]):::could
+            LC09(["LC-09 · Aplicar Tier de Membresía"]):::could
+            LC15(["LC-15 · Expirar Puntos Inactivos"]):::could
+        end
+
+        subgraph ROW3["Perfil & Historial"]
+            direction LR
+            LC04(["LC-04 · Consultar Perfil & Saldo"]):::could
+            LC05(["LC-05 · Ver Historial de Compras"]):::could
+            LC16(["LC-16 · Enviar Estado de Cuenta"]):::could
+        end
+
+        subgraph ROW4["Identificación & Registro"]
+            direction LR
+            LC01(["LC-01 · Registrar Cliente"]):::could
+            LC03(["LC-03 · Identificar en POS"]):::could
+        end
+
+        subgraph ROW5["Verificación Base"]
+            LC02(["LC-02 · Verificar Identidad"]):::could
+        end
+
+        subgraph ROW6["Configuración del Programa"]
+            direction LR
+            LC10(["LC-10 · Emitir Cupón de Descuento"]):::could
+            LC12(["LC-12 · Configurar Programa de Lealtad"]):::could
+            LC13(["LC-13 · Definir Multiplicadores de Puntos"]):::could
+            LC14(["LC-14 · Definir Beneficios por Nivel"]):::could
+        end
+    end
+
+    %% ── Actores → Casos de Uso (solo puntos de entrada primarios) ──
+    CAJ --> LC01 & LC03 & LC07 & LC11
+    ADM --> LC01 & LC05 & LC10 & LC12 & LC13 & LC14
+    CLT --> LC03 & LC05 & LC07
+    KFK --> LC06 & LC15
+    PM  --> LC16
+
+    %% ── «include» — todos fluyen HACIA ABAJO entre filas (ROW1 → ROW3 → ROW4 → ROW5) ──
+    LC07 -->|"«include»"| LC04
+    LC06 -->|"«include»"| LC03
+    LC06 -->|"«include»"| LC17
+    LC04 -->|"«include»"| LC03
+    LC03 -->|"«include»"| LC02
+
+    %% ── «extend» — se mantienen DENTRO de su fila (flechas cortas horizontales) ──
+    LC08 -.->|"«extend»\n[puntos p/prod. gratis]"| LC07
+    LC09 -.->|"«extend»\n[supera umbral de tier]"| LC06
+    LC15 -.->|"«extend»\n[12 meses inactivo]"| LC06
+    LC11 -.->|"«extend»\n[usa cupón vs puntos]"| LC07
+    LC16 -.->|"«extend»\n[periódico/solicitud]"| LC05

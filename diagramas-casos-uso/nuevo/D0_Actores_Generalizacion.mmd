@@ -1,0 +1,58 @@
+%%{init: {"flowchart": {"curve": "linear", "nodeSpacing": 45, "rankSpacing": 70, "padding": 15, "useMaxWidth": false}} }%%
+flowchart LR
+    classDef human fill:#1565C0,stroke:#0D47A1,color:#fff,font-weight:bold
+    classDef hw    fill:#BF360C,stroke:#8D2900,color:#fff,font-weight:bold
+    classDef ext   fill:#1B5E20,stroke:#003300,color:#fff,font-weight:bold
+    classDef kafka fill:#4A148C,stroke:#2D0068,color:#fff,font-weight:bold
+    classDef multi fill:#E65100,stroke:#BF360C,color:#fff,font-weight:bold
+
+    %% ── Actores Humanos (jerarquía vertical izquierda) ──
+    subgraph HUM["Actores Humanos"]
+        direction TB
+
+        subgraph JERARQUIA["Jerarquía de Roles"]
+            direction TB
+            UA["Usuario GlobalMart\n(Superactor)"]:::human
+            CAJ["Cajero"]:::human
+            REP["Reponedor"]:::human
+            ADM["Administrador"]:::human
+            SA["Super_Admin"]:::human
+            CLT["Cliente Afiliado"]:::human
+        end
+
+        ET["Encargado de Tienda\n(Actor Multi-Rol)"]:::multi
+    end
+
+    %% ── Actores Sistema / Hardware (columna derecha) ──
+    subgraph SYS["Actores Sistema / Hardware"]
+        direction TB
+
+        subgraph HW["Hardware Local"]
+            direction LR
+            BAL["Balanza Física\nUSB / Serial"]:::hw
+            TER["Terminal POS\nUSB / BT / LAN"]:::hw
+        end
+
+        subgraph EXTSIS["Sistemas Externos"]
+            direction LR
+            EF["Entidad Fiscal\nSII / AFIP / IRS"]:::ext
+            PP["Pasarela de Pago\nStripe / Transbank / MP"]:::ext
+            ST["Sistema Transporte 3PL"]:::ext
+            PM["Proveedor Mensajería\nTwilio / SendGrid / Firebase"]:::ext
+            SFX["Servicio FX\nFixer.io"]:::ext
+        end
+
+        KFK["Bus de Eventos — Apache Kafka"]:::kafka
+    end
+
+    %% ── Generalización de herencia ──
+    UA -->|"generaliza ▷"| CAJ
+    UA -->|"generaliza ▷"| REP
+    UA -->|"generaliza ▷"| ADM
+    UA -->|"generaliza ▷"| CLT
+    ADM -->|"hereda ▷"| SA
+
+    %% ── Actor Multi-Rol ──
+    ET -.->|"actúa como"| CAJ
+    ET -.->|"actúa como"| REP
+    ET -.->|"actúa como"| ADM

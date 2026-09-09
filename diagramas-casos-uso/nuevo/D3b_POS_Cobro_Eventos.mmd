@@ -1,0 +1,109 @@
+%%{init: {"flowchart": {"curve": "linear", "nodeSpacing": 45, "rankSpacing": 70, "padding": 15, "useMaxWidth": false}} }%%
+flowchart LR
+    classDef actor  fill:#1565C0,stroke:#0D47A1,color:#fff,font-weight:bold
+    classDef sys    fill:#37474F,stroke:#263238,color:#fff,font-weight:bold
+    classDef hw     fill:#BF360C,stroke:#8D2900,color:#fff,font-weight:bold
+    classDef extref fill:#2E7D32,stroke:#1B5E20,color:#fff,font-style:italic
+    classDef must   fill:#E8F5E9,stroke:#388E3C,color:#1B5E20,font-weight:bold
+    classDef should fill:#FFF8E1,stroke:#F9A825,color:#5D4037,font-weight:bold
+    classDef could  fill:#F3E5F5,stroke:#7B1FA2,color:#4A148C,font-weight:bold
+
+    subgraph ACTORES["Actores"]
+        direction TB
+        CAJ["Cajero"]:::actor
+        ADM["Administrador"]:::actor
+        TER["Terminal POS"]:::hw
+        PP["Pasarela de Pago"]:::sys
+        KFK["Kafka"]:::sys
+    end
+
+    %% ── Referencias cruzadas a MS-2 (llamadas síncronas) ──
+    subgraph MS2REF["Referencias MS-2"]
+        direction TB
+        TC01ref(["TC-01 · Calcular Impuesto\n⟵ MS-2"]):::extref
+        TC09ref(["TC-09 · Generar Boleta / Factura\n⟵ MS-2"]):::extref
+    end
+
+    subgraph MS5B["MS-5 · POS — Cobro & Eventos"]
+        direction TB
+
+        %% ROW 1 — Casos que incluyen otros (más complejos, arriba)
+        subgraph B1["Comprobante — Incluye sub-casos"]
+            direction LR
+            PC19(["PC-19 · Emitir Recibo / Comprobante"]):::must
+        end
+
+        %% ROW 2 — PC-14, PC-15, PC-17 incluyen sus sub-casos
+        subgraph B2["Cobro — Incluyen sub-casos"]
+            direction LR
+            PC14(["PC-14 · Calcular Total con Impuestos"]):::must
+            PC15(["PC-15 · Cobrar en Efectivo"]):::must
+            PC17(["PC-17 · Cobrar con Tarjeta"]):::must
+        end
+
+        %% ROW 3 — Sub-casos incluidos por ROW 2
+        subgraph B3["Sub-casos de Cobro"]
+            direction LR
+            PC34(["PC-34 · Mostrar Total en Display"]):::must
+            PC16(["PC-16 · Calcular Vuelto"]):::must
+            PC32(["PC-32 · Abrir Cajón de Dinero"]):::must
+            PC26(["PC-26 · Leer Tarjeta NFC / Chip / Mag"]):::must
+            PC27(["PC-27 · Enviar Solicitud a Pasarela"]):::must
+        end
+
+        %% ROW 4 — Sub-caso incluido por PC-27; entidades de respuesta y publicación
+        subgraph B4["Respuesta & Publicación de Evento"]
+            direction LR
+            PC28(["PC-28 · Recibir Respuesta de Pasarela"]):::must
+            PC33(["PC-33 · Imprimir Recibo en Terminal"]):::must
+            PC24(["PC-24 · Publicar sale.completed → Kafka"]):::must
+        end
+
+        %% ROW 5 — Pago mixto, rechazos, anulaciones (extend + standalone)
+        subgraph B5["Pago Mixto, Rechazos & Anulaciones"]
+            direction LR
+            PC18(["PC-18 · Pago Mixto Efectivo + Tarjeta"]):::should
+            PC20(["PC-20 · Anular Venta"]):::should
+            PC21(["PC-21 · Devolución Parcial"]):::should
+            PC29(["PC-29 · Manejar Rechazo de Pago"]):::must
+        end
+
+        %% ROW 6 — Reembolso y eventos de anulación
+        subgraph B6["Reembolso & Eventos Anulación"]
+            direction LR
+            PC25(["PC-25 · Publicar sale.reversed → Kafka"]):::should
+            PC30(["PC-30 · Solicitar Reembolso a Pasarela"]):::should
+            PC31(["PC-31 · Confirmar Reembolso"]):::should
+            PC37(["PC-37 · Acumular Puntos → MS-8"]):::could
+        end
+    end
+
+    %% ── Actores → Casos de Uso ──
+    CAJ --> PC14 & PC15 & PC17 & PC18 & PC19 & PC20 & PC21 & PC29
+    ADM --> PC20
+    TER --> PC26 & PC32 & PC33 & PC34
+    PP  --> PC27 & PC28 & PC30 & PC31
+    KFK --> PC24 & PC25
+
+    %% ── «include» — fluyen hacia abajo entre filas ──
+    PC19 -->|"«include»"| TC09ref
+    PC19 -->|"«include»"| PC33
+    PC19 -->|"«include»"| PC24
+    PC14 -->|"«include»"| TC01ref
+    PC14 -->|"«include»"| PC34
+    PC15 -->|"«include»"| PC16
+    PC15 -->|"«include»"| PC32
+    PC17 -->|"«include»"| PC26
+    PC17 -->|"«include»"| PC27
+    PC27 -->|"«include»"| PC28
+
+    %% ── «extend» — en la misma fila que su base ──
+    PC18 -.->|"«extend»\n[pago mixto seleccionado]"| PC15
+    PC18 -.->|"«extend»\n[pago mixto seleccionado]"| PC17
+    PC29 -.->|"«extend»\n[pasarela retorna declined]"| PC28
+    PC20 -.->|"«extend»\n[cajero/admin anula]"| PC19
+    PC21 -.->|"«extend»\n[devolución parcial]"| PC20
+    PC25 -.->|"«extend»\n[al anular venta]"| PC20
+    PC30 -.->|"«extend»\n[pago fue con tarjeta]"| PC20
+    PC31 -.->|"«extend»\n[reembolso solicitado]"| PC30
+    PC37 -.->|"«extend»\n[cliente afiliado identificado]"| PC24

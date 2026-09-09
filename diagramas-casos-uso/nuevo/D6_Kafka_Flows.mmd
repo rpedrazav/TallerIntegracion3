@@ -1,0 +1,60 @@
+%%{init: {"flowchart": {"curve": "linear", "nodeSpacing": 45, "rankSpacing": 70, "padding": 15, "useMaxWidth": false}} }%%
+flowchart LR
+    classDef producer fill:#0D47A1,stroke:#01579B,color:#fff,font-weight:bold
+    classDef topic    fill:#BF360C,stroke:#8D2900,color:#fff,font-weight:bold
+    classDef consumer fill:#1B5E20,stroke:#003300,color:#fff,font-weight:bold
+
+    subgraph PROD["Microservicios Productores"]
+        MS5P["MS-5\nPOS & Cart"]:::producer
+        MS4P["MS-4\nWarehouse"]:::producer
+        MS6P["MS-6\nSupply Chain"]:::producer
+        MS1P["MS-1\nTenant & FX"]:::producer
+        MS8P["MS-8\nLoyalty"]:::producer
+    end
+
+    subgraph TOPICS["Topics de Kafka (8)"]
+        T1[["sale.completed"]]:::topic
+        T2[["sale.reversed"]]:::topic
+        T3[["stock.alert"]]:::topic
+        T4[["expiry.alert"]]:::topic
+        T5[["stock.updated"]]:::topic
+        T6[["purchase.received"]]:::topic
+        T7[["fx.rate.updated"]]:::topic
+        T8[["points.updated"]]:::topic
+    end
+
+    subgraph CONS["Microservicios Consumidores"]
+        MS4C["MS-4\nWarehouse"]:::consumer
+        MS2C["MS-2\nTax"]:::consumer
+        MS7C["MS-7\nAnalytics"]:::consumer
+        MS8C["MS-8\nLoyalty"]:::consumer
+        MS3C["MS-3\nCatalog"]:::consumer
+        MS6C["MS-6\nSupply"]:::consumer
+    end
+
+    %% ── Productores → Topics ──
+    MS5P -->|"venta completada"| T1
+    MS5P -->|"venta anulada"| T2
+    MS4P -->|"stock bajo mínimo"| T3
+    MS4P -->|"caducidad próxima"| T4
+    MS4P -->|"stock actualizado"| T5
+    MS6P -->|"recepción confirmada"| T6
+    MS1P -->|"tasa FX actualizada"| T7
+    MS8P -->|"puntos actualizados"| T8
+
+    %% ── Topics → Consumidores ──
+    T1 -->|"descuenta stock — WI-13, WI-14"| MS4C
+    T1 -->|"registra hecho imponible"| MS2C
+    T1 -->|"actualiza KPIs ventas — AN-10"| MS7C
+    T1 -->|"acumula puntos — LC-06"| MS8C
+    T2 -->|"revierte descuento de stock"| MS4C
+    T2 -->|"corrige KPIs — AN-10"| MS7C
+    T2 -->|"revierte puntos acumulados"| MS8C
+    T3 -->|"notifica stock bajo — AN-12"| MS7C
+    T4 -->|"notifica caducidad — AN-13"| MS7C
+    T5 -->|"actualiza dashboard inventario — AN-11"| MS7C
+    T6 -->|"ingresa mercancía FEFO — WI-04"| MS4C
+    T7 -->|"actualiza precios en moneda extranjera"| MS3C
+    T7 -->|"actualiza conversión costos de flete"| MS6C
+    T7 -->|"alerta variación FX — AN-24"| MS7C
+    T8 -->|"actualiza métricas de lealtad"| MS7C

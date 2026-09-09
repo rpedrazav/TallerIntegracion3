@@ -1,0 +1,97 @@
+%%{init: {"flowchart": {"curve": "linear", "nodeSpacing": 45, "rankSpacing": 70, "padding": 15, "useMaxWidth": false}} }%%
+flowchart LR
+    classDef actor  fill:#1565C0,stroke:#0D47A1,color:#fff,font-weight:bold
+    classDef sys    fill:#37474F,stroke:#263238,color:#fff,font-weight:bold
+    classDef ext    fill:#1B5E20,stroke:#003300,color:#fff,font-weight:bold
+    classDef should fill:#FFF8E1,stroke:#F9A825,color:#5D4037,font-weight:bold
+    classDef could  fill:#F3E5F5,stroke:#7B1FA2,color:#4A148C,font-weight:bold
+
+    subgraph ACTORES["Actores"]
+        direction TB
+        ADM["Administrador"]:::actor
+        REP["Reponedor"]:::actor
+        ST["Sistema Transporte 3PL"]:::ext
+        KFK["Kafka"]:::sys
+    end
+
+    subgraph MS6["MS-6 · Supply Chain & Import Service"]
+        direction TB
+
+        %% ROW 1 — SC-10 incluye SC-06 (más complejo arriba)
+        subgraph S1["Importación — Incluye Costo Landed"]
+            direction LR
+            SC10(["SC-10 · Registrar Importación"]):::should
+            SC11(["SC-11 · Actualizar Estado Importación"]):::should
+            SC12(["SC-12 · Confirmar Recepción"]):::should
+        end
+
+        %% ROW 2 — SC-01 incluye SC-02 y SC-03; SC-06 incluye SC-07/08/09
+        subgraph S2["OC & Costo Landed — Incluyen sub-casos"]
+            direction LR
+            SC01(["SC-01 · Crear Orden de Compra"]):::should
+            SC06(["SC-06 · Calcular Costo Landed"]):::should
+        end
+
+        %% ROW 3 — Sub-casos incluidos por SC-01 y SC-06
+        subgraph S3["Sub-casos Incluidos"]
+            direction LR
+            SC02(["SC-02 · Seleccionar Proveedor"]):::should
+            SC03(["SC-03 · Agregar Ítems a Orden"]):::should
+            SC07(["SC-07 · Costos de Flete"]):::should
+            SC08(["SC-08 · Aranceles e Impuestos"]):::should
+            SC09(["SC-09 · Seguros y Aduanas"]):::should
+        end
+
+        %% ROW 4 — Aprobación y envío OC (extend de SC-01, misma área)
+        subgraph S4["Aprobación & Envío OC"]
+            direction LR
+            SC04(["SC-04 · Aprobar Orden de Compra"]):::should
+            SC05(["SC-05 · Enviar Orden a Proveedor"]):::should
+        end
+
+        %% ROW 5 — Gestión de proveedores
+        subgraph S5["Gestión de Proveedores"]
+            direction LR
+            SC14(["SC-14 · Gestionar Catálogo Proveedores"]):::should
+            SC15(["SC-15 · Crear / Editar Proveedor"]):::should
+            SC16(["SC-16 · Evaluar Historial Proveedor"]):::could
+        end
+
+        %% ROW 6 — Tracking, logística y FX
+        subgraph S6["Tracking, Logística & Conversión FX"]
+            direction LR
+            SC18(["SC-18 · Solicitar Cotización de Flete"]):::could
+            SC19(["SC-19 · Comparar Ofertas"]):::could
+            SC20(["SC-20 · Confirmar Transportista"]):::could
+            SC21(["SC-21 · Rastrear Envío"]):::could
+            SC22(["SC-22 · Confirmar Entrega"]):::could
+            SC23(["SC-23 · Gestionar Incidencia"]):::could
+            SC24(["SC-24 · Convertir Costo Flete a Moneda Local"]):::could
+        end
+    end
+
+    %% ── Actores → Casos de Uso ──
+    ADM --> SC01 & SC04 & SC05 & SC06 & SC07 & SC08 & SC09
+    ADM --> SC10 & SC11 & SC12 & SC14 & SC15 & SC16 & SC19 & SC20 & SC21 & SC23 & SC24
+    REP --> SC12 & SC22
+    ST  --> SC18 & SC21 & SC22
+    KFK --> SC12
+
+    %% ── «include» — fluyen hacia abajo entre filas ──
+    SC10 -->|"«include»"| SC06
+    SC01 -->|"«include»"| SC02
+    SC01 -->|"«include»"| SC03
+    SC06 -->|"«include»"| SC07
+    SC06 -->|"«include»"| SC08
+    SC06 -->|"«include»"| SC09
+
+    %% ── «extend» — en la misma fila que su base ──
+    SC04 -.->|"«extend»\n[separación de funciones]"| SC01
+    SC16 -.->|"«extend»\n[admin revisa historial]"| SC02
+    SC24 -.->|"«extend»\n[flete en moneda extranjera]"| SC06
+    SC18 -.->|"«extend»\n[importación internacional]"| SC10
+    SC19 -.->|"«extend»\n[múltiples cotizaciones]"| SC18
+    SC20 -.->|"«extend»\n[tras comparar ofertas]"| SC19
+    SC21 -.->|"«extend»\n[importación en tránsito]"| SC10
+    SC22 -.->|"«extend»\n[tracking confirma entrega]"| SC21
+    SC23 -.->|"«extend»\n[incidencia detectada]"| SC21
