@@ -1,25 +1,45 @@
-version: '3.8'
-
 # --- Configuración Base Reutilizable ---
 x-postgres-common: &postgres-common
   image: postgres:16-alpine
   restart: unless-stopped
+  mem_limit: 256m
+  cpus: 0.5
   networks:
     - minimarket-net
   healthcheck:
-    test: [ "CMD-SHELL", "pg_isready -U admin -d $$POSTGRES_DB" ]
+    test: [ "CMD-SHELL", "pg_isready -U ${DB_USER} -d $$POSTGRES_DB" ]
     interval: 10s
     timeout: 5s
     retries: 5
 
 services:
+  # --- Frontend Electron ---
+  # Usado para instalar deps y correr lint/build SIN necesitar Node en el host.
+  # La ventana gráfica (npm start) se corre desde el host directamente.
+  # Uso:
+  #   docker compose run --rm frontend npm install <paquete>
+  #   docker compose run --rm frontend npm run lint
+  frontend:
+    build:
+      context: ../globalmart-frontend
+    container_name: globalmart-frontend
+    volumes:
+      # Monta el código fuente para que los cambios se reflejen en tiempo real
+      - ../globalmart-frontend:/app
+      # Volumen anónimo para que node_modules del contenedor no pise el del host
+      - /app/node_modules
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+    networks:
+      - minimarket-net
+
   # 1. Tenant & Identity Service
   postgres-tenant:
     <<: *postgres-common
     container_name: postgres-tenant
     environment:
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: admin_password
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: tenant_db
     ports:
       - "5433:5432"
@@ -31,8 +51,8 @@ services:
     <<: *postgres-common
     container_name: postgres-supply
     environment:
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: admin_password
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: supply_db
     ports:
       - "5434:5432"
@@ -44,8 +64,8 @@ services:
     <<: *postgres-common
     container_name: postgres-catalog
     environment:
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: admin_password
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: catalog_db
     ports:
       - "5435:5432"
@@ -57,8 +77,8 @@ services:
     <<: *postgres-common
     container_name: postgres-pos
     environment:
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: admin_password
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: pos_db
     ports:
       - "5436:5432"
@@ -70,8 +90,8 @@ services:
     <<: *postgres-common
     container_name: postgres-tax
     environment:
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: admin_password
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: tax_db
     ports:
       - "5437:5432"
@@ -83,8 +103,8 @@ services:
     <<: *postgres-common
     container_name: postgres-warehouse
     environment:
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: admin_password
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: warehouse_db
     ports:
       - "5438:5432"
@@ -96,8 +116,8 @@ services:
     <<: *postgres-common
     container_name: postgres-analytics
     environment:
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: admin_password
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: analytics_db
     ports:
       - "5439:5432"
@@ -109,8 +129,8 @@ services:
     <<: *postgres-common
     container_name: postgres-loyalty
     environment:
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: admin_password
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: loyalty_db
     ports:
       - "5440:5432"
