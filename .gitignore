@@ -1,11 +1,12 @@
+# ─── Node / Electron Frontend ──────────────────────────────────────────────────
 # Variables de entorno
 .env
 .env.*
 
-# Dependencias
+# Dependencias Node
 node_modules/
 
-# Builds y outputs
+# Builds y outputs frontend
 dist/
 out/
 .webpack/
@@ -24,3 +25,58 @@ desktop.ini
 .idea/
 *.suo
 *.user
+
+# ─── .NET / ASP.NET Core Backend ───────────────────────────────────────────────
+
+# Carpetas de compilación (generadas automáticamente por dotnet build)
+bin/
+obj/
+
+# Archivos de usuario de Visual Studio
+*.user
+*.userosscache
+*.sln.docstates
+
+# Archivos de cobertura de tests
+*.coverage
+*.coveragexml
+coverage/
+TestResults/
+
+# NuGet
+*.nupkg
+*.snupkg
+**/[Pp]ackages/
+!**/[Pp]ackages/build/
+*.nuget.props
+*.nuget.targets
+
+# Secretos y configuración local (NO subir claves reales)
+appsettings.Development.json
+secrets.json
+**/secrets.json
+
+# Archivos de Entity Framework temporales (NO son necesarios en el repo)
+# Las migraciones SÍ se suben, solo ignoramos caché de EF
+*.ef.cache
+
+# Archivos de publicación
+**/publish/
+**/PublishProfiles/
+
+# Rider / ReSharper
+.idea/
+_ReSharper*/
+*.ReSharper
+
+# Visual Studio
+.vs/
+*.aps
+*.pch
+*.vspscc
+*.vssscc
+
+# Otros
+*.pidb
+*.svclog
+*.scc

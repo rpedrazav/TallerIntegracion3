@@ -1,0 +1,6 @@
+@TaxComplianceService_HostAddress = http://localhost:5239
+
+GET {{TaxComplianceService_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
