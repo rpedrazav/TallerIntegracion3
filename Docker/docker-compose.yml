@@ -1,0 +1,133 @@
+version: '3.8'
+
+# --- Configuración Base Reutilizable ---
+x-postgres-common: &postgres-common
+  image: postgres:16-alpine
+  restart: unless-stopped
+  networks:
+    - minimarket-net
+  healthcheck:
+    test: [ "CMD-SHELL", "pg_isready -U admin -d $$POSTGRES_DB" ]
+    interval: 10s
+    timeout: 5s
+    retries: 5
+
+services:
+  # 1. Tenant & Identity Service
+  postgres-tenant:
+    <<: *postgres-common
+    container_name: postgres-tenant
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin_password
+      POSTGRES_DB: tenant_db
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata-tenant:/var/lib/postgresql/data
+
+  # 2. Supply Chain & Import Service
+  postgres-supply:
+    <<: *postgres-common
+    container_name: postgres-supply
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin_password
+      POSTGRES_DB: supply_db
+    ports:
+      - "5434:5432"
+    volumes:
+      - pgdata-supply:/var/lib/postgresql/data
+
+  # 3. Catalog & Pricing Service
+  postgres-catalog:
+    <<: *postgres-common
+    container_name: postgres-catalog
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin_password
+      POSTGRES_DB: catalog_db
+    ports:
+      - "5435:5432"
+    volumes:
+      - pgdata-catalog:/var/lib/postgresql/data
+
+  # 4. POS & Cart Service
+  postgres-pos:
+    <<: *postgres-common
+    container_name: postgres-pos
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin_password
+      POSTGRES_DB: pos_db
+    ports:
+      - "5436:5432"
+    volumes:
+      - pgdata-pos:/var/lib/postgresql/data
+
+  # 5. Tax & Compliance Service
+  postgres-tax:
+    <<: *postgres-common
+    container_name: postgres-tax
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin_password
+      POSTGRES_DB: tax_db
+    ports:
+      - "5437:5432"
+    volumes:
+      - pgdata-tax:/var/lib/postgresql/data
+
+  # 6. Warehouse & Inventory Service
+  postgres-warehouse:
+    <<: *postgres-common
+    container_name: postgres-warehouse
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin_password
+      POSTGRES_DB: warehouse_db
+    ports:
+      - "5438:5432"
+    volumes:
+      - pgdata-warehouse:/var/lib/postgresql/data
+
+  # 7. Analytics & Notification Service
+  postgres-analytics:
+    <<: *postgres-common
+    container_name: postgres-analytics
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin_password
+      POSTGRES_DB: analytics_db
+    ports:
+      - "5439:5432"
+    volumes:
+      - pgdata-analytics:/var/lib/postgresql/data
+
+  # 8. Loyalty & Customer Service
+  postgres-loyalty:
+    <<: *postgres-common
+    container_name: postgres-loyalty
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin_password
+      POSTGRES_DB: loyalty_db
+    ports:
+      - "5440:5432"
+    volumes:
+      - pgdata-loyalty:/var/lib/postgresql/data
+
+# --- Redes y Volúmenes Definidos en Arquitectura ---
+networks:
+  minimarket-net:
+    driver: bridge
+
+volumes:
+  pgdata-tenant:
+  pgdata-supply:
+  pgdata-catalog:
+  pgdata-pos:
+  pgdata-tax:
+  pgdata-warehouse:
+  pgdata-analytics:
+  pgdata-loyalty:
