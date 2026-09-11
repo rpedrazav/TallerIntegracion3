@@ -1,1 +1,26 @@
-.env 
+# Variables de entorno
+.env
+.env.*
+
+# Dependencias
+node_modules/
+
+# Builds y outputs
+dist/
+out/
+.webpack/
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDEs
+.vscode/
+.idea/
+*.suo
+*.user
