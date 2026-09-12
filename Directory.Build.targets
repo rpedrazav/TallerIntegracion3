@@ -1,0 +1,6 @@
+<Project>
+  <Import Project="$(MSBuildProjectDirectory)/obj/$(MSBuildProjectFile).nuget.g.targets"
+          Condition="Exists('$(MSBuildProjectDirectory)/obj/$(MSBuildProjectFile).nuget.g.targets')" />
+  <Import Project="$(MSBuildProjectDirectory)/obj/$(MSBuildProjectFile).EntityFrameworkCore.targets"
+          Condition="Exists('$(MSBuildProjectDirectory)/obj/$(MSBuildProjectFile).EntityFrameworkCore.targets')" />
+</Project>
