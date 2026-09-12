@@ -16,6 +16,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CatalogPricingService", "sr
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WarehouseInventoryService", "src\WarehouseInventoryService\WarehouseInventoryService.csproj", "{03FBB9B0-0AA3-462A-8B5B-BF971D80E918}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AnalyticsNotificationService", "src\AnalyticsNotificationService\AnalyticsNotificationService.csproj", "{8E1CB1C7-AEB0-475B-A27A-90D4964E2FCD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LoyaltyCustomerService", "src\LoyaltyCustomerService\LoyaltyCustomerService.csproj", "{ABDA975A-8562-47C4-932D-4114B6DB5192}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -49,6 +53,14 @@ Global
 		{03FBB9B0-0AA3-462A-8B5B-BF971D80E918}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{03FBB9B0-0AA3-462A-8B5B-BF971D80E918}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{03FBB9B0-0AA3-462A-8B5B-BF971D80E918}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8E1CB1C7-AEB0-475B-A27A-90D4964E2FCD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8E1CB1C7-AEB0-475B-A27A-90D4964E2FCD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8E1CB1C7-AEB0-475B-A27A-90D4964E2FCD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8E1CB1C7-AEB0-475B-A27A-90D4964E2FCD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{ABDA975A-8562-47C4-932D-4114B6DB5192}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ABDA975A-8562-47C4-932D-4114B6DB5192}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ABDA975A-8562-47C4-932D-4114B6DB5192}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ABDA975A-8562-47C4-932D-4114B6DB5192}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{E09E4284-CD7B-4075-8A9D-E635809B5EC6} = {2711FAF7-183F-4E2F-8CC6-34666B5364A5}
@@ -57,5 +69,7 @@ Global
 		{DD646B8B-EA53-4A1B-AE6F-43A8B5DF2660} = {2711FAF7-183F-4E2F-8CC6-34666B5364A5}
 		{5E3D4A90-9289-4244-86A6-564AD8F89CB8} = {2711FAF7-183F-4E2F-8CC6-34666B5364A5}
 		{03FBB9B0-0AA3-462A-8B5B-BF971D80E918} = {2711FAF7-183F-4E2F-8CC6-34666B5364A5}
+		{8E1CB1C7-AEB0-475B-A27A-90D4964E2FCD} = {2711FAF7-183F-4E2F-8CC6-34666B5364A5}
+		{ABDA975A-8562-47C4-932D-4114B6DB5192} = {2711FAF7-183F-4E2F-8CC6-34666B5364A5}
 	EndGlobalSection
 EndGlobal

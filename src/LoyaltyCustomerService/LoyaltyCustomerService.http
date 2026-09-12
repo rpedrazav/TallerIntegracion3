@@ -1,0 +1,6 @@
+@LoyaltyCustomerService_HostAddress = http://localhost:5128
+
+GET {{LoyaltyCustomerService_HostAddress}}/health
+Accept: application/json
+
+###
