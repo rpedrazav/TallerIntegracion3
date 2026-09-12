@@ -20,6 +20,12 @@ public class OrdenCompra
     /// <summary>Referencia a la Sucursal en Tenant & Identity Service (MS-1). Sin navigation property: bases de datos separadas.</summary>
     public Guid SucursalDestinoId { get; set; }
 
+    /// <summary>Usuario (ADMIN) que creó la orden de compra. Sin navigation property: base de datos externa (MS-1).</summary>
+    public Guid CreadorId { get; set; }
+
+    /// <summary>Usuario (ADMIN) que aprobó la orden de compra. Null hasta que se aprueba. RN-13: debe ser distinto de CreadorId.</summary>
+    public Guid? AprobadorId { get; set; }
+
     public EstadoOrdenCompra Estado { get; set; } = EstadoOrdenCompra.BORRADOR;
 
     /// <summary>Código ISO de 3 letras de la moneda de la orden.</summary>
