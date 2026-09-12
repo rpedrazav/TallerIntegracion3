@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Http;
 using Microsoft.IdentityModel.Tokens;
 using POSCartService.Data;
 using System.Text;
@@ -41,6 +42,20 @@ builder.Services.AddCors(options =>
               .AllowAnyHeader()
               .AllowAnyMethod();
     });
+});
+
+// ─── Cliente HTTP para Pasarela de Pago (Stripe/Transbank) ──────────────────
+// RN-02: todo pago con tarjeta pasa por la pasarela externa vía HTTPS.
+// Nunca se procesan datos de tarjeta localmente (cumplimiento PCI DSS).
+builder.Services.AddHttpClient("PasarelaPago", client =>
+{
+    var baseUrl = builder.Configuration["PasarelaPago:BaseUrl"]
+        ?? throw new InvalidOperationException("PasarelaPago:BaseUrl no configurada en appsettings.json");
+    var timeoutSeconds = builder.Configuration.GetValue<int>("PasarelaPago:TimeoutSeconds", 30);
+
+    client.BaseAddress = new Uri(baseUrl);
+    client.Timeout = TimeSpan.FromSeconds(timeoutSeconds);
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
 });
 
 // ─── 4. Controllers + Swagger ────────────────────────────────────────────────
