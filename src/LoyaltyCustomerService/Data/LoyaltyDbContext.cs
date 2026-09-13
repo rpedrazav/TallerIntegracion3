@@ -5,6 +5,12 @@ namespace LoyaltyCustomerService.Data;
 
 public class LoyaltyDbContext(DbContextOptions<LoyaltyDbContext> options) : DbContext(options)
 {
+    /// <summary>
+    /// El tenant_id del request actual, establecido por TenantMiddleware.
+    /// EF Core aplica este valor en todos los filtros globales.
+    /// </summary>
+    public Guid? CurrentTenantId { get; set; }
+
     public DbSet<ClienteAfiliado> ClientesAfiliados => Set<ClienteAfiliado>();
     public DbSet<SaldoPuntos> SaldosPuntos => Set<SaldoPuntos>();
     public DbSet<MovimientoPuntos> MovimientosPuntos => Set<MovimientoPuntos>();
@@ -22,6 +28,9 @@ public class LoyaltyDbContext(DbContextOptions<LoyaltyDbContext> options) : DbCo
 
             entity.HasIndex(t => t.TenantId)
                   .HasDatabaseName("idx_tiers_membresia_tenant");
+
+            // FILTRO GLOBAL MULTI-TENANT: tenant_id propio
+            entity.HasQueryFilter(t => t.TenantId == CurrentTenantId);
         });
 
         // ClienteAfiliado
@@ -41,6 +50,9 @@ public class LoyaltyDbContext(DbContextOptions<LoyaltyDbContext> options) : DbCo
 
             entity.HasIndex(c => new { c.TenantId, c.QrCode })
                   .HasDatabaseName("idx_clientes_afiliados_tenant_qr");
+
+            // FILTRO GLOBAL MULTI-TENANT: tenant_id propio
+            entity.HasQueryFilter(c => c.TenantId == CurrentTenantId);
         });
 
         // SaldoPuntos (1 a 1 con ClienteAfiliado, PK = cliente_id)
@@ -52,6 +64,9 @@ public class LoyaltyDbContext(DbContextOptions<LoyaltyDbContext> options) : DbCo
                   .WithOne(c => c.SaldoPuntos)
                   .HasForeignKey<SaldoPuntos>(s => s.ClienteId)
                   .OnDelete(DeleteBehavior.Cascade);
+
+            // FILTRO GLOBAL MULTI-TENANT: heredado vía navegación
+            entity.HasQueryFilter(s => s.Cliente!.TenantId == CurrentTenantId);
         });
 
         // MovimientoPuntos (1 a N con ClienteAfiliado)
@@ -67,6 +82,9 @@ public class LoyaltyDbContext(DbContextOptions<LoyaltyDbContext> options) : DbCo
 
             entity.HasIndex(m => new { m.ClienteId, m.Timestamp })
                   .HasDatabaseName("idx_movimientos_puntos_cliente_timestamp");
+
+            // FILTRO GLOBAL MULTI-TENANT: heredado vía navegación
+            entity.HasQueryFilter(m => m.Cliente!.TenantId == CurrentTenantId);
         });
     }
 }

@@ -5,6 +5,12 @@ namespace AnalyticsNotificationService.Data;
 
 public class AnalyticsDbContext(DbContextOptions<AnalyticsDbContext> options) : DbContext(options)
 {
+    /// <summary>
+    /// El tenant_id del request actual, establecido por TenantMiddleware.
+    /// EF Core aplica este valor en todos los filtros globales.
+    /// </summary>
+    public Guid? CurrentTenantId { get; set; }
+
     public DbSet<KPIVenta> KPIsVentas => Set<KPIVenta>();
     public DbSet<Alerta> Alertas => Set<Alerta>();
     public DbSet<HistorialEnvio> HistorialEnvios => Set<HistorialEnvio>();
@@ -16,6 +22,11 @@ public class AnalyticsDbContext(DbContextOptions<AnalyticsDbContext> options) : 
         // Llave compuesta para KPIVenta: (tenant_id, sucursal_id, fecha)
         modelBuilder.Entity<KPIVenta>()
             .HasKey(k => new { k.TenantId, k.SucursalId, k.Fecha });
+
+        // Filtros Globales (Global Query Filters) para Aislamiento Multi-Tenant (RN-01 / RNF-01)
+        modelBuilder.Entity<KPIVenta>().HasQueryFilter(k => k.TenantId == CurrentTenantId);
+        modelBuilder.Entity<Alerta>().HasQueryFilter(a => a.TenantId == CurrentTenantId);
+        modelBuilder.Entity<HistorialEnvio>().HasQueryFilter(h => h.TenantId == CurrentTenantId);
 
         // Indices para aislamiento Multi-Tenant y consultas frecuentes (RNF-01)
         modelBuilder.Entity<KPIVenta>()
