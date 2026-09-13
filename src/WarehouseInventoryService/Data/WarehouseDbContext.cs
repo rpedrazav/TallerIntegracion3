@@ -1,10 +1,13 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using WarehouseInventoryService.Models;
+using System;
 
 namespace WarehouseInventoryService.Data;
 
 public class WarehouseDbContext : DbContext
 {
+    public Guid CurrentTenantId { get; set; } // Discriminador inyectado por middleware
+
     public WarehouseDbContext(DbContextOptions<WarehouseDbContext> options) : base(options)
     {
     }
@@ -17,21 +20,17 @@ public class WarehouseDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
-        // Llave compuesta para la tabla Stock
         modelBuilder.Entity<Stock>()
             .HasKey(s => new { s.ProductoId, s.SucursalId });
 
-        // Aislamiento Multi-Tenant: Indices obligatorios por tenant_id (RNF-01)
-        modelBuilder.Entity<Stock>()
-            .HasIndex(s => s.TenantId)
-            .HasDatabaseName("idx_stock_tenant");
+        // Filtros Globales (Global Query Filters) para Aislamiento Multi-Tenant
+        modelBuilder.Entity<Stock>().HasQueryFilter(s => s.TenantId == CurrentTenantId);
+        modelBuilder.Entity<Lote>().HasQueryFilter(l => l.TenantId == CurrentTenantId);
+        modelBuilder.Entity<MovimientoStock>().HasQueryFilter(m => m.TenantId == CurrentTenantId);
 
-        modelBuilder.Entity<Lote>()
-            .HasIndex(l => l.TenantId)
-            .HasDatabaseName("idx_lotes_tenant");
-
-        modelBuilder.Entity<MovimientoStock>()
-            .HasIndex(m => m.TenantId)
-            .HasDatabaseName("idx_movimientos_tenant");
+        // Indices
+        modelBuilder.Entity<Stock>().HasIndex(s => s.TenantId).HasDatabaseName("idx_stock_tenant");
+        modelBuilder.Entity<Lote>().HasIndex(l => l.TenantId).HasDatabaseName("idx_lotes_tenant");
+        modelBuilder.Entity<MovimientoStock>().HasIndex(m => m.TenantId).HasDatabaseName("idx_movimientos_tenant");
     }
 }
