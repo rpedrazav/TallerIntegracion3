@@ -1,0 +1,170 @@
+# ==============================================================================
+# Configuración Declarativa de Kong API Gateway (DB-less Mode)
+# Proyecto: GlobalMart OS (INTEGRA3)
+# Tarea: TI3-113
+#
+# Este archivo define todas las rutas, servicios y plugins de Kong.
+# Kong lo carga al arrancar via KONG_DECLARATIVE_CONFIG.
+#
+# Documentación: https://docs.konghq.com/gateway/3.6.x/production/deployment-topologies/db-less-and-declarative-config/
+# ==============================================================================
+
+_format_version: "3.0"
+_transform: true
+
+# ==============================================================================
+# Servicios y Rutas — Sprint 1
+# ==============================================================================
+# NOTA: Los hosts (tenant-identity-service, etc.) corresponden a los nombres
+# de servicio Docker que se agregarán cuando se containerizen los microservicios.
+# Por ahora están preparados para la integración futura.
+# ==============================================================================
+
+services:
+
+  # --------------------------------------------------------------------------
+  # MS-1: Tenant & Identity Service (puerto interno 5001)
+  # --------------------------------------------------------------------------
+  - name: tenant-identity-service
+    url: http://tenant-identity-service:5001
+    routes:
+      - name: auth-route
+        paths:
+          - /api/auth
+        strip_path: false
+        methods:
+          - GET
+          - POST
+          - PUT
+          - DELETE
+          - OPTIONS
+
+      - name: users-route
+        paths:
+          - /api/users
+        strip_path: false
+        methods:
+          - GET
+          - POST
+          - PUT
+          - DELETE
+          - OPTIONS
+
+      - name: tenants-route
+        paths:
+          - /api/tenants
+        strip_path: false
+        methods:
+          - GET
+          - POST
+          - PUT
+          - DELETE
+          - OPTIONS
+
+  # --------------------------------------------------------------------------
+  # MS-3: Catalog & Pricing Service (puerto interno 5003)
+  # --------------------------------------------------------------------------
+  - name: catalog-pricing-service
+    url: http://catalog-pricing-service:5003
+    routes:
+      - name: products-route
+        paths:
+          - /api/products
+        strip_path: false
+        methods:
+          - GET
+          - POST
+          - PUT
+          - DELETE
+          - OPTIONS
+
+      - name: prices-route
+        paths:
+          - /api/prices
+        strip_path: false
+        methods:
+          - GET
+          - POST
+          - PUT
+          - DELETE
+          - OPTIONS
+
+      - name: promotions-route
+        paths:
+          - /api/promotions
+        strip_path: false
+        methods:
+          - GET
+          - POST
+          - PUT
+          - DELETE
+          - OPTIONS
+
+  # --------------------------------------------------------------------------
+  # MS-5: POS & Cart Service (puerto interno 5005)
+  # --------------------------------------------------------------------------
+  - name: pos-cart-service
+    url: http://pos-cart-service:5005
+    routes:
+      - name: turnos-route
+        paths:
+          - /api/turnos
+        strip_path: false
+        methods:
+          - GET
+          - POST
+          - PUT
+          - DELETE
+          - OPTIONS
+
+      - name: ventas-route
+        paths:
+          - /api/ventas
+        strip_path: false
+        methods:
+          - GET
+          - POST
+          - PUT
+          - DELETE
+          - OPTIONS
+
+# ==============================================================================
+# Plugins Globales
+# ==============================================================================
+# NOTA: El plugin JWT se habilitará cuando MS-1 esté generando tokens.
+# Por ahora solo se configura rate-limiting para protección básica.
+# ==============================================================================
+
+plugins:
+  # Rate limiting global: máximo 100 requests por minuto por IP
+  - name: rate-limiting
+    config:
+      minute: 100
+      policy: local
+      fault_tolerant: true
+      hide_client_headers: false
+
+  # CORS para permitir requests desde Electron en desarrollo
+  - name: cors
+    config:
+      origins:
+        - "*"
+      methods:
+        - GET
+        - POST
+        - PUT
+        - DELETE
+        - OPTIONS
+        - PATCH
+      headers:
+        - Accept
+        - Authorization
+        - Content-Type
+        - Origin
+        - X-Requested-With
+        - X-Tenant-Id
+      exposed_headers:
+        - X-Auth-Token
+        - X-RateLimit-Remaining
+      credentials: true
+      max_age: 3600
