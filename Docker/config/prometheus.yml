@@ -1,0 +1,62 @@
+# ==============================================================================
+# Configuración de Prometheus
+# Proyecto: GlobalMart OS (INTEGRA3)
+# Tarea: TI3-114
+#
+# Documentación: https://prometheus.io/docs/prometheus/latest/configuration/configuration/
+# ==============================================================================
+
+global:
+  scrape_interval: 15s          # Frecuencia de recolección de métricas
+  evaluation_interval: 15s      # Frecuencia de evaluación de reglas
+  scrape_timeout: 10s           # Timeout por scrape
+
+scrape_configs:
+
+  # --------------------------------------------------------------------------
+  # Prometheus — Self-monitoring
+  # --------------------------------------------------------------------------
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["localhost:9090"]
+        labels:
+          service: "prometheus"
+
+  # --------------------------------------------------------------------------
+  # Kong API Gateway — Métricas del Gateway
+  # --------------------------------------------------------------------------
+  # Kong expone métricas en el puerto admin (8001) vía /metrics
+  # Requiere el plugin prometheus habilitado en Kong
+  - job_name: "kong"
+    static_configs:
+      - targets: ["kong:8001"]
+        labels:
+          service: "kong-gateway"
+    metrics_path: /metrics
+
+  # --------------------------------------------------------------------------
+  # Microservicios ASP.NET Core — Sprint 1 (futuros)
+  # --------------------------------------------------------------------------
+  # Descomentar cuando los microservicios estén containerizados y expongan
+  # métricas vía el paquete prometheus-net.AspNetCore
+  #
+  # - job_name: "ms1-tenant-identity"
+  #   static_configs:
+  #     - targets: ["tenant-identity-service:5001"]
+  #       labels:
+  #         service: "ms1-tenant-identity"
+  #   metrics_path: /metrics
+  #
+  # - job_name: "ms3-catalog-pricing"
+  #   static_configs:
+  #     - targets: ["catalog-pricing-service:5003"]
+  #       labels:
+  #         service: "ms3-catalog-pricing"
+  #   metrics_path: /metrics
+  #
+  # - job_name: "ms5-pos-cart"
+  #   static_configs:
+  #     - targets: ["pos-cart-service:5005"]
+  #       labels:
+  #         service: "ms5-pos-cart"
+  #   metrics_path: /metrics

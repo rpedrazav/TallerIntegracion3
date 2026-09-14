@@ -1,0 +1,21 @@
+# ==============================================================================
+# Grafana — Auto-Provisioning de Datasources
+# Proyecto: GlobalMart OS (INTEGRA3)
+# Tarea: TI3-114
+#
+# Este archivo se monta en /etc/grafana/provisioning/datasources/
+# y Grafana lo carga automáticamente al arrancar.
+# ==============================================================================
+
+apiVersion: 1
+
+datasources:
+  - name: Prometheus
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    isDefault: true
+    editable: true
+    jsonData:
+      timeInterval: "15s"
+      httpMethod: POST
