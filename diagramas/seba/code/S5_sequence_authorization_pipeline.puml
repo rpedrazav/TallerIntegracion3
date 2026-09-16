@@ -32,21 +32,24 @@ activate Electron
 Electron -> Kong : GET /api/v1/tax/reportes\nAuthorization: Bearer <JWT>
 activate Kong
 
-alt #FADBD8 Firma del JWT invalida
-  Kong --> Electron : 401 Unauthorized\n{"error":"Firma de token invalida"}
+Kong -> Kong : Decodificar header y payload\ndel JWT (sin validar firma aun)
+Kong -> Kong : Extraer claim "iss"\ndel payload
+
+Kong -> Kong : Buscar Consumer registrado\ncon credencial jwt.key = <iss>
+
+alt #FADBD8 Consumer no encontrado (iss desconocido)
+  Kong --> Electron : 401 Unauthorized\n{"error":"No se encontro Consumer\npara el iss recibido"}
   Electron --> Usuario : Redirige a /login
 
-else #D5F5E3 Firma valida (Kong deja pasar)
+else #D5F5E3 Consumer encontrado
 
-  note right of Kong
-    El plugin "jwt" de Kong solo
-    verifica la firma criptografica
-    (con el shared secret / clave
-    publica). No valida expiracion,
-    issuer ni audience: eso lo hace
-    ASP.NET Core mas adelante
-    (defensa en profundidad).
-  end note
+  Kong -> Kong : Validar firma HS256\nusando el "secret" del Consumer
+
+  alt #FADBD8 Firma del JWT invalida
+    Kong --> Electron : 401 Unauthorized\n{"error":"Firma de token invalida"}
+    Electron --> Usuario : Redirige a /login
+
+  else #D5F5E3 Firma valida (Kong deja pasar)
 
   Kong -> Pipeline : Enruta a tenant-identity:5001\n(request + header Authorization)
   activate Pipeline
@@ -113,6 +116,7 @@ else #D5F5E3 Firma valida (Kong deja pasar)
       Electron --> Usuario : Muestra el reporte
     end
   end
+end
 end
 
 deactivate Kong

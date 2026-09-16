@@ -132,6 +132,22 @@ else Usuario encontrado
 
       AuthService -> JwtGen : CreateAccessToken(\n  userId, tenantId, sucursalId,\n  role, tenantConfig)
       activate JwtGen
+
+      note right of JwtGen
+        **Firma del JWT:**
+        - Algoritmo: HS256 (HMAC)
+        - Claim "iss": globalmart-tenant-identity
+        - Secreto: variable de entorno
+          JWT_SIGNING_SECRET (nunca
+          hardcodeado)
+
+        Kong debe tener un Consumer
+        configurado con el MISMO "iss"
+        como key y el MISMO secreto,
+        para poder validar la firma
+        de este token (ver nota en S5).
+      end note
+
       JwtGen --> AuthService : accessToken (JWT firmado)
       deactivate JwtGen
 
