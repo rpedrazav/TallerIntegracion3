@@ -83,56 +83,45 @@ services:
           - name: jwt
 
   # --------------------------------------------------------------------------
-  # MS-3: Catalog & Pricing Service (puerto interno 5003)
+  # MS-3: Catalog & Pricing Service (puerto interno 8080)
   # --------------------------------------------------------------------------
   - name: catalog-pricing-service
-    url: http://catalog-pricing-service:5003
+    url: http://ms3:8080
     routes:
-      - name: products-route
+      # GET /api/products    — listar productos (con JWT)
+      # POST /api/products   — crear producto (con JWT)
+      - name: products-collection-route
         paths:
           - /api/products
         strip_path: false
         methods:
           - GET
           - POST
-          - PUT
-          - DELETE
-          - OPTIONS
         plugins:
           - name: jwt
 
-      - name: prices-route
+      # GET /api/products/{id}   — obtener producto por ID (con JWT)
+      # PUT /api/products/{id}   — actualizar producto por ID (con JWT)
+      - name: products-item-route
         paths:
-          - /api/prices
+          - ~/api/products/[^/]+$
         strip_path: false
         methods:
           - GET
-          - POST
           - PUT
-          - DELETE
-          - OPTIONS
-        plugins:
-          - name: jwt
-
-      - name: promotions-route
-        paths:
-          - /api/promotions
-        strip_path: false
-        methods:
-          - GET
-          - POST
-          - PUT
-          - DELETE
-          - OPTIONS
         plugins:
           - name: jwt
 
   # --------------------------------------------------------------------------
-  # MS-5: POS & Cart Service (puerto interno 5005)
+  # MS-5: POS & Cart Service (puerto interno 8080)
   # --------------------------------------------------------------------------
   - name: pos-cart-service
-    url: http://pos-cart-service:5005
+    url: http://ms5:8080
     routes:
+      # POST /api/turnos/abrir   — abrir turno de caja (con JWT)
+      # POST /api/turnos/cerrar  — cerrar turno de caja (con JWT)
+      # GET  /api/turnos/activo  — obtener turno activo (con JWT)
+      # El prefijo /api/turnos captura todos los sub-paths anteriores.
       - name: turnos-route
         paths:
           - /api/turnos
@@ -140,22 +129,18 @@ services:
         methods:
           - GET
           - POST
-          - PUT
-          - DELETE
-          - OPTIONS
         plugins:
           - name: jwt
 
+      # POST /api/ventas            — crear venta (con JWT)
+      # POST /api/ventas/{id}/items — agregar ítems a una venta (con JWT)
+      # El prefijo /api/ventas captura ambos sub-paths.
       - name: ventas-route
         paths:
           - /api/ventas
         strip_path: false
         methods:
-          - GET
           - POST
-          - PUT
-          - DELETE
-          - OPTIONS
         plugins:
           - name: jwt
 
