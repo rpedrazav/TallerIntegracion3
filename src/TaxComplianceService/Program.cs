@@ -3,12 +3,17 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using TaxComplianceService.Data;
+using TaxComplianceService.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // ─── 1. Base de Datos: PostgreSQL con EF Core ───────────────────────────────
 builder.Services.AddDbContext<TaxDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+// ─── Servicios de Dominio: Cálculo de Impuestos (MS-2) ───────────────────────
+builder.Services.AddSingleton<ITaxCalculatorService, TaxCalculatorService>();
+builder.Services.AddSingleton<TaxCalculatorService>();
 
 // ─── 2. Autenticación JWT ────────────────────────────────────────────────────
 var jwtKey = builder.Configuration["Jwt:Key"]
