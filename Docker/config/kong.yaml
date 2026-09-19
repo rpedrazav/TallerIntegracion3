@@ -23,21 +23,38 @@ _transform: true
 services:
 
   # --------------------------------------------------------------------------
-  # MS-1: Tenant & Identity Service (puerto interno 5001)
+  # MS-1: Tenant & Identity Service (puerto interno 8080)
   # --------------------------------------------------------------------------
   - name: tenant-identity-service
-    url: http://tenant-identity-service:5001
+    url: http://ms1:8080
     routes:
-      - name: auth-route
+      # Ruta pública: SOLO login. Sin autenticación (sin plugin jwt).
+      # Se separa de auth-me porque Kong aplica plugins a nivel de ruta completa:
+      # si login y /me compartieran ruta, no se podría excluir login del
+      # plugin jwt sin excluir también /me.
+      - name: auth-login
         paths:
-          - /api/auth
+          - /api/auth/login
+        strip_path: false
+        methods:
+          - POST
+        plugins:
+          # Cumple RN del informe: máx. 10 req/min en login (más estricto
+          # que el rate-limiting global de 100/min que ya cubre todo lo demás)
+          - name: rate-limiting
+            config:
+              minute: 10
+              policy: local
+
+      # Ruta protegida: GET /api/auth/me requiere JWT válido.
+      - name: auth-me
+        paths:
+          - /api/auth/me
         strip_path: false
         methods:
           - GET
-          - POST
-          - PUT
-          - DELETE
-          - OPTIONS
+        plugins:
+          - name: jwt
 
       - name: users-route
         paths:
@@ -49,6 +66,8 @@ services:
           - PUT
           - DELETE
           - OPTIONS
+        plugins:
+          - name: jwt
 
       - name: tenants-route
         paths:
@@ -60,52 +79,49 @@ services:
           - PUT
           - DELETE
           - OPTIONS
+        plugins:
+          - name: jwt
 
   # --------------------------------------------------------------------------
-  # MS-3: Catalog & Pricing Service (puerto interno 5003)
+  # MS-3: Catalog & Pricing Service (puerto interno 8080)
   # --------------------------------------------------------------------------
   - name: catalog-pricing-service
-    url: http://catalog-pricing-service:5003
+    url: http://ms3:8080
     routes:
-      - name: products-route
+      # GET /api/products    — listar productos (con JWT)
+      # POST /api/products   — crear producto (con JWT)
+      - name: products-collection-route
         paths:
           - /api/products
         strip_path: false
         methods:
           - GET
           - POST
-          - PUT
-          - DELETE
-          - OPTIONS
+        plugins:
+          - name: jwt
 
-      - name: prices-route
+      # GET /api/products/{id}   — obtener producto por ID (con JWT)
+      # PUT /api/products/{id}   — actualizar producto por ID (con JWT)
+      - name: products-item-route
         paths:
-          - /api/prices
+          - ~/api/products/[^/]+$
         strip_path: false
         methods:
           - GET
-          - POST
           - PUT
-          - DELETE
-          - OPTIONS
-
-      - name: promotions-route
-        paths:
-          - /api/promotions
-        strip_path: false
-        methods:
-          - GET
-          - POST
-          - PUT
-          - DELETE
-          - OPTIONS
+        plugins:
+          - name: jwt
 
   # --------------------------------------------------------------------------
-  # MS-5: POS & Cart Service (puerto interno 5005)
+  # MS-5: POS & Cart Service (puerto interno 8080)
   # --------------------------------------------------------------------------
   - name: pos-cart-service
-    url: http://pos-cart-service:5005
+    url: http://ms5:8080
     routes:
+      # POST /api/turnos/abrir   — abrir turno de caja (con JWT)
+      # POST /api/turnos/cerrar  — cerrar turno de caja (con JWT)
+      # GET  /api/turnos/activo  — obtener turno activo (con JWT)
+      # El prefijo /api/turnos captura todos los sub-paths anteriores.
       - name: turnos-route
         paths:
           - /api/turnos
@@ -113,29 +129,31 @@ services:
         methods:
           - GET
           - POST
-          - PUT
-          - DELETE
-          - OPTIONS
+        plugins:
+          - name: jwt
 
+      # POST /api/ventas            — crear venta (con JWT)
+      # POST /api/ventas/{id}/items — agregar ítems a una venta (con JWT)
+      # El prefijo /api/ventas captura ambos sub-paths.
       - name: ventas-route
         paths:
           - /api/ventas
         strip_path: false
         methods:
-          - GET
           - POST
-          - PUT
-          - DELETE
-          - OPTIONS
+        plugins:
+          - name: jwt
 
 # ==============================================================================
 # Plugins Globales
 # ==============================================================================
-# NOTA: El plugin JWT se habilitará cuando MS-1 esté generando tokens.
-# Por ahora solo se configura rate-limiting para protección básica.
 # ==============================================================================
 
 plugins:
+  # Expone métricas en /metrics (puerto admin 8001) para que Prometheus
+  # pueda scrapearlas — requerido por el job "kong" ya definido en prometheus.yml
+  - name: prometheus
+
   # Rate limiting global: máximo 100 requests por minuto por IP
   - name: rate-limiting
     config:
