@@ -1,7 +1,12 @@
-﻿# ==============================================================================
+# ==============================================================================
 # CI Workflow — GlobalMart OS (INTEGRA3)
 # Trigger: push a las ramas main y develop
-# Pasos: checkout → dotnet build (cada proyecto) → dotnet test
+# Pasos:
+#   1. checkout
+#   2. dotnet build (cada proyecto)
+#   3. docker compose up (infraestructura) + health check
+#   4. dotnet test (unit + integración)
+#   5. docker compose down (limpieza)
 # ==============================================================================
 
 name: CI
@@ -20,6 +25,12 @@ jobs:
   build-and-test:
     name: Build & Test (.NET 8)
     runs-on: ubuntu-latest
+
+    env:
+      # Variables mínimas para que docker compose arranque en CI
+      DB_USER: ci_user
+      DB_PASSWORD: ci_password
+      COMPOSE_FILE: Docker/docker-compose.yml
 
     steps:
       # ------------------------------------------------------------------
@@ -70,7 +81,77 @@ jobs:
         run: dotnet build src/TaxComplianceService/TaxComplianceService.csproj --no-restore --configuration Release
 
       # ------------------------------------------------------------------
-      # 5. Tests — ejecuta todos los proyectos de test encontrados en la solución
+      # 5. Levantar infraestructura con Docker Compose
+      #    Se excluye 'frontend' (requiere Electron/display) y servicios
+      #    de monitoreo (Prometheus/Grafana) no necesarios para los tests.
+      # ------------------------------------------------------------------
+      - name: Start infrastructure (Docker Compose)
+        run: |
+          docker compose -f $COMPOSE_FILE up -d \
+            postgres-tenant postgres-supply postgres-catalog \
+            postgres-pos postgres-tax postgres-warehouse \
+            postgres-analytics postgres-loyalty \
+            zookeeper kafka kong
+
+      # ------------------------------------------------------------------
+      # 6. Verificar que todos los contenedores están saludables
+      #    Espera hasta 120 s por servicio; falla si alguno no pasa
+      #    el healthcheck definido en docker-compose.yml.
+      # ------------------------------------------------------------------
+      - name: Wait for containers to be healthy
+        run: |
+          SERVICES=(
+            postgres-tenant
+            postgres-supply
+            postgres-catalog
+            postgres-pos
+            postgres-tax
+            postgres-warehouse
+            postgres-analytics
+            postgres-loyalty
+            zookeeper
+            kafka
+            kong
+          )
+
+          MAX_WAIT=120
+          INTERVAL=5
+
+          echo "Esperando que los contenedores esten healthy (timeout: ${MAX_WAIT}s cada uno)..."
+
+          for SERVICE in "${SERVICES[@]}"; do
+            echo "  -> Verificando: $SERVICE"
+            ELAPSED=0
+            while true; do
+              STATUS=$(docker inspect --format='{{.State.Health.Status}}' "$SERVICE" 2>/dev/null || echo "missing")
+
+              if [ "$STATUS" = "healthy" ]; then
+                echo "  OK $SERVICE — healthy"
+                break
+              fi
+
+              if [ $ELAPSED -ge $MAX_WAIT ]; then
+                echo "  FAIL $SERVICE sigue en estado '$STATUS' despues de ${MAX_WAIT}s"
+                docker compose -f $COMPOSE_FILE logs "$SERVICE" --tail=30
+                exit 1
+              fi
+
+              sleep $INTERVAL
+              ELAPSED=$((ELAPSED + INTERVAL))
+            done
+          done
+
+          echo "Todos los contenedores estan healthy. Listo para tests de integracion."
+
+      # ------------------------------------------------------------------
+      # 7. Tests unitarios e integración
       # ------------------------------------------------------------------
       - name: Run tests
         run: dotnet test GlobalMartOS.sln --no-build --configuration Release --verbosity normal
+
+      # ------------------------------------------------------------------
+      # 8. Limpieza — se ejecuta siempre, aunque los tests fallen
+      # ------------------------------------------------------------------
+      - name: Teardown infrastructure
+        if: always()
+        run: docker compose -f $COMPOSE_FILE down -v --remove-orphans
