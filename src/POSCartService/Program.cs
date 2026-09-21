@@ -4,6 +4,7 @@ using Microsoft.Extensions.Http;
 using Microsoft.IdentityModel.Tokens;
 using POSCartService.Data;
 using POSCartService.Repositories;
+using POSCartService.Services;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -12,6 +13,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<PosCartDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddScoped<ITurnoRepository, TurnoRepository>();
+builder.Services.AddScoped<ITurnoService, TurnoService>();
 
 // ─── 2. Autenticación JWT ────────────────────────────────────────────────────
 var jwtKey = builder.Configuration["Jwt:Key"]
