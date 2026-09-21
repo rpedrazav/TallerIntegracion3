@@ -28,16 +28,27 @@ services:
   - name: tenant-identity-service
     url: http://tenant-identity-service:5001
     routes:
+      # Ruta pública: solo POST /api/auth/login (no requiere JWT)
+      - name: auth-login-route
+        paths:
+          - /api/auth/login
+        strip_path: false
+        methods:
+          - POST
+          - OPTIONS
+
+      # Rutas protegidas de auth (GET, PUT, DELETE — requieren JWT)
       - name: auth-route
         paths:
           - /api/auth
         strip_path: false
         methods:
           - GET
-          - POST
           - PUT
           - DELETE
           - OPTIONS
+        plugins:
+          - name: jwt
 
       - name: users-route
         paths:
@@ -49,6 +60,8 @@ services:
           - PUT
           - DELETE
           - OPTIONS
+        plugins:
+          - name: jwt
 
       - name: tenants-route
         paths:
@@ -60,6 +73,8 @@ services:
           - PUT
           - DELETE
           - OPTIONS
+        plugins:
+          - name: jwt
 
   # --------------------------------------------------------------------------
   # MS-3: Catalog & Pricing Service (puerto interno 5003)
@@ -77,6 +92,8 @@ services:
           - PUT
           - DELETE
           - OPTIONS
+        plugins:
+          - name: jwt
 
       - name: prices-route
         paths:
@@ -88,6 +105,8 @@ services:
           - PUT
           - DELETE
           - OPTIONS
+        plugins:
+          - name: jwt
 
       - name: promotions-route
         paths:
@@ -99,6 +118,8 @@ services:
           - PUT
           - DELETE
           - OPTIONS
+        plugins:
+          - name: jwt
 
   # --------------------------------------------------------------------------
   # MS-5: POS & Cart Service (puerto interno 5005)
@@ -116,6 +137,8 @@ services:
           - PUT
           - DELETE
           - OPTIONS
+        plugins:
+          - name: jwt
 
       - name: ventas-route
         paths:
@@ -127,12 +150,11 @@ services:
           - PUT
           - DELETE
           - OPTIONS
+        plugins:
+          - name: jwt
 
 # ==============================================================================
 # Plugins Globales
-# ==============================================================================
-# NOTA: El plugin JWT se habilitará cuando MS-1 esté generando tokens.
-# Por ahora solo se configura rate-limiting para protección básica.
 # ==============================================================================
 
 plugins:
