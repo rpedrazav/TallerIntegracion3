@@ -311,8 +311,9 @@ services:
     image: kong:3.6
     container_name: kong
     restart: unless-stopped
-    mem_limit: 512m
-    cpus: 0.5
+    # mem_limit y cpus removidos: en Docker Desktop para Windows el límite de
+    # 512m causaba OOM kills en los workers de Kong. Sin límite explícito,
+    # Docker Desktop respeta la memoria asignada en sus Settings.
     environment:
       KONG_DATABASE: "off"
       KONG_DECLARATIVE_CONFIG: /etc/kong/kong.yaml
