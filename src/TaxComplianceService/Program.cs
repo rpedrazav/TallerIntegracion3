@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Polly;
 using System.Text;
 using TaxComplianceService.Data;
 using TaxComplianceService.Services;
@@ -15,17 +16,34 @@ builder.Services.AddDbContext<TaxDbContext>(options =>
 builder.Services.AddSingleton<ITaxCalculatorService, TaxCalculatorService>();
 builder.Services.AddSingleton<TaxCalculatorService>();
 
-// ─── Cliente HTTP hacia MS-1 (TenantIdentityService) ────────────────────────
+// ─── Cliente HTTP hacia MS-1 (TenantIdentityService) con Polly Retry Policy ─
 // IHttpClientFactory gestiona el pool de sockets y evita socket exhaustion.
 var ms1BaseUrl = builder.Configuration["Services:TenantIdentityService:BaseUrl"]
     ?? throw new InvalidOperationException("URL de MS-1 no configurada en Services:TenantIdentityService:BaseUrl");
 
-builder.Services.AddHttpClient(TaxComplianceService.Services.TenantConfigClient.HttpClientName, client =>
+builder.Services.AddHttpClient(TenantConfigClient.HttpClientName, client =>
 {
     client.BaseAddress = new Uri(ms1BaseUrl.TrimEnd('/') + "/");
     client.Timeout     = TimeSpan.FromSeconds(10);
     client.DefaultRequestHeaders.Add("Accept", "application/json");
-});
+})
+// Retry policy con Polly: reintentar hasta 2 veces si MS-1 no responde o devuelve error transitorio (red, 5xx, 408, timeout)
+.AddPolicyHandler((serviceProvider, request) =>
+    Polly.Extensions.Http.HttpPolicyExtensions
+        .HandleTransientHttpError()
+        .Or<TimeoutException>()
+        .WaitAndRetryAsync(
+            retryCount: 2,
+            sleepDurationProvider: retryAttempt => TimeSpan.FromMilliseconds(500 * retryAttempt),
+            onRetry: (outcome, timespan, retryAttempt, context) =>
+            {
+                var logger = serviceProvider.GetService<ILogger<TenantConfigClient>>();
+                logger?.LogWarning(
+                    "[Polly] Reintento {RetryAttempt}/2 tras {DelayMs}ms hacia MS-1 ({Reason})",
+                    retryAttempt,
+                    timespan.TotalMilliseconds,
+                    outcome.Exception?.Message ?? outcome.Result?.StatusCode.ToString());
+            }));
 
 builder.Services.AddScoped<ITenantConfigClient, TenantConfigClient>();
 
