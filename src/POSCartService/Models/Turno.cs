@@ -1,15 +1,15 @@
 namespace POSCartService.Models;
 
 /// <summary>
-/// Estado del turno de caja, según ERD (M3). 
-/// NOTA: el diagrama de estados de Daniel (DA4) define además EN_USO,
-/// PENDIENTE_CIERRE y EN_REVISION como estados intermedios de negocio.
-/// Pendiente de alinear con el equipo si esos estados se persisten o son solo transitorios en memoria.
+/// Estado del turno de caja, según ERD (M3).
 /// </summary>
 public enum EstadoTurno
 {
-    ABIERTO,
-    CERRADO
+    ABIERTO = 0,
+    CERRADO = 1,
+    EN_USO = 2,
+    PENDIENTE_CIERRE = 3,
+    EN_REVISION = 4
 }
 
 public class Turno
