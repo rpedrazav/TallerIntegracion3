@@ -14,6 +14,9 @@ builder.Services.AddFluentValidationAutoValidation();
 builder.Services.AddDbContext<CatalogPricingService.Data.CatalogDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+// Inyección del Repositorio
+builder.Services.AddScoped<CatalogPricingService.Data.IProductoRepository, CatalogPricingService.Data.ProductoRepository>();
+
 // Inyección de Autenticación JWT Stateless
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
