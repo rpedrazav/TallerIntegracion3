@@ -15,6 +15,20 @@ builder.Services.AddDbContext<TaxDbContext>(options =>
 builder.Services.AddSingleton<ITaxCalculatorService, TaxCalculatorService>();
 builder.Services.AddSingleton<TaxCalculatorService>();
 
+// ─── Cliente HTTP hacia MS-1 (TenantIdentityService) ────────────────────────
+// IHttpClientFactory gestiona el pool de sockets y evita socket exhaustion.
+var ms1BaseUrl = builder.Configuration["Services:TenantIdentityService:BaseUrl"]
+    ?? throw new InvalidOperationException("URL de MS-1 no configurada en Services:TenantIdentityService:BaseUrl");
+
+builder.Services.AddHttpClient(TaxComplianceService.Services.TenantConfigClient.HttpClientName, client =>
+{
+    client.BaseAddress = new Uri(ms1BaseUrl.TrimEnd('/') + "/");
+    client.Timeout     = TimeSpan.FromSeconds(10);
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+});
+
+builder.Services.AddScoped<ITenantConfigClient, TenantConfigClient>();
+
 // ─── 2. Autenticación JWT ────────────────────────────────────────────────────
 var jwtKey = builder.Configuration["Jwt:Key"]
     ?? throw new InvalidOperationException("JWT Key no configurada en appsettings.json");
