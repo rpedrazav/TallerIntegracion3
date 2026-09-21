@@ -1,9 +1,13 @@
+using FluentValidation;
+using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Polly;
 using System.Text;
 using TaxComplianceService.Data;
+using TaxComplianceService.Models;
+using TaxComplianceService.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,6 +15,9 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<TaxDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+// ─── Validación con FluentValidation ─────────────────────────────────────────
+builder.Services.AddFluentValidationAutoValidation();
+builder.Services.AddValidatorsFromAssemblyContaining<TaxCalculateRequestValidator>();
 
 // ─── Servicios de Dominio: Cálculo de Impuestos (MS-2) ───────────────────────
 builder.Services.AddSingleton<ITaxCalculatorService, TaxCalculatorService>();
