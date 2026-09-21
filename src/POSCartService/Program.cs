@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Http;
 using Microsoft.IdentityModel.Tokens;
 using POSCartService.Data;
+using POSCartService.Repositories;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -10,6 +11,7 @@ var builder = WebApplication.CreateBuilder(args);
 // ─── 1. Base de Datos: PostgreSQL con EF Core ───────────────────────────────
 builder.Services.AddDbContext<PosCartDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddScoped<ITurnoRepository, TurnoRepository>();
 
 // ─── 2. Autenticación JWT ────────────────────────────────────────────────────
 var jwtKey = builder.Configuration["Jwt:Key"]

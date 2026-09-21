@@ -2,15 +2,13 @@ namespace POSCartService.Models;
 
 /// <summary>
 /// Estado de la venta, según ERD (M3).
-/// NOTA: el diagrama de estados de Daniel (DA3) incluye además CANCELADA
-/// (venta abandonada antes de cobrar, sin impacto en stock ni boleta).
-/// Pendiente de confirmar con Martín si se agrega al ENUM de la tabla.
 /// </summary>
 public enum EstadoVenta
 {
     PENDIENTE,
     COMPLETADA,
-    ANULADA
+    ANULADA,
+    CANCELADA
 }
 
 public enum MetodoPagoVenta
