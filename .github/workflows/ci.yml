@@ -1,0 +1,76 @@
+﻿# ==============================================================================
+# CI Workflow — GlobalMart OS (INTEGRA3)
+# Trigger: push a las ramas main y develop
+# Pasos: checkout → dotnet build (cada proyecto) → dotnet test
+# ==============================================================================
+
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    branches:
+      - main
+      - develop
+
+jobs:
+  build-and-test:
+    name: Build & Test (.NET 8)
+    runs-on: ubuntu-latest
+
+    steps:
+      # ------------------------------------------------------------------
+      # 1. Checkout del repositorio
+      # ------------------------------------------------------------------
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # ------------------------------------------------------------------
+      # 2. Configurar .NET 8 SDK
+      # ------------------------------------------------------------------
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      # ------------------------------------------------------------------
+      # 3. Restaurar dependencias NuGet (solución completa)
+      # ------------------------------------------------------------------
+      - name: Restore dependencies
+        run: dotnet restore GlobalMartOS.sln
+
+      # ------------------------------------------------------------------
+      # 4. Build — cada microservicio
+      # ------------------------------------------------------------------
+      - name: Build TenantIdentityService
+        run: dotnet build src/TenantIdentityService/TenantIdentityService.csproj --no-restore --configuration Release
+
+      - name: Build CatalogPricingService
+        run: dotnet build src/CatalogPricingService/CatalogPricingService.csproj --no-restore --configuration Release
+
+      - name: Build POSCartService
+        run: dotnet build src/POSCartService/POSCartService.csproj --no-restore --configuration Release
+
+      - name: Build WarehouseInventoryService
+        run: dotnet build src/WarehouseInventoryService/WarehouseInventoryService.csproj --no-restore --configuration Release
+
+      - name: Build SupplyChainService
+        run: dotnet build src/SupplyChainService/SupplyChainService.csproj --no-restore --configuration Release
+
+      - name: Build LoyaltyCustomerService
+        run: dotnet build src/LoyaltyCustomerService/LoyaltyCustomerService.csproj --no-restore --configuration Release
+
+      - name: Build AnalyticsNotificationService
+        run: dotnet build src/AnalyticsNotificationService/AnalyticsNotificationService.csproj --no-restore --configuration Release
+
+      - name: Build TaxComplianceService
+        run: dotnet build src/TaxComplianceService/TaxComplianceService.csproj --no-restore --configuration Release
+
+      # ------------------------------------------------------------------
+      # 5. Tests — ejecuta todos los proyectos de test encontrados en la solución
+      # ------------------------------------------------------------------
+      - name: Run tests
+        run: dotnet test GlobalMartOS.sln --no-build --configuration Release --verbosity normal
