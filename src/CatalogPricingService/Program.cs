@@ -17,6 +17,9 @@ builder.Services.AddDbContext<CatalogPricingService.Data.CatalogDbContext>(optio
 // Inyección del Repositorio
 builder.Services.AddScoped<CatalogPricingService.Data.IProductoRepository, CatalogPricingService.Data.ProductoRepository>();
 
+// Inyección del Servicio de Productos
+builder.Services.AddScoped<CatalogPricingService.Services.IProductoService, CatalogPricingService.Services.ProductoService>();
+
 // Inyección de Autenticación JWT Stateless
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>

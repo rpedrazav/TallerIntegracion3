@@ -8,35 +8,48 @@ public class Producto
 {
     [Key]
     [Column("id")]
-    public Guid Id { get; set; } = Guid.NewGuid();
+    public Guid Id { get; set; }
 
     [Required]
-    [MaxLength(200)]
+    [Column("tenant_id")]
+    public Guid TenantId { get; set; }
+
+    [Required]
+    [MaxLength(150)]
     [Column("nombre")]
     public string Nombre { get; set; } = string.Empty;
+
+    [Column("descripcion")]
+    public string? Descripcion { get; set; }
 
     [Required]
     [MaxLength(50)]
     [Column("codigo_barras")]
     public string CodigoBarras { get; set; } = string.Empty;
 
-    [Column("precio", TypeName = "decimal(12,4)")]
-    public decimal Precio { get; set; }
+    [Column("codigo_qr_url")]
+    public string? CodigoQrUrl { get; set; }
 
-    [Required]
     [Column("categoria_id")]
-    public Guid CategoriaId { get; set; }
+    public Guid? CategoriaId { get; set; }
 
     [Required]
-    [Column("tenant_id")]
-    public Guid TenantId { get; set; }
+    [Column("uom_base_id")]
+    public Guid UomBaseId { get; set; }
 
-    [Column("activo")]
-    public bool Activo { get; set; } = true;
+    [Required]
+    [Column("precio_base", TypeName = "decimal(12,4)")]
+    public decimal PrecioBase { get; set; }
 
-    // Propiedades de navegacion
-    [ForeignKey(nameof(CategoriaId))]
-    public Categoria? Categoria { get; set; }
+    [Required]
+    [Column("es_peso_variable")]
+    public bool EsPesoVariable { get; set; }
 
-    public ICollection<Precio> Precios { get; set; } = new List<Precio>();
+    [Required]
+    [Column("is_active")]
+    public bool IsActive { get; set; }
+
+    [Required]
+    [Column("created_at")]
+    public DateTime CreatedAt { get; set; }
 }
