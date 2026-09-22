@@ -15,4 +15,9 @@ public interface ITurnoService
     /// Si montoFondoInicial es negativo.
     /// </exception>
     Task<Turno> Abrir(Guid cajeroId, Guid tenantId, Guid sucursalId, decimal montoFondoInicial);
+
+    /// <summary>
+    /// Cierra el turno activo del cajero dentro del tenant.
+    /// </summary>
+    Task<Turno?> Cerrar(Guid cajeroId, Guid tenantId);
 }
