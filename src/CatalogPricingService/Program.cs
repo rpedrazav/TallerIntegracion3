@@ -23,6 +23,9 @@ builder.Services.AddScoped<CatalogPricingService.Services.IProductoService, Cata
 // Inyección del Validador de Productos
 builder.Services.AddScoped<FluentValidation.IValidator<CatalogPricingService.DTOs.CreateProductoDto>, CatalogPricingService.Validators.CreateProductoDtoValidator>();
 
+// Inyección del Validador de Actualización de Productos (NUEVO - TI3-132)
+builder.Services.AddScoped<FluentValidation.IValidator<CatalogPricingService.DTOs.UpdateProductoDto>, CatalogPricingService.Validators.UpdateProductoDtoValidator>();
+
 // Inyección de Autenticación JWT Stateless
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
