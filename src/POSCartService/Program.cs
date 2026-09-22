@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Http;
 using Microsoft.IdentityModel.Tokens;
 using POSCartService.Data;
+using POSCartService.Middleware;
 using POSCartService.Repositories;
 using POSCartService.Services;
 using System.Text;
@@ -107,7 +108,7 @@ app.UseHttpsRedirection();
 app.UseCors("ElectronApp");
 app.UseAuthentication();
 app.UseAuthorization();
-// TODO: app.UseTenantMiddleware(); una vez creado el middleware para este servicio
+app.UseMiddleware<TenantMiddleware>();
 
 app.MapControllers();
 app.MapHealthChecks("/health");
