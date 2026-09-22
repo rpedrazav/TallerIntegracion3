@@ -58,6 +58,29 @@ public sealed class TurnosController : ControllerBase
         }
     }
 
+    [HttpGet("activo")]
+    [ProducesResponseType(typeof(Turno), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Activo()
+    {
+        var cajeroClaim = User.FindFirst("cajero_id")?.Value
+            ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+            ?? User.FindFirst("sub")?.Value;
+        var tenantClaim = User.FindFirst("tenant_id")?.Value;
+
+        if (!Guid.TryParse(cajeroClaim, out var cajeroId)
+            || !Guid.TryParse(tenantClaim, out var tenantId))
+        {
+            return Unauthorized(new { error = "Token inválido: faltan cajero_id/sub o tenant_id" });
+        }
+
+        var turno = await _turnoService.GetActivo(cajeroId, tenantId);
+        return turno is null
+            ? NotFound(new { error = "No existe un turno abierto para el cajero autenticado." })
+            : Ok(turno);
+    }
+
     [HttpPost("cerrar")]
     [ProducesResponseType(typeof(Turno), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]

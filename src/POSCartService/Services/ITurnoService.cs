@@ -20,4 +20,9 @@ public interface ITurnoService
     /// Cierra el turno activo del cajero dentro del tenant.
     /// </summary>
     Task<Turno?> Cerrar(Guid cajeroId, Guid tenantId);
+
+    /// <summary>
+    /// Obtiene el turno activo del cajero dentro del tenant.
+    /// </summary>
+    Task<Turno?> GetActivo(Guid cajeroId, Guid tenantId);
 }
