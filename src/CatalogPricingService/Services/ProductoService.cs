@@ -14,7 +14,6 @@ namespace CatalogPricingService.Services
 
         public async Task<Producto> UpdateProductoAsync(Guid id, Producto productoActualizado, Guid userTenantId)
         {
-            // RN-01: Validar que el producto existe Y pertenece al Tenant del usuario que hace la petición
             var productoExistente = await _repository.GetByIdAsync(id, userTenantId);
             
             if (productoExistente == null)
@@ -22,7 +21,6 @@ namespace CatalogPricingService.Services
                 throw new UnauthorizedAccessException("Acceso denegado: El producto no existe o pertenece a otro Minimarket.");
             }
 
-            // Actualizar solo los campos mutables permitidos
             productoExistente.Nombre = productoActualizado.Nombre;
             productoExistente.Descripcion = productoActualizado.Descripcion;
             productoExistente.PrecioBase = productoActualizado.PrecioBase;
@@ -31,10 +29,15 @@ namespace CatalogPricingService.Services
             productoExistente.IsActive = productoActualizado.IsActive;
             productoExistente.EsPesoVariable = productoActualizado.EsPesoVariable;
 
-            // Guardar en base de datos a través del repositorio
             await _repository.UpdateAsync(productoExistente);
 
             return productoExistente;
+        }
+
+        public async Task<(IEnumerable<Producto> Productos, int TotalCount)> GetAllProductosAsync(Guid tenantId, int page, int pageSize)
+        {
+            // Pasa la responsabilidad al repositorio que ya configuramos con paginación
+            return await _repository.GetAllByTenantAsync(tenantId, page, pageSize);
         }
     }
 }
