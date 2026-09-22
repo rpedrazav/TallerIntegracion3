@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using FluentValidation;
+using FluentValidation.AspNetCore;
 using Microsoft.Extensions.Http;
 using Microsoft.IdentityModel.Tokens;
 using POSCartService.Data;
@@ -15,6 +17,8 @@ builder.Services.AddDbContext<PosCartDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddScoped<ITurnoRepository, TurnoRepository>();
 builder.Services.AddScoped<ITurnoService, TurnoService>();
+builder.Services.AddFluentValidationAutoValidation();
+builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
 // ─── 2. Autenticación JWT ────────────────────────────────────────────────────
 var jwtKey = builder.Configuration["Jwt:Key"]
