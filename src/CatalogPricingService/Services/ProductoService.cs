@@ -12,6 +12,12 @@ namespace CatalogPricingService.Services
             _repository = repository;
         }
 
+        public async Task<Producto> CreateProductoAsync(Producto producto)
+        {
+            // RN-01: El tenant_id ya viene validado y asignado obligatoriamente desde el controlador
+            return await _repository.CreateAsync(producto);
+        }
+
         public async Task<Producto> UpdateProductoAsync(Guid id, Producto productoActualizado, Guid userTenantId)
         {
             var productoExistente = await _repository.GetByIdAsync(id, userTenantId);
@@ -36,7 +42,6 @@ namespace CatalogPricingService.Services
 
         public async Task<(IEnumerable<Producto> Productos, int TotalCount)> GetAllProductosAsync(Guid tenantId, int page, int pageSize)
         {
-            // Pasa la responsabilidad al repositorio que ya configuramos con paginación
             return await _repository.GetAllByTenantAsync(tenantId, page, pageSize);
         }
     }
