@@ -20,6 +20,9 @@ builder.Services.AddScoped<CatalogPricingService.Data.IProductoRepository, Catal
 // Inyección del Servicio de Productos
 builder.Services.AddScoped<CatalogPricingService.Services.IProductoService, CatalogPricingService.Services.ProductoService>();
 
+// Inyección del Validador de Productos
+builder.Services.AddScoped<FluentValidation.IValidator<CatalogPricingService.DTOs.CreateProductoDto>, CatalogPricingService.Validators.CreateProductoDtoValidator>();
+
 // Inyección de Autenticación JWT Stateless
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
