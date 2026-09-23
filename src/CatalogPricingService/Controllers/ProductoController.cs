@@ -11,7 +11,7 @@ namespace CatalogPricingService.Controllers
 {
     [ApiController]
     [Route("products")]
-    [Authorize] // RN-07: Obligatorio JWT
+    [Authorize]
     public class ProductoController : ControllerBase
     {
         private readonly IProductoService _service;
@@ -37,6 +37,22 @@ namespace CatalogPricingService.Controllers
 
             var result = await _service.GetAllProductosAsync(tenantId, page, pageSize);
             return Ok(new { data = result.Productos, totalCount = result.TotalCount, page, pageSize });
+        }
+
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetById(Guid id)
+        {
+            var tenantClaim = User.FindFirst("tenant_id")?.Value;
+            if (string.IsNullOrEmpty(tenantClaim) || !Guid.TryParse(tenantClaim, out Guid tenantId))
+                return Unauthorized(new { message = "Token inválido." });
+
+            var producto = await _service.GetProductoByIdAsync(id, tenantId);
+            
+            // RN-01: Si no existe o es de otro tenant, retorna 404 para no filtrar información
+            if (producto == null)
+                return NotFound(new { message = "Producto no encontrado o no pertenece a su catálogo." });
+
+            return Ok(producto);
         }
 
         [HttpPost]
@@ -76,7 +92,6 @@ namespace CatalogPricingService.Controllers
             if (string.IsNullOrEmpty(tenantClaim) || !Guid.TryParse(tenantClaim, out Guid tenantId))
                 return Unauthorized(new { message = "Token inválido." });
 
-            // RN-01: Inyectamos ID y TenantId directo del sistema para validar con seguridad
             dto.Id = id;
             dto.TenantId = tenantId;
 
@@ -98,7 +113,6 @@ namespace CatalogPricingService.Controllers
 
             try
             {
-                // El servicio valida que el producto exista y pertenezca al tenant del JWT
                 var updatedProducto = await _service.UpdateProductoAsync(id, productoActualizado, tenantId);
                 return Ok(updatedProducto);
             }

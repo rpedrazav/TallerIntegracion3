@@ -12,9 +12,13 @@ namespace CatalogPricingService.Services
             _repository = repository;
         }
 
+        public async Task<Producto?> GetProductoByIdAsync(Guid id, Guid tenantId)
+        {
+            return await _repository.GetByIdAsync(id, tenantId);
+        }
+
         public async Task<Producto> CreateProductoAsync(Producto producto)
         {
-            // RN-01: El tenant_id ya viene validado y asignado obligatoriamente desde el controlador
             return await _repository.CreateAsync(producto);
         }
 
@@ -23,9 +27,7 @@ namespace CatalogPricingService.Services
             var productoExistente = await _repository.GetByIdAsync(id, userTenantId);
             
             if (productoExistente == null)
-            {
                 throw new UnauthorizedAccessException("Acceso denegado: El producto no existe o pertenece a otro Minimarket.");
-            }
 
             productoExistente.Nombre = productoActualizado.Nombre;
             productoExistente.Descripcion = productoActualizado.Descripcion;
@@ -36,7 +38,6 @@ namespace CatalogPricingService.Services
             productoExistente.EsPesoVariable = productoActualizado.EsPesoVariable;
 
             await _repository.UpdateAsync(productoExistente);
-
             return productoExistente;
         }
 
