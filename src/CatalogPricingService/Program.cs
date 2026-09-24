@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using FluentValidation.AspNetCore;
+using CatalogPricingService.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -57,6 +58,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseAuthentication(); // 1. Verifica la firma del token
 app.UseAuthorization();  // 2. Verifica los roles del usuario
+app.UseMiddleware<TenantMiddleware>();
 
 app.MapControllers();
 
