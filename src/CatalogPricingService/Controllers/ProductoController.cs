@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using CatalogPricingService.Services;
 using CatalogPricingService.DTOs;
@@ -56,6 +56,22 @@ namespace CatalogPricingService.Controllers
 
             var result = await _service.GetAllProductosAsync(tenantId.Value, page, pageSize);
             return Ok(new { data = result.Productos, totalCount = result.TotalCount, page, pageSize });
+        }
+
+        [HttpGet("search")]
+        public async Task<IActionResult> Search(
+            [FromQuery] string q = "",
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 10)
+        {
+            var tenantId = GetTenantIdFromToken();
+            if (tenantId == null) return StatusCode(401, new { message = "Token inválido." });
+
+            if (string.IsNullOrWhiteSpace(q))
+                return BadRequest(new { message = "El parámetro 'q' es requerido." });
+
+            var result = await _service.SearchProductosAsync(tenantId.Value, q.Trim(), page, pageSize);
+            return Ok(new { data = result.Productos, totalCount = result.TotalCount, page, pageSize, query = q });
         }
 
         [HttpGet("{id}")]

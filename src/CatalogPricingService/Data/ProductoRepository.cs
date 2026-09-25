@@ -27,6 +27,21 @@ namespace CatalogPricingService.Data
             return (productos, totalCount);
         }
 
+        public async Task<(IEnumerable<Producto> Productos, int TotalCount)> SearchByNameAsync(Guid tenantId, string query, int page, int pageSize)
+        {
+            var q = _context.Productos
+                .Where(p => p.TenantId == tenantId && p.Nombre.Contains(query));
+
+            var totalCount = await q.CountAsync();
+
+            var productos = await q
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return (productos, totalCount);
+        }
+
         public async Task<Producto?> GetByIdAsync(Guid id, Guid tenantId)
         {
             // Verificamos el ID y que además pertenezca al minimarket correcto

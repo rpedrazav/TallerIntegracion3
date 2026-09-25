@@ -1,4 +1,4 @@
-﻿using CatalogPricingService.Data;
+using CatalogPricingService.Data;
 using CatalogPricingService.Models;
 
 namespace CatalogPricingService.Services
@@ -44,6 +44,11 @@ namespace CatalogPricingService.Services
         public async Task<(IEnumerable<Producto> Productos, int TotalCount)> GetAllProductosAsync(Guid tenantId, int page, int pageSize)
         {
             return await _repository.GetAllByTenantAsync(tenantId, page, pageSize);
+        }
+
+        public async Task<(IEnumerable<Producto> Productos, int TotalCount)> SearchProductosAsync(Guid tenantId, string query, int page, int pageSize)
+        {
+            return await _repository.SearchByNameAsync(tenantId, query, page, pageSize);
         }
     }
 }

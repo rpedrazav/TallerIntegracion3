@@ -1,4 +1,4 @@
-﻿using CatalogPricingService.Models;
+using CatalogPricingService.Models;
 
 namespace CatalogPricingService.Services
 {
@@ -8,5 +8,6 @@ namespace CatalogPricingService.Services
         Task<Producto> CreateProductoAsync(Producto producto);
         Task<Producto> UpdateProductoAsync(Guid id, Producto productoActualizado, Guid userTenantId);
         Task<(IEnumerable<Producto> Productos, int TotalCount)> GetAllProductosAsync(Guid tenantId, int page, int pageSize);
+        Task<(IEnumerable<Producto> Productos, int TotalCount)> SearchProductosAsync(Guid tenantId, string query, int page, int pageSize);
     }
 }
