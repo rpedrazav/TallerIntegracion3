@@ -17,6 +17,11 @@ namespace CatalogPricingService.Services
             return await _repository.GetByIdAsync(id, tenantId);
         }
 
+        public async Task<Producto?> GetProductoByBarcodeAsync(string barcode, Guid tenantId)
+        {
+            return await _repository.GetByBarcodeAsync(barcode, tenantId);
+        }
+
         public async Task<Producto> CreateProductoAsync(Producto producto)
         {
             return await _repository.CreateAsync(producto);

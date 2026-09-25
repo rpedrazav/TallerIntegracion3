@@ -74,6 +74,22 @@ namespace CatalogPricingService.Controllers
             return Ok(new { data = result.Productos, totalCount = result.TotalCount, page, pageSize, query = q });
         }
 
+        [HttpGet("lookup")]
+        public async Task<IActionResult> Lookup([FromQuery] string barcode)
+        {
+            var tenantId = GetTenantIdFromToken();
+            if (tenantId == null) return StatusCode(401, new { message = "Token inválido." });
+
+            if (string.IsNullOrWhiteSpace(barcode))
+                return BadRequest(new { message = "El parámetro 'barcode' es requerido." });
+
+            var producto = await _service.GetProductoByBarcodeAsync(barcode.Trim(), tenantId.Value);
+            if (producto == null)
+                return NotFound(new { message = "Producto no encontrado para el código de barras indicado." });
+
+            return Ok(producto);
+        }
+
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(Guid id)
         {
