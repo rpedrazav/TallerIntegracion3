@@ -22,11 +22,17 @@ builder.Services.AddScoped<CatalogPricingService.Data.ICategoriaRepository, Cata
 // Inyección del Servicio de Productos
 builder.Services.AddScoped<CatalogPricingService.Services.IProductoService, CatalogPricingService.Services.ProductoService>();
 
+// Inyección del Servicio de Categorias
+builder.Services.AddScoped<CatalogPricingService.Services.ICategoriaService, CatalogPricingService.Services.CategoriaService>();
+
 // Inyección del Validador de Productos
 builder.Services.AddScoped<FluentValidation.IValidator<CatalogPricingService.DTOs.CreateProductoDto>, CatalogPricingService.Validators.CreateProductoDtoValidator>();
 
 // Inyección del Validador de Actualización de Productos (NUEVO - TI3-132)
 builder.Services.AddScoped<FluentValidation.IValidator<CatalogPricingService.DTOs.UpdateProductoDto>, CatalogPricingService.Validators.UpdateProductoDtoValidator>();
+
+// Inyección del Validador de Categorias
+builder.Services.AddScoped<FluentValidation.IValidator<CatalogPricingService.DTOs.CreateCategoriaDto>, CatalogPricingService.Validators.CreateCategoriaDtoValidator>();
 
 // Inyección de Autenticación JWT Stateless
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)

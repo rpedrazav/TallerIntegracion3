@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using CatalogPricingService.Models;
 using System;
 
@@ -27,6 +27,13 @@ public class CatalogDbContext : DbContext
         modelBuilder.Entity<Categoria>().HasQueryFilter(c => c.TenantId == CurrentTenantId);
         modelBuilder.Entity<Producto>().HasQueryFilter(p => p.TenantId == CurrentTenantId);
         modelBuilder.Entity<Precio>().HasQueryFilter(p => p.TenantId == CurrentTenantId);
+
+        // Relacion auto-referenciada jerarquica de Categoria (parent_id nullable)
+        modelBuilder.Entity<Categoria>()
+            .HasOne(c => c.Parent)
+            .WithMany(c => c.Children)
+            .HasForeignKey(c => c.ParentId)
+            .OnDelete(DeleteBehavior.Restrict);
 
         // Indices
         modelBuilder.Entity<Categoria>().HasIndex(c => c.TenantId).HasDatabaseName("idx_categorias_tenant");
