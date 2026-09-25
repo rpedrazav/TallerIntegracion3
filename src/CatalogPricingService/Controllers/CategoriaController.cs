@@ -27,6 +27,28 @@ public class CategoriaController : ControllerBase
     }
 
     // ──────────────────────────────────────────────────────────────
+    // GET /categories
+    // ──────────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Lista todas las categorias activas del tenant autenticado.
+    ///
+    /// Responses:
+    ///   200 OK           – arreglo de categorias (puede ser vacio []).
+    ///   401 Unauthorized – JWT ausente o tenant_id invalido.
+    /// </summary>
+    [HttpGet]
+    public async Task<IActionResult> GetAll()
+    {
+        var tenantId = GetTenantIdFromToken();
+        if (tenantId == null)
+            return StatusCode(401, new { message = "Token inválido o tenant_id ausente." });
+
+        var categorias = await _service.GetAllCategoriasAsync(tenantId.Value);
+        return Ok(categorias);
+    }
+
+    // ──────────────────────────────────────────────────────────────
     // POST /categories
     // ──────────────────────────────────────────────────────────────
 

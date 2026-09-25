@@ -17,6 +17,13 @@ public class CategoriaService : ICategoriaService
     }
 
     /// <inheritdoc />
+    public async Task<IEnumerable<CategoriaResponseDto>> GetAllCategoriasAsync(Guid tenantId)
+    {
+        var categorias = await _repository.GetAllAsync(tenantId);
+        return categorias.Select(MapToResponse);
+    }
+
+    /// <inheritdoc />
     public async Task<CategoriaResponseDto> CreateCategoriaAsync(CreateCategoriaDto dto)
     {
         // Calcular el nivel jerarquico en base al padre
