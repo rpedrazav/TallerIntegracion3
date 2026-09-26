@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using FluentValidation.AspNetCore;
+using WarehouseInventoryService.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,6 +14,7 @@ builder.Services.AddFluentValidationAutoValidation();
 // Inyección de Base de Datos PostgreSQL
 builder.Services.AddDbContext<WarehouseInventoryService.Data.WarehouseDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddScoped<IStockRepository, StockRepository>();
 
 // Inyección de Autenticación JWT Stateless
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
