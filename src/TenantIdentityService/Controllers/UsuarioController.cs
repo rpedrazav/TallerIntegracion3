@@ -46,6 +46,33 @@ public class UsuarioController : ControllerBase
         });
     }
 
+    [HttpPost]
+    [ProducesResponseType(typeof(UsuarioDto), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<ActionResult<UsuarioDto>> CreateUser([FromBody] CrearUsuarioDto request)
+    {
+        var tenantClaim = User.FindFirst("tenant_id")?.Value;
+        if (!Guid.TryParse(tenantClaim, out var tenantId))
+            return Unauthorized(new { message = "El token no contiene un tenant_id válido." });
+
+        var usuario = new Usuario
+        {
+            TenantId = tenantId,
+            Nombre = request.Nombre,
+            Email = request.Email,
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
+            Activo = true,
+            CreadoEn = DateTime.UtcNow
+        };
+
+        var usuarioCreado = await _usuarioRepository.CreateAsync(usuario);
+        var usuarioDto = MapToDto(usuarioCreado);
+
+        return Created($"/api/v1/users/{usuarioCreado.Id}", usuarioDto);
+    }
+
     private static UsuarioDto MapToDto(Usuario usuario)
     {
         return new UsuarioDto
