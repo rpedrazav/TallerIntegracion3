@@ -73,6 +73,32 @@ public class UsuarioController : ControllerBase
         return Created($"/api/v1/users/{usuarioCreado.Id}", usuarioDto);
     }
 
+    [HttpPut("{id:guid}")]
+    [ProducesResponseType(typeof(UsuarioDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<UsuarioDto>> UpdateUser(
+        Guid id,
+        [FromBody] ActualizarUsuarioDto request)
+    {
+        var tenantClaim = User.FindFirst("tenant_id")?.Value;
+        if (!Guid.TryParse(tenantClaim, out var tenantId))
+            return Unauthorized(new { message = "El token no contiene un tenant_id válido." });
+
+        var usuario = await _usuarioRepository.GetByIdAsync(id, tenantId);
+        if (usuario is null)
+            return NotFound(new { message = "Usuario no encontrado." });
+
+        usuario.Nombre = request.Nombre;
+        usuario.Email = request.Email;
+
+        var usuarioActualizado = await _usuarioRepository.UpdateAsync(usuario);
+
+        return Ok(MapToDto(usuarioActualizado));
+    }
+
     private static UsuarioDto MapToDto(Usuario usuario)
     {
         return new UsuarioDto
