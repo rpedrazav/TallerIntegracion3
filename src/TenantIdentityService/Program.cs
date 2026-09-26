@@ -85,6 +85,7 @@ builder.Services.AddHealthChecks();
 // ─── 6. Servicios de Autenticación (Tarea Rodrigo W2) ────────────────────────
 // Scoped: una instancia por request HTTP (correcto para servicios con DbContext)
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
 builder.Services.AddScoped<IAuthService,    AuthService>();
 builder.Services.AddScoped<IJwtService,     JwtService>();
 
