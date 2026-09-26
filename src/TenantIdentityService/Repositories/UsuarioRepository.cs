@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using TenantIdentityService.Data;
+using TenantIdentityService.DTOs;
 using TenantIdentityService.Models;
 
 namespace TenantIdentityService.Repositories;
@@ -19,6 +20,32 @@ public class UsuarioRepository : IUsuarioRepository
             .IgnoreQueryFilters()
             .Where(usuario => usuario.TenantId == tenantId)
             .ToListAsync();
+    }
+
+    public async Task<PagedResult<Usuario>> GetActivePagedAsync(
+        Guid tenantId,
+        int page,
+        int pageSize)
+    {
+        var query = _db.Usuarios
+            .IgnoreQueryFilters()
+            .Where(usuario => usuario.TenantId == tenantId && usuario.Activo);
+
+        var totalItems = await query.CountAsync();
+        var items = await query
+            .OrderBy(usuario => usuario.Id)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        return new PagedResult<Usuario>
+        {
+            Items = items,
+            Page = page,
+            PageSize = pageSize,
+            TotalItems = totalItems,
+            TotalPages = (int)Math.Ceiling(totalItems / (double)pageSize)
+        };
     }
 
     public async Task<Usuario?> GetByIdAsync(Guid id, Guid tenantId)

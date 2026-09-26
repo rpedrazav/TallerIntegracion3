@@ -89,6 +89,9 @@ public class JwtService : IJwtService
             new("roles", JsonSerializer.Serialize(roles)),
         };
 
+        // Claims individuales requeridos por [Authorize(Roles = "ADMIN")].
+        claims.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role)));
+
         // ── 6. Firmar y construir el token ─────────────────────────────────────
         var key         = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);

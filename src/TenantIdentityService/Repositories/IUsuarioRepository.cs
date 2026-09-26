@@ -1,3 +1,4 @@
+using TenantIdentityService.DTOs;
 using TenantIdentityService.Models;
 
 namespace TenantIdentityService.Repositories;
@@ -5,6 +6,8 @@ namespace TenantIdentityService.Repositories;
 public interface IUsuarioRepository
 {
     Task<IEnumerable<Usuario>> GetAllAsync(Guid tenantId);
+
+    Task<PagedResult<Usuario>> GetActivePagedAsync(Guid tenantId, int page, int pageSize);
 
     Task<Usuario?> GetByIdAsync(Guid id, Guid tenantId);
 
