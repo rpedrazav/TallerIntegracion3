@@ -1,3 +1,5 @@
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TenantIdentityService.DTOs;
@@ -97,6 +99,33 @@ public class UsuarioController : ControllerBase
         var usuarioActualizado = await _usuarioRepository.UpdateAsync(usuario);
 
         return Ok(MapToDto(usuarioActualizado));
+    }
+
+    [HttpDelete("{id:guid}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> DeleteUser(Guid id)
+    {
+        var tenantClaim = User.FindFirst("tenant_id")?.Value;
+        if (!Guid.TryParse(tenantClaim, out var tenantId))
+            return Unauthorized(new { message = "El token no contiene un tenant_id válido." });
+
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                       ?? User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
+        if (!Guid.TryParse(userIdClaim, out var authenticatedUserId))
+            return Unauthorized(new { message = "El token no contiene un identificador de usuario válido." });
+
+        if (id == authenticatedUserId)
+            return BadRequest(new { message = "Un administrador no puede desactivarse a sí mismo." });
+
+        var deactivated = await _usuarioRepository.DeactivateAsync(id, tenantId);
+        if (!deactivated)
+            return NotFound(new { message = "Usuario no encontrado." });
+
+        return NoContent();
     }
 
     private static UsuarioDto MapToDto(Usuario usuario)
