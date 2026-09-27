@@ -1,4 +1,4 @@
-﻿import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import BarcodeInput from '../components/pos/BarcodeInput';
 import CartItem from '../components/pos/CartItem';
 
@@ -12,7 +12,7 @@ export interface ProductItem {
 export default function Pos() {
   const [cartItems, setCartItems] = useState<ProductItem[]>([
     { id: '1', name: 'Coca Cola 2L', price: 2500, quantity: 2 },
-    { id: '2', name: 'Pan de Molde Castao', price: 1800, quantity: 1 }
+    { id: '2', name: 'Pan de Molde Castaño', price: 1800, quantity: 1 }
   ]);
 
   const handleSearch = useCallback((query: string) => {
@@ -31,14 +31,14 @@ export default function Pos() {
 
   const handleCancelSale = () => {
     if (cartItems.length === 0) return;
-    if (window.confirm('Ests seguro de que deseas cancelar la venta actual? Se vaciar el carrito.')) {
+    if (window.confirm('¿Estás seguro de que deseas cancelar la venta actual? Se vaciará el carrito.')) {
       setCartItems([]);
     }
   };
 
   const handleCheckout = () => {
     console.log('Iniciando proceso de cobro...');
-    alert('Funcionalidad de cobro se implementar en el futuro.');
+    alert('Funcionalidad de cobro se implementará en el futuro.');
   };
 
   const { subtotal, totalItems } = useMemo(() => {
@@ -61,12 +61,12 @@ export default function Pos() {
   return (
     <div style={{ display: 'flex', height: 'calc(100vh - 100px)', gap: '1rem' }}>
       
-      {/* Columna Izquierda: Bsqueda y Escaneo */}
+      {/* Columna Izquierda: Búsqueda y Escaneo */}
       <div style={{ flex: '0 0 320px', display: 'flex', flexDirection: 'column', background: '#fff', padding: '1rem', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
         <h3 style={{ marginTop: 0, color: '#0ea5e9', fontSize: '1.25rem' }}>Buscar Producto</h3>
         <BarcodeInput onSearch={handleSearch} />
         <div style={{ flex: 1, border: '2px dashed #e5e7eb', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9ca3af', backgroundColor: '#f9fafb' }}>
-          [Resultados de bsqueda]
+          [Resultados de búsqueda]
         </div>
       </div>
 
@@ -84,7 +84,7 @@ export default function Pos() {
                 <circle cx="20" cy="21" r="1"></circle>
                 <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
               </svg>
-              <p style={{ fontSize: '1.25rem', margin: '0 0 0.5rem 0', color: '#6b7280', fontWeight: 500 }}>Carrito vaco</p>
+              <p style={{ fontSize: '1.25rem', margin: '0 0 0.5rem 0', color: '#6b7280', fontWeight: 500 }}>Carrito vacío</p>
               <p style={{ fontSize: '0.875rem', margin: 0 }}>Escanea o busca un producto para comenzar</p>
             </div>
           ) : (

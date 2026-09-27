@@ -1,4 +1,4 @@
-﻿import { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../hooks/useAuth';
@@ -42,9 +42,9 @@ export default function Login() {
         setError(typeof data === 'string' ? data : JSON.stringify(data));
       } else if (err.request) {
         // La peticin se hizo pero no hubo respuesta (CORS o servidor cado)
-        setError('Error de conexin (CORS o servidor cado). Revisa la consola (Ctrl+Shift+I).');
+        setError('Error de conexión (CORS o servidor caído). Revisa la consola (Ctrl+Shift+I).');
       } else {
-        setError('Error al enviar peticin: ' + err.message);
+        setError('Error al enviar petición: ' + err.message);
       }
     } finally {
       setIsLoading(false);
@@ -55,7 +55,7 @@ export default function Login() {
     <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: '#f4f6f8' }}>
       <form onSubmit={handleSubmit} style={{ background: 'white', padding: '2rem', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)', display: 'flex', flexDirection: 'column', gap: '1rem', width: '300px' }}>
         <h2 style={{ textAlign: 'center', color: '#38bdf8', margin: 0 }}>GlobalMart OS</h2>
-        <p style={{ textAlign: 'center', margin: 0, color: '#666' }}>Inicia Sesin</p>
+        <p style={{ textAlign: 'center', margin: 0, color: '#666' }}>Inicia Sesión</p>
         
         {error && <div style={{ color: '#DC2626', background: '#FEE2E2', padding: '0.5rem', borderRadius: '4px', fontSize: '0.875rem' }}>{error}</div>}
 
@@ -70,7 +70,7 @@ export default function Login() {
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column' }}>
-          <label style={{ fontSize: '0.875rem', marginBottom: '0.25rem' }}>Contrasea</label>
+          <label style={{ fontSize: '0.875rem', marginBottom: '0.25rem' }}>Contraseña</label>
           <input type="password" value={password} onChange={e => setPassword(e.target.value)} required style={{ padding: '0.5rem', borderRadius: '4px', border: '1px solid #ccc' }} />
         </div>
 
