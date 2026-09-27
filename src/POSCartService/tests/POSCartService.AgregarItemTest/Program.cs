@@ -587,6 +587,105 @@ public class Program
         Console.WriteLine();
 
         // ═══════════════════════════════════════════════════════════════════════════════
+        // SECCIÓN 10: GET /ventas/{id} — Estado completo del carrito
+        // ═══════════════════════════════════════════════════════════════════════════════
+        // Para esta sección creamos una venta fresca con ítems conocidos
+        // (la venta anterior quedó vacía tras los tests de DELETE)
+        Console.WriteLine("── 10. GET /ventas/{id}: Estado completo del carrito ──────────────────────");
+
+        // Crear una venta nueva con 2 ítems para inspeccionar la respuesta
+        var ventaParaGet = new Venta
+        {
+            TurnoId    = turno.Id,
+            CajeroId   = cajeroId,
+            SucursalId = sucursalId,
+            TenantId   = tenantId,
+            Subtotal   = 0m,
+            Impuestos  = 0m,
+            Total      = 0m,
+            MetodoPago = MetodoPagoVenta.TARJETA,
+            Estado     = EstadoVenta.PENDIENTE
+        };
+        await ventaRepo.CrearAsync(ventaParaGet);
+
+        // Agregar 2 ítems al carrito: Aceite (2u × $5.000) + Café (1u × $3.000)
+        await controller.AgregarItem(ventaParaGet.Id,
+            new AgregarItemRequest { ProductoId = productoAceiteId, Cantidad = 2 },
+            CancellationToken.None);
+        await controller.AgregarItem(ventaParaGet.Id,
+            new AgregarItemRequest { ProductoId = productoCafeId, Cantidad = 1 },
+            CancellationToken.None);
+        // Estado esperado: Subtotal=$13.000 | IVA=$2.470 | Total=$15.470
+
+        // GET-01: Sin JWT → 401
+        var ctrlSinAuthGet = CrearController(autenticado: false);
+        var resGetSinAuth = await ctrlSinAuthGet.GetById(ventaParaGet.Id);
+        Check("GET-01", "Sin JWT retorna 401 Unauthorized", resGetSinAuth is UnauthorizedObjectResult);
+
+        // GET-02: Venta inexistente → 404
+        var resGetNoExiste = await controller.GetById(Guid.NewGuid());
+        Check("GET-02", "Venta inexistente retorna 404 Not Found", resGetNoExiste is NotFoundObjectResult);
+
+        // GET-03: Venta existente → 200 OK con VentaResponse completo
+        var resGetOk = await controller.GetById(ventaParaGet.Id);
+        Check("GET-03", "Venta existente retorna 200 OK", resGetOk is OkObjectResult okGet && okGet.StatusCode == StatusCodes.Status200OK);
+
+        var ventaResp = (VentaResponse)((OkObjectResult)resGetOk).Value!;
+
+        // GET-04: Id de la venta correcto
+        Check("GET-04", "Response contiene el Id correcto de la venta",
+            ventaResp.Id == ventaParaGet.Id);
+
+        // GET-05: Estado PENDIENTE incluido en la respuesta
+        Check("GET-05", "Response incluye estado = PENDIENTE",
+            ventaResp.Estado == "PENDIENTE");
+
+        // GET-06: Método de pago correcto
+        Check("GET-06", "Response incluye metodo_pago = TARJETA",
+            ventaResp.MetodoPago == "TARJETA");
+
+        // GET-07: Colección de ítems incluye exactamente 2 ítems
+        Check("GET-07", "Response incluye colección de 2 ítems",
+            ventaResp.Items.Count == 2);
+
+        // GET-08: Totales actualizados correctos
+        Check("GET-08", "Response contiene Subtotal = $13.000 actualizado",
+            ventaResp.Subtotal == 13000m);
+
+        Check("GET-09", "Response contiene Impuestos (IVA) = $2.470 actualizado",
+            ventaResp.Impuestos == 2470m);
+
+        Check("GET-10", "Response contiene Total = $15.470 actualizado",
+            ventaResp.Total == 15470m);
+
+        // GET-11: Datos de cada ítem — verificar primer ítem (Aceite)
+        var itemAceiteResp = ventaResp.Items.FirstOrDefault(i => i.ProductoId == productoAceiteId);
+        Check("GET-11", "Ítem Aceite incluido en la respuesta con nombre correcto",
+            itemAceiteResp is not null && itemAceiteResp.NombreProducto.Contains("Aceite"));
+
+        Check("GET-12", "Ítem Aceite tiene PrecioUnitario = $5.000 y Subtotal = $10.000",
+            itemAceiteResp!.PrecioUnitario == 5000m && itemAceiteResp.Subtotal == 10000m);
+
+        Check("GET-13", "Ítem Aceite tiene Cantidad = 2",
+            itemAceiteResp.Cantidad == 2m);
+
+        // GET-14: Verificar segundo ítem (Café)
+        var itemCafeResp = ventaResp.Items.FirstOrDefault(i => i.ProductoId == productoCafeId);
+        Check("GET-14", "Ítem Café incluido en la respuesta con precio y subtotal correctos",
+            itemCafeResp is not null && itemCafeResp.PrecioUnitario == 3000m && itemCafeResp.Subtotal == 3000m);
+
+        // GET-15: Serialización JSON del VentaResponse completo
+        var jsonVenta = JsonSerializer.Serialize(ventaResp);
+        Check("GET-15", "JSON contiene 'estado'", jsonVenta.Contains("\"estado\":"));
+        Check("GET-16", "JSON contiene 'subtotal'", jsonVenta.Contains("\"subtotal\":"));
+        Check("GET-17", "JSON contiene 'impuestos'", jsonVenta.Contains("\"impuestos\":"));
+        Check("GET-18", "JSON contiene 'total'", jsonVenta.Contains("\"total\":"));
+        Check("GET-19", "JSON contiene 'items' con array no vacío", jsonVenta.Contains("\"items\":[{"));
+        Check("GET-20", "JSON contiene 'created_at'", jsonVenta.Contains("\"created_at\":"));
+
+        Console.WriteLine();
+
+        // ═══════════════════════════════════════════════════════════════════════════════
         // RESUMEN FINAL
         // ═══════════════════════════════════════════════════════════════════════════════
         Console.WriteLine("══════════════════════════════════════════════════════════════════════════");
@@ -600,6 +699,7 @@ public class Program
             Console.WriteLine("   • Manejo de errores: MS-3 no encontrado → 404; MS-2 no responde → 503");
             Console.WriteLine("   • PUT /ventas/{id}/items/{itemId}: modifica cantidad y recalcula subtotales/totales");
             Console.WriteLine("   • DELETE /ventas/{id}/items/{itemId}: elimina ítem y actualiza totales (MS-2)");
+            Console.WriteLine("   • GET /ventas/{id}: retorna estado completo del carrito con ítems y totales");
         }
         else
         {
