@@ -51,4 +51,22 @@ public interface IVentaService
     /// </summary>
     /// <exception cref="InvalidOperationException">Si la venta ya está ANULADA o CANCELADA.</exception>
     Task<Venta> AnularAsync(Guid ventaId, Guid cajeroId, string motivo);
+
+    /// <summary>
+    /// Agrega un ítem a una venta PENDIENTE y actualiza sus totales (subtotal, impuestos, total).
+    /// </summary>
+    /// <param name="ventaId">Id de la venta / carrito.</param>
+    /// <param name="item">Instancia del ítem a agregar.</param>
+    /// <param name="subtotal">Nuevo subtotal consolidado de la venta.</param>
+    /// <param name="impuestos">Nuevo total de impuestos (IVA) calculado.</param>
+    /// <param name="total">Nuevo total general de la venta.</param>
+    /// <exception cref="KeyNotFoundException">Si la venta no existe.</exception>
+    /// <exception cref="InvalidOperationException">Si la venta no está en estado PENDIENTE.</exception>
+    Task<(Venta Venta, ItemVenta Item)> AgregarItemAsync(
+        Guid ventaId,
+        ItemVenta item,
+        decimal subtotal,
+        decimal impuestos,
+        decimal total);
 }
+

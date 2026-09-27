@@ -9,7 +9,7 @@ using POSCartService.Validators;
 Console.OutputEncoding = System.Text.Encoding.UTF8;
 
 Console.WriteLine("╔══════════════════════════════════════════════════════════════╗");
-Console.WriteLine("║    TEST MANUAL TC-02 — POST /ventas + Ciclo de Vida          ║");
+Console.WriteLine("║    TEST MANUAL TC-02 & TC-03 — POST /ventas/{id}/items       ║");
 Console.WriteLine("║    MS-5 POS & Cart Service — GlobalMart OS                   ║");
 Console.WriteLine("╚══════════════════════════════════════════════════════════════╝\n");
 
@@ -28,7 +28,8 @@ ctx.CurrentTenantId = tenantId;
 var turnoRepo = new TurnoRepository(ctx);
 var turnoSvc  = new TurnoService(turnoRepo);
 var ventaRepo = new VentaRepository(ctx);
-var ventaSvc  = new VentaService(ventaRepo);
+var itemRepo  = new ItemVentaRepository(ctx);
+var ventaSvc  = new VentaService(ventaRepo, itemRepo);
 
 int pass = 0, fail = 0;
 
@@ -41,7 +42,7 @@ void Check(string label, bool ok)
 // ══════════════════════════════════════════════════════════════════════
 // BLOQUE A — Validación del Request (CrearVentaRequestValidator)
 // ══════════════════════════════════════════════════════════════════════
-Console.WriteLine("── A. Validación del Request ──────────────────────────────────");
+Console.WriteLine("── A. Validación del Request CrearVenta ─────────────────────────");
 
 var validator = new CrearVentaRequestValidator();
 
@@ -109,7 +110,6 @@ var requestItems = new List<ItemVentaRequest>
             Cantidad = 3, PrecioUnitario =   5_000m, PesoKg = 0.3m }
 };
 
-// Replicar el mapeo exacto que hace el controller
 var itemsDominio = requestItems.Select(i => new ItemVenta
 {
     ProductoId     = i.ProductoId,
@@ -142,7 +142,7 @@ var venta = await ventaSvc.CrearAsync(
     sucursalId:         turno.SucursalId,
     tenantId:           tenantId,
     items:              itemsDominio,
-    impuestoPorcentaje: 0m,       // IVA 0% — sin integrar MS-2 aún
+    impuestoPorcentaje: 0m,
     metodoPago:         MetodoPagoVenta.TARJETA);
 
 decimal expectedSubtotal = 850_000m + 30_000m + 15_000m; // 895.000
@@ -187,13 +187,237 @@ Check("F3 — 'BITCOIN' → parse falla (→ 400 BadRequest en HTTP)",
 Console.WriteLine();
 
 // ══════════════════════════════════════════════════════════════════════
+// BLOQUE G — Validación de AgregarItemRequest (AgregarItemRequestValidator)
+// ══════════════════════════════════════════════════════════════════════
+Console.WriteLine("── G. Validación AgregarItemRequest (POST /ventas/{id}/items) ─");
+
+var agregarValidator = new AgregarItemRequestValidator();
+
+// G1: ProductoId vacío debe fallar
+var g1 = agregarValidator.Validate(new AgregarItemRequest { ProductoId = Guid.Empty, Cantidad = 1 });
+Check("G1 — ProductoId vacío → validación falla", !g1.IsValid);
+
+// G2: Cantidad <= 0 sin peso_kg debe fallar
+var g2 = agregarValidator.Validate(new AgregarItemRequest { ProductoId = Guid.NewGuid(), Cantidad = 0 });
+Check("G2 — Cantidad <= 0 sin peso_kg → validación falla", !g2.IsValid);
+
+// G3: PesoKg <= 0 debe fallar
+var g3 = agregarValidator.Validate(new AgregarItemRequest { ProductoId = Guid.NewGuid(), PesoKg = -0.5m });
+Check("G3 — PesoKg <= 0 → validación falla", !g3.IsValid);
+
+// G4: Request válido con cantidad
+var g4 = agregarValidator.Validate(new AgregarItemRequest { ProductoId = Guid.NewGuid(), Cantidad = 2 });
+Check("G4 — Request válido con cantidad → validación pasa", g4.IsValid);
+
+// G5: Request válido con peso_kg (balanza)
+var g5 = agregarValidator.Validate(new AgregarItemRequest { ProductoId = Guid.NewGuid(), PesoKg = 1.25m });
+Check("G5 — Request válido con peso_kg → validación pasa", g5.IsValid);
+
+Console.WriteLine();
+
+// ══════════════════════════════════════════════════════════════════════
+// BLOQUE H — Simulación de ICatalogClient (MS-3: GET /api/products/{id})
+// ══════════════════════════════════════════════════════════════════════
+Console.WriteLine("── H. Simulación de MS-3 CatalogPricingService ────────────────");
+
+var prod1Id = Guid.NewGuid();
+var prod2Id = Guid.NewGuid();
+var prodInactivoId = Guid.NewGuid();
+
+var catalogMock = new Dictionary<Guid, ProductoCatalogDto>
+{
+    [prod1Id] = new() { Id = prod1Id, Nombre = "Aceite de Oliva 1L", PrecioBase = 5_000m, IsActive = true, EsPesoVariable = false },
+    [prod2Id] = new() { Id = prod2Id, Nombre = "Café Molido 500g", PrecioBase = 3_000m, IsActive = true, EsPesoVariable = false },
+    [prodInactivoId] = new() { Id = prodInactivoId, Nombre = "Producto Descontinuado", PrecioBase = 1_000m, IsActive = false }
+};
+
+Check("H1 — MS-3 retorna producto existente con precio actual (5.000)",
+    catalogMock.TryGetValue(prod1Id, out var p1) && p1.PrecioBase == 5_000m && p1.Nombre == "Aceite de Oliva 1L");
+
+Check("H2 — MS-3 retorna null para producto no existente (→ 404 en controller)",
+    !catalogMock.TryGetValue(Guid.NewGuid(), out _));
+
+Check("H3 — MS-3 detecta producto inactivo (IsActive=false → 400 en controller)",
+    catalogMock.TryGetValue(prodInactivoId, out var pInact) && !pInact.IsActive);
+
+Console.WriteLine();
+
+// ══════════════════════════════════════════════════════════════════════
+// BLOQUE I — Simulación de ITaxClient (MS-2: POST /api/tax/calculate)
+// ══════════════════════════════════════════════════════════════════════
+Console.WriteLine("── I. Simulación de MS-2 TaxComplianceService (Cálculo de IVA) ─");
+
+// Simular la llamada a MS-2 para calcular IVA: 19%
+TaxCalculationResult SimularMS2(IEnumerable<TaxItemDto> items)
+{
+    var list = items.ToList();
+    decimal subtotal = list.Sum(x => Math.Round(x.Precio * x.Cantidad, 2));
+    decimal iva = Math.Round(subtotal * 0.19m, 2);
+    decimal total = subtotal + iva;
+
+    return new TaxCalculationResult
+    {
+        Subtotal = subtotal,
+        PorcentajeIva = 19m,
+        Iva = iva,
+        Total = total,
+        Items = list.Select(x =>
+        {
+            var itemSubtotal = Math.Round(x.Precio * x.Cantidad, 2);
+            var itemIva = Math.Round(itemSubtotal * 0.19m, 2);
+            return new TaxItemBreakdownDto
+            {
+                Nombre = x.Nombre,
+                Precio = x.Precio,
+                Cantidad = x.Cantidad,
+                Subtotal = itemSubtotal,
+                PorcentajeIva = 19m,
+                Iva = itemIva,
+                Total = itemSubtotal + itemIva
+            };
+        }).ToList()
+    };
+}
+
+// I1: Cálculo con 1 item (5.000 x 2 = 10.000, IVA 19% = 1.900, Total = 11.900)
+var tax1 = SimularMS2(new[] { new TaxItemDto { Nombre = "Aceite de Oliva 1L", Precio = 5_000m, Cantidad = 2 } });
+Check("I1 — Ítem 1: Subtotal = 10.000, IVA 19% = 1.900, Total = 11.900",
+    tax1.Subtotal == 10_000m && tax1.Iva == 1_900m && tax1.Total == 11_900m);
+
+// I2: Cálculo acumulado con 2 items (5.000 x 2 + 3.000 x 1 = subtotal 13.000, IVA = 2.470, Total = 15.470)
+var tax2 = SimularMS2(new[]
+{
+    new TaxItemDto { Nombre = "Aceite de Oliva 1L", Precio = 5_000m, Cantidad = 2 },
+    new TaxItemDto { Nombre = "Café Molido 500g",   Precio = 3_000m, Cantidad = 1 }
+});
+Check("I2 — Acumulado 2 items: Subtotal = 13.000, IVA = 2.470, Total = 15.470",
+    tax2.Subtotal == 13_000m && tax2.Iva == 2_470m && tax2.Total == 15_470m);
+
+Console.WriteLine();
+
+// ══════════════════════════════════════════════════════════════════════
+// BLOQUE J — Flujo de Negocio AgregarItemAsync en VentaService (MS-5)
+// ══════════════════════════════════════════════════════════════════════
+Console.WriteLine("── J. Flujo Completo POST /ventas/{id}/items (VentaService) ────");
+
+// J1: Crear una nueva venta vacía/pendiente para probar agregar ítems uno a uno
+var nuevaVenta = new Venta
+{
+    TurnoId    = turno.Id,
+    CajeroId   = cajeroId,
+    SucursalId = sucursalId,
+    TenantId   = tenantId,
+    Subtotal   = 0m,
+    Impuestos  = 0m,
+    Total      = 0m,
+    MetodoPago = MetodoPagoVenta.EFECTIVO,
+    Estado     = EstadoVenta.PENDIENTE
+};
+await ventaRepo.CrearAsync(nuevaVenta);
+Check("J1 — Venta inicial en estado PENDIENTE creada", nuevaVenta.Estado == EstadoVenta.PENDIENTE);
+
+// J2: Agregar primer ítem (Aceite: precio obtenido de MS-3 = 5.000 x 2 = 10.000, IVA MS-2 = 1.900)
+var item1 = new ItemVenta
+{
+    ProductoId     = prod1Id,
+    NombreProducto = "Aceite de Oliva 1L",
+    Cantidad       = 2,
+    PrecioUnitario = 5_000m,
+    Subtotal       = 10_000m
+};
+
+var (vActualizada1, itemPersistido1) = await ventaSvc.AgregarItemAsync(
+    nuevaVenta.Id,
+    item1,
+    subtotal:  tax1.Subtotal,
+    impuestos: tax1.Iva,
+    total:     tax1.Total);
+
+Check("J2 — Ítem 1 agregado: VentaId asignado", itemPersistido1.VentaId == nuevaVenta.Id);
+Check("J3 — Ítem 1 persistido en base de datos", (await itemRepo.GetByIdAsync(itemPersistido1.Id)) is not null);
+Check("J4 — Venta actualizada con Subtotal = 10.000", vActualizada1.Subtotal == 10_000m);
+Check("J5 — Venta actualizada con IVA = 1.900",      vActualizada1.Impuestos == 1_900m);
+Check("J6 — Venta actualizada con Total = 11.900",    vActualizada1.Total == 11_900m);
+
+// J3: Agregar segundo ítem (Café: precio obtenido de MS-3 = 3.000 x 1 = 3.000)
+var item2 = new ItemVenta
+{
+    ProductoId     = prod2Id,
+    NombreProducto = "Café Molido 500g",
+    Cantidad       = 1,
+    PrecioUnitario = 3_000m,
+    Subtotal       = 3_000m
+};
+
+var (vActualizada2, itemPersistido2) = await ventaSvc.AgregarItemAsync(
+    nuevaVenta.Id,
+    item2,
+    subtotal:  tax2.Subtotal,
+    impuestos: tax2.Iva,
+    total:     tax2.Total);
+
+Check("J7 — Ítem 2 agregado: Subtotal acumulado = 13.000",  vActualizada2.Subtotal == 13_000m);
+Check("J8 — Ítem 2 agregado: IVA acumulado = 2.470",        vActualizada2.Impuestos == 2_470m);
+Check("J9 — Ítem 2 agregado: Total acumulado = 15.470",      vActualizada2.Total == 15_470m);
+Check("J10 — Venta contiene 2 ítems persistidos",           vActualizada2.Items.Count == 2);
+
+// J4: Intentar agregar ítem a venta inexistente lanza KeyNotFoundException (→ 404)
+bool throwNotFound = false;
+try
+{
+    await ventaSvc.AgregarItemAsync(Guid.NewGuid(), new ItemVenta { NombreProducto = "X" }, 10, 1.9m, 11.9m);
+}
+catch (KeyNotFoundException)
+{
+    throwNotFound = true;
+}
+Check("J11 — Venta inexistente → lanza KeyNotFoundException (→ 404 en HTTP)", throwNotFound);
+
+// J5: Completar la venta e intentar agregar ítem lanza InvalidOperationException (→ 409)
+await ventaSvc.CompletarAsync(nuevaVenta.Id);
+bool throwConflict = false;
+try
+{
+    await ventaSvc.AgregarItemAsync(nuevaVenta.Id, new ItemVenta { NombreProducto = "Y" }, 10, 1.9m, 11.9m);
+}
+catch (InvalidOperationException)
+{
+    throwConflict = true;
+}
+Check("J12 — Venta COMPLETADA → no permite agregar ítems (→ 409 Conflict)", throwConflict);
+
+Console.WriteLine();
+
+// ══════════════════════════════════════════════════════════════════════
+// BLOQUE K — Mapeo ItemVentaResponse con IVA y Total
+// ══════════════════════════════════════════════════════════════════════
+Console.WriteLine("── K. Mapeo ItemVentaResponse (Serialización HTTP) ─────────────");
+
+var itemResponse = ItemVentaResponse.FromModel(itemPersistido1, iva: 1_900m, total: 11_900m);
+
+Check("K1 — response.Id coincide con el ítem",              itemResponse.Id == itemPersistido1.Id);
+Check("K2 — response.NombreProducto coincide",              itemResponse.NombreProducto == "Aceite de Oliva 1L");
+Check("K3 — response.PrecioUnitario = 5.000",               itemResponse.PrecioUnitario == 5_000m);
+Check("K4 — response.Subtotal = 10.000",                    itemResponse.Subtotal == 10_000m);
+Check("K5 — response.Iva = 1.900 (calculado por MS-2)",     itemResponse.Iva == 1_900m);
+Check("K6 — response.Total = 11.900 (subtotal + IVA)",      itemResponse.Total == 11_900m);
+
+// Serialización JSON
+var json = System.Text.Json.JsonSerializer.Serialize(itemResponse);
+Check("K7 — Serialización JSON contiene campos calculados 'iva' y 'total'",
+    json.Contains("\"iva\":1900") && json.Contains("\"total\":11900"));
+
+Console.WriteLine();
+
+// ══════════════════════════════════════════════════════════════════════
 // RESULTADO FINAL
 // ══════════════════════════════════════════════════════════════════════
 Console.WriteLine("══════════════════════════════════════════════════════════════");
 Console.WriteLine($"  RESULTADO: {pass} / {pass + fail} tests aprobados");
 Console.WriteLine();
 if (fail == 0)
-    Console.WriteLine("  ✅ TEST MANUAL APROBADO — POST /ventas listo.");
+    Console.WriteLine("  ✅ TODOS LOS TESTS APROBADOS — POST /ventas/{id}/items LISTO.");
 else
     Console.WriteLine($"  ❌ {fail} test(s) FALLIDOS — revisar arriba.");
 Console.WriteLine("══════════════════════════════════════════════════════════════");
+

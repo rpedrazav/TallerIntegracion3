@@ -56,8 +56,8 @@ builder.Services.AddCors(options =>
     });
 });
 
-// â”€â”€â”€ Cliente HTTP para Pasarela de Pago (Stripe/Transbank) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// RN-02: todo pago con tarjeta pasa por la pasarela externa vÃ­a HTTPS.
+// ─── Cliente HTTP para Pasarela de Pago (Stripe/Transbank) ──────────────────────
+// RN-02: todo pago con tarjeta pasa por la pasarela externa vía HTTPS.
 // Nunca se procesan datos de tarjeta localmente (cumplimiento PCI DSS).
 builder.Services.AddHttpClient("PasarelaPago", client =>
 {
@@ -69,6 +69,27 @@ builder.Services.AddHttpClient("PasarelaPago", client =>
     client.Timeout = TimeSpan.FromSeconds(timeoutSeconds);
     client.DefaultRequestHeaders.Add("Accept", "application/json");
 });
+
+// ─── Clientes HTTP hacia microservicios MS-3 y MS-2 ───────────────────────────
+builder.Services.AddHttpClient(CatalogClient.HttpClientName, client =>
+{
+    var baseUrl = builder.Configuration["Services:CatalogPricingService:BaseUrl"] ?? "http://localhost:5003";
+    client.BaseAddress = new Uri(baseUrl.TrimEnd('/') + "/");
+    client.Timeout = TimeSpan.FromSeconds(10);
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+});
+
+builder.Services.AddHttpClient(TaxClient.HttpClientName, client =>
+{
+    var baseUrl = builder.Configuration["Services:TaxComplianceService:BaseUrl"] ?? "http://localhost:5002";
+    client.BaseAddress = new Uri(baseUrl.TrimEnd('/') + "/");
+    client.Timeout = TimeSpan.FromSeconds(10);
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+});
+
+builder.Services.AddScoped<ICatalogClient, CatalogClient>();
+builder.Services.AddScoped<ITaxClient, TaxClient>();
+
 
 // â”€â”€â”€ 4. Controllers + Swagger â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 builder.Services.AddControllers();

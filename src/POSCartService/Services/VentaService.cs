@@ -6,11 +6,14 @@ namespace POSCartService.Services;
 public class VentaService : IVentaService
 {
     private readonly IVentaRepository _ventaRepository;
+    private readonly IItemVentaRepository? _itemVentaRepository;
 
-    public VentaService(IVentaRepository ventaRepository)
+    public VentaService(IVentaRepository ventaRepository, IItemVentaRepository? itemVentaRepository = null)
     {
-        _ventaRepository = ventaRepository;
+        _ventaRepository = ventaRepository ?? throw new ArgumentNullException(nameof(ventaRepository));
+        _itemVentaRepository = itemVentaRepository;
     }
+
 
     /// <inheritdoc/>
     public Task<Venta?> GetByIdAsync(Guid ventaId)
@@ -96,4 +99,44 @@ public class VentaService : IVentaService
 
         return await _ventaRepository.ActualizarAsync(venta);
     }
+
+    /// <inheritdoc/>
+    public async Task<(Venta Venta, ItemVenta Item)> AgregarItemAsync(
+        Guid ventaId,
+        ItemVenta item,
+        decimal subtotal,
+        decimal impuestos,
+        decimal total)
+    {
+        var venta = await _ventaRepository.GetByIdAsync(ventaId)
+            ?? throw new KeyNotFoundException($"Venta {ventaId} no encontrada.");
+
+        if (venta.Estado != EstadoVenta.PENDIENTE)
+            throw new InvalidOperationException(
+                $"Solo se pueden agregar ítems a una venta PENDIENTE. Estado actual: {venta.Estado}.");
+
+        item.VentaId = ventaId;
+
+        // Si el repositorio de ítems está disponible, persistir el ítem individual
+        if (_itemVentaRepository is not null)
+        {
+            await _itemVentaRepository.CrearAsync(item);
+        }
+
+        // Actualizar totales calculados de la venta padre
+        venta.Subtotal  = subtotal;
+        venta.Impuestos = impuestos;
+        venta.Total     = total;
+
+        await _ventaRepository.ActualizarAsync(venta);
+
+        // Añadir a la colección en memoria si no está ya
+        if (!venta.Items.Any(i => i.Id == item.Id))
+        {
+            venta.Items.Add(item);
+        }
+
+        return (venta, item);
+    }
 }
+

@@ -60,7 +60,7 @@ public sealed record VentaResponse
         MetodoPago = venta.MetodoPago.ToString(),
         Estado     = venta.Estado.ToString(),
         CreatedAt  = venta.CreatedAt,
-        Items      = venta.Items.Select(ItemVentaResponse.FromModel).ToList()
+        Items      = venta.Items.Select(i => ItemVentaResponse.FromModel(i)).ToList()
     };
 }
 
@@ -90,7 +90,18 @@ public sealed record ItemVentaResponse
     [JsonPropertyName("subtotal")]
     public decimal Subtotal { get; init; }
 
-    public static ItemVentaResponse FromModel(Models.ItemVenta item) => new()
+    [JsonPropertyName("iva")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public decimal? Iva { get; init; }
+
+    [JsonPropertyName("total")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public decimal? Total { get; init; }
+
+    public static ItemVentaResponse FromModel(Models.ItemVenta item) =>
+        FromModel(item, null, null);
+
+    public static ItemVentaResponse FromModel(Models.ItemVenta item, decimal? iva, decimal? total) => new()
     {
         Id             = item.Id,
         ProductoId     = item.ProductoId,
@@ -98,6 +109,10 @@ public sealed record ItemVentaResponse
         Cantidad       = item.Cantidad,
         PesoKg         = item.PesoKg,
         PrecioUnitario = item.PrecioUnitario,
-        Subtotal       = item.Subtotal
+        Subtotal       = item.Subtotal,
+        Iva            = iva,
+        Total          = total
     };
 }
+
+
