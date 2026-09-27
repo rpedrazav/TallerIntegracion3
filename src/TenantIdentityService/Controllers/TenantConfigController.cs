@@ -68,4 +68,43 @@ public class TenantConfigController : ControllerBase
             PorcentajeIva = tenant.PorcentajeIva
         });
     }
+
+    [HttpPut("{id:guid}/config")]
+    [Authorize(Roles = "ADMIN")]
+    [ProducesResponseType(typeof(TenantConfigDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> UpdateConfig(
+        Guid id,
+        [FromBody] ActualizarTenantConfigDto request)
+    {
+        var tenantClaim = User.FindFirst("tenant_id")?.Value;
+        if (!Guid.TryParse(tenantClaim, out var tokenTenantId))
+            return Unauthorized(new { message = "El token no contiene un tenant_id válido." });
+
+        if (tokenTenantId != id)
+            return Forbid();
+
+        var tenant = await _tenantRepository.GetByIdAsync(id);
+        if (tenant is null)
+            return NotFound(new { message = $"Tenant {id} no encontrado o inactivo." });
+
+        tenant.Pais = request.Pais;
+        tenant.Moneda = request.Moneda;
+        tenant.Idioma = request.Idioma;
+        tenant.PorcentajeIva = request.PorcentajeIva;
+        tenant.ZonaHoraria = request.ZonaHoraria;
+
+        var tenantActualizado = await _tenantRepository.UpdateAsync(tenant);
+
+        return Ok(new TenantConfigDto
+        {
+            Pais = tenantActualizado.Pais,
+            Moneda = tenantActualizado.Moneda,
+            Idioma = tenantActualizado.Idioma,
+            ZonaHoraria = tenantActualizado.ZonaHoraria,
+            PorcentajeIva = tenantActualizado.PorcentajeIva
+        });
+    }
 }

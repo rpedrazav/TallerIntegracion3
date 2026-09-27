@@ -19,4 +19,11 @@ public class TenantRepository : ITenantRepository
             .AsNoTracking()
             .FirstOrDefaultAsync(tenant => tenant.Id == id && tenant.Activo);
     }
+
+    public async Task<Tenant> UpdateAsync(Tenant tenant)
+    {
+        _db.Tenants.Update(tenant);
+        await _db.SaveChangesAsync();
+        return tenant;
+    }
 }
