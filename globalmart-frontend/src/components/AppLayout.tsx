@@ -1,114 +1,58 @@
-import { useEffect } from 'react';
 import { Outlet, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import { parseJwtPayload } from '../utils/jwt';
 
 export default function AppLayout() {
-  const { token, loading, logout } = useAuth();
+  const { logout } = useAuth();
   const navigate = useNavigate();
 
-  // Protección de ruta: si no hay sesión activa, redirigir a /login
-  useEffect(() => {
-    if (!loading && !token) {
-      navigate('/login', { replace: true });
-    }
-  }, [loading, token, navigate]);
-
   const handleLogout = async () => {
-    // Tarea 3 (TI3-164): Limpia el electron-store y redirige a /login
     await logout();
-    navigate('/login', { replace: true });
+    navigate('/login');
   };
 
-  const payload = token ? parseJwtPayload(token) : null;
-  const userRole = payload?.active_role || 'CAJERO';
-  const userSub = payload?.sub || 'Usuario';
-
-  if (loading) {
-    return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-        <p>Cargando sesión...</p>
-      </div>
-    );
-  }
-
   return (
-    <div>
-      <nav
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          padding: '0.875rem 1.5rem',
-          borderBottom: '1px solid #e5e7eb',
-          backgroundColor: '#ffffff',
-          boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
-        }}
-      >
-        <span style={{ fontSize: '1.125rem' }}>
-          <strong>GlobalMart OS</strong>
-        </span>
-
-        <div style={{ display: 'flex', gap: '1.25rem' }}>
-          <Link
-            to="/pos"
-            style={{
-              textDecoration: 'none',
-              color: '#2563eb',
-              fontWeight: 500,
-            }}
-          >
-            Punto de Venta
-          </Link>
-          <Link
-            to="/admin"
-            style={{
-              textDecoration: 'none',
-              color: '#4b5563',
-              fontWeight: 500,
-            }}
-          >
-            Administración
-          </Link>
-        </div>
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          <span
-            style={{
-              fontSize: '0.875rem',
-              color: '#374151',
-              backgroundColor: '#f3f4f6',
-              padding: '0.25rem 0.625rem',
-              borderRadius: '9999px',
-              fontWeight: 500,
-            }}
-          >
-            Rol: {userRole} ({userSub})
+    <div style={{ backgroundColor: '#f4f6f8', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+      <nav style={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center', 
+        padding: '1rem 2rem', 
+        backgroundColor: '#38bdf8', /* Azul del logo GlobalMart */
+        color: 'white',
+        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
+          <span style={{ fontSize: '1.5rem', fontWeight: 800, letterSpacing: '1px' }}>
+            GLOBALMART
           </span>
-
-          <button
-            id="btn-logout"
+          <div style={{ display: 'flex', gap: '1.5rem' }}>
+            <Link to="/pos" style={{ color: 'white', textDecoration: 'none', fontWeight: 500, opacity: 0.9, transition: 'opacity 0.2s' }} onMouseOver={(e) => e.currentTarget.style.opacity = '1'} onMouseOut={(e) => e.currentTarget.style.opacity = '0.9'}>Punto de Venta</Link>
+            <Link to="/admin" style={{ color: 'white', textDecoration: 'none', fontWeight: 500, opacity: 0.9, transition: 'opacity 0.2s' }} onMouseOver={(e) => e.currentTarget.style.opacity = '1'} onMouseOut={(e) => e.currentTarget.style.opacity = '0.9'}>Administración</Link>
+          </div>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <span style={{ fontWeight: 500 }}>Cajero Demo</span>
+          <button 
             onClick={handleLogout}
             style={{
-              padding: '0.45rem 0.9rem',
-              backgroundColor: '#dc2626',
-              color: '#ffffff',
+              backgroundColor: 'white',
+              color: '#38bdf8',
               border: 'none',
-              borderRadius: '4px',
+              padding: '0.5rem 1rem',
+              borderRadius: '9999px',
+              fontWeight: 600,
               cursor: 'pointer',
-              fontSize: '0.875rem',
-              fontWeight: 500,
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '0.25rem',
+              transition: 'transform 0.1s, boxShadow 0.1s',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
             }}
+            onMouseOver={(e) => { e.currentTarget.style.transform = 'scale(1.05)'; e.currentTarget.style.boxShadow = '0 4px 6px rgba(0,0,0,0.15)' }}
+            onMouseOut={(e) => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)' }}
           >
-            Cerrar Sesión
+            Cerrar sesión
           </button>
         </div>
       </nav>
-
-      <main style={{ padding: '2rem' }}>
+      <main style={{ padding: '2rem', flex: 1 }}>
         <Outlet />
       </main>
     </div>
