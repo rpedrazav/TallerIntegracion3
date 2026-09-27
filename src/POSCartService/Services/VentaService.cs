@@ -177,6 +177,43 @@ public class VentaService : IVentaService
 
         return (venta, item);
     }
+
+    /// <inheritdoc/>
+    public async Task<(Venta Venta, ItemVenta ItemEliminado)> EliminarItemAsync(
+        Guid ventaId,
+        Guid itemId,
+        decimal nuevoSubtotalVenta,
+        decimal nuevosImpuestosVenta,
+        decimal nuevoTotalVenta)
+    {
+        var venta = await _ventaRepository.GetByIdAsync(ventaId)
+            ?? throw new KeyNotFoundException($"Venta {ventaId} no encontrada.");
+
+        if (venta.Estado != EstadoVenta.PENDIENTE)
+            throw new InvalidOperationException(
+                $"Solo se pueden eliminar ítems de una venta PENDIENTE. Estado actual: {venta.Estado}.");
+
+        var item = venta.Items.FirstOrDefault(i => i.Id == itemId)
+            ?? throw new KeyNotFoundException($"Item {itemId} no encontrado en la venta {ventaId}.");
+
+        // Eliminar del repositorio de ítems si está disponible
+        if (_itemVentaRepository is not null)
+        {
+            await _itemVentaRepository.EliminarAsync(item);
+        }
+
+        // Remover de la colección en memoria
+        venta.Items.Remove(item);
+
+        // Actualizar totales de la venta padre
+        venta.Subtotal  = nuevoSubtotalVenta;
+        venta.Impuestos = nuevosImpuestosVenta;
+        venta.Total     = nuevoTotalVenta;
+
+        await _ventaRepository.ActualizarAsync(venta);
+
+        return (venta, item);
+    }
 }
 
 

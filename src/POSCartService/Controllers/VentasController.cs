@@ -403,6 +403,118 @@ public sealed class VentasController : ControllerBase
         return Ok(response);
     }
 
+    // ── DELETE /ventas/{id}/items/{itemId} ────────────────────────────────────
+
+    /// <summary>
+    /// Elimina un ítem del carrito / venta pendiente y recalcula los totales de la venta (IVA incluido vía MS-2).
+    /// Si la venta queda sin ítems, subtotal, impuestos y total se ponen a 0.
+    /// </summary>
+    /// <response code="200">Ítem eliminado y totales recalculados correctamente.</response>
+    /// <response code="401">Token JWT ausente o inválido.</response>
+    /// <response code="404">Venta o ítem no encontrado.</response>
+    /// <response code="409">La venta no está en estado PENDIENTE.</response>
+    /// <response code="503">MS-2 no responde (servicio tributario no disponible).</response>
+    [HttpDelete("{id:guid}/items/{itemId:guid}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
+    public async Task<IActionResult> EliminarItem(
+        [FromRoute] Guid id,
+        [FromRoute] Guid itemId,
+        CancellationToken cancellationToken)
+    {
+        // 1. Extraer claims del JWT
+        if (!TryGetClaims(out _, out _))
+            return Unauthorized(new { error = "Token inválido: faltan cajero_id/sub o tenant_id." });
+
+        // 2. Verificar que la venta exista
+        var venta = await _ventaService.GetByIdAsync(id);
+        if (venta is null)
+            return NotFound(new { error = $"Venta {id} no encontrada." });
+
+        // 3. RN-04: Solo se pueden eliminar ítems si la venta está en estado PENDIENTE
+        if (venta.Estado != EstadoVenta.PENDIENTE)
+        {
+            return Conflict(new
+            {
+                error = $"Solo se pueden eliminar ítems de una venta en estado PENDIENTE. Estado actual: {venta.Estado}."
+            });
+        }
+
+        // 4. Verificar que el ítem exista en la venta
+        var item = venta.Items.FirstOrDefault(i => i.Id == itemId);
+        if (item is null)
+            return NotFound(new { error = $"Ítem {itemId} no encontrado en la venta {id}." });
+
+        // 5. Calcular los ítems restantes (sin el ítem eliminado) para recalcular IVA
+        var itemsRestantes = venta.Items
+            .Where(i => i.Id != itemId)
+            .Select(i => new TaxItemDto
+            {
+                Nombre   = i.NombreProducto,
+                Precio   = i.PrecioUnitario,
+                Cantidad = i.Cantidad
+            }).ToList();
+
+        decimal nuevoSubtotal  = 0m;
+        decimal nuevosImpuestos = 0m;
+        decimal nuevoTotal     = 0m;
+
+        // 6. Si quedan ítems, recalcular IVA y totales via MS-2
+        if (itemsRestantes.Count > 0)
+        {
+            var authHeader = Request.Headers.Authorization.ToString();
+            TaxCalculationResult? taxResult;
+            try
+            {
+                taxResult = await _taxClient.CalculateTaxAsync(itemsRestantes, null, authHeader, cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "MS-2 TaxComplianceService no responde al eliminar ítem");
+                return StatusCode(StatusCodes.Status503ServiceUnavailable, new
+                {
+                    message = "MS-2 no responde",
+                    error   = "El servicio de cálculo de impuestos (MS-2) no responde o no está disponible."
+                });
+            }
+
+            if (taxResult is null)
+            {
+                return StatusCode(StatusCodes.Status503ServiceUnavailable, new
+                {
+                    message = "MS-2 no responde",
+                    error   = "MS-2 no respondió o no retornó resultados de cálculo fiscal."
+                });
+            }
+
+            nuevoSubtotal   = taxResult.Subtotal;
+            nuevosImpuestos = taxResult.Iva;
+            nuevoTotal      = taxResult.Total;
+        }
+
+        // 7. Persistir eliminación del ítem y actualizar totales de la venta
+        var (ventaActualizada, itemEliminado) = await _ventaService.EliminarItemAsync(
+            id,
+            itemId,
+            nuevoSubtotalVenta:    nuevoSubtotal,
+            nuevosImpuestosVenta:  nuevosImpuestos,
+            nuevoTotalVenta:       nuevoTotal);
+
+        return Ok(new
+        {
+            message          = $"Ítem '{itemEliminado.NombreProducto}' eliminado exitosamente.",
+            itemEliminadoId  = itemEliminado.Id,
+            ventaId          = ventaActualizada.Id,
+            itemsRestantes   = ventaActualizada.Items.Count,
+            nuevoSubtotal    = ventaActualizada.Subtotal,
+            nuevosImpuestos  = ventaActualizada.Impuestos,
+            nuevoTotal       = ventaActualizada.Total
+        });
+    }
+
     // ── GET /ventas/{id} ───────────────────────────────────────────────────────
 
 
