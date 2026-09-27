@@ -6,7 +6,7 @@ using TenantIdentityService.Repositories;
 namespace TenantIdentityService.Controllers;
 
 /// <summary>
-/// Expone la configuración de un tenant para consumo interno entre microservicios.
+/// Expone la configuración regional y fiscal del tenant autenticado.
 /// Endpoint: GET /tenants/{id}/config
 /// Consumidor principal: MS-2 TaxComplianceService (TenantConfigClient).
 /// </summary>
@@ -28,13 +28,11 @@ public class TenantConfigController : ControllerBase
     }
 
     /// <summary>
-    /// Retorna la configuración fiscal del tenant solicitado.
-    /// Usado internamente por MS-2 para obtener el <c>porcentaje_iva</c>.
+    /// Retorna la configuración del tenant autenticado.
     /// </summary>
     /// <param name="id">Identificador del tenant.</param>
-    /// <param name="cancellationToken">Token de cancelación.</param>
     /// <returns>
-    /// 200 con <c>{ tenantId, porcentajeIva }</c> si existe,
+    /// 200 con país, moneda, idioma, zona horaria y porcentaje de IVA,
     /// 404 si el tenant no existe o está inactivo.
     /// </returns>
     [HttpGet("{id:guid}/config")]
@@ -48,8 +46,7 @@ public class TenantConfigController : ControllerBase
         if (!Guid.TryParse(tenantClaim, out var tokenTenantId))
             return Unauthorized(new { message = "El token no contiene un tenant_id válido." });
 
-        var isSuperAdmin = User.IsInRole("SUPER_ADMIN");
-        if (!isSuperAdmin && tokenTenantId != id)
+        if (tokenTenantId != id)
             return Forbid();
 
         _logger.LogInformation("Solicitando config de tenant {TenantId}", id);
@@ -64,15 +61,11 @@ public class TenantConfigController : ControllerBase
 
         return Ok(new TenantConfigDto
         {
-            TenantId = tenant.Id,
             Pais = tenant.Pais,
             Moneda = tenant.Moneda,
             Idioma = tenant.Idioma,
             ZonaHoraria = tenant.ZonaHoraria,
-            PorcentajeIva = tenant.PorcentajeIva,
-            UmbralStockMinimo = tenant.UmbralStockMinimo,
-            UmbralVariacionFx = tenant.UmbralVariacionFx,
-            SeparacionFuncionesOc = tenant.SeparacionFuncionesOc
+            PorcentajeIva = tenant.PorcentajeIva
         });
     }
 }
