@@ -234,13 +234,14 @@ var catalogMock = new Dictionary<Guid, ProductoCatalogDto>
 Check("H1 — MS-3 retorna producto existente con precio actual (5.000)",
     catalogMock.TryGetValue(prod1Id, out var p1) && p1.PrecioBase == 5_000m && p1.Nombre == "Aceite de Oliva 1L");
 
-Check("H2 — MS-3 retorna null para producto no existente (→ 404 en controller)",
+Check("H2 — MS-3 retorna null para producto no existente (→ 404 con 'Producto no encontrado')",
     !catalogMock.TryGetValue(Guid.NewGuid(), out _));
 
 Check("H3 — MS-3 detecta producto inactivo (IsActive=false → 400 en controller)",
     catalogMock.TryGetValue(prodInactivoId, out var pInact) && !pInact.IsActive);
 
 Console.WriteLine();
+
 
 // ══════════════════════════════════════════════════════════════════════
 // BLOQUE I — Simulación de ITaxClient (MS-2: POST /api/tax/calculate)
