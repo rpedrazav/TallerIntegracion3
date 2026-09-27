@@ -39,6 +39,9 @@ public class CatalogDbContext : DbContext
         modelBuilder.Entity<Categoria>().HasIndex(c => c.TenantId).HasDatabaseName("idx_categorias_tenant");
         modelBuilder.Entity<Producto>().HasIndex(p => p.TenantId).HasDatabaseName("idx_productos_tenant");
         modelBuilder.Entity<Producto>().HasIndex(p => new { p.TenantId, p.CodigoBarras }).IsUnique().HasDatabaseName("idx_productos_tenant_barcode");
+        // idx_productos_nombre_trgm: indice GIN pg_trgm sobre (tenant_id, nombre) para busquedas LIKE eficientes.
+        // EF Core no soporta GIN nativamente; el indice se crea via SQL crudo en la migracion
+        // 20260927164215_AddProductoNombreTrgmIndex.cs con "CREATE EXTENSION IF NOT EXISTS pg_trgm".
         modelBuilder.Entity<Precio>().HasIndex(p => p.TenantId).HasDatabaseName("idx_precios_tenant");
     }
 }

@@ -303,6 +303,43 @@ services:
       - minimarket-net
 
   # ==========================================================================
+  # MICROSERVICIOS — Aplicaciones .NET 8
+  # ==========================================================================
+
+  # --- Tenant & Identity Service (MS-1) ---
+  tenant-identity-service:
+    build:
+      context: ../src/TenantIdentityService
+      dockerfile: Dockerfile
+    container_name: tenant-identity-service
+    restart: unless-stopped
+    depends_on:
+      postgres-tenant:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__DefaultConnection: "Host=postgres-tenant;Port=5432;Database=tenant_db;Username=${DB_USER};Password=${DB_PASSWORD}"
+      Jwt__Key: "${JWT_SECRET_KEY:-GlobalMartOS_SuperSecretKey_ChangeInProduction_Min32Chars!!}"
+      Jwt__Issuer: "GlobalMartOS"
+      Jwt__Audience: "GlobalMartOS_Clients"
+      Jwt__ExpirationHours: "8"
+      Kafka__BootstrapServers: "kafka:29092"
+      Kafka__GroupId: "tenant-identity-service"
+    ports:
+      - "5124:8080"   # Host:5124 → Contenedor:8080 (mismo puerto que usa el Electron)
+    networks:
+      - minimarket-net
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -f http://localhost:8080/health || exit 1" ]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # ==========================================================================
   # API GATEWAY — Kong 3.6 DB-less (TI3-113)
   # ==========================================================================
 
