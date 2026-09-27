@@ -41,7 +41,6 @@ export default function Pos() {
     alert('Funcionalidad de cobro se implementar en el futuro.');
   };
 
-  // Recalcular totales
   const { subtotal, totalItems } = useMemo(() => {
     return cartItems.reduce(
       (acc, item) => {
@@ -53,7 +52,7 @@ export default function Pos() {
     );
   }, [cartItems]);
 
-  const tasaIva = 0.19; // 19% IVA en Chile
+  const tasaIva = 0.19; 
   const iva = Math.round(subtotal * tasaIva);
   const total = subtotal + iva;
   
@@ -76,31 +75,45 @@ export default function Pos() {
         <h3 style={{ marginTop: 0, color: '#1B4332', fontSize: '1.25rem' }}>
           Carrito de Compras ({totalItems} items)
         </h3>
-        <div style={{ flex: 1, overflow: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-            <thead>
-              <tr style={{ borderBottom: '2px solid #e5e7eb', color: '#6b7280', fontSize: '0.875rem', textTransform: 'uppercase' }}>
-                <th style={{ padding: '0.75rem 0.5rem' }}>Producto</th>
-                <th style={{ padding: '0.75rem 0.5rem' }}>Precio</th>
-                <th style={{ padding: '0.75rem 0.5rem' }}>Cant.</th>
-                <th style={{ padding: '0.75rem 0.5rem' }}>Subtotal</th>
-                <th style={{ padding: '0.75rem 0.5rem', textAlign: 'center' }}>X</th>
-              </tr>
-            </thead>
-            <tbody>
-              {cartItems.map(item => (
-                <CartItem 
-                  key={item.id}
-                  id={item.id} 
-                  name={item.name} 
-                  price={item.price} 
-                  quantity={item.quantity} 
-                  onQuantityChange={handleQuantityChange}
-                  onRemove={handleRemoveItem}
-                />
-              ))}
-            </tbody>
-          </table>
+        <div style={{ flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column' }}>
+          
+          {isCartEmpty ? (
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#9ca3af' }}>
+              <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" style={{ marginBottom: '1rem', color: '#d1d5db' }}>
+                <circle cx="9" cy="21" r="1"></circle>
+                <circle cx="20" cy="21" r="1"></circle>
+                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+              </svg>
+              <p style={{ fontSize: '1.25rem', margin: '0 0 0.5rem 0', color: '#6b7280', fontWeight: 500 }}>Carrito vaco</p>
+              <p style={{ fontSize: '0.875rem', margin: 0 }}>Escanea o busca un producto para comenzar</p>
+            </div>
+          ) : (
+            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+              <thead>
+                <tr style={{ borderBottom: '2px solid #e5e7eb', color: '#6b7280', fontSize: '0.875rem', textTransform: 'uppercase' }}>
+                  <th style={{ padding: '0.75rem 0.5rem' }}>Producto</th>
+                  <th style={{ padding: '0.75rem 0.5rem' }}>Precio</th>
+                  <th style={{ padding: '0.75rem 0.5rem' }}>Cant.</th>
+                  <th style={{ padding: '0.75rem 0.5rem' }}>Subtotal</th>
+                  <th style={{ padding: '0.75rem 0.5rem', textAlign: 'center' }}>X</th>
+                </tr>
+              </thead>
+              <tbody>
+                {cartItems.map(item => (
+                  <CartItem 
+                    key={item.id}
+                    id={item.id} 
+                    name={item.name} 
+                    price={item.price} 
+                    quantity={item.quantity} 
+                    onQuantityChange={handleQuantityChange}
+                    onRemove={handleRemoveItem}
+                  />
+                ))}
+              </tbody>
+            </table>
+          )}
+          
         </div>
       </div>
 
