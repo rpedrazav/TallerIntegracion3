@@ -1,11 +1,11 @@
-﻿import React from 'react';
+import React, { useCallback } from 'react';
 import BarcodeInput from '../components/pos/BarcodeInput';
 
 export default function Pos() {
-  const handleSearch = (query: string) => {
-    console.log('Buscando producto:', query);
-    // TODO: Implementar la bsqueda real con axios ms adelante
-  };
+  const handleSearch = useCallback((query: string) => {
+    console.log('Buscando producto (debounce disparado):', query);
+    // TODO: Implementar la busqueda real con axios mas adelante a GET /api/products/search
+  }, []);
 
   return (
     <div style={{ display: 'flex', height: 'calc(100vh - 100px)', gap: '1rem' }}>

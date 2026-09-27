@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 
 interface BarcodeInputProps {
   onSearch: (query: string) => void;
@@ -7,9 +7,24 @@ interface BarcodeInputProps {
 export default function BarcodeInput({ onSearch }: BarcodeInputProps) {
   const [value, setValue] = useState('');
 
+  // Efecto Debounce de 300ms
+  useEffect(() => {
+    if (!value.trim()) return; // No busca si est vaco
+
+    const timerId = setTimeout(() => {
+      onSearch(value);
+    }, 300);
+
+    return () => {
+      clearTimeout(timerId);
+    };
+  }, [value, onSearch]);
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
-      onSearch(value);
+      if (value.trim()) {
+        onSearch(value);
+      }
     }
   };
 
