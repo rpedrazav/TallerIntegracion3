@@ -1,4 +1,4 @@
-using FluentValidation;
+﻿using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -10,11 +10,11 @@ using TenantIdentityService.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ─── 1. Base de Datos: PostgreSQL con EF Core ───────────────────────────────
+// â”€â”€â”€ 1. Base de Datos: PostgreSQL con EF Core â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 builder.Services.AddDbContext<TenantDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// ─── 2. Autenticación JWT ────────────────────────────────────────────────────
+// â”€â”€â”€ 2. AutenticaciÃ³n JWT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 var jwtKey = builder.Configuration["Jwt:Key"]
     ?? throw new InvalidOperationException("JWT Key no configurada en appsettings.json");
 
@@ -30,36 +30,36 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidIssuer              = builder.Configuration["Jwt:Issuer"],
             ValidAudience            = builder.Configuration["Jwt:Audience"],
             IssuerSigningKey         = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
-            ClockSkew                = TimeSpan.Zero  // Sin margen de tolerancia en expiración
+            ClockSkew                = TimeSpan.Zero  // Sin margen de tolerancia en expiraciÃ³n
         };
     });
 
 builder.Services.AddAuthorization();
 
-// ─── 3. CORS ─────────────────────────────────────────────────────────────────
+// â”€â”€â”€ 3. CORS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("ElectronApp", policy =>
     {
         // El frontend Electron no tiene un origen HTTP fijo; en desarrollo permitimos localhost
-        policy.WithOrigins("http://localhost:3000", "http://localhost:5173")
+        policy.WithOrigins("http://localhost:3000", "http://localhost:5173", "http://localhost:3005", "http://localhost:9005")
               .AllowAnyHeader()
               .AllowAnyMethod();
     });
 });
 
-// ─── 4. Controllers + Swagger ────────────────────────────────────────────────
+// â”€â”€â”€ 4. Controllers + Swagger â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
-    c.SwaggerDoc("v1", new() { Title = "GlobalMart OS — Tenant & Identity Service (MS-1)", Version = "v1" });
+    c.SwaggerDoc("v1", new() { Title = "GlobalMart OS â€” Tenant & Identity Service (MS-1)", Version = "v1" });
 
-    // Botón de "Authorize" en Swagger para enviar el JWT
+    // BotÃ³n de "Authorize" en Swagger para enviar el JWT
     c.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
     {
-        Type        = Microsoft.OpenApi.Models.SecuritySchemeType.Http,
-        Scheme      = "bearer",
+        Type = Microsoft.OpenApi.Models.SecuritySchemeType.ApiKey,
+        Scheme = "bearer", In = Microsoft.OpenApi.Models.ParameterLocation.Header, Name = "Authorization",
         BearerFormat = "JWT",
         Description = "Ingresa el JWT token (sin 'Bearer ' al inicio)"
     });
@@ -79,47 +79,47 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-// ─── 5. Health Checks ────────────────────────────────────────────────────────
+// â”€â”€â”€ 5. Health Checks â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 builder.Services.AddHealthChecks();
 
-// ─── 6. Servicios de Autenticación (Tarea Rodrigo W2) ────────────────────────
+// â”€â”€â”€ 6. Servicios de AutenticaciÃ³n (Tarea Rodrigo W2) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Scoped: una instancia por request HTTP (correcto para servicios con DbContext)
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
 builder.Services.AddScoped<IAuthService,    AuthService>();
 builder.Services.AddScoped<IJwtService,     JwtService>();
 
-// FluentValidation: registra automáticamente todos los validators del ensamblado
+// FluentValidation: registra automÃ¡ticamente todos los validators del ensamblado
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
 var app = builder.Build();
 
-// ─── Pipeline de Middlewares ──────────────────────────────────────────────────
+// â”€â”€â”€ Pipeline de Middlewares â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
+    app.UseSwagger(c => c.SerializeAsV2 = true);
     app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "MS-1 Tenant & Identity v1"));
 }
 
 app.UseHttpsRedirection();
 app.UseCors("ElectronApp");
 app.UseAuthentication();   // PRIMERO: valida el JWT
-app.UseAuthorization();    // DESPUÉS: verifica permisos
-app.UseTenantMiddleware(); // ÚLTIMO en auth chain: extrae tenant_id y lo inyecta en DbContext
+app.UseAuthorization();    // DESPUÃ‰S: verifica permisos
+app.UseTenantMiddleware(); // ÃšLTIMO en auth chain: extrae tenant_id y lo inyecta en DbContext
 
 app.MapControllers();
 app.MapHealthChecks("/health");
 
-// ─── Auto-migración y seed de desarrollo ─────────────────────────────────────
+// â”€â”€â”€ Auto-migraciÃ³n y seed de desarrollo â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 if (app.Environment.IsDevelopment())
 {
     using var scope = app.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<TenantDbContext>();
     db.Database.Migrate(); // Aplica migraciones pendientes al iniciar
 
-    // Seed mínimo: crea un tenant y un usuario CAJERO de prueba si no existen.
-    // Credenciales de prueba → email: cajero@demo.cl | password: demo1234
+    // Seed mÃ­nimo: crea un tenant y un usuario CAJERO de prueba si no existen.
+    // Credenciales de prueba â†’ email: cajero@demo.cl | password: demo1234
     // TenantId fijo para facilitar las pruebas con Postman.
     var tenantIdDemo = Guid.Parse("aaaaaaaa-0000-0000-0000-000000000001");
 
@@ -161,10 +161,11 @@ if (app.Environment.IsDevelopment())
 
         var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
         logger.LogInformation(
-            "Seed de desarrollo aplicado. Login de prueba → email: cajero@demo.cl | password: demo1234 | tenantId: {TenantId}",
+            "Seed de desarrollo aplicado. Login de prueba â†’ email: cajero@demo.cl | password: demo1234 | tenantId: {TenantId}",
             tenantIdDemo);
     }
 }
 
 app.Run();
+
 

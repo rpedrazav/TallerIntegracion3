@@ -70,6 +70,9 @@ ipcMain.handle('ping', () => {
   return 'pong';
 });
 
+// @ts-ignore
 ipcMain.handle('auth:getToken', () => store.get('jwt_token'));
+// @ts-ignore
 ipcMain.handle('auth:setToken', (_e, token: string) => store.set('jwt_token', token));
+// @ts-ignore
 ipcMain.handle('auth:logout', () => store.set('jwt_token', null));

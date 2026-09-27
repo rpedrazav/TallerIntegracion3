@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
@@ -7,34 +7,34 @@ using CatalogPricingService.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Inyección de Controladores y Auto-Validación
+// InyecciÃ³n de Controladores y Auto-ValidaciÃ³n
 builder.Services.AddControllers();
 builder.Services.AddFluentValidationAutoValidation();
 
-// Inyección de Base de Datos PostgreSQL
+// InyecciÃ³n de Base de Datos PostgreSQL
 builder.Services.AddDbContext<CatalogPricingService.Data.CatalogDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Inyección del Repositorio
+// InyecciÃ³n del Repositorio
 builder.Services.AddScoped<CatalogPricingService.Data.IProductoRepository, CatalogPricingService.Data.ProductoRepository>();
 builder.Services.AddScoped<CatalogPricingService.Data.ICategoriaRepository, CatalogPricingService.Data.CategoriaRepository>();
 
-// Inyección del Servicio de Productos
+// InyecciÃ³n del Servicio de Productos
 builder.Services.AddScoped<CatalogPricingService.Services.IProductoService, CatalogPricingService.Services.ProductoService>();
 
-// Inyección del Servicio de Categorias
+// InyecciÃ³n del Servicio de Categorias
 builder.Services.AddScoped<CatalogPricingService.Services.ICategoriaService, CatalogPricingService.Services.CategoriaService>();
 
-// Inyección del Validador de Productos
+// InyecciÃ³n del Validador de Productos
 builder.Services.AddScoped<FluentValidation.IValidator<CatalogPricingService.DTOs.CreateProductoDto>, CatalogPricingService.Validators.CreateProductoDtoValidator>();
 
-// Inyección del Validador de Actualización de Productos (NUEVO - TI3-132)
+// InyecciÃ³n del Validador de ActualizaciÃ³n de Productos (NUEVO - TI3-132)
 builder.Services.AddScoped<FluentValidation.IValidator<CatalogPricingService.DTOs.UpdateProductoDto>, CatalogPricingService.Validators.UpdateProductoDtoValidator>();
 
-// Inyección del Validador de Categorias
+// InyecciÃ³n del Validador de Categorias
 builder.Services.AddScoped<FluentValidation.IValidator<CatalogPricingService.DTOs.CreateCategoriaDto>, CatalogPricingService.Validators.CreateCategoriaDtoValidator>();
 
-// Inyección de Autenticación JWT Stateless
+// InyecciÃ³n de AutenticaciÃ³n JWT Stateless
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -59,7 +59,7 @@ var app = builder.Build();
 // Pipeline de Middlewares (Orden estricto)
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
+    app.UseSwagger(c => c.SerializeAsV2 = true);
     app.UseSwaggerUI();
 }
 
@@ -70,3 +70,4 @@ app.UseMiddleware<TenantMiddleware>();
 app.MapControllers();
 
 app.Run();
+
