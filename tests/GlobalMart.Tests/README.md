@@ -52,9 +52,11 @@ dotnet test tests/GlobalMart.Tests/ --filter "FullyQualifiedName~AuthService_Rol
 tests/GlobalMart.Tests/
 ├── GlobalMart.Tests.csproj            # Proyecto xUnit con Moq y FluentAssertions
 ├── README.md                          # Este archivo
-└── MS1_TenantIdentity/
-    ├── AuthController_LoginTests.cs   # Tests de login (TI3-206, TI3-207, TI3-208)
-    └── AuthService_RoleTests.cs       # Tests de roles RBAC (TI3-209)
+├── MS1_TenantIdentity/
+│   ├── AuthController_LoginTests.cs   # Tests de login (TI3-206, TI3-207, TI3-208)
+│   └── AuthService_RoleTests.cs       # Tests de roles RBAC (TI3-209)
+└── MS2_TaxCompliance/
+    └── TaxCalculatorService_Tests.cs  # Tests de cálculo IVA (TI3-210, TI3-211, TI3-212)
 ```
 
 ## Tests Implementados
@@ -81,6 +83,40 @@ tests/GlobalMart.Tests/
 | `AuthService_ValidateCredentials_RetornaUsuarioConRolesIntactos` | TI3-209 | AuthService devuelve usuario con roles cargados |
 | `JwtService_GenerateToken_IncluyeRolesEnElToken` | TI3-209 | JWT contiene claims `roles` y `active_role` correctos |
 | `JwtService_GenerateToken_ConUnSoloRol_ActiveRoleCorrecto` | TI3-209 | Un solo rol → active_role = ese rol |
+
+### TaxCalculatorService_Tests (12 tests)
+
+| Test | Tarea | Qué verifica |
+|------|-------|--------------|
+| `Calculate_IVA19_ConDosItems_SubtotalCorrecto` | TI3-210 | Subtotal = 13.000 |
+| `Calculate_IVA19_ConDosItems_IvaCorrecto` | TI3-210 | IVA 19% = 2.470 |
+| `Calculate_IVA19_ConDosItems_TotalCorrecto` | TI3-210 | Total = 15.470 |
+| `Calculate_IVA19_ConDosItems_DesglosePorItem` | TI3-210 | Desglose item por item |
+| `Calculate_IVA21_Subtotal10000_IvaCorrecto` | TI3-211 | IVA 21% de 10.000 = 2.100, total = 12.100 |
+| `Calculate_IVA21_ConMultiplesItems_TotalCorrecto` | TI3-211 | Múltiples items con IVA 21% |
+| `Calculate_IVA0_ProductoExento_IvaEsCero` | TI3-212 | IVA 0% → subtotal = total, IVA = 0 |
+| `Calculate_IVA0_MultipleItems_SubtotalIgualTotal` | TI3-212 | Múltiples items exentos |
+| `Calculate_ItemConFlagExento_IvaEsCeroParaEseItem` | TI3-212 | Canasta mixta: exento + gravado |
+| `Calculate_ConListaVacia_RetornaCeros` | — | Lista vacía → ceros |
+| `Calculate_ConItemsNull_LanzaArgumentNullException` | — | Null → excepción |
+| `Calculate_ConPorcentajeNegativo_LanzaArgumentOutOfRangeException` | — | % negativo → excepción |
+
+## Cobertura de Código (TI3-213)
+
+### Generar reporte de cobertura
+
+```bash
+dotnet test tests/GlobalMart.Tests/ --collect:"XPlat Code Coverage" --results-directory tests/GlobalMart.Tests/TestResults
+```
+
+### Cobertura actual
+
+| Clase | Cobertura |
+|-------|-----------|
+| `AuthService` | 100% |
+| `AuthController` | 100% |
+| `JwtService` | 100% |
+| `TaxCalculatorService` | 93.5% |
 
 ## Tecnologías
 
