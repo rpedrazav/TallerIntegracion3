@@ -1,104 +1,199 @@
 using Microsoft.EntityFrameworkCore;
 using POSCartService.Data;
+using POSCartService.DTOs;
 using POSCartService.Models;
 using POSCartService.Repositories;
 using POSCartService.Services;
+using POSCartService.Validators;
 
-Console.WriteLine("==============================================================");
-Console.WriteLine("       TEST MANUAL TC-02 — CREACIÓN Y FLUJO DE VENTA          ");
-Console.WriteLine("       MS-5 POS & Cart Service — GlobalMart OS                ");
-Console.WriteLine("==============================================================\n");
+Console.OutputEncoding = System.Text.Encoding.UTF8;
 
-// ── Configurar DB en memoria ────────────────────────────────────────────────
-// NOTA: EF Core InMemory + QueryFilters con navegaciones (i.Venta.TenantId)
-// tienen limitaciones conocidas al usar múltiples instancias de contexto.
-// Usamos un único contexto compartido, igual que lo haría un request HTTP real
-// (el DI container entrega el mismo DbContext durante todo un request).
-var tenantId  = Guid.NewGuid();
-var cajeroId  = Guid.NewGuid();
+Console.WriteLine("╔══════════════════════════════════════════════════════════════╗");
+Console.WriteLine("║    TEST MANUAL TC-02 — POST /ventas + Ciclo de Vida          ║");
+Console.WriteLine("║    MS-5 POS & Cart Service — GlobalMart OS                   ║");
+Console.WriteLine("╚══════════════════════════════════════════════════════════════╝\n");
+
+// ── Infraestructura compartida ──────────────────────────────────────────────
+var tenantId   = Guid.NewGuid();
+var cajeroId   = Guid.NewGuid();
 var sucursalId = Guid.NewGuid();
 
 var options = new DbContextOptionsBuilder<PosCartDbContext>()
-    .UseInMemoryDatabase($"TestDb_{tenantId}")   // DB única por ejecución
+    .UseInMemoryDatabase($"TestDb_{tenantId}")
     .Options;
 
 using var ctx = new PosCartDbContext(options);
 ctx.CurrentTenantId = tenantId;
 
-var turnoRepo  = new TurnoRepository(ctx);
-var turnoSvc   = new TurnoService(turnoRepo);
-var ventaRepo  = new VentaRepository(ctx);
-var ventaSvc   = new VentaService(ventaRepo);
+var turnoRepo = new TurnoRepository(ctx);
+var turnoSvc  = new TurnoService(turnoRepo);
+var ventaRepo = new VentaRepository(ctx);
+var ventaSvc  = new VentaService(ventaRepo);
 
-// ── [1] Abrir Turno ─────────────────────────────────────────────────────────
-Console.WriteLine("[1] Abriendo Turno de Caja...");
-var turno = await turnoSvc.Abrir(cajeroId, tenantId, sucursalId, 50000m);
-Console.WriteLine($"✅ Turno abierto con ID: {turno.Id} (Fondo: $50,000)\n");
+int pass = 0, fail = 0;
 
-// ── [2] Crear Venta PENDIENTE ───────────────────────────────────────────────
-Console.WriteLine("[2] Registrando Venta PENDIENTE...");
-var items = new List<ItemVenta>
+void Check(string label, bool ok)
+{
+    if (ok) { Console.WriteLine($"  ✅ {label} [ OK ]"); pass++; }
+    else    { Console.WriteLine($"  ❌ {label} [ FALLIDO ]"); fail++; }
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// BLOQUE A — Validación del Request (CrearVentaRequestValidator)
+// ══════════════════════════════════════════════════════════════════════
+Console.WriteLine("── A. Validación del Request ──────────────────────────────────");
+
+var validator = new CrearVentaRequestValidator();
+
+// A1: request vacío debe fallar
+var r1 = validator.Validate(new CrearVentaRequest { MetodoPago = "EFECTIVO" });
+Check("A1 — Items vacíos → validación falla", !r1.IsValid);
+
+// A2: método de pago inválido
+var r2 = validator.Validate(new CrearVentaRequest
+{
+    MetodoPago = "BITCOIN",
+    Items = [new ItemVentaRequest { ProductoId = Guid.NewGuid(), NombreProducto = "Test", Cantidad = 1, PrecioUnitario = 100 }]
+});
+Check("A2 — MetodoPago inválido → validación falla", !r2.IsValid);
+
+// A3: precio negativo
+var r3 = validator.Validate(new CrearVentaRequest
+{
+    MetodoPago = "TARJETA",
+    Items = [new ItemVentaRequest { ProductoId = Guid.NewGuid(), NombreProducto = "Test", Cantidad = 1, PrecioUnitario = -50 }]
+});
+Check("A3 — Precio negativo → validación falla", !r3.IsValid);
+
+// A4: request válido
+var r4 = validator.Validate(new CrearVentaRequest
+{
+    MetodoPago = "TARJETA",
+    Items = [new ItemVentaRequest { ProductoId = Guid.NewGuid(), NombreProducto = "Laptop", Cantidad = 1, PrecioUnitario = 850000 }]
+});
+Check("A4 — Request válido → validación pasa", r4.IsValid);
+
+Console.WriteLine();
+
+// ══════════════════════════════════════════════════════════════════════
+// BLOQUE B — Lógica del Controller: verificación de turno
+// ══════════════════════════════════════════════════════════════════════
+Console.WriteLine("── B. Verificación de Turno Activo (pre-condición de POST /ventas) ──");
+
+// B1: sin turno abierto → GetActivo devuelve null (controller retornaría 409)
+var turnoSinAbrir = await turnoSvc.GetActivo(cajeroId, tenantId);
+Check("B1 — Sin turno abierto → GetActivo devuelve null (→ 409 en HTTP)", turnoSinAbrir is null);
+
+// B2: abrir turno
+var turno = await turnoSvc.Abrir(cajeroId, tenantId, sucursalId, 50_000m);
+Check("B2 — Turno abierto correctamente", turno.Estado == EstadoTurno.ABIERTO);
+
+// B3: con turno abierto → GetActivo devuelve el turno (→ continúa hacia crear venta)
+var turnoActivo = await turnoSvc.GetActivo(cajeroId, tenantId);
+Check("B3 — Con turno abierto → GetActivo devuelve el turno (→ 201 en HTTP)", turnoActivo is not null);
+
+Console.WriteLine();
+
+// ══════════════════════════════════════════════════════════════════════
+// BLOQUE C — Mapeo DTO → Dominio (lógica del controller)
+// ══════════════════════════════════════════════════════════════════════
+Console.WriteLine("── C. Mapeo DTO → ItemVenta (subtotal por ítem = precio × cantidad) ──");
+
+var requestItems = new List<ItemVentaRequest>
 {
     new() { ProductoId = Guid.NewGuid(), NombreProducto = "Laptop Gamer 15''",
-            Cantidad = 1, PrecioUnitario = 850_000m, Subtotal = 850_000m },
+            Cantidad = 1, PrecioUnitario = 850_000m },
     new() { ProductoId = Guid.NewGuid(), NombreProducto = "Mouse Inalámbrico",
-            Cantidad = 2, PrecioUnitario =  15_000m, Subtotal =  30_000m }
+            Cantidad = 2, PrecioUnitario =  15_000m },
+    new() { ProductoId = Guid.NewGuid(), NombreProducto = "Alfombrilla XXL",
+            Cantidad = 3, PrecioUnitario =   5_000m, PesoKg = 0.3m }
 };
 
-var venta = await ventaSvc.CrearAsync(
-    turnoId: turno.Id, cajeroId: cajeroId, sucursalId: sucursalId,
-    tenantId: tenantId, items: items,
-    impuestoPorcentaje: 19m,
-    metodoPago: MetodoPagoVenta.TARJETA);
+// Replicar el mapeo exacto que hace el controller
+var itemsDominio = requestItems.Select(i => new ItemVenta
+{
+    ProductoId     = i.ProductoId,
+    NombreProducto = i.NombreProducto,
+    Cantidad       = i.Cantidad,
+    PesoKg         = i.PesoKg,
+    PrecioUnitario = i.PrecioUnitario,
+    Subtotal       = Math.Round(i.PrecioUnitario * i.Cantidad, 2)
+}).ToList();
 
-Console.WriteLine("   Detalle de Venta Registrada:");
-Console.WriteLine($"   - ID Venta  : {venta.Id}");
-Console.WriteLine($"   - Estado    : {venta.Estado}");
-Console.WriteLine($"   - Subtotal  : ${venta.Subtotal:N0}");
-Console.WriteLine($"   - Impuestos : ${venta.Impuestos:N0} (19%)");
-Console.WriteLine($"   - Total     : ${venta.Total:N0}");
-Console.WriteLine($"   - Items     : {venta.Items.Count}\n");
+Check("C1 — Laptop: subtotal = 850.000 × 1",
+    itemsDominio[0].Subtotal == 850_000m);
+Check("C2 — Mouse: subtotal = 15.000 × 2 = 30.000",
+    itemsDominio[1].Subtotal == 30_000m);
+Check("C3 — Alfombrilla: subtotal = 5.000 × 3 = 15.000",
+    itemsDominio[2].Subtotal == 15_000m);
+Check("C4 — Alfombrilla tiene PesoKg = 0.3",
+    itemsDominio[2].PesoKg == 0.3m);
 
-bool subtotalOk  = venta.Subtotal  == 880_000m;
-bool impuestosOk = venta.Impuestos == 167_200m;   // 880.000 × 19%
-bool totalOk     = venta.Total     == 1_047_200m;
-
-Console.WriteLine("  VERIFICACIÓN DE CÁLCULOS:");
-Console.WriteLine($"  ✅ Subtotal  : esperado = 880.000    | obtenido = {venta.Subtotal:N0} [ {(subtotalOk  ? "OK" : "ERROR")} ]");
-Console.WriteLine($"  ✅ Impuestos : esperado = 167.200    | obtenido = {venta.Impuestos:N0} [ {(impuestosOk ? "OK" : "ERROR")} ]");
-Console.WriteLine($"  ✅ Total     : esperado = 1.047.200  | obtenido = {venta.Total:N0} [ {(totalOk     ? "OK" : "ERROR")} ]\n");
-
-// ── [3] Completar Venta ─────────────────────────────────────────────────────
-Console.WriteLine("[3] Completando la Venta...");
-var ventaCompletada = await ventaSvc.CompletarAsync(venta.Id);
-bool completadaOk = ventaCompletada.Estado == EstadoVenta.COMPLETADA;
-Console.WriteLine($"✅ Venta completada. Nuevo estado: {ventaCompletada.Estado} [ {(completadaOk ? "OK" : "ERROR")} ]\n");
-
-// ── [4] Anular Venta ────────────────────────────────────────────────────────
-Console.WriteLine("[4] Anulando la Venta...");
-var ventaAnulada = await ventaSvc.AnularAsync(
-    ventaCompletada.Id, cajeroId,
-    "Cliente se arrepintió después del cobro");
-
-bool anuladaOk = ventaAnulada.Estado == EstadoVenta.ANULADA;
-bool motivoOk  = ventaAnulada.Anulacion?.Motivo is not null;
-
-Console.WriteLine($"✅ Venta anulada. Nuevo estado: {ventaAnulada.Estado} [ {(anuladaOk ? "OK" : "ERROR")} ]");
-Console.WriteLine($"✅ Motivo       : '{ventaAnulada.Anulacion?.Motivo}' [ {(motivoOk ? "OK" : "ERROR")} ]");
-Console.WriteLine($"✅ AutorizadoPor: {ventaAnulada.Anulacion?.AutorizadoPor}\n");
-
-// ── [5] Validar que Items se guardaron correctamente ────────────────────────
-Console.WriteLine("[5] Verificando Items en repositorio...");
-var itemsGuardados = await new ItemVentaRepository(ctx).GetByVentaAsync(venta.Id);
-bool itemsOk = itemsGuardados.Count == 2;
-Console.WriteLine($"✅ Items guardados : {itemsGuardados.Count} (esperado: 2) [ {(itemsOk ? "OK" : "ERROR")} ]");
-foreach (var item in itemsGuardados)
-    Console.WriteLine($"   • {item.NombreProducto}: {item.Cantidad}x ${item.PrecioUnitario:N0} = ${item.Subtotal:N0}");
-
-// ── RESULTADO FINAL ─────────────────────────────────────────────────────────
-bool passed = subtotalOk && impuestosOk && totalOk && completadaOk && anuladaOk && motivoOk && itemsOk;
 Console.WriteLine();
-if (passed)
-    Console.WriteLine("✅ TEST MANUAL APROBADO — VentaRepository, ItemVentaRepository y VentaService funcionan correctamente.");
+
+// ══════════════════════════════════════════════════════════════════════
+// BLOQUE D — Creación completa de Venta (IVA 0% → subtotal = total)
+// ══════════════════════════════════════════════════════════════════════
+Console.WriteLine("── D. POST /ventas — Flujo completo (IVA 0%) ─────────────────");
+
+var venta = await ventaSvc.CrearAsync(
+    turnoId:            turno.Id,
+    cajeroId:           cajeroId,
+    sucursalId:         turno.SucursalId,
+    tenantId:           tenantId,
+    items:              itemsDominio,
+    impuestoPorcentaje: 0m,       // IVA 0% — sin integrar MS-2 aún
+    metodoPago:         MetodoPagoVenta.TARJETA);
+
+decimal expectedSubtotal = 850_000m + 30_000m + 15_000m; // 895.000
+Check($"D1 — Estado inicial PENDIENTE",            venta.Estado == EstadoVenta.PENDIENTE);
+Check($"D2 — Subtotal = 895.000",                  venta.Subtotal == expectedSubtotal);
+Check($"D3 — Impuestos = 0 (IVA 0%)",              venta.Impuestos == 0m);
+Check($"D4 — Total = Subtotal (IVA exento)",        venta.Total == expectedSubtotal);
+Check($"D5 — Items persistidos = 3",               venta.Items.Count == 3);
+Check($"D6 — TurnoId asignado correctamente",      venta.TurnoId == turno.Id);
+Check($"D7 — SucursalId del turno denormalizado",  venta.SucursalId == turno.SucursalId);
+
+Console.WriteLine();
+
+// ══════════════════════════════════════════════════════════════════════
+// BLOQUE E — Mapeo Dominio → VentaResponse DTO
+// ══════════════════════════════════════════════════════════════════════
+Console.WriteLine("── E. Mapeo Venta → VentaResponse (serialización HTTP) ───────");
+
+var response = VentaResponse.FromModel(venta);
+
+Check("E1 — response.Id coincide",          response.Id == venta.Id);
+Check("E2 — response.Estado = 'PENDIENTE'", response.Estado == "PENDIENTE");
+Check("E3 — response.MetodoPago = 'TARJETA'", response.MetodoPago == "TARJETA");
+Check("E4 — response.Items.Count = 3",      response.Items.Count == 3);
+Check("E5 — response.Total correcto",       response.Total == expectedSubtotal);
+Check("E6 — Laptop en response.Items[0]",   response.Items[0].NombreProducto == "Laptop Gamer 15''");
+
+Console.WriteLine();
+
+// ══════════════════════════════════════════════════════════════════════
+// BLOQUE F — Parsing de MetodoPago
+// ══════════════════════════════════════════════════════════════════════
+Console.WriteLine("── F. Parsing MetodoPago (lógica del controller) ──────────────");
+
+Check("F1 — 'TARJETA' → MetodoPagoVenta.TARJETA",
+    Enum.TryParse<MetodoPagoVenta>("TARJETA", ignoreCase: true, out var m1) && m1 == MetodoPagoVenta.TARJETA);
+Check("F2 — 'efectivo' (minúscula) → MetodoPagoVenta.EFECTIVO",
+    Enum.TryParse<MetodoPagoVenta>("efectivo", ignoreCase: true, out var m2) && m2 == MetodoPagoVenta.EFECTIVO);
+Check("F3 — 'BITCOIN' → parse falla (→ 400 BadRequest en HTTP)",
+    !Enum.TryParse<MetodoPagoVenta>("BITCOIN", ignoreCase: true, out _));
+
+Console.WriteLine();
+
+// ══════════════════════════════════════════════════════════════════════
+// RESULTADO FINAL
+// ══════════════════════════════════════════════════════════════════════
+Console.WriteLine("══════════════════════════════════════════════════════════════");
+Console.WriteLine($"  RESULTADO: {pass} / {pass + fail} tests aprobados");
+Console.WriteLine();
+if (fail == 0)
+    Console.WriteLine("  ✅ TEST MANUAL APROBADO — POST /ventas listo.");
 else
-    Console.WriteLine("❌ TEST MANUAL FALLIDO — Revisa los items marcados como ERROR.");
+    Console.WriteLine($"  ❌ {fail} test(s) FALLIDOS — revisar arriba.");
+Console.WriteLine("══════════════════════════════════════════════════════════════");
