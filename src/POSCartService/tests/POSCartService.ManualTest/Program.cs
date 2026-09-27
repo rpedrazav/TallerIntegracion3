@@ -411,14 +411,47 @@ Check("K7 — Serialización JSON contiene campos calculados 'iva' y 'total'",
 Console.WriteLine();
 
 // ══════════════════════════════════════════════════════════════════════
+// BLOQUE L — Modificar Cantidad de Ítem (PUT /ventas/{id}/items/{itemId})
+// ══════════════════════════════════════════════════════════════════════
+Console.WriteLine("── L. Modificar Cantidad de Ítem (PUT /ventas/{id}/items/{itemId}) ─");
+
+var modVal = new ModificarCantidadItemRequestValidator();
+Check("L1 — Validador rechaza cantidad <= 0", !modVal.Validate(new ModificarCantidadItemRequest { Cantidad = 0 }).IsValid);
+Check("L2 — Validador acepta cantidad > 0", modVal.Validate(new ModificarCantidadItemRequest { Cantidad = 3 }).IsValid);
+
+// Modificar ítem 1 (Aceite) de 2 a 3 unidades
+// Ítem 1 nuevo subtotal: 3 x 5.000 = 15.000
+// Venta nuevo subtotal: 15.000 + 3.000 = 18.000
+// Venta nuevo IVA 19%: 3.420
+// Venta nuevo Total: 21.420
+var (vMod, itemMod) = await ventaSvc.ModificarCantidadItemAsync(
+    venta.Id,
+    itemsDominio[0].Id,
+    nuevaCantidad:        3m,
+    nuevoPesoKg:          null,
+    nuevoSubtotalItem:    15_000m,
+    nuevoSubtotalVenta:   18_000m,
+    nuevosImpuestosVenta: 3_420m,
+    nuevoTotalVenta:      21_420m);
+
+Check("L3 — Ítem modificado: Cantidad = 3",                itemMod.Cantidad == 3m);
+Check("L4 — Ítem modificado: Subtotal = 15.000",          itemMod.Subtotal == 15_000m);
+Check("L5 — Venta recalculada: Subtotal = 18.000",        vMod.Subtotal == 18_000m);
+Check("L6 — Venta recalculada: Impuestos (IVA) = 3.420",  vMod.Impuestos == 3_420m);
+Check("L7 — Venta recalculada: Total = 21.420",            vMod.Total == 21_420m);
+
+Console.WriteLine();
+
+// ══════════════════════════════════════════════════════════════════════
 // RESULTADO FINAL
 // ══════════════════════════════════════════════════════════════════════
 Console.WriteLine("══════════════════════════════════════════════════════════════");
 Console.WriteLine($"  RESULTADO: {pass} / {pass + fail} tests aprobados");
 Console.WriteLine();
 if (fail == 0)
-    Console.WriteLine("  ✅ TODOS LOS TESTS APROBADOS — POST /ventas/{id}/items LISTO.");
+    Console.WriteLine("  ✅ TODOS LOS TESTS APROBADOS — PUT /ventas/{id}/items/{itemId} LISTO.");
 else
     Console.WriteLine($"  ❌ {fail} test(s) FALLIDOS — revisar arriba.");
 Console.WriteLine("══════════════════════════════════════════════════════════════");
+
 

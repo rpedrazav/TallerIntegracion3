@@ -415,6 +415,94 @@ public class Program
         Console.WriteLine();
 
         // ═══════════════════════════════════════════════════════════════════════════════
+        // SECCIÓN 8: Modificar Cantidad de Ítem (PUT /ventas/{id}/items/{itemId})
+        // ═══════════════════════════════════════════════════════════════════════════════
+        Console.WriteLine("── 8. Modificar Cantidad de Ítem (PUT /ventas/{id}/items/{itemId}) ─────────");
+
+        var modValidator = new ModificarCantidadItemRequestValidator();
+        var mv1 = modValidator.Validate(new ModificarCantidadItemRequest { Cantidad = 0 });
+        Check("MOD-01", "Validador rechaza Cantidad <= 0", !mv1.IsValid);
+
+        var mv2 = modValidator.Validate(new ModificarCantidadItemRequest { Cantidad = 3 });
+        Check("MOD-02", "Validador acepta Cantidad > 0", mv2.IsValid);
+
+        // Error: Venta inexistente
+        var resModVentaNoExiste = await controller.ModificarCantidadItem(
+            Guid.NewGuid(), itemResp1.Id,
+            new ModificarCantidadItemRequest { Cantidad = 3 },
+            CancellationToken.None);
+        Check("MOD-03", "Venta inexistente retorna 404 Not Found",
+            resModVentaNoExiste is NotFoundObjectResult);
+
+        // Error: Ítem inexistente en la venta
+        var resModItemNoExiste = await controller.ModificarCantidadItem(
+            ventaPendiente.Id, Guid.NewGuid(),
+            new ModificarCantidadItemRequest { Cantidad = 3 },
+            CancellationToken.None);
+        Check("MOD-04", "Ítem no perteneciente a la venta retorna 404 Not Found",
+            resModItemNoExiste is NotFoundObjectResult);
+
+        // Error: Venta completada
+        var resModVentaComp = await controller.ModificarCantidadItem(
+            ventaCompletada.Id, Guid.NewGuid(),
+            new ModificarCantidadItemRequest { Cantidad = 3 },
+            CancellationToken.None);
+        Check("MOD-05", "Venta COMPLETADA retorna 409 Conflict al intentar modificar ítem",
+            resModVentaComp is ConflictObjectResult);
+
+        // Error: MS-2 no responde
+        taxMock.SimularFallaDeRed = true;
+        var resModFallaMS2 = await controller.ModificarCantidadItem(
+            ventaPendiente.Id, itemResp1.Id,
+            new ModificarCantidadItemRequest { Cantidad = 3 },
+            CancellationToken.None);
+        taxMock.SimularFallaDeRed = false;
+        Check("MOD-06", "Si MS-2 no responde retorna 503 Service Unavailable",
+            resModFallaMS2 is ObjectResult objMod && objMod.StatusCode == StatusCodes.Status503ServiceUnavailable);
+
+        // Éxito: Modificar cantidad de Ítem 1 (Aceite de Oliva) de 2 a 3 unidades
+        // Carrito con 3 ítems:
+        // Ítem 1 ahora: 3 x $5.000 = $15.000
+        // Ítem 2: 1 x $3.000 = $3.000
+        // Ítem 3 (Balanza): 1.5 kg x $1.200 = $1.800
+        // Nuevo subtotal venta: $15.000 + $3.000 + $1.800 = $19.800
+        // Nuevo IVA venta (19%): $3.762
+        // Nuevo total venta: $23.562
+        var resModOk = await controller.ModificarCantidadItem(
+            ventaPendiente.Id, itemResp1.Id,
+            new ModificarCantidadItemRequest { Cantidad = 3 },
+            CancellationToken.None);
+
+        Check("MOD-07", "Endpoint retorna 200 OK al modificar cantidad",
+            resModOk is OkObjectResult okMod && okMod.StatusCode == StatusCodes.Status200OK);
+
+        var itemModResp = (ItemVentaResponse)((OkObjectResult)resModOk).Value!;
+
+        Check("MOD-08", "Ítem modificado recalcula cantidad = 3",
+            itemModResp.Cantidad == 3m);
+
+        Check("MOD-09", "Ítem modificado recalcula subtotal = $15.000 ($5.000 x 3)",
+            itemModResp.Subtotal == 15000m);
+
+        var ventaEnDbMod = await ventaRepo.GetByIdAsync(ventaPendiente.Id);
+
+        Check("MOD-10", "Venta en DB recalcula Subtotal consolidado = $19.800",
+            ventaEnDbMod!.Subtotal == 19800m);
+
+        Check("MOD-11", "Venta en DB recalcula IVA consolidado (19%) = $3.762 vía MS-2",
+            ventaEnDbMod.Impuestos == 3762m);
+
+        Check("MOD-12", "Venta en DB recalcula Total consolidado = $23.562",
+            ventaEnDbMod.Total == 23562m);
+
+
+        var itemEnDbMod = await itemRepo.GetByIdAsync(itemResp1.Id);
+        Check("MOD-13", "Ítem en DB persistido con nueva cantidad=3 y subtotal=15.000",
+            itemEnDbMod!.Cantidad == 3m && itemEnDbMod.Subtotal == 15000m);
+
+        Console.WriteLine();
+
+        // ═══════════════════════════════════════════════════════════════════════════════
         // RESUMEN FINAL
         // ═══════════════════════════════════════════════════════════════════════════════
         Console.WriteLine("══════════════════════════════════════════════════════════════════════════");
@@ -423,12 +511,10 @@ public class Program
             Console.ForegroundColor = ConsoleColor.Green;
             Console.WriteLine($"  ✅ RESULTADO: TODOS LOS TESTS PASARON EXITOSAMENTE ({pass} de {pass + fail})");
             Console.ResetColor();
-            Console.WriteLine("  La tarea cumple al 100% todos los requisitos solicitados:");
-            Console.WriteLine("   • Llama a MS-3 GET /api/products/{id} para el precio actual del producto");
-            Console.WriteLine("   • Llama a MS-2 POST /api/tax/calculate para el cálculo tributario de IVA");
-            Console.WriteLine("   • Persiste el ítem con todos los datos calculados");
-            Console.WriteLine("   • Actualiza correctamente subtotal, IVA y total de la venta en DB");
-            Console.WriteLine("   • Maneja correctamente los casos de error (400, 401, 404, 409, 502)");
+            Console.WriteLine("  Todas las tareas cumplen al 100% los requisitos solicitados:");
+            Console.WriteLine("   • POST /ventas/{id}/items: agrega ítem consultando MS-3 y MS-2");
+            Console.WriteLine("   • Manejo de errores: MS-3 no encontrado → 404; MS-2 no responde → 503");
+            Console.WriteLine("   • PUT /ventas/{id}/items/{itemId}: modifica cantidad y recalcula subtotales/totales");
         }
         else
         {
@@ -437,6 +523,7 @@ public class Program
             Console.ResetColor();
         }
         Console.WriteLine("══════════════════════════════════════════════════════════════════════════");
+
     }
 }
 

@@ -31,7 +31,13 @@ public interface IItemVentaRepository
     Task<IReadOnlyList<ItemVenta>> CrearRangoAsync(IEnumerable<ItemVenta> items);
 
     /// <summary>
+    /// Actualiza los datos de un item existente (cantidad, subtotal, etc.).
+    /// </summary>
+    Task<ItemVenta> ActualizarAsync(ItemVenta item);
+
+    /// <summary>
     /// Elimina un item de la base de datos.
     /// </summary>
     Task EliminarAsync(ItemVenta item);
 }
+

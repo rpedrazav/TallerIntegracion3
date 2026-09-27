@@ -25,7 +25,22 @@ public sealed record AgregarItemRequest
     public decimal? PesoKg { get; init; }
 }
 
+// ── Request para PUT /ventas/{id}/items/{itemId} ─────────────────────────────
+
+/// <summary>
+/// Cuerpo del request para modificar la cantidad o peso de un ítem en el carrito.
+/// </summary>
+public sealed record ModificarCantidadItemRequest
+{
+    [JsonPropertyName("cantidad")]
+    public decimal Cantidad { get; init; }
+
+    [JsonPropertyName("peso_kg")]
+    public decimal? PesoKg { get; init; }
+}
+
 // ── DTOs de MS-3 (CatalogPricingService) ──────────────────────────────────────
+
 
 /// <summary>
 /// Modelo del producto obtenido desde MS-3 (GET /api/products/{id}).
