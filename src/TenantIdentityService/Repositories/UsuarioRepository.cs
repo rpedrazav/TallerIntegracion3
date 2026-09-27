@@ -90,4 +90,68 @@ public class UsuarioRepository : IUsuarioRepository
         await _db.SaveChangesAsync();
         return true;
     }
+
+    public async Task<AssignRolesResult> AssignRolesAsync(
+        Guid userId,
+        IEnumerable<string> roleNames,
+        Guid tenantId)
+    {
+        var usuario = await _db.Usuarios
+            .IgnoreQueryFilters()
+            .FirstOrDefaultAsync(existing => existing.Id == userId
+                                          && existing.TenantId == tenantId);
+
+        if (usuario is null)
+        {
+            return new AssignRolesResult
+            {
+                UserFound = false
+            };
+        }
+
+        var normalizedRoleNames = roleNames
+            .Select(roleName => roleName.Trim().ToUpperInvariant())
+            .Distinct()
+            .ToArray();
+
+        var roles = await _db.Roles
+            .Where(role => normalizedRoleNames.Contains(role.Nombre.ToUpper()))
+            .ToListAsync();
+
+        var validRoleNames = roles
+            .Select(role => role.Nombre.ToUpperInvariant())
+            .ToHashSet();
+        var invalidRoles = normalizedRoleNames
+            .Where(roleName => !validRoleNames.Contains(roleName))
+            .ToArray();
+
+        if (invalidRoles.Length > 0)
+        {
+            return new AssignRolesResult
+            {
+                UserFound = true,
+                InvalidRoles = invalidRoles,
+                Usuario = usuario
+            };
+        }
+
+        var currentAssignments = await _db.UsuarioRoles
+            .Where(usuarioRol => usuarioRol.UsuarioId == userId)
+            .ToListAsync();
+
+        _db.UsuarioRoles.RemoveRange(currentAssignments);
+        _db.UsuarioRoles.AddRange(roles.Select(role => new UsuarioRol
+        {
+            UsuarioId = userId,
+            RolId = role.Id
+        }));
+
+        await _db.SaveChangesAsync();
+
+        return new AssignRolesResult
+        {
+            UserFound = true,
+            Usuario = usuario
+        };
+    }
 }

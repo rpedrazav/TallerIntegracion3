@@ -16,4 +16,9 @@ public interface IUsuarioRepository
     Task<Usuario> UpdateAsync(Usuario usuario);
 
     Task<bool> DeactivateAsync(Guid id, Guid tenantId);
+
+    Task<AssignRolesResult> AssignRolesAsync(
+        Guid userId,
+        IEnumerable<string> roleNames,
+        Guid tenantId);
 }
