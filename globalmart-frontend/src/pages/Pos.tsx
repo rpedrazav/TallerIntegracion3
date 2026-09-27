@@ -1,11 +1,46 @@
-﻿import React, { useCallback } from 'react';
+﻿import React, { useState, useCallback, useMemo } from 'react';
 import BarcodeInput from '../components/pos/BarcodeInput';
 import CartItem from '../components/pos/CartItem';
 
+export interface ProductItem {
+  id: string;
+  name: string;
+  price: number;
+  quantity: number;
+}
+
 export default function Pos() {
+  const [cartItems, setCartItems] = useState<ProductItem[]>([
+    { id: '1', name: 'Coca Cola 2L', price: 2500, quantity: 2 },
+    { id: '2', name: 'Pan de Molde Castao', price: 1800, quantity: 1 }
+  ]);
+
   const handleSearch = useCallback((query: string) => {
     console.log('Buscando producto (debounce disparado):', query);
+    // Aqu en el futuro, si encuentra el producto, haremos setCartItems([...cartItems, nuevoProducto])
   }, []);
+
+  const handleQuantityChange = useCallback((id: string, newQuantity: number) => {
+    setCartItems(prev => prev.map(item => 
+      item.id === id ? { ...item, quantity: newQuantity } : item
+    ));
+  }, []);
+
+  const handleRemoveItem = useCallback((id: string) => {
+    setCartItems(prev => prev.filter(item => item.id !== id));
+  }, []);
+
+  // Recalcular totales en tiempo real
+  const { subtotal, totalItems } = useMemo(() => {
+    return cartItems.reduce(
+      (acc, item) => {
+        acc.subtotal += item.price * item.quantity;
+        acc.totalItems += item.quantity;
+        return acc;
+      },
+      { subtotal: 0, totalItems: 0 }
+    );
+  }, [cartItems]);
 
   return (
     <div style={{ display: 'flex', height: 'calc(100vh - 100px)', gap: '1rem' }}>
@@ -21,7 +56,9 @@ export default function Pos() {
 
       {/* Columna Central: Tabla del Carrito */}
       <div style={{ flex: '1', display: 'flex', flexDirection: 'column', background: '#fff', padding: '1rem', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-        <h3 style={{ marginTop: 0, color: '#1B4332', fontSize: '1.25rem' }}>Carrito de Compras</h3>
+        <h3 style={{ marginTop: 0, color: '#1B4332', fontSize: '1.25rem' }}>
+          Carrito de Compras ({totalItems} items)
+        </h3>
         <div style={{ flex: 1, overflow: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
             <thead>
@@ -34,23 +71,17 @@ export default function Pos() {
               </tr>
             </thead>
             <tbody>
-              {/* Dummy data para visualizar el componente CartItem */}
-              <CartItem 
-                id="1" 
-                name="Coca Cola 2L" 
-                price={2500} 
-                quantity={2} 
-                onQuantityChange={(id, q) => console.log('Cambio cantidad', id, q)}
-                onRemove={(id) => console.log('Eliminar', id)}
-              />
-              <CartItem 
-                id="2" 
-                name="Pan de Molde Castao" 
-                price={1800} 
-                quantity={1} 
-                onQuantityChange={(id, q) => console.log('Cambio cantidad', id, q)}
-                onRemove={(id) => console.log('Eliminar', id)}
-              />
+              {cartItems.map(item => (
+                <CartItem 
+                  key={item.id}
+                  id={item.id} 
+                  name={item.name} 
+                  price={item.price} 
+                  quantity={item.quantity} 
+                  onQuantityChange={handleQuantityChange}
+                  onRemove={handleRemoveItem}
+                />
+              ))}
             </tbody>
           </table>
         </div>
@@ -59,8 +90,9 @@ export default function Pos() {
       {/* Columna Derecha: Totales y Botones */}
       <div style={{ flex: '0 0 300px', display: 'flex', flexDirection: 'column', background: '#fff', padding: '1rem', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
         <h3 style={{ marginTop: 0, color: '#1B4332', fontSize: '1.25rem' }}>Resumen</h3>
-        <div style={{ flex: 1, border: '2px dashed #e5e7eb', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9ca3af', backgroundColor: '#f9fafb' }}>
-          [Totales y Botones]
+        <div style={{ flex: 1, border: '2px dashed #e5e7eb', borderRadius: '8px', padding: '1rem', color: '#374151', backgroundColor: '#f9fafb' }}>
+          <p><strong>Subtotal (bruto):</strong> $ {subtotal.toLocaleString('es-CL')}</p>
+          <p style={{ color: '#9ca3af', fontSize: '0.875rem' }}>(Los totales visuales y el IVA se implementarn en la siguiente tarea)</p>
         </div>
       </div>
 
