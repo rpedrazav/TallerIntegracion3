@@ -11,6 +11,8 @@ namespace WarehouseInventoryService.Messaging;
 /// Servicio hospedado que se suscribe al topic Kafka "sale.completed" al iniciar la aplicación.
 /// Por cada evento recibido: verifica idempotencia (EventosKafkaProcesados), deserializa el
 /// payload, itera los items y descuenta stock vía IStockRepository.Descontar.
+/// Si el procesamiento de un mensaje falla, se loguea el error y se continúa con el siguiente
+/// mensaje sin bloquear el consumer.
 /// No implementa selección de lote por FEFO (ver ticket separado).
 /// </summary>
 public sealed class KafkaConsumerService : IHostedService, IDisposable
@@ -70,18 +72,34 @@ public sealed class KafkaConsumerService : IHostedService, IDisposable
         {
             while (!cancellationToken.IsCancellationRequested)
             {
+                ConsumeResult<string, string>? result;
                 try
                 {
-                    var result = _consumer.Consume(cancellationToken);
-                    ProcesarEvento(result.Message.Value);
-                    // Se hace commit siempre (evento nuevo procesado o duplicado descartado),
-                    // para no reintentar indefinidamente un mensaje ya identificado como duplicado.
-                    _consumer.Commit(result);
+                    result = _consumer.Consume(cancellationToken);
                 }
                 catch (ConsumeException ex)
                 {
                     _logger.LogError(ex, "Error consumiendo mensaje del topic {Topic}", Topic);
+                    continue;
                 }
+
+                try
+                {
+                    ProcesarEvento(result.Message.Value);
+                }
+                catch (Exception ex)
+                {
+                    // No bloquear el consumer: se loguea el error y se continúa con el siguiente mensaje.
+                    _logger.LogError(
+                        ex,
+                        "Error procesando evento del topic {Topic} (offset {Offset}); se continúa con el siguiente mensaje",
+                        Topic,
+                        result.Offset);
+                }
+
+                // Se hace commit siempre (procesado, duplicado descartado, o fallido),
+                // para no reintentar indefinidamente el mismo mensaje.
+                _consumer.Commit(result);
             }
         }
         catch (OperationCanceledException)
@@ -114,6 +132,10 @@ public sealed class KafkaConsumerService : IHostedService, IDisposable
 
         using var scope = _scopeFactory.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<WarehouseDbContext>();
+
+        // No hay TenantMiddleware en este flujo (no es un request HTTP), así que el tenant
+        // del filtro global multi-tenant se setea manualmente desde el propio evento.
+        context.CurrentTenantId = evento.TenantId;
 
         var yaProcesado = context.EventosKafkaProcesados
             .AsNoTracking()
