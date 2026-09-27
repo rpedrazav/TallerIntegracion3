@@ -1,0 +1,157 @@
+using Microsoft.EntityFrameworkCore;
+using TenantIdentityService.Data;
+using TenantIdentityService.DTOs;
+using TenantIdentityService.Models;
+
+namespace TenantIdentityService.Repositories;
+
+public class UsuarioRepository : IUsuarioRepository
+{
+    private readonly TenantDbContext _db;
+
+    public UsuarioRepository(TenantDbContext db)
+    {
+        _db = db;
+    }
+
+    public async Task<IEnumerable<Usuario>> GetAllAsync(Guid tenantId)
+    {
+        return await _db.Usuarios
+            .IgnoreQueryFilters()
+            .Where(usuario => usuario.TenantId == tenantId)
+            .ToListAsync();
+    }
+
+    public async Task<PagedResult<Usuario>> GetActivePagedAsync(
+        Guid tenantId,
+        int page,
+        int pageSize)
+    {
+        var query = _db.Usuarios
+            .IgnoreQueryFilters()
+            .Where(usuario => usuario.TenantId == tenantId && usuario.Activo);
+
+        var totalItems = await query.CountAsync();
+        var items = await query
+            .OrderBy(usuario => usuario.Id)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        return new PagedResult<Usuario>
+        {
+            Items = items,
+            Page = page,
+            PageSize = pageSize,
+            TotalItems = totalItems,
+            TotalPages = (int)Math.Ceiling(totalItems / (double)pageSize)
+        };
+    }
+
+    public async Task<Usuario?> GetByIdAsync(Guid id, Guid tenantId)
+    {
+        return await _db.Usuarios
+            .IgnoreQueryFilters()
+            .FirstOrDefaultAsync(usuario => usuario.Id == id && usuario.TenantId == tenantId);
+    }
+
+    public async Task<Usuario> CreateAsync(Usuario usuario)
+    {
+        _db.Usuarios.Add(usuario);
+        await _db.SaveChangesAsync();
+        return usuario;
+    }
+
+    public async Task<Usuario> UpdateAsync(Usuario usuario)
+    {
+        var usuarioExistente = await _db.Usuarios
+            .IgnoreQueryFilters()
+            .FirstOrDefaultAsync(existing => existing.Id == usuario.Id
+                                          && existing.TenantId == usuario.TenantId);
+
+        if (usuarioExistente is null)
+            throw new KeyNotFoundException("El usuario no existe en el tenant indicado.");
+
+        _db.Entry(usuarioExistente).CurrentValues.SetValues(usuario);
+        await _db.SaveChangesAsync();
+        return usuarioExistente;
+    }
+
+    public async Task<bool> DeactivateAsync(Guid id, Guid tenantId)
+    {
+        var usuario = await _db.Usuarios
+            .IgnoreQueryFilters()
+            .FirstOrDefaultAsync(existing => existing.Id == id && existing.TenantId == tenantId);
+
+        if (usuario is null)
+            return false;
+
+        usuario.Activo = false;
+        await _db.SaveChangesAsync();
+        return true;
+    }
+
+    public async Task<AssignRolesResult> AssignRolesAsync(
+        Guid userId,
+        IEnumerable<string> roleNames,
+        Guid tenantId)
+    {
+        var usuario = await _db.Usuarios
+            .IgnoreQueryFilters()
+            .FirstOrDefaultAsync(existing => existing.Id == userId
+                                          && existing.TenantId == tenantId);
+
+        if (usuario is null)
+        {
+            return new AssignRolesResult
+            {
+                UserFound = false
+            };
+        }
+
+        var normalizedRoleNames = roleNames
+            .Select(roleName => roleName.Trim().ToUpperInvariant())
+            .Distinct()
+            .ToArray();
+
+        var roles = await _db.Roles
+            .Where(role => normalizedRoleNames.Contains(role.Nombre.ToUpper()))
+            .ToListAsync();
+
+        var validRoleNames = roles
+            .Select(role => role.Nombre.ToUpperInvariant())
+            .ToHashSet();
+        var invalidRoles = normalizedRoleNames
+            .Where(roleName => !validRoleNames.Contains(roleName))
+            .ToArray();
+
+        if (invalidRoles.Length > 0)
+        {
+            return new AssignRolesResult
+            {
+                UserFound = true,
+                InvalidRoles = invalidRoles,
+                Usuario = usuario
+            };
+        }
+
+        var currentAssignments = await _db.UsuarioRoles
+            .Where(usuarioRol => usuarioRol.UsuarioId == userId)
+            .ToListAsync();
+
+        _db.UsuarioRoles.RemoveRange(currentAssignments);
+        _db.UsuarioRoles.AddRange(roles.Select(role => new UsuarioRol
+        {
+            UsuarioId = userId,
+            RolId = role.Id
+        }));
+
+        await _db.SaveChangesAsync();
+
+        return new AssignRolesResult
+        {
+            UserFound = true,
+            Usuario = usuario
+        };
+    }
+}

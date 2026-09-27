@@ -39,4 +39,20 @@ public class TurnoService : ITurnoService
 
         return await _turnoRepository.Abrir(turno);
     }
+
+    public async Task<Turno?> Cerrar(Guid cajeroId, Guid tenantId)
+    {
+        var turnoActivo = await _turnoRepository.GetActivo(cajeroId, tenantId);
+        if (turnoActivo is null)
+        {
+            return null;
+        }
+
+        return await _turnoRepository.Cerrar(turnoActivo.Id);
+    }
+
+    public Task<Turno?> GetActivo(Guid cajeroId, Guid tenantId)
+    {
+        return _turnoRepository.GetActivo(cajeroId, tenantId);
+    }
 }

@@ -26,8 +26,9 @@ public class TenantMiddleware
         // Endpoints públicos que NO requieren tenant_id en el JWT (solo login y health)
         var path = context.Request.Path.Value ?? string.Empty;
         if (path.StartsWith("/auth/login") ||
-            path.StartsWith("/health") ||
-            path.StartsWith("/swagger"))
+            path.StartsWith("/health")     ||
+            path.StartsWith("/swagger")    ||
+            path.StartsWith("/tenants"))   // Endpoint interno: consumido por otros microservicios
         {
             await _next(context);
             return;

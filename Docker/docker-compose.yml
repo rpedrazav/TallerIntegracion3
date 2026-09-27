@@ -2,13 +2,16 @@
 # Docker Compose — Infraestructura Local GlobalMart OS
 # Proyecto: Taller de Integración 3 (INTEGRA3)
 #
-# Servicios:
+# Servicios (Docker):
 #   - 8x PostgreSQL 16 (una instancia por microservicio)
 #   - Apache Zookeeper + Apache Kafka + Kafka Init Topics
 #   - Kafdrop (UI web de Kafka)
 #   - Kong 3.6 DB-less (API Gateway)
 #   - Prometheus + Grafana (Monitoreo)
 #   - Frontend Electron (build helper)
+#
+# Servicios (host local, fuera de Docker):
+#   - TenantIdentityService  →  dotnet run  (puerto 5124)
 #
 # Uso:
 #   docker compose up -d          # Levantar todo
@@ -311,8 +314,9 @@ services:
     image: kong:3.6
     container_name: kong
     restart: unless-stopped
-    mem_limit: 512m
-    cpus: 0.5
+    # mem_limit y cpus removidos: en Docker Desktop para Windows el límite de
+    # 512m causaba OOM kills en los workers de Kong. Sin límite explícito,
+    # Docker Desktop respeta la memoria asignada en sus Settings.
     environment:
       KONG_DATABASE: "off"
       KONG_DECLARATIVE_CONFIG: /etc/kong/kong.yaml

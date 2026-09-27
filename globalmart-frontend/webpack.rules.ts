@@ -8,6 +8,7 @@ export const rules: Required<ModuleOptions>['rules'] = [
     test: /native_modules[/\\].+\.node$/,
     use: 'node-loader',
   },
+  /*
   {
     test: /[/\\]node_modules[/\\].+\.(m?js|node)$/,
     parser: { amd: false },
@@ -18,6 +19,7 @@ export const rules: Required<ModuleOptions>['rules'] = [
       },
     },
   },
+  */
   {
     test: /\.tsx?$/,
     exclude: /(node_modules|\.webpack)/,

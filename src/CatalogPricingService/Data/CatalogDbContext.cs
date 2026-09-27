@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using CatalogPricingService.Models;
 using System;
 
@@ -28,10 +28,20 @@ public class CatalogDbContext : DbContext
         modelBuilder.Entity<Producto>().HasQueryFilter(p => p.TenantId == CurrentTenantId);
         modelBuilder.Entity<Precio>().HasQueryFilter(p => p.TenantId == CurrentTenantId);
 
+        // Relacion auto-referenciada jerarquica de Categoria (parent_id nullable)
+        modelBuilder.Entity<Categoria>()
+            .HasOne(c => c.Parent)
+            .WithMany(c => c.Children)
+            .HasForeignKey(c => c.ParentId)
+            .OnDelete(DeleteBehavior.Restrict);
+
         // Indices
         modelBuilder.Entity<Categoria>().HasIndex(c => c.TenantId).HasDatabaseName("idx_categorias_tenant");
         modelBuilder.Entity<Producto>().HasIndex(p => p.TenantId).HasDatabaseName("idx_productos_tenant");
         modelBuilder.Entity<Producto>().HasIndex(p => new { p.TenantId, p.CodigoBarras }).IsUnique().HasDatabaseName("idx_productos_tenant_barcode");
+        // idx_productos_nombre_trgm: indice GIN pg_trgm sobre (tenant_id, nombre) para busquedas LIKE eficientes.
+        // EF Core no soporta GIN nativamente; el indice se crea via SQL crudo en la migracion
+        // 20260927164215_AddProductoNombreTrgmIndex.cs con "CREATE EXTENSION IF NOT EXISTS pg_trgm".
         modelBuilder.Entity<Precio>().HasIndex(p => p.TenantId).HasDatabaseName("idx_precios_tenant");
     }
 }

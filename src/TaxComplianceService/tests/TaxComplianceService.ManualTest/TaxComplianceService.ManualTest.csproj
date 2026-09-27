@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Referencia directa al microservicio MS-2 para usar su lógica real de cálculo -->
+    <ProjectReference Include="..\..\TaxComplianceService.csproj" />
+  </ItemGroup>
+
+</Project>

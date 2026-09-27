@@ -1,21 +1,29 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using FluentValidation;
+using FluentValidation.AspNetCore;
 using Microsoft.Extensions.Http;
 using Microsoft.IdentityModel.Tokens;
 using POSCartService.Data;
+using POSCartService.Middleware;
 using POSCartService.Repositories;
 using POSCartService.Services;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ─── 1. Base de Datos: PostgreSQL con EF Core ───────────────────────────────
+// â”€â”€â”€ 1. Base de Datos: PostgreSQL con EF Core â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 builder.Services.AddDbContext<PosCartDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddScoped<ITurnoRepository, TurnoRepository>();
+builder.Services.AddScoped<IVentaRepository, VentaRepository>();
+builder.Services.AddScoped<IItemVentaRepository, ItemVentaRepository>();
 builder.Services.AddScoped<ITurnoService, TurnoService>();
+builder.Services.AddScoped<IVentaService, VentaService>();
+builder.Services.AddFluentValidationAutoValidation();
+builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
-// ─── 2. Autenticación JWT ────────────────────────────────────────────────────
+// â”€â”€â”€ 2. AutenticaciÃ³n JWT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 var jwtKey = builder.Configuration["Jwt:Key"]
     ?? throw new InvalidOperationException("JWT Key no configurada en appsettings.json");
 
@@ -37,7 +45,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddAuthorization();
 
-// ─── 3. CORS ─────────────────────────────────────────────────────────────────
+// â”€â”€â”€ 3. CORS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("ElectronApp", policy =>
@@ -48,7 +56,7 @@ builder.Services.AddCors(options =>
     });
 });
 
-// ─── Cliente HTTP para Pasarela de Pago (Stripe/Transbank) ──────────────────
+// ─── Cliente HTTP para Pasarela de Pago (Stripe/Transbank) ──────────────────────
 // RN-02: todo pago con tarjeta pasa por la pasarela externa vía HTTPS.
 // Nunca se procesan datos de tarjeta localmente (cumplimiento PCI DSS).
 builder.Services.AddHttpClient("PasarelaPago", client =>
@@ -62,17 +70,38 @@ builder.Services.AddHttpClient("PasarelaPago", client =>
     client.DefaultRequestHeaders.Add("Accept", "application/json");
 });
 
-// ─── 4. Controllers + Swagger ────────────────────────────────────────────────
+// ─── Clientes HTTP hacia microservicios MS-3 y MS-2 ───────────────────────────
+builder.Services.AddHttpClient(CatalogClient.HttpClientName, client =>
+{
+    var baseUrl = builder.Configuration["Services:CatalogPricingService:BaseUrl"] ?? "http://localhost:5003";
+    client.BaseAddress = new Uri(baseUrl.TrimEnd('/') + "/");
+    client.Timeout = TimeSpan.FromSeconds(10);
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+});
+
+builder.Services.AddHttpClient(TaxClient.HttpClientName, client =>
+{
+    var baseUrl = builder.Configuration["Services:TaxComplianceService:BaseUrl"] ?? "http://localhost:5002";
+    client.BaseAddress = new Uri(baseUrl.TrimEnd('/') + "/");
+    client.Timeout = TimeSpan.FromSeconds(10);
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+});
+
+builder.Services.AddScoped<ICatalogClient, CatalogClient>();
+builder.Services.AddScoped<ITaxClient, TaxClient>();
+
+
+// â”€â”€â”€ 4. Controllers + Swagger â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
-    c.SwaggerDoc("v1", new() { Title = "GlobalMart OS — POS & Cart Service (MS-5)", Version = "v1" });
+    c.SwaggerDoc("v1", new() { Title = "GlobalMart OS â€” POS & Cart Service (MS-5)", Version = "v1" });
 
     c.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
     {
-        Type        = Microsoft.OpenApi.Models.SecuritySchemeType.Http,
-        Scheme      = "bearer",
+        Type = Microsoft.OpenApi.Models.SecuritySchemeType.ApiKey,
+        Scheme = "bearer", In = Microsoft.OpenApi.Models.ParameterLocation.Header, Name = "Authorization",
         BearerFormat = "JWT",
         Description = "Ingresa el JWT token (sin 'Bearer ' al inicio)"
     });
@@ -92,14 +121,14 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-// ─── 5. Health Checks ────────────────────────────────────────────────────────
+// â”€â”€â”€ 5. Health Checks â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 builder.Services.AddHealthChecks();
 
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
+    app.UseSwagger(c => c.SerializeAsV2 = true);
     app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "MS-5 POS & Cart v1"));
 }
 
@@ -107,11 +136,11 @@ app.UseHttpsRedirection();
 app.UseCors("ElectronApp");
 app.UseAuthentication();
 app.UseAuthorization();
-// TODO: app.UseTenantMiddleware(); una vez creado el middleware para este servicio
+app.UseMiddleware<TenantMiddleware>();
 
 app.MapControllers();
 app.MapHealthChecks("/health");
 
-// TODO: auto-migración en desarrollo, una vez exista el DbContext
+// TODO: auto-migraciÃ³n en desarrollo, una vez exista el DbContext
 
 app.Run();

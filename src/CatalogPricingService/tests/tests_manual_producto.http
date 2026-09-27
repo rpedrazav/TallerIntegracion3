@@ -1,0 +1,156 @@
+# =========================================================
+#  TEST MANUAL – CatalogPricingService  (ProductoController)
+#  Endpoints bajo prueba:
+#    GET /products/lookup?barcode={barcode}  → lookup por barcode
+#    GET /products/search?q={nombre}         → búsqueda parcial paginada
+#
+#  URL base del servicio: http://localhost:5203
+#  Auth requerida       : Bearer JWT  ó  header X-Tenant-ID (Development)
+# =========================================================
+
+### PASO 0 – OBTENER JWT (sólo si no usas X-Tenant-ID)
+# Ejecuta esto primero para obtener el token, luego copia el valor de "token"
+# en la variable @token más abajo.
+
+POST http://localhost:5124/auth/login
+Content-Type: application/json
+
+{
+  "email": "cajero@demo.cl",
+  "password": "demo1234"
+}
+
+###
+
+# ── Variables globales ─────────────────────────────────────────────────────────
+@baseUrl    = http://localhost:5203
+@tenantId   = aaaaaaaa-0000-0000-0000-000000000001
+@token      = PEGA_AQUI_EL_JWT
+
+# ──────────────────────────────────────────────────────────────────────────────
+# SETUP: Crear producto de prueba (necesario si la BD de catálogo está vacía)
+#        Ejecuta esto UNA SOLA VEZ antes de los casos de prueba.
+# ──────────────────────────────────────────────────────────────────────────────
+
+### SETUP – Crear producto de prueba
+POST {{baseUrl}}/products
+Content-Type: application/json
+Authorization: Bearer {{token}}
+X-Tenant-ID: {{tenantId}}
+
+{
+  "nombre": "Coca Cola 2L",
+  "descripcion": "Bebida gaseosa 2 litros",
+  "codigoBarras": "7591234567890",
+  "precioBase": 2500,
+  "isActive": true
+}
+
+###
+
+
+# ==============================================================================
+#  CASO 1 – Buscar por barcode EXISTENTE
+#  Endpoint : GET /products/lookup?barcode=7591234567890
+#  Resultado esperado: HTTP 200 + JSON con datos del producto
+# ==============================================================================
+
+### TC-01 · Barcode existente → 200 OK con producto
+GET {{baseUrl}}/products/lookup?barcode=7591234567890
+Authorization: Bearer {{token}}
+X-Tenant-ID: {{tenantId}}
+
+###
+# ✅ Validar en la respuesta:
+#   - Status: 200 OK
+#   - Body contiene: "codigoBarras": "7591234567890"
+#   - Body contiene: "nombre": "Coca Cola 2L"
+#   - Body contiene: "precioBase": 2500
+
+
+# ==============================================================================
+#  CASO 2 – Buscar por barcode INEXISTENTE
+#  Endpoint : GET /products/lookup?barcode=9999999999999
+#  Resultado esperado: HTTP 404 + mensaje de error
+# ==============================================================================
+
+### TC-02 · Barcode inexistente → 404 Not Found
+GET {{baseUrl}}/products/lookup?barcode=9999999999999
+Authorization: Bearer {{token}}
+X-Tenant-ID: {{tenantId}}
+
+###
+# ✅ Validar en la respuesta:
+#   - Status: 404 Not Found
+#   - Body: { "message": "Producto no encontrado para el código de barras indicado." }
+
+
+# ==============================================================================
+#  CASO 3 – Buscar por nombre PARCIAL (lista paginada)
+#  Endpoint : GET /products/search?q=coca&page=1&pageSize=10
+#  Resultado esperado: HTTP 200 + lista paginada
+# ==============================================================================
+
+### TC-03a · Nombre parcial "coca" → 200 con lista paginada
+GET {{baseUrl}}/products/search?q=coca&page=1&pageSize=10
+Authorization: Bearer {{token}}
+X-Tenant-ID: {{tenantId}}
+
+###
+# ✅ Validar en la respuesta:
+#   - Status: 200 OK
+#   - Body.data   → array con al menos 1 elemento
+#   - Body.data[0].nombre contiene "Coca" (case-insensitive)
+#   - Body.totalCount ≥ 1
+#   - Body.page     = 1
+#   - Body.pageSize = 10
+#   - Body.query    = "coca"
+
+### TC-03b · Nombre parcial "pan" → 200 con lista paginada
+GET {{baseUrl}}/products/search?q=pan&page=1&pageSize=5
+Authorization: Bearer {{token}}
+X-Tenant-ID: {{tenantId}}
+
+###
+# ✅ Validar:
+#   - Status: 200 OK
+#   - Body.data → productos que contengan "pan" en el nombre
+#   - Body.pageSize = 5  (paginación personalizada funciona)
+
+### TC-03c · Query sin resultados → 200 con lista vacía
+GET {{baseUrl}}/products/search?q=xyzproductoquenoexiste&page=1&pageSize=10
+Authorization: Bearer {{token}}
+X-Tenant-ID: {{tenantId}}
+
+###
+# ✅ Validar:
+#   - Status: 200 OK  (no 404, la búsqueda retorna lista vacía)
+#   - Body.data       = []
+#   - Body.totalCount = 0
+
+
+# ==============================================================================
+#  CASOS BORDE EXTRA (opcionales, para cobertura adicional)
+# ==============================================================================
+
+### BORDE-01 · Barcode vacío → 400 Bad Request
+GET {{baseUrl}}/products/lookup?barcode=
+Authorization: Bearer {{token}}
+X-Tenant-ID: {{tenantId}}
+
+###
+# ✅ Esperar: 400 con { "message": "El parámetro 'barcode' es requerido." }
+
+### BORDE-02 · Search sin parámetro q → 400 Bad Request
+GET {{baseUrl}}/products/search
+Authorization: Bearer {{token}}
+X-Tenant-ID: {{tenantId}}
+
+###
+# ✅ Esperar: 400 con { "message": "El parámetro 'q' es requerido." }
+
+### BORDE-03 · Sin header de autenticación → 401 Unauthorized
+GET {{baseUrl}}/products/lookup?barcode=7591234567890
+
+###
+# ✅ Esperar: 401 Unauthorized
