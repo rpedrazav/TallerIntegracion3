@@ -17,7 +17,6 @@ export default function Pos() {
 
   const handleSearch = useCallback((query: string) => {
     console.log('Buscando producto (debounce disparado):', query);
-    // Aqu en el futuro, si encuentra el producto, haremos setCartItems([...cartItems, nuevoProducto])
   }, []);
 
   const handleQuantityChange = useCallback((id: string, newQuantity: number) => {
@@ -30,7 +29,7 @@ export default function Pos() {
     setCartItems(prev => prev.filter(item => item.id !== id));
   }, []);
 
-  // Recalcular totales en tiempo real
+  // Recalcular totales
   const { subtotal, totalItems } = useMemo(() => {
     return cartItems.reduce(
       (acc, item) => {
@@ -41,6 +40,10 @@ export default function Pos() {
       { subtotal: 0, totalItems: 0 }
     );
   }, [cartItems]);
+
+  const tasaIva = 0.19; // 19% IVA en Chile
+  const iva = Math.round(subtotal * tasaIva);
+  const total = subtotal + iva;
 
   return (
     <div style={{ display: 'flex', height: 'calc(100vh - 100px)', gap: '1rem' }}>
@@ -88,12 +91,36 @@ export default function Pos() {
       </div>
 
       {/* Columna Derecha: Totales y Botones */}
-      <div style={{ flex: '0 0 300px', display: 'flex', flexDirection: 'column', background: '#fff', padding: '1rem', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-        <h3 style={{ marginTop: 0, color: '#1B4332', fontSize: '1.25rem' }}>Resumen</h3>
-        <div style={{ flex: 1, border: '2px dashed #e5e7eb', borderRadius: '8px', padding: '1rem', color: '#374151', backgroundColor: '#f9fafb' }}>
-          <p><strong>Subtotal (bruto):</strong> $ {subtotal.toLocaleString('es-CL')}</p>
-          <p style={{ color: '#9ca3af', fontSize: '0.875rem' }}>(Los totales visuales y el IVA se implementarn en la siguiente tarea)</p>
+      <div style={{ flex: '0 0 300px', display: 'flex', flexDirection: 'column', background: '#fff', padding: '1.5rem', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+        <h3 style={{ marginTop: 0, color: '#1B4332', fontSize: '1.25rem', borderBottom: '2px solid #e5e7eb', paddingBottom: '0.5rem', marginBottom: '1.5rem' }}>
+          Resumen de Venta
+        </h3>
+        
+        <div style={{ flex: 1 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem', color: '#4b5563' }}>
+            <span>Subtotal:</span>
+            <span>$ {subtotal.toLocaleString('es-CL')}</span>
+          </div>
+          
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem', color: '#4b5563' }}>
+            <span>IVA (19%):</span>
+            <span>$ {iva.toLocaleString('es-CL')}</span>
+          </div>
+
+          <div style={{ borderTop: '2px dashed #e5e7eb', margin: '1.5rem 0' }}></div>
+
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+            <span style={{ fontSize: '1.25rem', fontWeight: 600, color: '#111827' }}>TOTAL:</span>
+            <span style={{ fontSize: '2rem', fontWeight: 700, color: '#1B4332' }}>
+              $ {total.toLocaleString('es-CL')}
+            </span>
+          </div>
         </div>
+
+        <div style={{ marginTop: 'auto', border: '2px dashed #e5e7eb', borderRadius: '8px', padding: '1rem', textAlign: 'center', color: '#9ca3af', backgroundColor: '#f9fafb' }}>
+          [Botones de Cobro irn aqu]
+        </div>
+
       </div>
 
     </div>
