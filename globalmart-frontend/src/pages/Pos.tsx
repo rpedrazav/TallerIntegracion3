@@ -29,6 +29,18 @@ export default function Pos() {
     setCartItems(prev => prev.filter(item => item.id !== id));
   }, []);
 
+  const handleCancelSale = () => {
+    if (cartItems.length === 0) return;
+    if (window.confirm('Ests seguro de que deseas cancelar la venta actual? Se vaciar el carrito.')) {
+      setCartItems([]);
+    }
+  };
+
+  const handleCheckout = () => {
+    console.log('Iniciando proceso de cobro...');
+    alert('Funcionalidad de cobro se implementar en el futuro.');
+  };
+
   // Recalcular totales
   const { subtotal, totalItems } = useMemo(() => {
     return cartItems.reduce(
@@ -44,6 +56,8 @@ export default function Pos() {
   const tasaIva = 0.19; // 19% IVA en Chile
   const iva = Math.round(subtotal * tasaIva);
   const total = subtotal + iva;
+  
+  const isCartEmpty = cartItems.length === 0;
 
   return (
     <div style={{ display: 'flex', height: 'calc(100vh - 100px)', gap: '1rem' }}>
@@ -117,8 +131,45 @@ export default function Pos() {
           </div>
         </div>
 
-        <div style={{ marginTop: 'auto', border: '2px dashed #e5e7eb', borderRadius: '8px', padding: '1rem', textAlign: 'center', color: '#9ca3af', backgroundColor: '#f9fafb' }}>
-          [Botones de Cobro irn aqu]
+        <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+          <button 
+            onClick={handleCheckout}
+            disabled={isCartEmpty}
+            style={{ 
+              width: '100%', 
+              padding: '1rem', 
+              fontSize: '1.125rem', 
+              fontWeight: 'bold', 
+              color: 'white', 
+              backgroundColor: isCartEmpty ? '#9ca3af' : '#10b981', 
+              border: 'none', 
+              borderRadius: '8px', 
+              cursor: isCartEmpty ? 'not-allowed' : 'pointer',
+              transition: 'background-color 0.2s',
+              boxShadow: isCartEmpty ? 'none' : '0 4px 6px rgba(16, 185, 129, 0.25)'
+            }}
+          >
+            COBRAR
+          </button>
+          
+          <button 
+            onClick={handleCancelSale}
+            disabled={isCartEmpty}
+            style={{ 
+              width: '100%', 
+              padding: '0.75rem', 
+              fontSize: '1rem', 
+              fontWeight: 600, 
+              color: isCartEmpty ? '#d1d5db' : '#4b5563', 
+              backgroundColor: isCartEmpty ? '#f3f4f6' : '#e5e7eb', 
+              border: 'none', 
+              borderRadius: '8px', 
+              cursor: isCartEmpty ? 'not-allowed' : 'pointer',
+              transition: 'background-color 0.2s'
+            }}
+          >
+            Cancelar Venta
+          </button>
         </div>
 
       </div>
