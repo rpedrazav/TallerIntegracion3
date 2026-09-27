@@ -503,6 +503,90 @@ public class Program
         Console.WriteLine();
 
         // ═══════════════════════════════════════════════════════════════════════════════
+        // SECCIÓN 9: Eliminar Ítem (DELETE /ventas/{id}/items/{itemId})
+        // ═══════════════════════════════════════════════════════════════════════════════
+        Console.WriteLine("── 9. Eliminar Ítem (DELETE /ventas/{id}/items/{itemId}) ───────────────────");
+
+        // Estado actual del carrito (tras MOD-07):
+        // Ítem 1 (Aceite): 3 x $5.000 = $15.000
+        // Ítem 2 (Café):   1 x $3.000 =  $3.000
+        // Ítem 3 (Balanza):1.5 x $1.200 = $1.800
+        // Subtotal = $19.800 | IVA = $3.762 | Total = $23.562
+
+        // DEL-01: Sin JWT → 401
+        var ctrlSinAuth = CrearController(autenticado: false);
+        var resDelSinAuth = await ctrlSinAuth.EliminarItem(ventaPendiente.Id, itemResp1.Id, CancellationToken.None);
+        Check("DEL-01", "Sin JWT retorna 401 Unauthorized", resDelSinAuth is UnauthorizedObjectResult);
+
+        // DEL-02: Venta inexistente → 404
+        var resDelVentaNoExiste = await controller.EliminarItem(Guid.NewGuid(), itemResp1.Id, CancellationToken.None);
+        Check("DEL-02", "Venta inexistente retorna 404 Not Found", resDelVentaNoExiste is NotFoundObjectResult);
+
+        // DEL-03: Ítem inexistente en la venta → 404
+        var resDelItemNoExiste = await controller.EliminarItem(ventaPendiente.Id, Guid.NewGuid(), CancellationToken.None);
+        Check("DEL-03", "Ítem inexistente retorna 404 Not Found", resDelItemNoExiste is NotFoundObjectResult);
+
+        // DEL-04: Venta en estado COMPLETADA → 409
+        var resDelVentaComp = await controller.EliminarItem(ventaCompletada.Id, Guid.NewGuid(), CancellationToken.None);
+        Check("DEL-04", "Venta COMPLETADA retorna 409 Conflict al intentar eliminar ítem",
+            resDelVentaComp is ConflictObjectResult);
+
+        // DEL-05: MS-2 no responde al eliminar → 503
+        // (solo se llama a MS-2 si quedan ítems; el carrito tiene 3 ítems, así que sí llama)
+        taxMock.SimularFallaDeRed = true;
+        var resDelFallaMS2 = await controller.EliminarItem(ventaPendiente.Id, itemResp1.Id, CancellationToken.None);
+        taxMock.SimularFallaDeRed = false;
+        Check("DEL-05", "Si MS-2 no responde retorna 503 Service Unavailable",
+            resDelFallaMS2 is ObjectResult objDel && objDel.StatusCode == StatusCodes.Status503ServiceUnavailable);
+
+        // DEL-06: Flujo exitoso — eliminar Ítem 3 (Balanza: $1.800)
+        // Carrito resultante:
+        // Ítem 1 (Aceite): 3 x $5.000 = $15.000
+        // Ítem 2 (Café):   1 x $3.000 =  $3.000
+        // Nuevo subtotal = $18.000 | IVA 19% = $3.420 | Total = $21.420
+        var resDelItem3 = await controller.EliminarItem(ventaPendiente.Id, itemResp3.Id, CancellationToken.None);
+        Check("DEL-06", "Eliminar ítem de balanza retorna 200 OK",
+            resDelItem3 is OkObjectResult okDel && okDel.StatusCode == StatusCodes.Status200OK);
+
+        var ventaDbDel1 = await ventaRepo.GetByIdAsync(ventaPendiente.Id);
+        Check("DEL-07", "Venta en DB recalcula Subtotal = $18.000 tras eliminar ítem balanza",
+            ventaDbDel1!.Subtotal == 18000m);
+
+        Check("DEL-08", "Venta en DB recalcula IVA (19%) = $3.420 vía MS-2",
+            ventaDbDel1.Impuestos == 3420m);
+
+        Check("DEL-09", "Venta en DB recalcula Total = $21.420",
+            ventaDbDel1.Total == 21420m);
+
+        Check("DEL-10", "Venta en DB tiene exactamente 2 ítems restantes",
+            ventaDbDel1.Items.Count == 2);
+
+        // Verificar que el ítem eliminado ya no existe en la base de datos
+        var itemEliminadoEnDb = await itemRepo.GetByIdAsync(itemResp3.Id);
+        Check("DEL-11", "Ítem eliminado ya no existe en la tabla ItemsVenta",
+            itemEliminadoEnDb is null);
+
+        // DEL-12: Eliminar el último ítem restante → totales deben quedar en 0
+        // Eliminamos Ítem 2 (Café: $3.000)
+        var resDelItem2 = await controller.EliminarItem(ventaPendiente.Id, itemResp2.Id, CancellationToken.None);
+        Check("DEL-12", "Eliminar Ítem 2 retorna 200 OK",
+            resDelItem2 is OkObjectResult);
+
+        // DEL-13: Eliminar Ítem 1 (el último) → carrito vacío → totales = 0 (MS-2 no se llama)
+        var resDelItem1 = await controller.EliminarItem(ventaPendiente.Id, itemResp1.Id, CancellationToken.None);
+        Check("DEL-13", "Eliminar último ítem retorna 200 OK",
+            resDelItem1 is OkObjectResult);
+
+        var ventaDbVacia = await ventaRepo.GetByIdAsync(ventaPendiente.Id);
+        Check("DEL-14", "Venta con carrito vacío tiene Subtotal = 0, Impuestos = 0, Total = 0",
+            ventaDbVacia!.Subtotal == 0m && ventaDbVacia.Impuestos == 0m && ventaDbVacia.Total == 0m);
+
+        Check("DEL-15", "Venta vacía tiene 0 ítems en su colección",
+            ventaDbVacia.Items.Count == 0);
+
+        Console.WriteLine();
+
+        // ═══════════════════════════════════════════════════════════════════════════════
         // RESUMEN FINAL
         // ═══════════════════════════════════════════════════════════════════════════════
         Console.WriteLine("══════════════════════════════════════════════════════════════════════════");
@@ -515,6 +599,7 @@ public class Program
             Console.WriteLine("   • POST /ventas/{id}/items: agrega ítem consultando MS-3 y MS-2");
             Console.WriteLine("   • Manejo de errores: MS-3 no encontrado → 404; MS-2 no responde → 503");
             Console.WriteLine("   • PUT /ventas/{id}/items/{itemId}: modifica cantidad y recalcula subtotales/totales");
+            Console.WriteLine("   • DELETE /ventas/{id}/items/{itemId}: elimina ítem y actualiza totales (MS-2)");
         }
         else
         {

@@ -91,6 +91,24 @@ public interface IVentaService
         decimal nuevoSubtotalVenta,
         decimal nuevosImpuestosVenta,
         decimal nuevoTotalVenta);
+
+    /// <summary>
+    /// Elimina un ítem de una venta PENDIENTE y actualiza los totales consolidados (subtotal, impuestos, total).
+    /// </summary>
+    /// <param name="ventaId">Id de la venta / carrito.</param>
+    /// <param name="itemId">Id del ítem a eliminar.</param>
+    /// <param name="nuevoSubtotalVenta">Subtotal consolidado recalculado sin el ítem eliminado.</param>
+    /// <param name="nuevosImpuestosVenta">Total de impuestos recalculado sin el ítem eliminado.</param>
+    /// <param name="nuevoTotalVenta">Total consolidado recalculado sin el ítem eliminado.</param>
+    /// <returns>La venta actualizada y el ítem que fue eliminado.</returns>
+    /// <exception cref="KeyNotFoundException">Si la venta o el ítem no existen.</exception>
+    /// <exception cref="InvalidOperationException">Si la venta no está en estado PENDIENTE.</exception>
+    Task<(Venta Venta, ItemVenta ItemEliminado)> EliminarItemAsync(
+        Guid ventaId,
+        Guid itemId,
+        decimal nuevoSubtotalVenta,
+        decimal nuevosImpuestosVenta,
+        decimal nuevoTotalVenta);
 }
 
 

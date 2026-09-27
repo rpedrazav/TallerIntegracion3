@@ -66,8 +66,16 @@ public class ItemVentaRepository : IItemVentaRepository
     /// <inheritdoc/>
     public async Task EliminarAsync(ItemVenta item)
     {
-        _context.ItemsVenta.Remove(item);
-        await _context.SaveChangesAsync();
+        // Buscar la instancia ya rastreada por EF para evitar conflictos de identity map
+        var tracked = await _context.ItemsVenta
+            .IgnoreQueryFilters()
+            .FirstOrDefaultAsync(i => i.Id == item.Id);
+
+        if (tracked is not null)
+        {
+            _context.ItemsVenta.Remove(tracked);
+            await _context.SaveChangesAsync();
+        }
     }
 }
 
