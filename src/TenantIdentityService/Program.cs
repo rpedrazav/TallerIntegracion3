@@ -1,4 +1,4 @@
-﻿using FluentValidation;
+using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -42,7 +42,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy("ElectronApp", policy =>
     {
         // El frontend Electron no tiene un origen HTTP fijo; en desarrollo permitimos localhost
-        policy.WithOrigins("http://localhost:3000", "http://localhost:5173", "http://localhost:3005", "http://localhost:9005")
+        policy.AllowAnyOrigin()
               .AllowAnyHeader()
               .AllowAnyMethod();
     });

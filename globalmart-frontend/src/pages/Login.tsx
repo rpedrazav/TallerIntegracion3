@@ -19,7 +19,7 @@ export default function Login() {
 
     try {
       // Llamada real a la API de Identity
-      const response = await axios.post('http://localhost:5124/auth/login', {
+      const response = await axios.post('http://127.0.0.1:5124/auth/login', {
         email,
         password,
         tenantId
