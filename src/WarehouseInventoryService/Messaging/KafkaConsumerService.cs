@@ -1,13 +1,17 @@
 using System.Text.Json;
 using Confluent.Kafka;
+using Microsoft.EntityFrameworkCore;
+using WarehouseInventoryService.Data;
+using WarehouseInventoryService.Models;
 using WarehouseInventoryService.Repositories;
 
 namespace WarehouseInventoryService.Messaging;
 
 /// <summary>
 /// Servicio hospedado que se suscribe al topic Kafka "sale.completed" al iniciar la aplicación.
-/// Por cada evento recibido: deserializa el payload, itera los items y descuenta stock
-/// vía IStockRepository.Descontar. No implementa selección de lote por FEFO (ver ticket separado).
+/// Por cada evento recibido: verifica idempotencia (EventosKafkaProcesados), deserializa el
+/// payload, itera los items y descuenta stock vía IStockRepository.Descontar.
+/// No implementa selección de lote por FEFO (ver ticket separado).
 /// </summary>
 public sealed class KafkaConsumerService : IHostedService, IDisposable
 {
@@ -70,6 +74,8 @@ public sealed class KafkaConsumerService : IHostedService, IDisposable
                 {
                     var result = _consumer.Consume(cancellationToken);
                     ProcesarEvento(result.Message.Value);
+                    // Se hace commit siempre (evento nuevo procesado o duplicado descartado),
+                    // para no reintentar indefinidamente un mensaje ya identificado como duplicado.
                     _consumer.Commit(result);
                 }
                 catch (ConsumeException ex)
@@ -103,7 +109,24 @@ public sealed class KafkaConsumerService : IHostedService, IDisposable
             return;
         }
 
+        // event_id = VentaId (ver decisión de diseño acordada: no hay eventId explícito en el payload).
+        var eventId = evento.VentaId;
+
         using var scope = _scopeFactory.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<WarehouseDbContext>();
+
+        var yaProcesado = context.EventosKafkaProcesados
+            .AsNoTracking()
+            .Any(e => e.EventId == eventId);
+
+        if (yaProcesado)
+        {
+            _logger.LogInformation(
+                "Evento {EventId} ya fue procesado anteriormente, se descarta (idempotencia)",
+                eventId);
+            return;
+        }
+
         var stockRepository = scope.ServiceProvider.GetRequiredService<IStockRepository>();
 
         foreach (var item in evento.Items)
@@ -126,6 +149,13 @@ public sealed class KafkaConsumerService : IHostedService, IDisposable
                     item.ProductoId, evento.SucursalId, item.Cantidad, evento.VentaId);
             }
         }
+
+        context.EventosKafkaProcesados.Add(new EventoKafkaProcesado
+        {
+            EventId = eventId,
+            ProcesadoAt = DateTime.UtcNow
+        });
+        context.SaveChanges();
     }
 
     public async Task StopAsync(CancellationToken cancellationToken)
