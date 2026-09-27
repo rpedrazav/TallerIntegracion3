@@ -68,5 +68,29 @@ public interface IVentaService
         decimal subtotal,
         decimal impuestos,
         decimal total);
+
+    /// <summary>
+    /// Modifica la cantidad de un ítem existente en una venta PENDIENTE y actualiza los totales consolidados.
+    /// </summary>
+    /// <param name="ventaId">Id de la venta / carrito.</param>
+    /// <param name="itemId">Id del ítem a modificar.</param>
+    /// <param name="nuevaCantidad">Nueva cantidad a asignar.</param>
+    /// <param name="nuevoPesoKg">Nuevo peso (opcional, balanza).</param>
+    /// <param name="nuevoSubtotalItem">Subtotal recalculado del ítem (precioUnitario * nuevaCantidad).</param>
+    /// <param name="nuevoSubtotalVenta">Subtotal consolidado recalculado de la venta.</param>
+    /// <param name="nuevosImpuestosVenta">Total de impuestos consolidado recalculado de la venta.</param>
+    /// <param name="nuevoTotalVenta">Total consolidado recalculado de la venta.</param>
+    /// <exception cref="KeyNotFoundException">Si la venta o el ítem no existen.</exception>
+    /// <exception cref="InvalidOperationException">Si la venta no está en estado PENDIENTE.</exception>
+    Task<(Venta Venta, ItemVenta Item)> ModificarCantidadItemAsync(
+        Guid ventaId,
+        Guid itemId,
+        decimal nuevaCantidad,
+        decimal? nuevoPesoKg,
+        decimal nuevoSubtotalItem,
+        decimal nuevoSubtotalVenta,
+        decimal nuevosImpuestosVenta,
+        decimal nuevoTotalVenta);
 }
+
 

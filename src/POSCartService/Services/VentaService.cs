@@ -138,5 +138,45 @@ public class VentaService : IVentaService
 
         return (venta, item);
     }
+
+    /// <inheritdoc/>
+    public async Task<(Venta Venta, ItemVenta Item)> ModificarCantidadItemAsync(
+        Guid ventaId,
+        Guid itemId,
+        decimal nuevaCantidad,
+        decimal? nuevoPesoKg,
+        decimal nuevoSubtotalItem,
+        decimal nuevoSubtotalVenta,
+        decimal nuevosImpuestosVenta,
+        decimal nuevoTotalVenta)
+    {
+        var venta = await _ventaRepository.GetByIdAsync(ventaId)
+            ?? throw new KeyNotFoundException($"Venta {ventaId} no encontrada.");
+
+        if (venta.Estado != EstadoVenta.PENDIENTE)
+            throw new InvalidOperationException(
+                $"Solo se pueden modificar ítems de una venta PENDIENTE. Estado actual: {venta.Estado}.");
+
+        var item = venta.Items.FirstOrDefault(i => i.Id == itemId)
+            ?? throw new KeyNotFoundException($"Item {itemId} no encontrado en la venta {ventaId}.");
+
+        item.Cantidad = nuevaCantidad;
+        item.PesoKg   = nuevoPesoKg;
+        item.Subtotal = nuevoSubtotalItem;
+
+        if (_itemVentaRepository is not null)
+        {
+            await _itemVentaRepository.ActualizarAsync(item);
+        }
+
+        venta.Subtotal  = nuevoSubtotalVenta;
+        venta.Impuestos = nuevosImpuestosVenta;
+        venta.Total     = nuevoTotalVenta;
+
+        await _ventaRepository.ActualizarAsync(venta);
+
+        return (venta, item);
+    }
 }
+
 
