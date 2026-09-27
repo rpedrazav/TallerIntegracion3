@@ -53,7 +53,7 @@ export default function CartItem({ id, name, price, quantity, onQuantityChange, 
             textAlign: 'center',
             outline: 'none',
           }}
-          onFocus={(e) => e.target.style.borderColor = '#1B4332'}
+          onFocus={(e) => e.target.style.borderColor = '#0ea5e9'}
           onBlur={(e) => {
             e.target.style.borderColor = '#d1d5db';
             handleBlur(e);
@@ -91,3 +91,4 @@ export default function CartItem({ id, name, price, quantity, onQuantityChange, 
     </tr>
   );
 }
+

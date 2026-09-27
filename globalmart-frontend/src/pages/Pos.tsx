@@ -63,7 +63,7 @@ export default function Pos() {
       
       {/* Columna Izquierda: Bsqueda y Escaneo */}
       <div style={{ flex: '0 0 320px', display: 'flex', flexDirection: 'column', background: '#fff', padding: '1rem', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-        <h3 style={{ marginTop: 0, color: '#1B4332', fontSize: '1.25rem' }}>Buscar Producto</h3>
+        <h3 style={{ marginTop: 0, color: '#0ea5e9', fontSize: '1.25rem' }}>Buscar Producto</h3>
         <BarcodeInput onSearch={handleSearch} />
         <div style={{ flex: 1, border: '2px dashed #e5e7eb', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9ca3af', backgroundColor: '#f9fafb' }}>
           [Resultados de bsqueda]
@@ -72,7 +72,7 @@ export default function Pos() {
 
       {/* Columna Central: Tabla del Carrito */}
       <div style={{ flex: '1', display: 'flex', flexDirection: 'column', background: '#fff', padding: '1rem', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-        <h3 style={{ marginTop: 0, color: '#1B4332', fontSize: '1.25rem' }}>
+        <h3 style={{ marginTop: 0, color: '#0ea5e9', fontSize: '1.25rem' }}>
           Carrito de Compras ({totalItems} items)
         </h3>
         <div style={{ flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column' }}>
@@ -119,7 +119,7 @@ export default function Pos() {
 
       {/* Columna Derecha: Totales y Botones */}
       <div style={{ flex: '0 0 300px', display: 'flex', flexDirection: 'column', background: '#fff', padding: '1.5rem', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-        <h3 style={{ marginTop: 0, color: '#1B4332', fontSize: '1.25rem', borderBottom: '2px solid #e5e7eb', paddingBottom: '0.5rem', marginBottom: '1.5rem' }}>
+        <h3 style={{ marginTop: 0, color: '#0ea5e9', fontSize: '1.25rem', borderBottom: '2px solid #e5e7eb', paddingBottom: '0.5rem', marginBottom: '1.5rem' }}>
           Resumen de Venta
         </h3>
         
@@ -138,7 +138,7 @@ export default function Pos() {
 
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
             <span style={{ fontSize: '1.25rem', fontWeight: 600, color: '#111827' }}>TOTAL:</span>
-            <span style={{ fontSize: '2rem', fontWeight: 700, color: '#1B4332' }}>
+            <span style={{ fontSize: '2rem', fontWeight: 700, color: '#0ea5e9' }}>
               $ {total.toLocaleString('es-CL')}
             </span>
           </div>
@@ -154,12 +154,12 @@ export default function Pos() {
               fontSize: '1.125rem', 
               fontWeight: 'bold', 
               color: 'white', 
-              backgroundColor: isCartEmpty ? '#9ca3af' : '#10b981', 
+              backgroundColor: isCartEmpty ? '#9ca3af' : '#0ea5e9', 
               border: 'none', 
               borderRadius: '8px', 
               cursor: isCartEmpty ? 'not-allowed' : 'pointer',
               transition: 'background-color 0.2s',
-              boxShadow: isCartEmpty ? 'none' : '0 4px 6px rgba(16, 185, 129, 0.25)'
+              boxShadow: isCartEmpty ? 'none' : '0 4px 6px rgba(14, 165, 233, 0.25)'
             }}
           >
             COBRAR
@@ -190,3 +190,4 @@ export default function Pos() {
     </div>
   );
 }
+

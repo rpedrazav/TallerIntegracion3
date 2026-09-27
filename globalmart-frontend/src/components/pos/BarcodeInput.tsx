@@ -54,8 +54,8 @@ export default function BarcodeInput({ onSearch }: BarcodeInputProps) {
           transition: 'all 0.2s ease',
         }}
         onFocus={(e) => {
-            e.target.style.borderColor = '#1B4332';
-            e.target.style.boxShadow = '0 0 0 3px rgba(27, 67, 50, 0.2)';
+            e.target.style.borderColor = '#0ea5e9';
+            e.target.style.boxShadow = '0 0 0 3px rgba(14, 165, 233, 0.2)';
         }}
         onBlur={(e) => {
             e.target.style.borderColor = '#d1d5db';
@@ -65,3 +65,4 @@ export default function BarcodeInput({ onSearch }: BarcodeInputProps) {
     </div>
   );
 }
+
