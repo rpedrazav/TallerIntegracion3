@@ -21,7 +21,7 @@ reglas: [RN-02, RN-03, RN-06, RF-02, RF-03, RF-04, RF-05, RF-06, RF-07]
 src/POSCartService/
 ├── Controllers/
 │   ├── TurnosController.cs   POST abrir|activo|cerrar
-│   └── VentasController.cs   CRUD ventas + ítems + cobro + anular
+│   └── VentasController.cs   CRUD ventas + gestión de ítems (cobro y anulación aún no expuestos)
 ├── Data/  PosCartDbContext.cs + Migrations/
 ├── Models/  Venta · ItemVenta · Turno · Pago · Anulacion
 ├── Repositories/  IVentaRepository · VentaRepository · ITurnoRepository · TurnoRepository · IItemVentaRepository · ItemVentaRepository
