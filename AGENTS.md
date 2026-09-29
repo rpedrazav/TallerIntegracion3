@@ -12,7 +12,20 @@ Antes de realizar cualquier tarea, consulta el **Grafo de Contexto**:
 1. Leer [`docs/context/estado-actual.md`](docs/context/estado-actual.md) para conocer el estado real (implementado vs planificado).
 2. Leer el nodo de servicio en [`docs/context/servicios/`](docs/context/servicios/) correspondiente a la tarea.
 3. Consultar [`docs/context/index.md`](docs/context/index.md) para ubicar nodos de dominio, eventos Kafka o infraestructura.
-4. **Regla de mantenimiento:** Si modificas código o arquitectura, debes actualizar el nodo `.md` correspondiente y su fecha `ultima_revision`.
+
+### Regla de actualización automática del Grafo
+
+El mismo agente que modifica el código debe mantener actualizado el Grafo de Contexto dentro de la misma tarea, commit o Pull Request.
+
+1. Antes de editar, identifica qué nodos están directamente relacionados con el cambio.
+2. Después de editar, actualiza únicamente los nodos realmente afectados: servicio, dominio, evento Kafka, infraestructura o frontend, según corresponda.
+3. Si el cambio altera endpoints, eventos, reglas, arquitectura o el estado de una funcionalidad, actualiza también [`docs/context/estado-actual.md`](docs/context/estado-actual.md).
+4. Actualiza `ultima_revision` en cada nodo que hayas modificado, incluida `estado-actual.md` cuando corresponda.
+5. Cambia `IMPLEMENTADO`, `PARCIAL` o `PLANIFICADO` solo cuando exista evidencia en el código, las pruebas o la configuración. Todo dato no confirmado debe marcarse como `[NO VERIFICADO]`.
+6. Verifica que los enlaces nuevos apunten a archivos existentes y que los endpoints, eventos y nombres coincidan con el código.
+7. Si un nodo no está afectado por el cambio, **no lo modifiques**. No actualices todo el Grafo por rutina ni agregues información especulativa.
+
+**Criterio mínimo:** un cambio en `VentasController.cs` puede requerir `ms5-pos.md` y `estado-actual.md`; un cambio en Kafka puede requerir además `kafka-topics.md`; un cambio interno que no altere comportamiento, arquitectura ni estado documentado no requiere modificar ningún nodo.
 
 ---
 
