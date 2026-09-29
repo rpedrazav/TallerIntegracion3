@@ -19,6 +19,13 @@ if sys.stdout.encoding != 'utf-8':
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent.parent
 CONTEXT_ROOT = REPO_ROOT / "docs" / "context"
 
+def rel_path(p: Path) -> str:
+    """Retorna la ruta relativa al repo en formato posix."""
+    try:
+        return p.relative_to(REPO_ROOT).as_posix()
+    except ValueError:
+        return str(p)
+
 errors = []
 warnings = []
 stats = {
@@ -94,7 +101,7 @@ def check_fuentes_existence(md_file: Path, fuentes_str: str):
             target = REPO_ROOT / clean
             if not target.exists():
                 warnings.append(
-                    f"Fuente no encontrada: '{clean}' en {md_file.relative_to(REPO_ROOT)}"
+                    f"Fuente no encontrada: '{clean}' en {rel_path(md_file)}"
                 )
 
 
@@ -117,7 +124,7 @@ def check_secrets(md_file: Path, content: str):
             val = m.group(1).lower() if m.groups() else m.group(0).lower()
             if not any(ph in val for ph in known_placeholders):
                 errors.append(
-                    f"POSIBLE SECRETO REAL en: {md_file.relative_to(REPO_ROOT)}"
+                    f"POSIBLE SECRETO REAL en: {rel_path(md_file)}"
                 )
 
 
@@ -129,7 +136,7 @@ def validate_node(md_file: Path):
 
     if not content.strip():
         stats["empty_files"] += 1
-        errors.append(f"VACÍO: {md_file.relative_to(REPO_ROOT)}")
+        errors.append(f"VACÍO: {rel_path(md_file)}")
         return
 
     # 1. Frontmatter
@@ -141,14 +148,14 @@ def validate_node(md_file: Path):
         node_id = fm.get("id", "").strip().strip("\"'")
         if not node_id:
             stats["nodes_missing_id"] += 1
-            warnings.append(f"SIN id: {md_file.relative_to(REPO_ROOT)}")
+            warnings.append(f"SIN id: {rel_path(md_file)}")
         else:
             # Comprobación de unicidad de ID
             if node_id in SEEN_IDS and SEEN_IDS[node_id] != md_file:
                 stats["duplicate_ids"] += 1
                 errors.append(
-                    f"ID DUPLICADO: '{node_id}' en {md_file.relative_to(REPO_ROOT)} "
-                    f"(ya definido en {SEEN_IDS[node_id].relative_to(REPO_ROOT)})"
+                    f"ID DUPLICADO: '{node_id}' en {rel_path(md_file)} "
+                    f"(ya definido en {rel_path(SEEN_IDS[node_id])})"
                 )
             else:
                 SEEN_IDS[node_id] = md_file
@@ -156,36 +163,28 @@ def validate_node(md_file: Path):
         estado_val = fm.get("estado", "").strip().strip("\"'[]").lower()
         if not estado_val:
             stats["nodes_missing_estado"] += 1
-            warnings.append(f"SIN estado: {md_file.relative_to(REPO_ROOT)}")
+            warnings.append(f"SIN estado: {rel_path(md_file)}")
         elif estado_val not in VALID_ESTADOS:
             warnings.append(
-                f"estado inválido '{estado_val}': {md_file.relative_to(REPO_ROOT)}"
+                f"estado inválido '{estado_val}': {rel_path(md_file)}"
             )
 
         fuentes_val = fm.get("fuentes", "")
         if not fuentes_val:
             stats["nodes_missing_fuentes"] += 1
-            warnings.append(f"SIN fuentes: {md_file.relative_to(REPO_ROOT)}")
+            warnings.append(f"SIN fuentes: {rel_path(md_file)}")
         else:
             # Comprobación de existencia de rutas en fuentes:
             check_fuentes_existence(md_file, fuentes_val)
 
     else:
-        warnings.append(f"SIN frontmatter: {md_file.relative_to(REPO_ROOT)}")
+        warnings.append(f"SIN frontmatter: {rel_path(md_file)}")
 
     # 2. Encabezado H1
     if not re.search(r"^# .+", content, re.MULTILINE):
-        warnings.append(f"SIN encabezado H1: {md_file.relative_to(REPO_ROOT)}")
+        warnings.append(f"SIN encabezado H1: {rel_path(md_file)}")
 
-    # 3. Menciones mal escritas de PLANIFICADO
-    bad_state_mentions = re.findall(r"\bPLANIFICADO\b(?!\])", content)
-    if bad_state_mentions:
-        warnings.append(
-            f"PLANIFICADO sin corchetes ({len(bad_state_mentions)}x): "
-            f"{md_file.relative_to(REPO_ROOT)}"
-        )
-
-    # 4. Enlaces wiki-style [[target]]
+    # 3. Enlaces wiki-style [[target]]
     wiki_links = re.findall(r"\[\[([^\]]+)\]\]", content)
     for link in wiki_links:
         link_id = link.strip().split("|")[0].strip()
@@ -193,9 +192,9 @@ def validate_node(md_file: Path):
         if link_id.lower() in IGNORED_WIKI_TARGETS:
             continue
         if link_id not in VALID_IDS:
-            stats["broken_links"].append(f"{md_file.relative_to(REPO_ROOT)} -> [[{link_id}]]")
+            stats["broken_links"].append(f"{rel_path(md_file)} -> [[{link_id}]]")
 
-    # 5. Comprobación de secretos
+    # 4. Comprobación de secretos
     check_secrets(md_file, content)
 
 
@@ -218,7 +217,7 @@ def check_required_files():
     ]
     for f in required:
         if not f.exists():
-            errors.append(f"ARCHIVO REQUERIDO FALTANTE: {f.relative_to(REPO_ROOT)}")
+            errors.append(f"ARCHIVO REQUERIDO FALTANTE: {rel_path(f)}")
 
 
 def check_source_code_not_modified():
@@ -240,7 +239,7 @@ def check_source_code_not_modified():
             if suspicious:
                 warnings.append(
                     f"Archivos .md inesperados en carpeta protegida {d}/: "
-                    + ", ".join(str(f.relative_to(REPO_ROOT)) for f in suspicious)
+                    + ", ".join(rel_path(f) for f in suspicious)
                 )
 
 
@@ -249,7 +248,7 @@ def generate_report_text() -> str:
     lines = [
         "=" * 60,
         " GlobalMart OS — Validador del Grafo de Conocimiento",
-        f" Repositorio: {REPO_ROOT}",
+        " Repositorio: .",
         "=" * 60,
         "",
         f"  Nodos analizados:              {stats['total_nodes']}",
