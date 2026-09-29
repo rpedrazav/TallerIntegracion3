@@ -7,8 +7,10 @@ fuentes: [src/WarehouseInventoryService/Messaging/KafkaConsumerService.cs, Docke
 verificado_contra_codigo: true
 ultima_revision: 2026-09-29
 depende_de: [ms5-pos, ms4-inventory]
-publica: [sale.completed, sale.reversed, stock.alert, expiry.alert, stock.updated, purchase.received, fx.rate.updated, points.updated]
-consume: [sale.completed, sale.reversed, stock.alert, expiry.alert, stock.updated, purchase.received, fx.rate.updated, points.updated]
+publica: []
+consume: [sale.completed]
+diseno_publica: [sale.completed, sale.reversed, stock.alert, expiry.alert, stock.updated, purchase.received, fx.rate.updated, points.updated]
+diseno_consume: [sale.completed, sale.reversed, stock.alert, expiry.alert, stock.updated, purchase.received, fx.rate.updated, points.updated]
 reglas: [RN-04, RF-09]
 ---
 # Kafka Topics — Diseño vs Implementación Real
