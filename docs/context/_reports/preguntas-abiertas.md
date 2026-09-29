@@ -17,7 +17,7 @@ ultima_revision: 2026-09-29
 | # | Pregunta | Estado | Respuesta / Verificación |
 |---|---|---|---|
 | **PA-01** | ¿El `sucursal_id` se valida en algún lugar del sistema? | **RESUELTO** | Se implementará en las siguientes semanas junto con el desarrollo de la API. Actualmente no hay validación de entidad en BD. |
-| **PA-02** | ¿`VentasController.cs` tiene `POST /ventas` y `POST /cobrar`? | **RESUELTO** | [`POST /ventas`](file:///c:/Users/dp877/Desktop/Universidad/Semestre%206/TallerIntegra3/TallerIntegracion3/src/POSCartService/Controllers/VentasController.cs) **sí existe** y crea la venta. Sin embargo, `cobrar` y `anular` solo existen como métodos en `VentaService.cs`; no están expuestos en el controlador todavía. |
+| **PA-02** | ¿`VentasController.cs` tiene `POST /ventas` y `POST /cobrar`? | **RESUELTO** | [`POST /ventas`](src/POSCartService/Controllers/VentasController.cs) **sí existe** y crea la venta. Sin embargo, `cobrar` y `anular` solo existen como métodos en `VentaService.cs`; no están expuestos en el controlador todavía. |
 | **PA-03** | ¿`Admin.tsx` tiene contenido real o es un placeholder? | **RESUELTO** | Es un placeholder temporal (`<h2>Administración</h2>`). Se acordó dejar la ruta directa para facilitar pruebas de desarrollo del POS sin alternar credenciales constantemente. |
 | **PA-04** | ¿Hay un `RoleSwitcher` en algún archivo del frontend? | **RESUELTO** | **No**. El frontend comenzó a desarrollarse en la semana 3 y se centraliza en `globalmart-frontend/`. |
 | **PA-05** | ¿`preload.ts` expone APIs de hardware (SerialPort, cajón)? | **RESUELTO** | **No**. Verificado en código: `preload.ts` solo expone métodos de sesión (`ping`, `getToken`, `setToken`, `logout`). |
