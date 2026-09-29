@@ -17,23 +17,27 @@
   Sin campo 'id':                0
   Sin campo 'estado':            2
   Sin campo 'fuentes':           0
-  Archivos vac├¡os:               1
+  Archivos vac├¡os:               0
   IDs de nodos registrados:      51
 
-  [!] ENLACES ROTOS (2):
+  [!] ENLACES ROTOS (4):
+      -> docs\context\_reports\validacion.md ÔåÆ [[enlaces]]
+      -> docs\context\_reports\validacion.md ÔåÆ [[enlaces]]
       -> docs\context\index.md ÔåÆ [[enlaces]]
       -> docs\context\index.md ÔåÆ [[enlaces]]
 
-  [X] ERRORES (1):
-      ERROR: VAC├ìO: docs\context\_reports\validacion.md
+  [OK] Sin errores criticos
 
-  [!] ADVERTENCIAS (27):
+  [!] ADVERTENCIAS (30):
       WARN: SIN frontmatter: docs\context\_reports\cobertura-ids.md
       WARN: SIN estado: docs\context\_reports\discrepancias.md
       WARN: SIN frontmatter: docs\context\_reports\inventario.md
       WARN: PLANIFICADO sin corchetes (16x): docs\context\_reports\inventario.md
       WARN: SIN frontmatter: docs\context\_reports\plan-de-nodos.md
       WARN: SIN estado: docs\context\_reports\preguntas-abiertas.md
+      WARN: SIN frontmatter: docs\context\_reports\validacion.md
+      WARN: SIN encabezado H1: docs\context\_reports\validacion.md
+      WARN: PLANIFICADO sin corchetes (20x): docs\context\_reports\validacion.md
       WARN: PLANIFICADO sin corchetes (1x): docs\context\dominio\fefo.md
       WARN: PLANIFICADO sin corchetes (3x): docs\context\dominio\rbac-multirol.md
       WARN: PLANIFICADO sin corchetes (8x): docs\context\estado-actual.md
@@ -57,4 +61,4 @@
       WARN: Archivos .md encontrados en carpeta protegida Docker/: Docker\README.md, Docker\config\README_KONG.md
 
 ============================================================
- RESULTADO: FALLO (hay errores criticos)
+ RESULTADO: OK
