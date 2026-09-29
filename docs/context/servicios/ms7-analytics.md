@@ -73,9 +73,34 @@ HistorialEnvio
 | `points.updated` | Actualiza métricas de lealtad |
 | `fx.rate.updated` | Genera alerta de variación FX |
 
-## Casos de uso (todos PLANIFICADOS)
+## Casos de uso cubiertos (todos PLANIFICADOS)
 
-AN-01..24: Dashboards, reportes, alertas, SMS/Email/Push, KPIs en tiempo real.
+| ID | Caso de Uso | Estado |
+|----|-------------|--------|
+| AN-01 | Dashboard de Ventas | [PLANIFICADO] |
+| AN-02 | Filtrar por Período | [PLANIFICADO] |
+| AN-03 | Filtrar por Sucursal | [PLANIFICADO] |
+| AN-04 | Dashboard de Inventario | [PLANIFICADO] |
+| AN-05 | Dashboard Financiero | [PLANIFICADO] |
+| AN-06 | Generar Reporte de Ventas | [PLANIFICADO] |
+| AN-07 | Top Productos Más Vendidos | [PLANIFICADO] |
+| AN-08 | Reporte de Mermas | [PLANIFICADO] |
+| AN-09 | Exportar PDF / Excel | [PLANIFICADO] |
+| AN-10 | Consumir sale.completed | [PLANIFICADO] |
+| AN-11 | Consumir stock.updated | [PLANIFICADO] |
+| AN-12 | Alerta Stock Mínimo | [PLANIFICADO] |
+| AN-13 | Alerta Próxima Caducidad | [PLANIFICADO] |
+| AN-14 | Configurar Umbrales de Alerta | [PLANIFICADO] |
+| AN-15 | Despachar Notificación (orquestador) | [PLANIFICADO] |
+| AN-16 | KPIs en Tiempo Real | [PLANIFICADO] |
+| AN-17 | Auditar Log de Eventos del Sistema | [PLANIFICADO] |
+| AN-18 | Enviar SMS vía Twilio | [PLANIFICADO] |
+| AN-19 | Enviar Email vía SendGrid | [PLANIFICADO] |
+| AN-20 | Enviar Notif. Push vía Firebase | [PLANIFICADO] |
+| AN-21 | Configurar Plantillas de Mensaje | [PLANIFICADO] |
+| AN-22 | Historial de Envíos | [PLANIFICADO] |
+| AN-23 | Manejar Fallo de Entrega | [PLANIFICADO] |
+| AN-24 | Alerta Variación Tipo de Cambio | [PLANIFICADO] |
 
 ## Conexiones
 - Consumiría: `sale.completed`, `stock.alert`, etc. ← [[ms4-inventory]], [[ms5-pos]]

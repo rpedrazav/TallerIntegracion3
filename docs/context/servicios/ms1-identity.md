@@ -149,18 +149,26 @@ GET/POST/PUT/DELETE /api/tenants
 | ID | Caso de Uso | Estado |
 |----|-------------|--------|
 | TI-01 | Iniciar Sesión (Login) | [IMPLEMENTADO] |
+| TI-02 | Cerrar Sesión (Logout) | [PARCIAL — solo lado frontend] |
+| TI-03 | Autenticar con MFA | [PLANIFICADO] |
 | TI-04 | Gestionar Perfil de Usuario | [IMPLEMENTADO] |
-| TI-05 | Crear/Editar/Desactivar Usuario | [IMPLEMENTADO] |
+| TI-05 | Crear / Editar / Desactivar Usuario | [IMPLEMENTADO] |
 | TI-06 | Asignar Roles y Permisos | [IMPLEMENTADO] |
 | TI-07 | Configurar Tenant (Localización) | [IMPLEMENTADO] |
-| TI-20 | Asignar Múltiples Roles | [IMPLEMENTADO] |
-| TI-02 | Cerrar Sesión | [PARCIAL — solo del lado frontend] |
-| TI-03 | MFA | [PLANIFICADO] |
-| TI-08..10 | Config Idioma/Moneda/País | [IMPLEMENTADO via TenantConfig] |
+| TI-08 | Definir Idioma del Sistema | [IMPLEMENTADO via TenantConfig] |
+| TI-09 | Configurar Moneda Base | [IMPLEMENTADO via TenantConfig] |
+| TI-10 | Configurar País y Zona Horaria | [IMPLEMENTADO via TenantConfig] |
 | TI-11 | Gestionar Sucursales | [PLANIFICADO] |
-| TI-14 | Auditar Log Accesos | [PLANIFICADO] |
-| TI-15..19 | FX | [PLANIFICADO] |
-| TI-21..23 | Multi-rol, escalado temporal | [PLANIFICADO] |
+| TI-14 | Auditar Log de Accesos | [PLANIFICADO] |
+| TI-15 | Obtener Tipo de Cambio en Tiempo Real | [PLANIFICADO] |
+| TI-16 | Actualizar Tabla de Tipos de Cambio | [PLANIFICADO] |
+| TI-17 | Convertir Monto entre Monedas | [PLANIFICADO] |
+| TI-18 | Configurar Umbral Actualización FX | [PLANIFICADO] |
+| TI-19 | Registrar Historial de Tasas FX | [PLANIFICADO] |
+| TI-20 | Asignar Múltiples Roles a Usuario | [IMPLEMENTADO] |
+| TI-21 | Cambiar Rol Activo en Sesión | [PLANIFICADO] |
+| TI-22 | Escalar Rol Temporalmente | [PLANIFICADO] |
+| TI-23 | Configurar Separación de Funciones | [PLANIFICADO] |
 
 ## Conexiones
 - Dependido por: [[ms2-tax]] (TenantConfigClient), [[ms5-pos]], [[ms3-catalog]], [[ms4-inventory]]

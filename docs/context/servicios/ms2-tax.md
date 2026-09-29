@@ -117,11 +117,17 @@ MS-5 (POSCartService) llama a MS-2 directamente (no vía Kong) en cada operació
 | ID | Caso de Uso | Estado |
 |----|-------------|--------|
 | TC-01 | Calcular Impuesto de Venta | [IMPLEMENTADO] |
-| TC-02 | IVA Compuesto en cascada | [PLANIFICADO] |
-| TC-03 | Exención Fiscal por Producto | [PLANIFICADO] |
-| TC-04 | Exención Fiscal por Cliente | [PLANIFICADO] |
-| TC-05 | Configurar Reglas Fiscales | [PARCIAL — solo IVA% en MS-1] |
-| TC-06..12 | DTE, folios, boleta, reintento, reporte | [PLANIFICADO] |
+| TC-02 | Calcular IVA Compuesto (cascada) | [PLANIFICADO] |
+| TC-03 | Aplicar Exención Fiscal (Producto) | [PLANIFICADO] |
+| TC-04 | Aplicar Exención Fiscal (Cliente) | [PLANIFICADO] |
+| TC-05 | Configurar Reglas Fiscales por País | [PARCIAL — solo IVA% en MS-1] |
+| TC-06 | Solicitar Folio Electrónico | [PLANIFICADO / SIMULADO] |
+| TC-07 | Validar Folio con Entidad Fiscal | [PLANIFICADO / SIMULADO] |
+| TC-08 | Emitir DTE | [PLANIFICADO / SIMULADO] |
+| TC-09 | Generar Boleta / Factura Electrónica | [PLANIFICADO / SIMULADO] |
+| TC-10 | Manejar Rechazo de Folio (Reintento) | [PLANIFICADO / SIMULADO] |
+| TC-11 | Consultar Estado de DTE | [PLANIFICADO] |
+| TC-12 | Reporte Declaración Fiscal | [PLANIFICADO] |
 
 ## Conexiones
 - Depende de: [[ms1-identity]] (para obtener PorcentajeIva del tenant)

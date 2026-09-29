@@ -103,9 +103,32 @@ Costo Landed = Costo Producto
              + Gastos Aduaneros
 ```
 
-## Casos de uso (todos PLANIFICADOS)
+## Casos de uso cubiertos (todos PLANIFICADOS)
 
-SC-01..24: Gestión de OC, proveedores, Landed Cost, importaciones, tracking 3PL.
+| ID | Caso de Uso | Estado |
+|----|-------------|--------|
+| SC-01 | Crear Orden de Compra | [PLANIFICADO] |
+| SC-02 | Seleccionar Proveedor | [PLANIFICADO] |
+| SC-03 | Agregar Items a Orden | [PLANIFICADO] |
+| SC-04 | Aprobar Orden de Compra | [PLANIFICADO] |
+| SC-05 | Enviar Orden a Proveedor | [PLANIFICADO] |
+| SC-06 | Calcular Costo Landed | [PLANIFICADO] |
+| SC-07 | Ingresar Costos de Flete | [PLANIFICADO] |
+| SC-08 | Ingresar Aranceles e Impuestos | [PLANIFICADO] |
+| SC-09 | Ingresar Seguros y Aduanas | [PLANIFICADO] |
+| SC-10 | Registrar Importación | [PLANIFICADO] |
+| SC-11 | Actualizar Estado Importación | [PLANIFICADO] |
+| SC-12 | Confirmar Recepción de Importación | [PLANIFICADO] |
+| SC-14 | Gestionar Catálogo de Proveedores | [PLANIFICADO] |
+| SC-15 | Crear / Editar Proveedor | [PLANIFICADO] |
+| SC-16 | Evaluar Historial de Proveedor | [PLANIFICADO] |
+| SC-18 | Solicitar Cotización de Flete | [PLANIFICADO] |
+| SC-19 | Comparar Ofertas de Flete | [PLANIFICADO] |
+| SC-20 | Confirmar Transportista | [PLANIFICADO] |
+| SC-21 | Rastrear Envío (Tracking) | [PLANIFICADO] |
+| SC-22 | Confirmar Entrega en Destino | [PLANIFICADO] |
+| SC-23 | Gestionar Incidencia de Transporte | [PLANIFICADO] |
+| SC-24 | Convertir Costo Flete a Moneda Local | [PLANIFICADO] |
 
 ## Conexiones
 - Depende de: [[ms1-identity]] (JWT + FX rates)

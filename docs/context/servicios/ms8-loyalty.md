@@ -82,9 +82,27 @@ puntos_acumulados = monto_venta × tasa_base × multiplicador_categoria
 - Expiración: 12 meses de inactividad (RN-15)
 - Tiers: suben automáticamente al superar umbral de puntos históricos
 
-## Casos de uso (todos PLANIFICADOS)
+## Casos de uso cubiertos (todos PLANIFICADOS)
 
-LC-01..17: Registro, identificación en POS, acumulación, canje, tiers, cupones, expiración.
+| ID | Caso de Uso | Estado |
+|----|-------------|--------|
+| LC-01 | Registrar Cliente Afiliado | [PLANIFICADO] |
+| LC-02 | Verificar Identidad del Cliente | [PLANIFICADO] |
+| LC-03 | Identificar Cliente en POS | [PLANIFICADO] |
+| LC-04 | Consultar Perfil y Saldo de Puntos | [PLANIFICADO] |
+| LC-05 | Ver Historial de Compras | [PLANIFICADO] |
+| LC-06 | Acumular Puntos por Compra | [PLANIFICADO] |
+| LC-07 | Canjear Puntos por Descuento | [PLANIFICADO] |
+| LC-08 | Canjear Puntos por Producto Gratis | [PLANIFICADO] |
+| LC-09 | Aplicar Tier / Nivel Membresía | [PLANIFICADO] |
+| LC-10 | Emitir Cupón de Descuento | [PLANIFICADO] |
+| LC-11 | Validar Cupón en POS | [PLANIFICADO] |
+| LC-12 | Configurar Programa de Lealtad | [PLANIFICADO] |
+| LC-13 | Definir Multiplicadores de Puntos | [PLANIFICADO] |
+| LC-14 | Definir Beneficios por Nivel | [PLANIFICADO] |
+| LC-15 | Expirar Puntos Inactivos | [PLANIFICADO] |
+| LC-16 | Enviar Estado de Cuenta al Cliente | [PLANIFICADO] |
+| LC-17 | Publicar points.updated | [PLANIFICADO] |
 
 ## Conexiones
 - Consumiría: `sale.completed` ← [[ms5-pos]] (para acumular puntos)

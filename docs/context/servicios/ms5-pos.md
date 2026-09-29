@@ -164,22 +164,43 @@ public async Task<Venta> CompletarAsync(Guid ventaId)
 
 | ID | Caso de Uso | Estado |
 |----|-------------|--------|
-| PC-01 | Abrir Turno | [IMPLEMENTADO] |
+| PC-01 | Abrir Turno de Caja | [IMPLEMENTADO] |
 | PC-02 | Registrar Fondo de Apertura | [IMPLEMENTADO] |
-| PC-03 | Cerrar Turno | [IMPLEMENTADO] |
+| PC-03 | Cerrar Turno de Caja | [IMPLEMENTADO] |
 | PC-04 | Cuadre de Caja | [PARCIAL — sin declaración de billetes] |
-| PC-06 | Iniciar Nueva Venta | [IMPLEMENTADO] |
+| PC-05 | Declarar Billetes y Monedas | [PLANIFICADO] |
+| PC-06 | Iniciar Nueva Venta (Carrito) | [IMPLEMENTADO] |
 | PC-07 | Agregar Producto (escaneo) | [IMPLEMENTADO] |
 | PC-08 | Agregar Producto (búsqueda) | [IMPLEMENTADO] |
+| PC-09 | Agregar Producto a Granel | [PARCIAL — modelo soporta PesoKg] |
+| PC-10 | Integrar Peso de Balanza | [PLANIFICADO] |
 | PC-11 | Modificar Cantidad | [IMPLEMENTADO] |
-| PC-12 | Eliminar Ítem | [IMPLEMENTADO] |
+| PC-12 | Eliminar Ítem del Carrito | [IMPLEMENTADO] |
+| PC-13 | Descuento Manual | [PLANIFICADO] |
 | PC-14 | Calcular Total con Impuestos | [IMPLEMENTADO] |
 | PC-15 | Cobrar en Efectivo | [PARCIAL — sin vuelto automático] |
+| PC-16 | Calcular Vuelto | [PLANIFICADO] |
 | PC-17 | Cobrar con Tarjeta | [PLANIFICADO] |
-| PC-20 | Anular Venta | [IMPLEMENTADO — sin reembolso] |
+| PC-18 | Pago Mixto (efectivo + tarjeta) | [PLANIFICADO] |
+| PC-19 | Emitir Recibo / Comprobante | [PLANIFICADO] |
+| PC-20 | Anular Venta (Devolución) | [PARCIAL — implementado en VentaService.AnularAsync] |
+| PC-21 | Devolución Parcial | [PLANIFICADO] |
+| PC-22 | Poner Venta en Espera (Hold) | [PLANIFICADO] |
+| PC-23 | Recuperar Venta de Espera | [PLANIFICADO] |
 | PC-24 | Publicar sale.completed | [PLANIFICADO] |
 | PC-25 | Publicar sale.reversed | [PLANIFICADO] |
-| PC-26..34 | Hardware (terminal, cajón, impresora) | [PLANIFICADO] |
+| PC-26 | Leer Tarjeta en Terminal (NFC/chip/mag) | [PLANIFICADO] |
+| PC-27 | Enviar Solicitud a Pasarela | [PLANIFICADO] |
+| PC-28 | Recibir Respuesta de Pasarela | [PLANIFICADO] |
+| PC-29 | Manejar Rechazo de Pago | [PLANIFICADO] |
+| PC-30 | Solicitar Reembolso a Pasarela | [PLANIFICADO] |
+| PC-31 | Confirmar Reembolso | [PLANIFICADO] |
+| PC-32 | Abrir Cajón de Dinero | [PLANIFICADO] |
+| PC-33 | Imprimir Recibo en Terminal | [PLANIFICADO] |
+| PC-34 | Mostrar Total en Display Cliente | [PLANIFICADO] |
+| PC-35 | Identificar Cliente Afiliado en POS | [PLANIFICADO] |
+| PC-36 | Aplicar Beneficios de Membresía | [PLANIFICADO] |
+| PC-37 | Acumular Puntos tras Venta | [PLANIFICADO] |
 
 ## Conexiones
 - Depende de: [[ms2-tax]] (TaxClient), [[ms3-catalog]] (CatalogClient), [[ms1-identity]] (JWT)
