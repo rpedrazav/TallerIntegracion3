@@ -1,54 +1,52 @@
 # GlobalMart OS — Briefing para IA
 
 **Sistema:** POS + ERP multi-tenant para minimarkets  
+**Contexto:** Proyecto académico de Ingeniería Civil Informática (Universidad Católica de Temuco). Integraciones externas no disponibles legalmente son simuladas.  
 **Stack:** 8 microservicios ASP.NET Core 8 · PostgreSQL por servicio · Kafka · Kong · Electron + React + TypeScript  
-**Rama activa:** `docs/context-graph` (documentación) — **nunca modificar `dev` o `main`**  
-**Fecha de este documento:** 2026-09-28
 
 ---
 
-## Qué hacer ANTES de cualquier tarea
+## Cómo usar el Grafo de Conocimiento
 
-1. Leer [`docs/context/estado-actual.md`](docs/context/estado-actual.md) → qué está implementado vs planificado
-2. Leer el nodo de servicio relevante en [`docs/context/servicios/`](docs/context/servicios/)
-3. Si vas a tocar Kafka: leer [`docs/context/eventos/kafka-topics.md`](docs/context/eventos/kafka-topics.md)
-4. Si vas a tocar auth/roles: leer [`docs/context/dominio/rbac-multirol.md`](docs/context/dominio/rbac-multirol.md)
-
-Hub completo: [`docs/context/index.md`](docs/context/index.md)
-
----
-
-## Reglas inviolables
-
-| # | Regla |
-|---|-------|
-| 1 | Nunca modificar `src/`, `globalmart-frontend/`, `Docker/`, `.github/`, `*.sln`, `*.props`, `*.bat` |
-| 2 | Solo trabajar en rama `docs/context-graph`. No hacer push a `dev` ni `main` |
-| 3 | No inventar datos — usar `[NO VERIFICADO]` si no está en el código |
-| 4 | No copiar secrets (connection strings con contraseñas, API keys) |
-| 5 | Todo query debe filtrar por `tenant_id` (RN-01) |
-| 6 | Pagos con tarjeta NUNCA localmente, siempre por pasarela (RN-02) |
-| 7 | Solo crear ventas si hay turno abierto (RN-06) |
+Antes de realizar cualquier tarea, consulta el **Grafo de Contexto**:
+1. Leer [`docs/context/estado-actual.md`](docs/context/estado-actual.md) para conocer el estado real (implementado vs planificado).
+2. Leer el nodo de servicio en [`docs/context/servicios/`](docs/context/servicios/) correspondiente a la tarea.
+3. Consultar [`docs/context/index.md`](docs/context/index.md) para ubicar nodos de dominio, eventos Kafka o infraestructura.
+4. **Regla de mantenimiento:** Si modificas código o arquitectura, debes actualizar el nodo `.md` correspondiente y su fecha `ultima_revision`.
 
 ---
 
-## Brechas críticas actuales (2026-09-28)
+## Reglas de Dominio Obligatorias
 
-1. **MS-5 NO publica `sale.completed`** → stock nunca se descuenta automáticamente
-2. **MS-2 NO emite DTE** → ventas sin documento tributario
-3. **Sin pasarela de pago** → cobro con tarjeta no implementado
-4. **Frontend POS tiene datos hardcodeados** → sin integración real con APIs
-
----
-
-## Credentials de prueba (solo dev)
-
-- URL MS-1: `http://localhost:5124/auth/login`
-- Email: `cajero@demo.cl` | Password: `demo1234`
-- TenantId: `aaaaaaaa-0000-0000-0000-000000000001`
+| # | Regla | Descripción |
+|---|---|---|
+| 1 | **Aislamiento Multi-Tenant (RN-01)** | Toda consulta o mutación debe filtrar estrictamente por `tenant_id`. |
+| 2 | **Pagos por Pasarela (RN-02)** | Pagos con tarjeta NUNCA se procesan localmente; siempre pasan por pasarela/simulador. |
+| 3 | **Turno de Caja Abierto (RN-06)** | Solo se pueden crear ventas si el cajero en sesión tiene un turno ABIERTO. |
+| 4 | **Autenticación JWT (RN-07)** | Todo endpoint protegido debe exigir JWT válido con claims de usuario y tenant. |
+| 5 | **Sin datos inventados** | Si un requerimiento o dato no está confirmado en el código, documentarlo como `[NO VERIFICADO]`. |
 
 ---
 
-## Sprint actual
+## Comandos Principales (Build / Test / Run)
 
-Sprint 1 — Ver [`docs/context/planificacion/sprint-actual.md`](docs/context/planificacion/sprint-actual.md)
+```bash
+# Levantar infraestructura (PostgreSQL x8, Kafka, Kong, Grafana)
+docker compose -f Docker/docker-compose.yml up -d
+
+# Compilar la solución completa (.NET 8)
+dotnet build GlobalMartOS.sln
+
+# Ejecutar tests de la solución
+dotnet test GlobalMartOS.sln
+
+# Ejecutar frontend de escritorio (Electron)
+cd globalmart-frontend && npm install && npm start
+```
+*Para detalles de configuración y seed local de desarrollo, ver [`docs/context/proyecto/como-ejecutar.md`](docs/context/proyecto/como-ejecutar.md).*
+
+---
+
+## Sprint Actual
+
+Sprint 1 (Semana 3 de 4) — Ver [`docs/context/planificacion/sprint-actual.md`](docs/context/planificacion/sprint-actual.md)

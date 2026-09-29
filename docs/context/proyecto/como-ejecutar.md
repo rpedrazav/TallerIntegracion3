@@ -80,7 +80,7 @@ npm install
 npm start    # Abre la app Electron
 ```
 
-**Credenciales de prueba (seed de dev):**
+**Seed local de desarrollo (credenciales de prueba):**
 - Email: `cajero@demo.cl`
 - Password: `demo1234`
 - Tenant ID: `aaaaaaaa-0000-0000-0000-000000000001`
