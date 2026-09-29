@@ -2,10 +2,10 @@
 id: roadmap
 tipo: planificacion
 titulo: Roadmap — Sprints 1 a 8
-estado: parcial
-fuentes: [GlobalMart_ContextMaster.md#sec18]
-verificado_contra_codigo: false
-ultima_revision: 2026-09-28
+estado: vigente
+fuentes: [GlobalMart_ContextMaster.md#sec18, docs/context/planificacion/sprint-actual.md]
+verificado_contra_codigo: true
+ultima_revision: 2026-09-29
 depende_de: [sprint-actual]
 publica: []
 consume: []
@@ -13,94 +13,106 @@ reglas: []
 ---
 # Roadmap — Sprints 1 a 8
 
-> Plan original de 8 sprints según el ContextMaster. Los Sprints 1-3 están completados o en curso (ver [[sprint-actual]] para el estado real).
+> Plan de desarrollo alineado con el calendario académico de la Universidad Católica de Temuco (UCT). Cada sprint tiene una duración de **4 semanas** (de miércoles a miércoles).
 
-## Sprint 1 — Fundamentos [COMPLETADO]
+---
 
-**Objetivo:** Infraestructura base, autenticación y catálogo mínimo.
+## Sprint 1 — Fundamentos, Backend Core y POS Base [EN CURSO]
 
-| US/TT | Descripción | Servicio |
-|-------|-------------|---------|
-| US-01 | Login con JWT multi-tenant | MS-1 |
-| US-02 | CRUD usuarios con RBAC | MS-1 |
-| US-03 | Config de tenant (país, moneda, IVA) | MS-1 |
-| US-04 | CRUD productos básico | MS-3 |
-| US-05 | Búsqueda y lookup de productos | MS-3 |
-| TT-01..08 | CI/CD, Docker Compose, Kong, Kafka | Infra |
+**Duración:** 4 semanas | **Estado actual:** Semana 3 de 4 (penúltimo día al 29-09-2026)  
+**Objetivo:** Infraestructura base, autenticación multi-tenant, catálogo de productos, flujo inicial de ventas en POS y primer consumidor Kafka con idempotencia.
 
-## Sprint 2 — POS Core [COMPLETADO]
+| Entregable / Hito | Servicio | Estado |
+|---|---|---|
+| Infraestructura Docker completa (8 PostgreSQL, Kafka, Kong, Grafana) | Infra | ✅ Completado |
+| Autenticación JWT, CRUD usuarios y configuración tenant | MS-1 | ✅ Completado |
+| Cálculo de IVA integrado con configuración de tenant | MS-2 | ✅ Completado |
+| Catálogo de productos, categorías jerárquicas y búsqueda trigram | MS-3 | ✅ Completado |
+| Consulta de stock y consumidor Kafka `sale.completed` con idempotencia | MS-4 | ✅ Completado |
+| Apertura/cierre de turnos y operaciones de carrito (crear, agregar, modificar) | MS-5 | ✅ Completado |
+| Frontend Electron + React: Login funcional y UI base de POS | Frontend | 🟡 Parcial |
+| Publicación de `sale.completed` a Kafka al completar venta | MS-5 | 🔴 Pendiente (Semana 4) |
+| Exponer endpoints HTTP de cobro y anulación en controller | MS-5 | 🔴 Pendiente (Semana 4) |
 
-**Objetivo:** Flujo completo de venta en el POS.
+---
 
-| US/TT | Descripción | Servicio |
-|-------|-------------|---------|
-| US-06 | Abrir/cerrar turno de caja | MS-5 |
-| US-07 | Crear venta y gestionar carrito | MS-5 |
-| US-08 | Calcular IVA automáticamente | MS-2 → MS-5 |
-| US-09 | Categorías jerárquicas | MS-3 |
-| TT-09..14 | Tests de integración, índice trigram | MS-3, MS-5 |
+## Sprint 2 — POS Avanzado, Cobro con Tarjeta y Hardware [PLANIFICADO]
 
-## Sprint 3 — Inventario y Kafka [EN PROGRESO]
+**Objetivo:** Completar el ciclo de venta en mostrador con cobro de tarjetas y soporte para hardware.
 
-**Objetivo:** Descuento de stock asíncrono y FEFO básico.
+- Integración con pasarela de cobro externa (simulada/sandbox tipo Mercado Pago).
+- Cobro en efectivo con cálculo automático de vuelto y comprobante.
+- Integración de balanza serial/USB para productos de peso variable (`EsPesoVariable`).
+- Integración de cajón de dinero e impresora de recibos vía IPC en Electron.
 
-| US/TT | Descripción | Servicio | Estado |
-|-------|-------------|---------|--------|
-| US-10 | Consultar stock por producto/sucursal | MS-4 | ✅ |
-| US-11 | Kafka consumer sale.completed | MS-4 | ✅ |
-| ??? | Kafka producer sale.completed | MS-5 | 🔴 PENDIENTE |
-| ??? | Recepciones con FEFO | MS-4 | 🔴 PENDIENTE |
+---
 
-## Sprint 4 — Cobros y Fiscal [PRÓXIMO]
+## Sprint 3 — Inventario FEFO y Recepciones [PLANIFICADO]
 
-**Objetivo:** Integración pasarela de pago y DTE.
+**Objetivo:** Control estricto de mercancía y caducidades en bodega y sala.
 
-- RN-02: Cobro con tarjeta vía pasarela (Transbank/Stripe)
-- RN-03: Emisión de DTE electrónico (SII Chile)
-- RF-06: Cobro en efectivo con cálculo de vuelto
-- RF-07: Cobro con tarjeta
-- RF-08: Emitir boleta electrónica
+- Endpoints de recepción de mercancía y creación de lotes con fecha de caducidad.
+- Aplicación de la regla FEFO (*First-Expired, First-Out*) al descontar stock por ventas.
+- Generación de alertas automáticas Kafka (`stock.alert`, `expiry.alert`).
+- Registro de mermas, transferencias entre sucursales y ajustes manuales.
 
-## Sprint 5 — Analytics [PLANIFICADO]
+---
 
-**Objetivo:** Dashboards en tiempo real.
+## Sprint 4 — Cumplimiento Fiscal y DTE [PLANIFICADO]
 
-- MS-7 Analytics: consumers Kafka + dashboards
-- KPIs de ventas en tiempo real
-- Alertas de stock mínimo y caducidad
-- Notificaciones SMS/Email
+**Objetivo:** Emisión de documentos tributarios electrónicos oficiales (simulados).
 
-## Sprint 6 — Supply Chain [PLANIFICADO]
+- Módulo de folios electrónicos (solicitud y consumo de CAF/CAE).
+- Generación y firma digital simulada de XML para boletas y facturas electrónicas (SII/AFIP).
+- Reportes tributarios periódicos de ventas e IVA por período.
 
-**Objetivo:** Gestión de proveedores y OC.
+---
 
-- MS-6 Supply Chain: controllers completos
-- Órdenes de compra con aprobación (RN-13)
-- Costo Landed (RN-09)
-- Integración 3PL
+## Sprint 5 — Analytics y Dashboards en Tiempo Real [PLANIFICADO]
 
-## Sprint 7 — Loyalty [PLANIFICADO]
+**Objetivo:** Visibilidad operacional para administradores y dueños de negocio.
 
-**Objetivo:** Programa de lealtad.
+- MS-7 Analytics: consumidores Kafka para todos los eventos del ecosistema.
+- Dashboards de ventas, márgenes, productos más vendidos y proyección de demanda.
+- Despacho de notificaciones multicanal (alertas de stock crítico vía SMS/Email).
 
-- MS-8 Loyalty: controllers + Kafka consumers
-- Acumulación de puntos por venta
-- Tiers y beneficios
-- Canje en POS
+---
 
-## Sprint 8 — Multi-sucursal y Hardening [PLANIFICADO]
+## Sprint 6 — Supply Chain y Costo Landed [PLANIFICADO]
 
-**Objetivo:** Escalabilidad y modo offline.
+**Objetivo:** Gestión integral de compras, proveedores e importaciones.
 
-- Gestión de sucursales (TI-11)
-- Precios por sucursal (RN-11)
-- Modo offline para POS en efectivo (RNF-09)
-- Cobertura de tests >= 80% (RNF-07)
+- MS-6 Supply Chain: controllers y lógica de órdenes de compra con aprobación (RN-13).
+- Algoritmo de cálculo de Costo Landed histórico (flete + aranceles + seguros + aduana).
+- Integración con APIs de transportistas (3PL) para tracking de guías.
+
+---
+
+## Sprint 7 — Programa de Lealtad y Fidelización [PLANIFICADO]
+
+**Objetivo:** Retención de clientes y promociones personalizadas.
+
+- MS-8 Loyalty: activación de consumidores Kafka y lógica de acumulación de puntos por venta.
+- Gestión de tiers de membresía (Bronce, Plata, Oro) y multiplicadores por categoría.
+- Validación y canje de cupones y puntos en la interfaz del POS.
+
+---
+
+## Sprint 8 — Multi-Sucursal, Modo Offline y Hardening [PLANIFICADO]
+
+**Objetivo:** Escalabilidad empresarial y resiliencia en mostrador.
+
+- Gestión formal de múltiples sucursales con inventarios y precios independientes (RN-11).
+- Modo offline parcial en POS para continuar ventas en efectivo ante caídas de red.
+- Cobertura de tests automatizados unitarios y de integración >= 80% (RNF-07).
+
+---
 
 ## Conexiones
 - Sprint actual: [[sprint-actual]]
 - Backlog original: [[backlog]]
-- Estado real: [[estado-actual]]
+- Estado real del sistema: [[estado-actual]]
 
 ## Fuentes
 - `GlobalMart_ContextMaster.md` §18
+- `docs/context/planificacion/sprint-actual.md`
