@@ -290,17 +290,19 @@ El sistema gestiona esto mediante:
 
 ## 6. Los 8 Microservicios
 
+> **Nota:** Diseño objetivo; el estado real está en la sección 0.1 y en `docs/context/estado-actual.md`.
+
 ### MS-1 · Tenant & Identity Service
 
 **Responsabilidad:** Gestionar la autenticacion, usuarios, roles, configuracion del tenant y tipos de cambio FX.
 
 **Endpoints principales:**
 - `POST /auth/login` — Genera JWT con tenant_id y roles
-- `POST /auth/refresh` — Renueva token
+- `POST /auth/refresh` [PLANIFICADO] — Renueva token
 - `GET/POST/PUT /users` — CRUD de usuarios
 - `GET/PUT /tenants/{id}/config` — Configuracion de localizacion
-- `GET /tenants/{id}/sucursales` — Gestion de sucursales
-- `GET /fx/rates` — Tasas de cambio actuales
+- `GET /tenants/{id}/sucursales` [PLANIFICADO] — Gestion de sucursales
+- `GET /fx/rates` [PLANIFICADO] — Tasas de cambio actuales
 
 **Datos que gestiona:** Usuarios, roles, permisos, configuracion de tenant (pais, moneda, idioma, zona horaria), historial de tasas FX, tokens de sesion, log de accesos.
 
@@ -314,10 +316,10 @@ El sistema gestiona esto mediante:
 
 **Endpoints principales:**
 - `POST /tax/calculate` — Calcula impuesto para un carrito dado el tenant
-- `POST /dte/solicitar-folio` — Solicita folio a la Entidad Fiscal
-- `POST /dte/emitir` — Emite boleta/factura electronica
-- `GET /dte/{id}/estado` — Consulta estado de un DTE
-- `GET /reportes/declaracion-fiscal` — Reporte fiscal del periodo
+- `POST /dte/solicitar-folio` [PLANIFICADO / SIMULADO] — Solicita folio a la Entidad Fiscal
+- `POST /dte/emitir` [PLANIFICADO / SIMULADO] — Emite boleta/factura electronica
+- `GET /dte/{id}/estado` [PLANIFICADO / SIMULADO] — Consulta estado de un DTE
+- `GET /reportes/declaracion-fiscal` [PLANIFICADO] — Reporte fiscal del periodo
 
 **Logica de impuestos:**
 - Soporta IVA simple (Chile 19%, Argentina 21%), IVA compuesto en cascada, y exenciones por producto o cliente.
@@ -336,9 +338,9 @@ El sistema gestiona esto mediante:
 - `GET/POST/PUT /products` — CRUD de productos
 - `GET /products/lookup?barcode={code}` — Busqueda por codigo de barras
 - `GET /products/search?q={query}` — Busqueda por nombre
-- `GET/POST /prices` — Gestion de precios por producto y sucursal
-- `GET/POST /promotions` — Gestion de promociones con fechas
-- `POST /uom/convert` — Conversion de unidades de medida
+- `GET/POST /prices` [PLANIFICADO] — Gestion de precios por producto y sucursal
+- `GET/POST /promotions` [PLANIFICADO] — Gestion de promociones con fechas
+- `POST /uom/convert` [PLANIFICADO] — Conversion de unidades de medida
 
 **Conversion de unidades de medida (UOM):**
 El sistema soporta conversion entre sistemas de medida para facilitar importaciones internacionales: kg ↔ lb, L ↔ gal, m ↔ ft, etc. Cada producto tiene una UOM base y el sistema convierte automaticamente.
@@ -355,12 +357,12 @@ El sistema soporta conversion entre sistemas de medida para facilitar importacio
 
 **Endpoints principales:**
 - `GET /stock/{productId}` — Consulta stock actual
-- `POST /stock/ajuste` — Ajuste manual de stock
-- `POST /recepciones` — Registrar recepcion de mercancia
-- `GET /lotes` — Consulta lotes y fechas de caducidad
-- `POST /mermas` — Registrar merma o perdida
-- `POST /transferencias` — Transferir stock entre sucursales
-- `POST /conteos` — Registrar conteo fisico de inventario
+- `POST /stock/ajuste` [PLANIFICADO] — Ajuste manual de stock
+- `POST /recepciones` [PLANIFICADO] — Registrar recepcion de mercancia
+- `GET /lotes` [PLANIFICADO] — Consulta lotes y fechas de caducidad
+- `POST /mermas` [PLANIFICADO] — Registrar merma o perdida
+- `POST /transferencias` [PLANIFICADO] — Transferir stock entre sucursales
+- `POST /conteos` [PLANIFICADO] — Registrar conteo fisico de inventario
 
 **Regla FEFO (First Expired, First Out):**
 Al registrar una recepcion de mercancia perecedera, el sistema:
@@ -383,13 +385,13 @@ Al registrar una recepcion de mercancia perecedera, el sistema:
 **Endpoints principales:**
 - `POST /turnos/abrir` — Abre turno con fondo inicial
 - `POST /turnos/cerrar` — Cierra turno y calcula cuadre
-- `POST /ventas/iniciar` — Inicia nueva venta (carrito vacio)
+- `POST /ventas/iniciar` — Inicia nueva venta (carrito vacio) [en controller: `POST /ventas`]
 - `POST /ventas/{id}/items` — Agrega item al carrito
 - `PUT /ventas/{id}/items/{itemId}` — Modifica cantidad
 - `DELETE /ventas/{id}/items/{itemId}` — Elimina item
-- `POST /ventas/{id}/cobrar` — Procesa cobro (efectivo, tarjeta o mixto)
-- `POST /ventas/{id}/anular` — Anula venta y solicita reembolso
-- `GET /ventas/{id}/comprobante` — Obtiene datos del comprobante
+- `POST /ventas/{id}/cobrar` [PLANIFICADO en controller — implementado en VentaService.CompletarAsync] — Procesa cobro (efectivo, tarjeta o mixto)
+- `POST /ventas/{id}/anular` [PLANIFICADO en controller — implementado en VentaService.AnularAsync] — Anula venta y solicita reembolso
+- `GET /ventas/{id}/comprobante` [PLANIFICADO] — Obtiene datos del comprobante
 
 **Flujo de venta completo:**
 1. Cajero abre turno (requiere autenticacion JWT)
@@ -413,16 +415,16 @@ Al registrar una recepcion de mercancia perecedera, el sistema:
 
 ### MS-6 · Supply Chain & Import Service
 
-**Responsabilidad:** Gestionar el ciclo completo de compras e importaciones: proveedores, ordenes de compra, calculo de Costo Landed, tracking de envios con transportista 3PL, y recepcion de importaciones.
+**Responsabilidad:** Gestionar el ciclo completo de compras e importaciones: proveedores, ordenes de compra, calculo de Costo Landed, tracking de envios con transportista 3PL, y recepcion de importaciones. *(Microservicio sin controllers implementados a la fecha; solo modelos y DbContext)*.
 
 **Endpoints principales:**
-- `GET/POST /proveedores` — CRUD de proveedores
-- `POST /ordenes-compra` — Crear orden de compra
-- `PUT /ordenes-compra/{id}/aprobar` — Aprobar OC
-- `POST /ordenes-compra/{id}/landed-cost` — Calcular Costo Landed
-- `POST /importaciones` — Registrar embarque
-- `GET /importaciones/{id}/tracking` — Estado del envio
-- `POST /importaciones/{id}/recepcion` — Confirmar recepcion
+- `GET/POST /proveedores` [PLANIFICADO] — CRUD de proveedores
+- `POST /ordenes-compra` [PLANIFICADO] — Crear orden de compra
+- `PUT /ordenes-compra/{id}/aprobar` [PLANIFICADO] — Aprobar OC
+- `POST /ordenes-compra/{id}/landed-cost` [PLANIFICADO] — Calcular Costo Landed
+- `POST /importaciones` [PLANIFICADO] — Registrar embarque
+- `GET /importaciones/{id}/tracking` [PLANIFICADO] — Estado del envio
+- `POST /importaciones/{id}/recepcion` [PLANIFICADO] — Confirmar recepcion
 
 **Calculo de Costo Landed:**
 ```
@@ -442,17 +444,17 @@ Este calculo permite conocer el costo REAL de cada producto importado para estab
 
 ### MS-7 · Analytics & Notification Service
 
-**Responsabilidad:** Consumir eventos de Kafka para actualizar dashboards en tiempo real, generar reportes, gestionar alertas y despachar notificaciones multicanal (SMS, Email, Push).
+**Responsabilidad:** Consumir eventos de Kafka para actualizar dashboards en tiempo real, generar reportes, gestionar alertas y despachar notificaciones multicanal (SMS, Email, Push). *(Microservicio sin controllers implementados a la fecha; solo modelos y DbContext)*.
 
 **Endpoints principales:**
-- `GET /dashboards/ventas` — Dashboard de ventas con filtros
-- `GET /dashboards/inventario` — Dashboard de inventario
-- `GET /dashboards/financiero` — Dashboard financiero
-- `GET /reportes/ventas` — Generar reporte de ventas
-- `GET /reportes/mermas` — Reporte de mermas
-- `GET /reportes/top-productos` — Productos mas vendidos
-- `POST /alertas/configurar` — Configurar umbrales de alerta
-- `GET /notificaciones/historial` — Historial de envios
+- `GET /dashboards/ventas` [PLANIFICADO] — Dashboard de ventas con filtros
+- `GET /dashboards/inventario` [PLANIFICADO] — Dashboard de inventario
+- `GET /dashboards/financiero` [PLANIFICADO] — Dashboard financiero
+- `GET /reportes/ventas` [PLANIFICADO] — Generar reporte de ventas
+- `GET /reportes/mermas` [PLANIFICADO] — Reporte de mermas
+- `GET /reportes/top-productos` [PLANIFICADO] — Productos mas vendidos
+- `POST /alertas/configurar` [PLANIFICADO] — Configurar umbrales de alerta
+- `GET /notificaciones/historial` [PLANIFICADO] — Historial de envios
 
 **Eventos que consume de Kafka:**
 - `sale.completed` → actualiza KPIs de ventas en tiempo real
@@ -473,16 +475,16 @@ Las plantillas de mensaje son configurables por tenant. El sistema registra hist
 
 ### MS-8 · Loyalty & Customer Service
 
-**Responsabilidad:** Gestionar el programa de lealtad de clientes: registro de clientes afiliados, acumulacion y canje de puntos, tiers de membresia, cupones de descuento y comunicacion de estado de cuenta.
+**Responsabilidad:** Gestionar el programa de lealtad de clientes: registro de clientes afiliados, acumulacion y canje de puntos, tiers de membresia, cupones de descuento y comunicacion de estado de cuenta. *(Microservicio sin controllers implementados a la fecha; solo modelos y DbContext)*.
 
 **Endpoints principales:**
-- `POST /clientes` — Registrar nuevo cliente afiliado
-- `GET /clientes/{id}` — Perfil y saldo de puntos
-- `GET /clientes/{id}/historial` — Historial de compras
-- `POST /clientes/{id}/identificar` — Identificar en POS (por QR, DNI o app)
-- `POST /clientes/{id}/canjear` — Canjear puntos por descuento o producto
-- `GET/POST /programas` — Configurar programa de lealtad
-- `POST /cupones/validar` — Validar cupon en POS
+- `POST /clientes` [PLANIFICADO] — Registrar nuevo cliente afiliado
+- `GET /clientes/{id}` [PLANIFICADO] — Perfil y saldo de puntos
+- `GET /clientes/{id}/historial` [PLANIFICADO] — Historial de compras
+- `POST /clientes/{id}/identificar` [PLANIFICADO] — Identificar en POS (por QR, DNI o app)
+- `POST /clientes/{id}/canjear` [PLANIFICADO] — Canjear puntos por descuento o producto
+- `GET/POST /programas` [PLANIFICADO] — Configurar programa de lealtad
+- `POST /cupones/validar` [PLANIFICADO] — Validar cupon en POS
 
 **Logica de acumulacion de puntos:**
 - Al completar una venta con cliente afiliado identificado, MS-8 consume el evento `sale.completed` de Kafka
@@ -546,6 +548,8 @@ Las plantillas de mensaje son configurables por tenant. El sistema registra hist
 ---
 
 ## 8. Requerimientos Funcionales (MoSCoW)
+
+> **Nota:** Diseño objetivo; el estado real está en la sección 0.1 y en `docs/context/estado-actual.md`.
 
 ### MUST
 
@@ -630,6 +634,8 @@ Las plantillas de mensaje son configurables por tenant. El sistema registra hist
 ---
 
 ## 10. Casos de Uso por Microservicio (MoSCoW)
+
+> **Nota:** Diseño objetivo; el estado real está en la sección 0.1 y en `docs/context/estado-actual.md`.
 
 ### MS-1 · Tenant & Identity Service
 
@@ -838,7 +844,9 @@ Las plantillas de mensaje son configurables por tenant. El sistema registra hist
 
 ## 11. Arquitectura de Eventos Kafka
 
-El sistema utiliza **9 topics de Kafka**. La comunicacion asincrona garantiza que el POS no se bloquee esperando operaciones secundarias.
+> **Nota:** Diseño objetivo; el estado real está en la sección 0.1 y en `docs/context/estado-actual.md`. Actualmente hay 17 topics aprovisionados en Docker (`docker-compose.yml`) y solo 1 consumer real implementado (`sale.completed` en MS-4 Warehouse). En el código real actual, MS-5 todavía no publica `sale.completed` (la cadena Kafka entre producer y consumer está pendiente).
+
+El sistema contempla en su diseño **9 flujos de topics de Kafka** (con 17 topics aprovisionados en el cluster de infraestructura, ver `docs/context/eventos/kafka-topics.md`). La comunicacion asincrona garantiza que el POS no se bloquee esperando operaciones secundarias.
 
 ### Topics y Flujos
 
