@@ -112,7 +112,7 @@ El TenantMiddleware extrae `tenant_id` del JWT e inyecta en `TenantDbContext.Cur
 
 - Passwords: BCrypt hash [IMPLEMENTADO]
 - JWT: validado en cada endpoint excepto `/auth/login` [IMPLEMENTADO]
-- Seed de dev: `cajero@demo.cl` / `demo1234` / tenantId: `aaaaaaaa-0000-0000-0000-000000000001` [SOLO EN DESARROLLO]
+- Seed de dev: `cajero@demo.cl` (ver contraseña en [[como-ejecutar]]) / tenantId: `aaaaaaaa-0000-0000-0000-000000000001` [SOLO EN DESARROLLO]
 - Un admin NO puede desactivarse a sí mismo [IMPLEMENTADO]
 
 ## Kong Gateway

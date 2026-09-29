@@ -44,7 +44,7 @@ reglas: []
 - `POST /api/v1/users/{id}/roles` — asignar roles (sin SUPER_ADMIN) [IMPLEMENTADO]
 - `GET/PUT /tenants/{id}/config` — config de tenant (país, moneda, IVA) [IMPLEMENTADO]
 - TenantMiddleware — extrae tenant_id del JWT e inyecta en DbContext [IMPLEMENTADO]
-- Seed de desarrollo: cajero@demo.cl / demo1234 [IMPLEMENTADO]
+- Seed de desarrollo: cajero@demo.cl (ver contraseña en [[como-ejecutar]]) [IMPLEMENTADO]
 
 **No implementado (PLANIFICADO):**
 - `POST /auth/refresh` — renovar token

@@ -95,7 +95,7 @@ app.MapHealthChecks("/health");
 
 MS-1 incluye seed en `Development`:
 - TenantId fijo: `aaaaaaaa-0000-0000-0000-000000000001`
-- Usuario: `cajero@demo.cl` / `demo1234`
+- Usuario: `cajero@demo.cl` (contraseña documentada en [[como-ejecutar]])
 - RolId fijo: `11111111-0000-0000-0000-000000000001`
 
 ## Migraciones EF Core

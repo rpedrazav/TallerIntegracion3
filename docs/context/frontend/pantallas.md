@@ -30,7 +30,7 @@ Al enviar:
 
 Valores pre-llenados para desarrollo:
   - Email: cajero@demo.cl
-  - Password: demo1234
+  - Password: (ver seed en [[como-ejecutar]])
   - Tenant ID: aaaaaaaa-0000-0000-0000-000000000001
 ```
 
