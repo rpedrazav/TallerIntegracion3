@@ -6,18 +6,17 @@ Uso: python docs/context/_tools/validate.py
 Salida: 0 si todo OK, 1 si hay errores
 """
 import io
-import sys
-# Force UTF-8 output on Windows
-if sys.stdout.encoding != 'utf-8':
-    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
-
 import os
 import re
 import sys
 from pathlib import Path
 
+# Force UTF-8 output on Windows
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
+
 # Raíz del repositorio (2 niveles arriba desde _tools/)
-REPO_ROOT = Path(__file__).parent.parent.parent.parent
+REPO_ROOT = Path(__file__).resolve().parent.parent.parent.parent
 CONTEXT_ROOT = REPO_ROOT / "docs" / "context"
 
 errors = []
@@ -28,12 +27,22 @@ stats = {
     "nodes_missing_id": 0,
     "nodes_missing_estado": 0,
     "nodes_missing_fuentes": 0,
+    "duplicate_ids": 0,
     "broken_links": [],
     "empty_files": 0,
 }
 
-# Todos los IDs de nodos válidos (para verificar enlaces)
 VALID_IDS = set()
+SEEN_IDS = {}
+VALID_ESTADOS = {
+    "implementado", "parcial", "planificado", "obsoleto",
+    "no_verificado", "vigente"
+}
+
+IGNORED_WIKI_TARGETS = {
+    "enlace", "enlaces", "link", "links", "id", "topic",
+    "topic1", "id1", "ruta1", "nodo"
+}
 
 
 def parse_frontmatter(content: str) -> dict:
@@ -55,14 +64,61 @@ def parse_frontmatter(content: str) -> dict:
 def collect_node_ids():
     """Recolecta todos los IDs definidos en los nodos."""
     for md_file in CONTEXT_ROOT.rglob("*.md"):
-        if "_reports" in str(md_file) or "_tools" in str(md_file):
+        if "_tools" in str(md_file):
             continue
         content = md_file.read_text(encoding="utf-8", errors="replace")
         fm = parse_frontmatter(content)
-        if "id" in fm:
-            VALID_IDS.add(fm["id"].strip())
-        # También agregamos el nombre del archivo sin extensión
+        if "id" in fm and fm["id"]:
+            node_id = fm["id"].strip().strip("\"'")
+            VALID_IDS.add(node_id)
         VALID_IDS.add(md_file.stem)
+
+
+def check_fuentes_existence(md_file: Path, fuentes_str: str):
+    """Comprueba que las rutas mencionadas en fuentes: existan en el repo."""
+    # Extraer elementos dentro de corchetes o comas
+    raw_items = re.findall(r'[^,\[\]\n\r]+', fuentes_str)
+    for raw in raw_items:
+        clean = raw.strip().strip("\"'").split("#")[0].strip()
+        if not clean:
+            continue
+        # Ignorar descriptores textuales o comandos conocidos
+        if clean.lower() in {"git log", "equipo de desarrollo uct", "equipo uct", "contextmaster"}:
+            continue
+        # Si parece ruta o nombre de archivo en repo
+        is_path_like = any(clean.startswith(p) for p in [
+            "src", "docs", "Docker", "diagramas", ".github", "globalmart-frontend"
+        ]) or clean.endswith((".md", ".pdf", ".cs", ".json", ".yml", ".yaml", ".sh", ".bat", ".drawio", ".png", ".http"))
+
+        if is_path_like:
+            target = REPO_ROOT / clean
+            if not target.exists():
+                warnings.append(
+                    f"Fuente no encontrada: '{clean}' en {md_file.relative_to(REPO_ROOT)}"
+                )
+
+
+def check_secrets(md_file: Path, content: str):
+    """Verifica que no existan secretos reales en el contenido."""
+    secret_patterns = [
+        r"password\s*[:=]\s*[\"']([^\"']+)[\"']",
+        r"ConnectionString.*Password=([^;\"'\s]+)",
+        r"api[_-]?key\s*[:=]\s*[\"']([a-zA-Z0-9]{20,})[\"']",
+        r"-----BEGIN [A-Z ]*PRIVATE KEY-----",
+    ]
+    known_placeholders = {
+        "demo1234", "admin_password", "ci_password", "<password>",
+        "min32chars", "changeme", "changeinproduction"
+    }
+
+    for pattern in secret_patterns:
+        matches = re.finditer(pattern, content, re.IGNORECASE)
+        for m in matches:
+            val = m.group(1).lower() if m.groups() else m.group(0).lower()
+            if not any(ph in val for ph in known_placeholders):
+                errors.append(
+                    f"POSIBLE SECRETO REAL en: {md_file.relative_to(REPO_ROOT)}"
+                )
 
 
 def validate_node(md_file: Path):
@@ -76,43 +132,52 @@ def validate_node(md_file: Path):
         errors.append(f"VACÍO: {md_file.relative_to(REPO_ROOT)}")
         return
 
-    # Verifica frontmatter
+    # 1. Frontmatter
     has_fm = content.startswith("---")
     if has_fm:
         stats["nodes_with_frontmatter"] += 1
         fm = parse_frontmatter(content)
 
-        if "id" not in fm or not fm.get("id"):
+        node_id = fm.get("id", "").strip().strip("\"'")
+        if not node_id:
             stats["nodes_missing_id"] += 1
             warnings.append(f"SIN id: {md_file.relative_to(REPO_ROOT)}")
+        else:
+            # Comprobación de unicidad de ID
+            if node_id in SEEN_IDS and SEEN_IDS[node_id] != md_file:
+                stats["duplicate_ids"] += 1
+                errors.append(
+                    f"ID DUPLICADO: '{node_id}' en {md_file.relative_to(REPO_ROOT)} "
+                    f"(ya definido en {SEEN_IDS[node_id].relative_to(REPO_ROOT)})"
+                )
+            else:
+                SEEN_IDS[node_id] = md_file
 
-        if "estado" not in fm or not fm.get("estado"):
+        estado_val = fm.get("estado", "").strip().strip("\"'[]").lower()
+        if not estado_val:
             stats["nodes_missing_estado"] += 1
             warnings.append(f"SIN estado: {md_file.relative_to(REPO_ROOT)}")
+        elif estado_val not in VALID_ESTADOS:
+            warnings.append(
+                f"estado inválido '{estado_val}': {md_file.relative_to(REPO_ROOT)}"
+            )
 
-        if "fuentes" not in fm or not fm.get("fuentes"):
+        fuentes_val = fm.get("fuentes", "")
+        if not fuentes_val:
             stats["nodes_missing_fuentes"] += 1
             warnings.append(f"SIN fuentes: {md_file.relative_to(REPO_ROOT)}")
+        else:
+            # Comprobación de existencia de rutas en fuentes:
+            check_fuentes_existence(md_file, fuentes_val)
 
-        # Verifica que estado sea uno de los valores permitidos
-        estado_value = fm.get("estado", "").strip("\"'[]")
-        valid_estados = {
-            "implementado", "parcial", "planificado", "obsoleto",
-            "no_verificado"
-        }
-        if estado_value and estado_value.lower() not in valid_estados:
-            warnings.append(
-                f"estado inválido '{estado_value}': {md_file.relative_to(REPO_ROOT)}"
-            )
     else:
         warnings.append(f"SIN frontmatter: {md_file.relative_to(REPO_ROOT)}")
 
-    # Verifica que el archivo tenga al menos un encabezado H1
+    # 2. Encabezado H1
     if not re.search(r"^# .+", content, re.MULTILINE):
         warnings.append(f"SIN encabezado H1: {md_file.relative_to(REPO_ROOT)}")
 
-    # Verifica que no tenga texto [PLANIFICADO] mal escrito
-    # (debe ser con corchetes, como etiqueta de estado)
+    # 3. Menciones mal escritas de PLANIFICADO
     bad_state_mentions = re.findall(r"\bPLANIFICADO\b(?!\])", content)
     if bad_state_mentions:
         warnings.append(
@@ -120,24 +185,18 @@ def validate_node(md_file: Path):
             f"{md_file.relative_to(REPO_ROOT)}"
         )
 
-    # Extrae y verifica enlaces [[wiki-style]]
+    # 4. Enlaces wiki-style [[target]]
     wiki_links = re.findall(r"\[\[([^\]]+)\]\]", content)
     for link in wiki_links:
-        link_id = link.strip().split("|")[0]  # [[id|label]] → id
+        link_id = link.strip().split("|")[0].strip()
+        # Ignorar ejemplos literales en documentación
+        if link_id.lower() in IGNORED_WIKI_TARGETS:
+            continue
         if link_id not in VALID_IDS:
-            stats["broken_links"].append(f"{md_file.relative_to(REPO_ROOT)} → [[{link_id}]]")
+            stats["broken_links"].append(f"{md_file.relative_to(REPO_ROOT)} -> [[{link_id}]]")
 
-    # Verifica que no tenga contraseñas hardcodeadas
-    secret_patterns = [
-        r"password\s*=\s*[\"'][^\"']+[\"']",
-        r"ConnectionString.*Password=[^;]+",
-        r"api[_-]?key\s*=\s*[\"'][a-zA-Z0-9]{20,}[\"']",
-    ]
-    for pattern in secret_patterns:
-        if re.search(pattern, content, re.IGNORECASE):
-            errors.append(
-                f"POSIBLE SECRETO en: {md_file.relative_to(REPO_ROOT)}"
-            )
+    # 5. Comprobación de secretos
+    check_secrets(md_file, content)
 
 
 def check_required_files():
@@ -163,93 +222,125 @@ def check_required_files():
 
 
 def check_source_code_not_modified():
-    """Verifica que NO se hayan modificado archivos de código fuente."""
+    """Verifica que NO se hayan añadido archivos .md indebidos en carpetas protegidas."""
     protected_dirs = ["src", "globalmart-frontend", "Docker", ".github"]
-    # Esto no puede hacerse sin git en Python puro, así que solo verificamos
-    # que no existan archivos nuevos en esas carpetas con extensión .md
     for d in protected_dirs:
         target = REPO_ROOT / d
         if target.exists():
-            md_files = list(target.rglob("*.md"))
-            if md_files:
+            # Ignorar node_modules, .git y .webpack
+            md_files = [
+                f for f in target.rglob("*.md")
+                if "node_modules" not in str(f) and ".git" not in str(f) and ".webpack" not in str(f)
+            ]
+            # Excluir READMEs documentados legítimos
+            suspicious = [
+                f for f in md_files
+                if f.name not in ["README.md", "README_KONG.md"]
+            ]
+            if suspicious:
                 warnings.append(
-                    f"Archivos .md encontrados en carpeta protegida {d}/: "
-                    + ", ".join(str(f.relative_to(REPO_ROOT)) for f in md_files)
+                    f"Archivos .md inesperados en carpeta protegida {d}/: "
+                    + ", ".join(str(f.relative_to(REPO_ROOT)) for f in suspicious)
                 )
 
 
-def main():
-    print("=" * 60)
-    print(" GlobalMart OS — Validador del Grafo de Conocimiento")
-    print(f" Repositorio: {REPO_ROOT}")
-    print("=" * 60)
-    print()
-
-    # 1. Recolectar IDs para validar enlaces
-    print("[1/4] Recolectando IDs de nodos...")
-    collect_node_ids()
-    print(f"      IDs encontrados: {len(VALID_IDS)}")
-
-    # 2. Verificar archivos requeridos
-    print("[2/4] Verificando archivos requeridos...")
-    check_required_files()
-
-    # 3. Validar cada nodo
-    print("[3/4] Validando nodos...")
-    for md_file in sorted(CONTEXT_ROOT.rglob("*.md")):
-        validate_node(md_file)
-
-    # 4. Verificar protección de código
-    print("[4/4] Verificando que no se modifique código fuente...")
-    check_source_code_not_modified()
-
-    # Mostrar resultados
-    print()
-    print("=" * 60)
-    print(" RESULTADOS")
-    print("=" * 60)
-    print(f"  Nodos totales analizados:      {stats['total_nodes']}")
-    print(f"  Con frontmatter:               {stats['nodes_with_frontmatter']}")
-    print(f"  Sin campo 'id':                {stats['nodes_missing_id']}")
-    print(f"  Sin campo 'estado':            {stats['nodes_missing_estado']}")
-    print(f"  Sin campo 'fuentes':           {stats['nodes_missing_fuentes']}")
-    print(f"  Archivos vacíos:               {stats['empty_files']}")
-    print(f"  IDs de nodos registrados:      {len(VALID_IDS)}")
-    print()
+def generate_report_text() -> str:
+    """Genera el reporte estructurado."""
+    lines = [
+        "=" * 60,
+        " GlobalMart OS — Validador del Grafo de Conocimiento",
+        f" Repositorio: {REPO_ROOT}",
+        "=" * 60,
+        "",
+        f"  Nodos analizados:              {stats['total_nodes']}",
+        f"  Con frontmatter:               {stats['nodes_with_frontmatter']}",
+        f"  Sin campo 'id':                {stats['nodes_missing_id']}",
+        f"  Sin campo 'estado':            {stats['nodes_missing_estado']}",
+        f"  Sin campo 'fuentes':           {stats['nodes_missing_fuentes']}",
+        f"  IDs duplicados:                {stats['duplicate_ids']}",
+        f"  Archivos vacíos:               {stats['empty_files']}",
+        f"  IDs únicos registrados:        {len(VALID_IDS)}",
+        "",
+    ]
 
     if stats["broken_links"]:
-        print(f"  [!] ENLACES ROTOS ({len(stats['broken_links'])}):")
+        lines.append(f"  [!] ENLACES ROTOS ({len(stats['broken_links'])}):")
         for bl in stats["broken_links"][:20]:
-            print(f"      -> {bl}")
+            lines.append(f"      -> {bl}")
         if len(stats["broken_links"]) > 20:
-            print(f"      ... y {len(stats['broken_links']) - 20} mas")
+            lines.append(f"      ... y {len(stats['broken_links']) - 20} más")
     else:
-        print("  [OK] Sin enlaces rotos")
+        lines.append("  [OK] Sin enlaces rotos")
 
-    print()
+    lines.append("")
     if errors:
-        print(f"  [X] ERRORES ({len(errors)}):")
+        lines.append(f"  [X] ERRORES ({len(errors)}):")
         for e in errors:
-            print(f"      ERROR: {e}")
+            lines.append(f"      ERROR: {e}")
     else:
-        print("  [OK] Sin errores criticos")
+        lines.append("  [OK] Sin errores críticos")
 
     if warnings:
-        print(f"\n  [!] ADVERTENCIAS ({len(warnings)}):")
+        lines.append(f"\n  [!] ADVERTENCIAS ({len(warnings)}):")
         for w in warnings[:30]:
-            print(f"      WARN: {w}")
+            lines.append(f"      WARN: {w}")
         if len(warnings) > 30:
-            print(f"      ... y {len(warnings) - 30} mas")
+            lines.append(f"      ... y {len(warnings) - 30} más")
     else:
-        print("  [OK] Sin advertencias")
+        lines.append("  [OK] Sin advertencias")
 
-    print()
-    print("=" * 60)
+    lines.append("")
+    lines.append("=" * 60)
     if errors:
-        print(" RESULTADO: FALLO (hay errores criticos)")
+        lines.append(" RESULTADO: FALLO (hay errores críticos)")
+    else:
+        lines.append(" RESULTADO: OK")
+    lines.append("=" * 60)
+    return "\n".join(lines)
+
+
+def main():
+    # 1. Recolectar IDs
+    collect_node_ids()
+
+    # 2. Verificar archivos requeridos
+    check_required_files()
+
+    # 3. Validar cada nodo (excluyendo _tools)
+    for md_file in sorted(CONTEXT_ROOT.rglob("*.md")):
+        if "_tools" in str(md_file):
+            continue
+        validate_node(md_file)
+
+    # 4. Verificar carpetas de código
+    check_source_code_not_modified()
+
+    # 5. Generar reporte
+    report = generate_report_text()
+    print(report)
+
+    # Guardar reporte en docs/context/_reports/validacion.md con UTF-8
+    report_file = CONTEXT_ROOT / "_reports" / "validacion.md"
+    report_content = f"""---
+id: validacion
+tipo: reporte
+titulo: Reporte de Validación del Grafo de Conocimiento
+estado: vigente
+fuentes: [docs/context/_tools/validate.py]
+verificado_contra_codigo: true
+ultima_revision: 2026-09-29
+---
+# Reporte de Validación del Grafo de Conocimiento
+
+```
+{report}
+```
+"""
+    report_file.write_text(report_content, encoding="utf-8")
+
+    if errors:
         sys.exit(1)
     else:
-        print(" RESULTADO: OK")
         sys.exit(0)
 
 
