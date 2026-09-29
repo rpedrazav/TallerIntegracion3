@@ -51,4 +51,4 @@ Hub completo: [`docs/context/index.md`](docs/context/index.md)
 
 ## Sprint actual
 
-Sprint 3 (estimado) — Ver [`docs/context/planificacion/sprint-actual.md`](docs/context/planificacion/sprint-actual.md)
+Sprint 1 — Ver [`docs/context/planificacion/sprint-actual.md`](docs/context/planificacion/sprint-actual.md)

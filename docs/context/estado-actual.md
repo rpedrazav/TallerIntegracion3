@@ -3,9 +3,9 @@ id: estado-actual
 tipo: indice
 titulo: Estado Real de Implementación — GlobalMart OS
 estado: implementado
-fuentes: [docs/context/_reports/inventario.md, src/, git log]
+fuentes: [docs/context/_reports/inventario.md, src/, git log, docs/context/_reports/preguntas-abiertas.md]
 verificado_contra_codigo: true
-ultima_revision: 2026-09-28
+ultima_revision: 2026-09-29
 depende_de: []
 publica: []
 consume: []
@@ -13,9 +13,10 @@ reglas: []
 ---
 # Estado Real de Implementación — GlobalMart OS
 
-> Nodo más importante para cualquier IA nueva. Refleja el estado REAL del código al 28-09-2026, no el diseño.
+> Nodo más importante para cualquier IA nueva. Refleja el estado REAL del código al 29-09-2026, validado contra el repositorio y las aclaraciones del equipo de desarrollo.
 
-**Sprint en curso:** Sprint 3 (estimado por git log — trabajo activo en MS-4 Warehouse + MS-5 POS avanzado)
+**Contexto del proyecto:** Proyecto académico de Ingeniería Civil Informática, Universidad Católica de Temuco (UCT). Las integraciones externas que no puedan obtenerse legalmente (certificados digitales reales del SII, terminales de pago bancario físicos) serán simuladas.  
+**Sprint en curso:** **Sprint 1** (penúltimo día de la Semana 3 de un ciclo de 4 semanas, de miércoles a miércoles).
 
 ---
 
@@ -30,7 +31,7 @@ reglas: []
 | MS-5 POS | ✅ 2 controllers | ❌ SIN productor sale.completed | ✅ AgregarItemTest | **PARCIAL** |
 | MS-6 SupplyChain | ❌ Sin controllers | ❌ Sin Kafka | ❌ Sin tests | **PLANIFICADO** |
 | MS-7 Analytics | ❌ Sin controllers | ❌ Sin consumers | ❌ Sin tests | **PLANIFICADO** |
-| MS-8 Loyalty | ❌ Sin controllers | ⚠️ Registrado en DI pero sin handlers | ❌ Sin tests | **PLANIFICADO** |
+| MS-8 Loyalty | ❌ Sin controllers | ⚠️ Registrado en DI sin consumer loop | ❌ Sin tests | **PLANIFICADO** |
 
 ---
 
@@ -38,7 +39,7 @@ reglas: []
 
 ### MS-1 · Tenant & Identity Service [PARCIAL]
 **Implementado:**
-- `POST /auth/login` — genera JWT con tenant_id, roles, active_role [IMPLEMENTADO]
+- `POST /auth/login` — genera JWT con tenant_id, roles, active_role (expiración: 8 horas por defecto en appsettings.json) [IMPLEMENTADO]
 - `GET/POST/PUT/DELETE /api/v1/users` — CRUD usuarios con RBAC [IMPLEMENTADO]
 - `POST /api/v1/users/{id}/roles` — asignar roles (sin SUPER_ADMIN) [IMPLEMENTADO]
 - `GET/PUT /tenants/{id}/config` — config de tenant (país, moneda, IVA) [IMPLEMENTADO]
@@ -47,14 +48,9 @@ reglas: []
 
 **No implementado (PLANIFICADO):**
 - `POST /auth/refresh` — renovar token
-- `GET /tenants/{id}/sucursales` — gestión de sucursales
+- `GET /tenants/{id}/sucursales` — gestión de sucursales (planificada para próximas semanas)
 - `GET /fx/rates` — tipos de cambio
 - `TI-03` MFA (Multi-Factor Authentication)
-
-**Brechas críticas:**
-- No hay endpoint de refresh token → sesiones expiradas sin solución
-- No hay gestión de sucursales (`sucursal_id` en JWT es campo manual, no gestionado)
-- No hay integración con Fixer.io para tipos de cambio
 
 ---
 
@@ -64,24 +60,19 @@ reglas: []
 - TaxCalculatorService — IVA simple (configurable por tenant) [IMPLEMENTADO]
 - TenantConfigClient — llama a MS-1 para obtener PorcentajeIva [IMPLEMENTADO]
 
-**No implementado (PLANIFICADO):**
-- `POST /dte/solicitar-folio` — integración con entidad fiscal
+**No implementado (PLANIFICADO / SIMULADO):**
+- `POST /dte/solicitar-folio` — integración simulada con entidad fiscal (SII)
 - `POST /dte/emitir` — emisión de boleta/factura electrónica
 - `GET /dte/{id}/estado` — estado de DTE
 - `GET /reportes/declaracion-fiscal` — reportes fiscales
 - IVA compuesto en cascada
-- Integración con SII/AFIP/IRS
-
-**Brechas críticas:**
-- Sin folio electrónico → RF-08 (emitir DTE) no implementado → ventas sin comprobante tributario
-- RN-03 (toda venta genera DTE) NO se cumple en el código actual
 
 ---
 
 ### MS-3 · Catalog & Pricing Service [PARCIAL]
 **Implementado:**
 - `GET/POST/PUT /products` — CRUD productos [IMPLEMENTADO]
-- `GET /products/search?q=` — búsqueda full-text con índice trigram pg_trgm [IMPLEMENTADO]
+- `GET /products/search?q=` — búsqueda full-text con índice trigram `pg_trgm` [IMPLEMENTADO]
 - `GET /products/lookup?barcode=` — lookup por código de barras [IMPLEMENTADO]
 - `GET/POST /categories` — CRUD categorías con jerarquía (parentId) [IMPLEMENTADO]
 - Soporte para `EsPesoVariable`, `CodigoQrUrl`, `UomBaseId` en modelo [IMPLEMENTADO]
@@ -91,10 +82,6 @@ reglas: []
 - `GET/POST /promotions` — promociones con fechas
 - `POST /uom/convert` — conversión de unidades
 - Publicación de eventos Kafka (`catalog.updated`, `product.price_updated`)
-
-**Brechas:**
-- Sin precios por sucursal (RN-11 no cumplido)
-- Sin promociones por fechas (RF-21 parcial)
 
 ---
 
@@ -113,11 +100,6 @@ reglas: []
 - Generación de alertas Kafka (`stock.alert`, `expiry.alert`)
 - FEFO en selección de lotes para venta
 
-**Brechas críticas:**
-- MS-5 NO produce `sale.completed` → el consumer en MS-4 no recibe eventos
-- RN-05 FEFO: no hay lógica de selección por fecha de vencimiento implementada
-- WI-09/WI-10 (alertas): sin implementar
-
 ---
 
 ### MS-5 · POS & Cart Service [PARCIAL]
@@ -125,49 +107,40 @@ reglas: []
 - `POST /turnos/abrir` — abre turno [IMPLEMENTADO]
 - `GET /turnos/activo` — turno activo del cajero [IMPLEMENTADO]
 - `POST /turnos/cerrar` — cierra turno [IMPLEMENTADO]
-- `POST /ventas` — crear venta [IMPLEMENTADO]
+- `POST /ventas` — crear venta en estado PENDIENTE [IMPLEMENTADO en controller y service]
 - `POST /ventas/{id}/items` — agregar ítem (con tax via MS-2) [IMPLEMENTADO]
-- `PUT /ventas/{id}/items/{itemId}` — modificar cantidad (con recálculo IVA) [IMPLEMENTADO]
-- `DELETE /ventas/{id}/items/{itemId}` — eliminar ítem (con recálculo IVA) [IMPLEMENTADO]
+- `PUT /ventas/{id}/items/{itemId}` — modificar cantidad [IMPLEMENTADO]
+- `DELETE /ventas/{id}/items/{itemId}` — eliminar ítem [IMPLEMENTADO]
 - `GET /ventas/{id}` — obtener venta [IMPLEMENTADO]
 - `GET /ventas/turno/{turnoId}` — ventas por turno [IMPLEMENTADO]
-- `POST /ventas/{id}/anular` — anular venta [IMPLEMENTADO]
-- VentaService con estados PENDIENTE/COMPLETADA/ANULADA/CANCELADA [IMPLEMENTADO]
+- VentaService con métodos `CompletarAsync` y `AnularAsync` [IMPLEMENTADO en service, sin endpoint HTTP aún]
 
 **No implementado / CRÍTICO:**
-- `POST /ventas/{id}/cobrar` — el endpoint existe pero VentaService.CompletarAsync **NO publica** `sale.completed` a Kafka [PARCIAL — falta Kafka]
-- Integración con pasarela de pago (RN-02, PC-27, PC-28) — NO implementado [PLANIFICADO]
-- Integración con hardware: balanza serial, impresora, cajón de dinero [PLANIFICADO]
-- Cálculo de vuelto al cobrar en efectivo [PLANIFICADO en VentaService, no en endpoint]
-
-**Brechas críticas:**
-- RN-02 (pagos por pasarela) — sin implementar
-- PC-24 (publicar sale.completed) — sin implementar → cadena Kafka rota
+- Endpoints HTTP `POST /ventas/{id}/cobrar` y `POST /ventas/{id}/anular` aún no están expuestos en `VentasController.cs`
+- `VentaService.CompletarAsync` **NO publica** `sale.completed` a Kafka
+- Integración con pasarela de cobro externa (planificada simulación con pasarelas tipo Mercado Pago)
+- Integración con hardware (balanza, impresora, cajón de dinero)
 
 ---
 
 ### MS-6 · Supply Chain & Import Service [PLANIFICADO]
 - Modelos: OrdenCompra, OrdenCompraItem, Proveedor, Envio, CostoLandedHistorico [IMPLEMENTADO]
 - DbContext y migración inicial [IMPLEMENTADO]
-- **Sin controllers, sin endpoints, sin lógica de negocio**
-- Sprint 6 según roadmap
+- Sin controllers, sin endpoints, sin lógica de negocio activa.
 
 ---
 
 ### MS-7 · Analytics & Notification Service [PLANIFICADO]
 - Modelos: Alerta, HistorialEnvio, KPIVenta [IMPLEMENTADO]
 - DbContext y migración inicial [IMPLEMENTADO]
-- **Sin controllers, sin Kafka consumers, sin lógica**
-- Sprint 5 según roadmap
+- Sin controllers ni Kafka consumers.
 
 ---
 
 ### MS-8 · Loyalty & Customer Service [PLANIFICADO]
 - Modelos: ClienteAfiliado, MovimientoPuntos, SaldoPuntos, TierMembresia [IMPLEMENTADO]
 - DbContext y migración inicial [IMPLEMENTADO]
-- Kafka Consumer y Producer registrados en DI (sin handlers implementados) [PARCIAL]
-- **Sin controllers, sin endpoints, sin lógica de negocio**
-- Sprint 7 según roadmap
+- Kafka Consumer y Producer registrados como singletons en `Program.cs`, pero sin `IHostedService` ni consumidor activo.
 
 ---
 
@@ -175,16 +148,14 @@ reglas: []
 
 | # | Funcionalidad | RN/RF afectado | Gravedad |
 |---|---------------|----------------|----------|
-| 1 | Publicación de `sale.completed` desde MS-5 | RN-04, RF-09, PC-24 | 🔴 Crítica |
-| 2 | Emisión de DTE (boleta/factura) | RN-03, RF-08, TC-08/09 | 🔴 Crítica |
-| 3 | Integración pasarela de pago | RN-02, RF-07, PC-27/28 | 🔴 Crítica |
-| 4 | FEFO en recepción e inventario | RN-05, RF-10, WI-04/05 | 🟠 Alta |
-| 5 | Endpoint POST /auth/refresh | RF-01 | 🟠 Alta |
-| 6 | Gestión de sucursales | TI-11, RF-19 | 🟠 Alta |
-| 7 | Precios dinámicos por sucursal | RN-11, RF-21, CP-14 | 🟡 Media |
-| 8 | MS-7 Analytics completo | RF-17, AN-01..24 | 🟡 Sprint 5 |
-| 9 | MS-6 Supply Chain completo | RF-18, SC-01..24 | 🟡 Sprint 6 |
-| 10 | MS-8 Loyalty completo | RF-23, LC-01..17 | 🟡 Sprint 7 |
+| 1 | Publicación de `sale.completed` desde MS-5 a Kafka | RN-04, RF-09, PC-24 | 🔴 Crítica |
+| 2 | Exponer endpoints `cobrar` y `anular` en `VentasController.cs` | RF-06, RF-22 | 🔴 Crítica |
+| 3 | Emisión simulada de DTE (boleta/factura) en MS-2 | RN-03, RF-08, TC-08/09 | 🔴 Crítica |
+| 4 | Integración con pasarela de cobro (Mercado Pago o simulador) | RN-02, RF-07, PC-27/28 | 🔴 Crítica |
+| 5 | FEFO en recepción e inventario en MS-4 | RN-05, RF-10, WI-04/05 | 🟠 Alta |
+| 6 | Integrar frontend `Pos.tsx` con backend real | RF-04, RF-05 | 🟠 Alta |
+| 7 | Endpoint POST /auth/refresh | RF-01 | 🟠 Alta |
+| 8 | Gestión de sucursales en backend | TI-11, RF-19 | 🟠 Alta |
 
 ---
 
@@ -192,22 +163,24 @@ reglas: []
 
 | Pantalla | Estado | Integración API |
 |----------|--------|-----------------|
-| Login | [IMPLEMENTADO] | Directo a port 5124 (sin Kong) |
-| POS/Carrito | [PARCIAL] | Datos hardcodeados, sin API real |
-| Admin | [PARCIAL] | Contenido NO verificado |
+| Login | [IMPLEMENTADO] | Llama directo a `http://127.0.0.1:5124` |
+| POS/Carrito | [PARCIAL] | UI implementada con datos mockeados; pendiente llamada a APIs |
+| Admin | [PLACEHOLDER] | Componente básico (`<h2>Administración</h2>`) para acceso directo |
 
-**Hallazgo:** El frontend NO pasa por Kong (API Gateway), llama directo a `http://127.0.0.1:5124`.
+**Nota de integración Electron:** `preload.ts` expone únicamente funciones de autenticación y sesión (`ping`, `getToken`, `setToken`, `logout`). No expone hardware serial ni actualización automática por ahora.
 
 ---
 
 ## Conexiones
-- Detalle de servicios: [[ms1-identity]], [[ms2-tax]], [[ms3-catalog]], [[ms4-inventory]], [[ms5-pos]]
-- Brechas en Kafka: [[kafka-topics]]
-- Sprint actual: [[sprint-actual]]
-- Discrepancias: ver `docs/context/_reports/discrepancias.md`
+- Servicios: [[ms1-identity]], [[ms2-tax]], [[ms3-catalog]], [[ms4-inventory]], [[ms5-pos]]
+- Eventos: [[kafka-topics]]
+- Planificación: [[sprint-actual]]
+- Reporte de discrepancias: `docs/context/_reports/discrepancias.md`
 
 ## Fuentes
 - `docs/context/_reports/inventario.md`
+- `docs/context/_reports/preguntas-abiertas.md`
+- `src/POSCartService/Controllers/VentasController.cs`
 - `src/POSCartService/Services/VentaService.cs`
 - `src/WarehouseInventoryService/Messaging/KafkaConsumerService.cs`
-- `src/TaxComplianceService/Controllers/TaxController.cs`
+- `src/TenantIdentityService/appsettings.json`

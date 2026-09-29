@@ -1,53 +1,50 @@
 ---
 id: preguntas-abiertas
 tipo: reporte
-titulo: Preguntas Abiertas — NO VERIFICADO
-fuentes: [src/, GlobalMart_ContextMaster.md]
-verificado_contra_codigo: false
-ultima_revision: 2026-09-28
+titulo: Preguntas Abiertas y Respuestas del Equipo
+fuentes: [src/, GlobalMart_ContextMaster.md, Equipo de Desarrollo UCT]
+verificado_contra_codigo: true
+ultima_revision: 2026-09-29
 ---
-# Preguntas Abiertas — NO VERIFICADO
+# Preguntas Abiertas y Respuestas del Equipo
 
-> Items que no pudieron verificarse con el código fuente disponible. Se necesita consultar al equipo o verificar archivos no analizados.
+> **Contexto General:** Este es un proyecto académico para la carrera de Ingeniería Civil Informática en la Universidad Católica de Temuco (UCT). Todo componente, certificado o integración que no pueda obtenerse legalmente (certificados digitales reales del SII, terminales de pago bancario físicos) será simulado mediante software/sandboxes.
 
-## Preguntas sobre Implementación
+---
 
-| # | Pregunta | Por qué no verificado |
-|---|---------|----------------------|
-| PA-01 | ¿El `sucursal_id` se valida en algún lugar del sistema? | No se encontró endpoint de gestión de sucursales |
-| PA-02 | ¿VentasController.cs (inicio) tiene `POST /ventas` y `POST /ventas/{id}/cobrar`? Solo se leyó el final del archivo | El archivo fue truncado en la lectura; VentaService.CrearAsync y CompletarAsync existen pero el endpoint HTTP no fue verificado |
-| PA-03 | ¿El Admin.tsx tiene contenido real o es una página vacía? | Solo se leyó el inicio de Pos.tsx; Admin.tsx no fue leído |
-| PA-04 | ¿Hay un RoleSwitcher en algún archivo del frontend no listado? | Solo se listaron 12 archivos .tsx/.ts en el frontend |
-| PA-05 | ¿El preload.ts expone APIs de hardware (SerialPort, cajón)? | preload.ts no fue leído completamente |
-| PA-06 | ¿Los puertos reales de MS-6, MS-7, MS-8 son 6001, 7001, 8001? | launchSettings.json de esos servicios no fueron verificados |
-| PA-07 | ¿LoyaltyCustomerService.Program.cs tiene Kafka handlers configurados o solo registrados en DI? | Solo se vio un grep parcial del Program.cs |
-| PA-08 | ¿Existe un `migrations/` en CatalogPricingService con el índice trigram? | Se vio mención de la migración en la lista de archivos |
+## 1. Preguntas sobre Implementación
 
-## Preguntas sobre Diseño
+| # | Pregunta | Estado | Respuesta / Verificación |
+|---|---|---|---|
+| **PA-01** | ¿El `sucursal_id` se valida en algún lugar del sistema? | **RESUELTO** | Se implementará en las siguientes semanas junto con el desarrollo de la API. Actualmente no hay validación de entidad en BD. |
+| **PA-02** | ¿`VentasController.cs` tiene `POST /ventas` y `POST /cobrar`? | **RESUELTO** | [`POST /ventas`](file:///c:/Users/dp877/Desktop/Universidad/Semestre%206/TallerIntegra3/TallerIntegracion3/src/POSCartService/Controllers/VentasController.cs) **sí existe** y crea la venta. Sin embargo, `cobrar` y `anular` solo existen como métodos en `VentaService.cs`; no están expuestos en el controlador todavía. |
+| **PA-03** | ¿`Admin.tsx` tiene contenido real o es un placeholder? | **RESUELTO** | Es un placeholder temporal (`<h2>Administración</h2>`). Se acordó dejar la ruta directa para facilitar pruebas de desarrollo del POS sin alternar credenciales constantemente. |
+| **PA-04** | ¿Hay un `RoleSwitcher` en algún archivo del frontend? | **RESUELTO** | **No**. El frontend comenzó a desarrollarse en la semana 3 y se centraliza en `globalmart-frontend/`. |
+| **PA-05** | ¿`preload.ts` expone APIs de hardware (SerialPort, cajón)? | **RESUELTO** | **No**. Verificado en código: `preload.ts` solo expone métodos de sesión (`ping`, `getToken`, `setToken`, `logout`). |
+| **PA-06** | ¿Los puertos reales de MS-6, MS-7 y MS-8 son 6001, 7001, 8001? | **RESUELTO** | No, usan el rango 5124 y asociados según la configuración de los microservicios. |
+| **PA-07** | ¿`LoyaltyCustomerService.Program.cs` tiene Kafka handlers o solo registro en DI? | **RESUELTO** | Verificado en código: `Program.cs` registra el Consumer y Producer de Kafka como Singletons en DI, pero no tiene implementado ningún `IHostedService` ni loop de consumo de eventos. |
+| **PA-08** | ¿Existe la migración del índice trigram en CatalogPricingService? | **RESUELTO** | **Sí**, confirmada en `src/CatalogPricingService/Data/Migrations/20260927164215_AddProductoNombreTrgmIndex.cs`. |
 
-| # | Pregunta | Origen |
-|---|---------|--------|
-| PA-09 | ¿Cuál es la `JwtExpirationHours` configurada por defecto? | No se leyó appsettings.json de MS-1 |
-| PA-10 | ¿El seed de dev en MS-3 crea productos de ejemplo? | Program.cs de MS-3 no fue analizado completamente |
-| PA-11 | ¿Existe un `env.example` con documentación de todas las variables? | Se mencionó pero no se leyó |
-| PA-12 | ¿Los diagramas en `diagramas-casos-uso/nuevo/` están actualizados respecto al código? | Archivos .mmd no fueron leídos |
-| PA-13 | ¿`docs/informe.pdf` y `docs/contexto_general.md` tienen información adicional no en el ContextMaster? | Archivos no leídos |
+---
 
-## Preguntas sobre el Equipo y el Proceso
+## 2. Preguntas sobre Diseño
 
-| # | Pregunta |
-|---|---------|
-| PA-14 | ¿El sprint actual es Sprint 2, 3 o cuál? Las tareas TI3-179..195 ¿son todas del mismo sprint? |
-| PA-15 | ¿Hay una decisión sobre qué pasarela de pago usar (Transbank vs Stripe)? |
-| PA-16 | ¿El certificado digital del SII ya fue obtenido o es futuro? |
-| PA-17 | ¿Hay sucursales de prueba configuradas manualmente en algún seed? |
-| PA-18 | ¿El frontend de Electron tiene auto-update configurado con electron-updater? |
+| # | Pregunta | Estado | Respuesta / Verificación |
+|---|---|---|---|
+| **PA-09** | ¿Cuál es la `JwtExpirationHours` configurada por defecto? | **RESUELTO** | Verificado en `src/TenantIdentityService/appsettings.json`: fijada en **8 horas**. |
+| **PA-10** | ¿El seed de dev en MS-3 crea productos de ejemplo? | **RESUELTO** | No hay seed de productos configurado en MS-3 (solo la creación de tablas). |
+| **PA-11** | ¿Existe un `env.example` con documentación de todas las variables? | **RESUELTO** | Sí, existe en `Docker/env.example`, aunque los puertos presentan discrepancias con el entorno local que se discutirán en equipo. |
+| **PA-12** | ¿Los diagramas en `diagramas-casos-uso/nuevo/` están actualizados? | **RESUELTO** | **Sí**, los diagramas Mermaid `.mmd` y su código están actualizados. |
+| **PA-13** | ¿`docs/informe.pdf` tiene información base adicional? | **RESUELTO** | **Sí**, `informe.pdf` contiene el marco conceptual completo y la especificación de lo que se pretende lograr en el proyecto. |
 
-## Formato para actualizar este archivo
+---
 
-Al resolver una pregunta, moverla a la sección de discrepancias confirmadas o simplemente eliminarla de este archivo:
-```
-Estado: RESUELTO el YYYY-MM-DD
-Respuesta: [respuesta verificada]
-Fuente: [archivo o persona que confirmó]
-```
+## 3. Preguntas sobre el Equipo y el Proceso
+
+| # | Pregunta | Estado | Respuesta / Verificación |
+|---|---|---|---|
+| **PA-14** | ¿Cuál es el sprint actual y duración? | **RESUELTO** | Es el **Sprint 1**. Los sprints duran **4 semanas** (de miércoles a miércoles). Al 28-29 de septiembre de 2026 el equipo se encuentra en el penúltimo día de la Semana 3. |
+| **PA-15** | ¿Decisión sobre pasarela de pago (Transbank vs Stripe)? | **RESUELTO** | Se definirá a futuro; se proyecta usar una pasarela externa o máquinas tipo Mercado Pago en modo simulado/sandbox. |
+| **PA-16** | ¿Certificado digital del SII? | **RESUELTO** | Será obtenido/implementado a futuro de manera **simulada**. |
+| **PA-17** | ¿Hay sucursales de prueba en seed? | **RESUELTO** | No hay sucursales configuradas en ningún seed. |
+| **PA-18** | ¿Auto-update configurado con `electron-updater`? | **RESUELTO** | Verificado en `package.json`: **No** está instalado ni configurado `electron-updater`. |

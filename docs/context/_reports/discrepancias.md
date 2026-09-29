@@ -56,11 +56,11 @@ ultima_revision: 2026-09-28
 
 ## Discrepancias Importantes
 
-### D-07 — Sprint mal documentado
+### D-07 — Duración y avance del Sprint 1
 
-- **ContextMaster dice:** "Sprint 1 en curso" al momento de redacción (8 sept 2026)
-- **Código real al 28 sept 2026:** Sprint 3 en curso (commits TI3-179..195 en septiembre)
-- **Impacto:** La sección de sprint backlog del ContextMaster está completamente desactualizada
+- **ContextMaster dice:** Documentaba un alcance de Sprint 1 muy preliminar centrado en setup.
+- **Realidad aclarada por el equipo:** El proyecto sigue formalmente en **Sprint 1** (sprints de 4 semanas, de miércoles a miércoles, en la UCT; actualmente semana 3). Sin embargo, el equipo avanzó tareas backend (TI3-179..195) de Kafka, multi-tenant y ventas completas antes de cerrar el sprint.
+- **Impacto:** El backlog original del Sprint 1 en ContextMaster subestimaba el progreso real que se alcanzaría en las primeras 3 semanas.
 
 ### D-08 — Endpoints de MS-2 faltantes en ContextMaster
 
@@ -105,11 +105,17 @@ ultima_revision: 2026-09-28
 - **ContextMaster dice:** "RNF-07: >= 80% cobertura en MS-1, MS-2, MS-5"
 - **Código real:** Solo console apps de smoke testing. Cobertura estimada: < 5%
 
+### D-15 — Endpoints HTTP de cobro y anulación ausentes en VentasController
+
+- **ContextMaster dice:** MS-5 expone `POST /ventas/{id}/cobrar` y `POST /ventas/{id}/anular`
+- **Código real:** `VentaService.cs` implementa `CompletarAsync` y `AnularAsync`, pero `VentasController.cs` aún no tiene las acciones HTTP mapeadas (solo tiene `POST /ventas`, items CRUD y GET).
+- **Impacto:** Las operaciones de completar y anular no son invocables vía HTTP todavía.
+
 ## Resumen
 
 | Gravedad | Cantidad |
 |----------|---------|
 | 🔴 Crítica | 6 (D-01 a D-06) |
-| 🟠 Importante | 6 (D-07 a D-12) |
+| 🟠 Importante | 7 (D-07 a D-12, D-15) |
 | 🟡 Menor | 2 (D-13, D-14) |
-| **Total** | **14** |
+| **Total** | **15** |

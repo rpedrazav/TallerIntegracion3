@@ -13,7 +13,9 @@ reglas: []
 ---
 # Visión del Proyecto — GlobalMart OS
 
-> GlobalMart OS es un sistema POS + ERP multi-tenant para minimarkets, con arquitectura de microservicios, Kafka y frontend Electron. Contexto académico: Taller de Integración 3 (INTEGRA3).
+> GlobalMart OS es un sistema POS + ERP multi-tenant para minimarkets, con arquitectura de microservicios, Kafka y frontend Electron.  
+> **Contexto Académico:** Proyecto formativo de la carrera de Ingeniería Civil Informática en la Universidad Católica de Temuco (UCT) para la asignatura Taller de Integración 3 (INTEGRA3).  
+> **Política de Simulación:** Aquellos servicios e integraciones que no puedan obtenerse legal u oficialmente (certificados digitales reales del SII, terminales POS físicos de bancos) serán simulados mediante software/sandboxes.
 
 ## Qué es
 

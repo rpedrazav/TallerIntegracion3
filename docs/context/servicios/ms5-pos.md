@@ -50,8 +50,8 @@ src/POSCartService/
 | DELETE | `/ventas/{id}/items/{itemId}` | JWT | [IMPLEMENTADO] |
 | GET | `/ventas/{id}` | JWT | [IMPLEMENTADO] |
 | GET | `/ventas/turno/{turnoId}` | JWT | [IMPLEMENTADO] |
-| POST | `/ventas/{id}/cobrar` | JWT | [PARCIAL — falta Kafka + pasarela] |
-| POST | `/ventas/{id}/anular` | JWT | [IMPLEMENTADO — sin reembolso a pasarela] |
+| POST | `/ventas/{id}/cobrar` | JWT | [PLANIFICADO en controller — implementado en VentaService.CompletarAsync] |
+| POST | `/ventas/{id}/anular` | JWT | [PLANIFICADO en controller — implementado en VentaService.AnularAsync] |
 | GET | `/health` | Público | [IMPLEMENTADO] |
 
 ## Flujo de venta (implementado)
