@@ -2,10 +2,10 @@
 id: backlog
 tipo: planificacion
 titulo: Backlog Original — User Stories y Tareas Técnicas
-estado: parcial
+estado: vigente
 fuentes: [GlobalMart_ContextMaster.md#sec16-17]
 verificado_contra_codigo: false
-ultima_revision: 2026-09-28
+ultima_revision: 2026-09-29
 depende_de: [roadmap]
 publica: []
 consume: []

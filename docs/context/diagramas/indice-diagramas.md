@@ -2,10 +2,10 @@
 id: indice-diagramas
 tipo: diagrama
 titulo: Índice de Diagramas — GlobalMart OS
-estado: implementado
+estado: vigente
 fuentes: [diagramas-casos-uso/nuevo/, diagramas/, GlobalMart_ContextMaster.md#sec15]
 verificado_contra_codigo: false
-ultima_revision: 2026-09-28
+ultima_revision: 2026-09-29
 depende_de: [actores]
 publica: []
 consume: []

@@ -1,3 +1,12 @@
+---
+id: inventario
+tipo: reporte
+titulo: Inventario del Proyecto GlobalMart OS
+estado: vigente
+fuentes: [src/, Docker/, GlobalMart_ContextMaster.md]
+verificado_contra_codigo: true
+ultima_revision: 2026-09-29
+---
 # Inventario del Proyecto GlobalMart OS
 **Fecha de revisión:** 2026-09-28  
 **Rama:** docs/context-graph  

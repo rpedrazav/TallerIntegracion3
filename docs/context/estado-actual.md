@@ -2,7 +2,7 @@
 id: estado-actual
 tipo: indice
 titulo: Estado Real de Implementación — GlobalMart OS
-estado: implementado
+estado: vigente
 fuentes: [docs/context/_reports/inventario.md, src/, git log, docs/context/_reports/preguntas-abiertas.md]
 verificado_contra_codigo: true
 ultima_revision: 2026-09-29

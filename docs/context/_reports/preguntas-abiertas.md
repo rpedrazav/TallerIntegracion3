@@ -2,6 +2,7 @@
 id: preguntas-abiertas
 tipo: reporte
 titulo: Preguntas Abiertas y Respuestas del Equipo
+estado: vigente
 fuentes: [src/, GlobalMart_ContextMaster.md, Equipo de Desarrollo UCT]
 verificado_contra_codigo: true
 ultima_revision: 2026-09-29

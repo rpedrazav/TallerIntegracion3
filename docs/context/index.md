@@ -2,10 +2,10 @@
 id: index
 tipo: indice
 titulo: Índice del Grafo de Conocimiento — GlobalMart OS
-estado: implementado
+estado: vigente
 fuentes: [docs/context/_reports/inventario.md, GlobalMart_ContextMaster.md]
 verificado_contra_codigo: true
-ultima_revision: 2026-09-28
+ultima_revision: 2026-09-29
 depende_de: []
 publica: []
 consume: []

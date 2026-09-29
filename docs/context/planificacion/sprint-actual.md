@@ -2,7 +2,7 @@
 id: sprint-actual
 tipo: planificacion
 titulo: Sprint Actual — Sprint 1 (En Curso)
-estado: implementado
+estado: vigente
 fuentes: [git log, GlobalMart_ContextMaster.md#sec17-18, src/, docs/context/_reports/preguntas-abiertas.md]
 verificado_contra_codigo: true
 ultima_revision: 2026-09-29

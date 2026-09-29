@@ -2,6 +2,7 @@
 id: cobertura-ids
 tipo: reporte
 titulo: Cobertura de IDs — Trazabilidad ContextMaster vs Grafo
+estado: vigente
 fuentes: [GlobalMart_ContextMaster.md, docs/context/]
 verificado_contra_codigo: true
 ultima_revision: 2026-09-29

@@ -16,9 +16,9 @@ ultima_revision: 2026-09-29
 ============================================================
 
   Nodos analizados:              57
-  Con frontmatter:               54
+  Con frontmatter:               57
   Sin campo 'id':                0
-  Sin campo 'estado':            3
+  Sin campo 'estado':            0
   Sin campo 'fuentes':           0
   IDs duplicados:                0
   Archivos vacíos:               0
@@ -28,15 +28,8 @@ ultima_revision: 2026-09-29
 
   [OK] Sin errores críticos
 
-  [!] ADVERTENCIAS (29):
-      WARN: SIN estado: docs\context\_reports\cobertura-ids.md
-      WARN: SIN estado: docs\context\_reports\discrepancias.md
-      WARN: SIN frontmatter: docs\context\_reports\inventario.md
+  [!] ADVERTENCIAS (22):
       WARN: PLANIFICADO sin corchetes (16x): docs\context\_reports\inventario.md
-      WARN: SIN frontmatter: docs\context\_reports\plan-de-nodos.md
-      WARN: SIN estado: docs\context\_reports\preguntas-abiertas.md
-      WARN: SIN frontmatter: docs\context\_reports\validacion.md
-      WARN: SIN encabezado H1: docs\context\_reports\validacion.md
       WARN: PLANIFICADO sin corchetes (22x): docs\context\_reports\validacion.md
       WARN: PLANIFICADO sin corchetes (1x): docs\context\dominio\fefo.md
       WARN: PLANIFICADO sin corchetes (3x): docs\context\dominio\rbac-multirol.md

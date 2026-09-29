@@ -2,10 +2,10 @@
 id: sprints-anteriores
 tipo: planificacion
 titulo: Sprints Anteriores — Trabajo Completado
-estado: implementado
+estado: vigente
 fuentes: [git log, src/]
 verificado_contra_codigo: true
-ultima_revision: 2026-09-28
+ultima_revision: 2026-09-29
 depende_de: []
 publica: []
 consume: []

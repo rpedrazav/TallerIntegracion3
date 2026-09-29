@@ -5,10 +5,10 @@ titulo: Kafka Topics — Diseño vs Implementación Real
 estado: parcial
 fuentes: [src/WarehouseInventoryService/Messaging/KafkaConsumerService.cs, Docker/docker-compose.yml, Docker/scripts/init-kafka-topics.sh]
 verificado_contra_codigo: true
-ultima_revision: 2026-09-28
+ultima_revision: 2026-09-29
 depende_de: [ms5-pos, ms4-inventory]
-publica: []
-consume: []
+publica: [sale.completed, sale.reversed, stock.alert, expiry.alert, stock.updated, purchase.received, fx.rate.updated, points.updated]
+consume: [sale.completed, sale.reversed, stock.alert, expiry.alert, stock.updated, purchase.received, fx.rate.updated, points.updated]
 reglas: [RN-04, RF-09]
 ---
 # Kafka Topics — Diseño vs Implementación Real
@@ -92,8 +92,12 @@ MS-8 Loyalty → points.updated → MS-7 Analytics ❌
 ## Acción requerida (crítica)
 
 Para que la cadena funcione, MS-5 debe publicar `sale.completed` al completar una venta:
+
+> [!NOTE]
+> **Sugerencia sin verificar:** El siguiente bloque representa una sugerencia de implementación de referencia que debe ser validada por el equipo antes de introducirse en el código:
+
 ```csharp
-// En VentaService.CompletarAsync, agregar después de ActualizarAsync:
+// Sugerencia sin verificar para MS-5 (VentaService.CompletarAsync):
 await _kafkaProducer.ProduceAsync("sale.completed", new Message<string,string> {
     Key = venta.TenantId.ToString(),
     Value = JsonSerializer.Serialize(new {

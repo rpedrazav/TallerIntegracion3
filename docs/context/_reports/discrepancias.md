@@ -2,9 +2,10 @@
 id: discrepancias
 tipo: reporte
 titulo: Discrepancias — Código Real vs ContextMaster
+estado: vigente
 fuentes: [src/, GlobalMart_ContextMaster.md, docs/context/_reports/inventario.md]
 verificado_contra_codigo: true
-ultima_revision: 2026-09-28
+ultima_revision: 2026-09-29
 ---
 # Discrepancias — Código Real vs ContextMaster
 
