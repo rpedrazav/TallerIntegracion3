@@ -80,6 +80,9 @@ jobs:
       - name: Build TaxComplianceService
         run: dotnet build src/TaxComplianceService/TaxComplianceService.csproj --no-restore --configuration Release
 
+      - name: Build IntegrationTests
+        run: dotnet build tests/GlobalMart.IntegrationTests/GlobalMart.IntegrationTests.csproj --no-restore --configuration Release
+
       # ------------------------------------------------------------------
       # 5. Levantar infraestructura con Docker Compose
       #    Se excluye 'frontend' (requiere Electron/display) y servicios
