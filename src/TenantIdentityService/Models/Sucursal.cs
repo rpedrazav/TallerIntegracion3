@@ -15,6 +15,14 @@ public class Sucursal
 
     public string Direccion { get; set; } = string.Empty;
 
+    /// <summary>
+    /// Zona horaria IANA propia de la sucursal (ej: "America/Santiago", "America/Argentina/Buenos_Aires").
+    /// Si es <c>null</c>, la sucursal hereda <see cref="Tenant.ZonaHoraria"/>:
+    /// <c>ZonaHoraria efectiva = Sucursal.ZonaHoraria ?? Tenant.ZonaHoraria</c>.
+    /// Permite que un tenant opere sucursales en zonas horarias distintas.
+    /// </summary>
+    public string? ZonaHoraria { get; set; }
+
     public bool Activa { get; set; } = true;
 
     public DateTime CreadaEn { get; set; } = DateTime.UtcNow;

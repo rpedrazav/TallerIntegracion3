@@ -5,7 +5,7 @@ titulo: Estado Real de Implementación — GlobalMart OS
 estado: vigente
 fuentes: [docs/context/_reports/inventario.md, src/, git log, docs/context/_reports/preguntas-abiertas.md]
 verificado_contra_codigo: true
-ultima_revision: 2026-09-29
+ultima_revision: 2026-10-02
 depende_de: []
 publica: []
 consume: []
@@ -43,12 +43,16 @@ reglas: []
 - `GET/POST/PUT/DELETE /api/v1/users` — CRUD usuarios con RBAC [IMPLEMENTADO]
 - `POST /api/v1/users/{id}/roles` — asignar roles (sin SUPER_ADMIN) [IMPLEMENTADO]
 - `GET/PUT /tenants/{id}/config` — config de tenant (país, moneda, IVA) [IMPLEMENTADO]
+- `GET /sucursales` — lista sucursales del tenant del JWT, con zona horaria efectiva [IMPLEMENTADO]
+- `POST /sucursales` — crea sucursal (solo ADMIN), zona horaria IANA opcional y validada, nombre único por tenant sin distinguir mayúsculas (409) [IMPLEMENTADO]
 - TenantMiddleware — extrae tenant_id del JWT e inyecta en DbContext [IMPLEMENTADO]
 - Seed de desarrollo: cajero@demo.cl (ver contraseña en [[como-ejecutar]]) [IMPLEMENTADO]
 
 **No implementado (PLANIFICADO):**
 - `POST /auth/refresh` — renovar token
-- `GET /tenants/{id}/sucursales` — gestión de sucursales (planificada para próximas semanas)
+- `PUT`/`DELETE /sucursales/{id}` — editar y desactivar sucursales (solo existe crear y listar)
+- Asignación de usuarios a sucursales (`UsuarioSucursales` sin endpoint)
+- `GET /tenants/{id}/sucursales` — superseded por `GET /sucursales`
 - `GET /fx/rates` — tipos de cambio
 - `TI-03` MFA (Multi-Factor Authentication)
 
@@ -57,10 +61,18 @@ reglas: []
 ### MS-2 · Tax & Compliance Service [PARCIAL]
 **Implementado:**
 - `POST /tax/calculate` — calcula IVA para lista de items usando config del tenant [IMPLEMENTADO]
+- `POST /comprobantes` — emite comprobante de venta con correlativo atómico por tenant [IMPLEMENTADO]
+- `GET /comprobantes/{id}` — obtiene comprobante para reimpresión, aislado por tenant [IMPLEMENTADO]
+- TenantMiddleware — inyecta tenant_id del JWT en TaxDbContext para los HasQueryFilter [IMPLEMENTADO]
 - TaxCalculatorService — IVA simple (configurable por tenant) [IMPLEMENTADO]
+- ComprobanteService — calcula importes en servidor y persiste comprobante (jsonb) [IMPLEMENTADO]
+- `obtener_correlativo_comprobante(uuid)` — secuencia PostgreSQL por tenant, correlativo único bajo concurrencia [IMPLEMENTADO]
+- Corrección de carrera en la creación de la secuencia por tenant (`CREATE SEQUENCE IF NOT EXISTS` era TOCTOU y devolvía 500 en el primer comprobante de un tenant nuevo) [IMPLEMENTADO]
+- Test de concurrencia: 5 requests simultáneos → correlativos consecutivos y sin duplicados; validado también con 20 simultáneos y con 2 tenants en paralelo [IMPLEMENTADO]
 - TenantConfigClient — llama a MS-1 para obtener PorcentajeIva [IMPLEMENTADO]
 
 **No implementado (PLANIFICADO / SIMULADO):**
+- `sucursal_id` en el comprobante — MS-1 ya expone `GET`/`POST /sucursales`, pero falta la columna en el modelo de MS-2
 - `POST /dte/solicitar-folio` — integración simulada con entidad fiscal (SII)
 - `POST /dte/emitir` — emisión de boleta/factura electrónica
 - `GET /dte/{id}/estado` — estado de DTE

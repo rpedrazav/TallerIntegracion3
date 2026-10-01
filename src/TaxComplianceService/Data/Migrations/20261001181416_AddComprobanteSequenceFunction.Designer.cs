@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using TaxComplianceService.Data;
@@ -11,9 +12,11 @@ using TaxComplianceService.Data;
 namespace TaxComplianceService.Data.Migrations
 {
     [DbContext(typeof(TaxDbContext))]
-    partial class TaxDbContextModelSnapshot : ModelSnapshot
+    [Migration("20261001181416_AddComprobanteSequenceFunction")]
+    partial class AddComprobanteSequenceFunction
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
