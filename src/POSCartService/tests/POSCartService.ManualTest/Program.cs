@@ -375,7 +375,7 @@ catch (KeyNotFoundException)
 Check("J11 — Venta inexistente → lanza KeyNotFoundException (→ 404 en HTTP)", throwNotFound);
 
 // J5: Completar la venta e intentar agregar ítem lanza InvalidOperationException (→ 409)
-await ventaSvc.CompletarAsync(nuevaVenta.Id);
+await ventaSvc.CompletarAsync(nuevaVenta.Id, montoRecibido: nuevaVenta.Total, vuelto: 0m);
 bool throwConflict = false;
 try
 {

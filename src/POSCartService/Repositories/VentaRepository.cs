@@ -63,6 +63,9 @@ public class VentaRepository : IVentaRepository
         // scope autenticado; el filtro multi-tenant no debe bloquear la escritura.
         var tracked = await _context.Ventas
             .IgnoreQueryFilters()
+            .Include(v => v.Items)
+            .Include(v => v.Pagos)
+            .Include(v => v.Anulacion)
             .FirstOrDefaultAsync(v => v.Id == venta.Id);
         if (tracked is null)
             throw new KeyNotFoundException($"Venta {venta.Id} no encontrada para actualizar.");
@@ -80,6 +83,15 @@ public class VentaRepository : IVentaRepository
             venta.Anulacion.VentaId = tracked.Id;
             _context.Anulaciones.Add(venta.Anulacion);
             tracked.Anulacion = venta.Anulacion;
+        }
+
+        // Si se adjuntan nuevos Pagos, persistirlos por separado
+        var pagosExistentesIds = tracked.Pagos?.Select(p => p.Id).ToHashSet() ?? new HashSet<Guid>();
+        var pagosNuevos = venta.Pagos.Where(p => !pagosExistentesIds.Contains(p.Id)).ToList();
+        foreach (var pago in pagosNuevos)
+        {
+            pago.VentaId = tracked.Id;
+            _context.Pagos.Add(pago);
         }
 
         await _context.SaveChangesAsync();

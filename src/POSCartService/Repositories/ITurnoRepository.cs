@@ -21,4 +21,10 @@ public interface ITurnoRepository
     /// Cierra un turno existente.
     /// </summary>
     Task<Turno?> Cerrar(Guid turnoId);
-}
+
+    /// <summary>
+    /// Suma el Pago.Monto de todas las ventas COMPLETADAS cuyo MetodoPago sea EFECTIVO
+    /// dentro del turno indicado. Utilizado para el cuadre de caja.
+    /// </summary>
+    Task<decimal> GetEfectivoTurnoAsync(Guid turnoId);
+}

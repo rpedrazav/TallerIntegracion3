@@ -5,7 +5,7 @@ titulo: Estado Real de Implementación — GlobalMart OS
 estado: vigente
 fuentes: [docs/context/_reports/inventario.md, src/, git log, docs/context/_reports/preguntas-abiertas.md]
 verificado_contra_codigo: true
-ultima_revision: 2026-10-02
+ultima_revision: 2026-10-01
 depende_de: []
 publica: []
 consume: []
@@ -28,7 +28,7 @@ reglas: []
 | MS-2 Tax | ✅ 1 controller | ❌ No Kafka | ✅ ManualTest | **PARCIAL** |
 | MS-3 Catalog | ✅ 2 controllers | ❌ No Kafka | ✅ Manual .http | **PARCIAL** |
 | MS-4 Warehouse | ✅ 1 controller | ✅ Consumer sale.completed | ❌ No tests | **PARCIAL** |
-| MS-5 POS | ✅ 2 controllers | ❌ SIN productor sale.completed | ✅ AgregarItemTest | **PARCIAL** |
+| MS-5 POS | ✅ 2 controllers | ✅ Producer sale.completed | ✅ AgregarItemTest + CobroCuadreTest | **PARCIAL** |
 | MS-6 SupplyChain | ❌ Sin controllers | ❌ Sin Kafka | ❌ Sin tests | **PLANIFICADO** |
 | MS-7 Analytics | ❌ Sin controllers | ❌ Sin consumers | ❌ Sin tests | **PLANIFICADO** |
 | MS-8 Loyalty | ❌ Sin controllers | ⚠️ Registrado en DI sin consumer loop | ❌ Sin tests | **PLANIFICADO** |
@@ -125,11 +125,12 @@ reglas: []
 - `DELETE /ventas/{id}/items/{itemId}` — eliminar ítem [IMPLEMENTADO]
 - `GET /ventas/{id}` — obtener venta [IMPLEMENTADO]
 - `GET /ventas/turno/{turnoId}` — ventas por turno [IMPLEMENTADO]
-- VentaService con métodos `CompletarAsync` y `AnularAsync` [IMPLEMENTADO en service, sin endpoint HTTP aún]
+- `POST /ventas/{id}/cobrar` — valida `monto_recibido` ≥ total, completa la venta, retorna vuelto y publica `sale.completed` a Kafka con `event_id` único [IMPLEMENTADO]
+- VentaService con métodos `CompletarAsync` y `AnularAsync` [IMPLEMENTADO en service]
+- KafkaProducerService — publica eventos Kafka con key=tenant_id y event_id único [IMPLEMENTADO]
 
 **No implementado / CRÍTICO:**
-- Endpoints HTTP `POST /ventas/{id}/cobrar` y `POST /ventas/{id}/anular` aún no están expuestos en `VentasController.cs`
-- `VentaService.CompletarAsync` **NO publica** `sale.completed` a Kafka
+- Endpoint HTTP `POST /ventas/{id}/anular` aún no está expuesto en `VentasController.cs`
 - Integración con pasarela de cobro externa (planificada simulación con pasarelas tipo Mercado Pago)
 - Integración con hardware (balanza, impresora, cajón de dinero)
 
@@ -160,14 +161,13 @@ reglas: []
 
 | # | Funcionalidad | RN/RF afectado | Gravedad |
 |---|---------------|----------------|----------|
-| 1 | Publicación de `sale.completed` desde MS-5 a Kafka | RN-04, RF-09, PC-24 | 🔴 Crítica |
-| 2 | Exponer endpoints `cobrar` y `anular` en `VentasController.cs` | RF-06, RF-22 | 🔴 Crítica |
-| 3 | Emisión simulada de DTE (boleta/factura) en MS-2 | RN-03, RF-08, TC-08/09 | 🔴 Crítica |
-| 4 | Integración con pasarela de cobro (Mercado Pago o simulador) | RN-02, RF-07, PC-27/28 | 🔴 Crítica |
-| 5 | FEFO en recepción e inventario en MS-4 | RN-05, RF-10, WI-04/05 | 🟠 Alta |
-| 6 | Integrar frontend `Pos.tsx` con backend real | RF-04, RF-05 | 🟠 Alta |
-| 7 | Endpoint POST /auth/refresh | RF-01 | 🟠 Alta |
-| 8 | Gestión de sucursales en backend | TI-11, RF-19 | 🟠 Alta |
+| 1 | Exponer endpoint `POST /ventas/{id}/anular` en `VentasController.cs` | RF-22 | 🔴 Crítica |
+| 2 | Emisión simulada de DTE (boleta/factura) en MS-2 | RN-03, RF-08, TC-08/09 | 🔴 Crítica |
+| 3 | Integración con pasarela de cobro (Mercado Pago o simulador) | RN-02, RF-07, PC-27/28 | 🔴 Crítica |
+| 4 | FEFO en recepción e inventario en MS-4 | RN-05, RF-10, WI-04/05 | 🟠 Alta |
+| 5 | Integrar frontend `Pos.tsx` con backend real | RF-04, RF-05 | 🟠 Alta |
+| 6 | Endpoint POST /auth/refresh | RF-01 | 🟠 Alta |
+| 7 | Gestión de sucursales en backend | TI-11, RF-19 | 🟠 Alta |
 
 ---
 
