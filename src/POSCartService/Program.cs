@@ -144,3 +144,5 @@ app.MapHealthChecks("/health");
 // TODO: auto-migraciÃ³n en desarrollo, una vez exista el DbContext
 
 app.Run();
+
+public partial class Program { }
