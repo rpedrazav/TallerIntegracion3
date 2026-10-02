@@ -5,15 +5,15 @@ titulo: MS-5 · POS & Cart Service
 estado: parcial
 fuentes: [src/POSCartService/]
 verificado_contra_codigo: true
-ultima_revision: 2026-09-28
+ultima_revision: 2026-10-01
 depende_de: [ms1-identity, ms2-tax, ms3-catalog]
-publica: []
+publica: [sale.completed]
 consume: []
 reglas: [RN-02, RN-03, RN-06, RF-02, RF-03, RF-04, RF-05, RF-06, RF-07]
 ---
 # MS-5 · POS & Cart Service
 
-> Servicio central del punto de venta. Gestiona turnos de caja y el ciclo completo de una venta (carrito, ítems, cobro, anulación). Integrado con MS-2 (IVA) y MS-3 (productos). **FALTA:** publicar `sale.completed` a Kafka, integración con pasarela de pago y hardware.
+> Servicio central del punto de venta. Gestiona turnos de caja y el ciclo completo de una venta (carrito, ítems, cobro, anulación). Integrado con MS-2 (IVA) y MS-3 (productos), y publica `sale.completed` a Kafka. **FALTA:** integración con pasarela de pago y hardware.
 
 ## Estructura del proyecto
 
@@ -26,14 +26,16 @@ src/POSCartService/
 ├── Models/  Venta · ItemVenta · Turno · Pago · Anulacion
 ├── Repositories/  IVentaRepository · VentaRepository · ITurnoRepository · TurnoRepository · IItemVentaRepository · ItemVentaRepository
 ├── Services/
-│   ├── VentaService.cs       ← lógica de negocio central
+│   ├── VentaService.cs       ← lógica de negocio central + publicación sale.completed
 │   ├── TurnoService.cs
+│   ├── KafkaProducerService.cs ← publica eventos Kafka
 │   ├── CatalogClient.cs      ← llama MS-3
 │   └── TaxClient.cs          ← llama MS-2
 ├── Validators/  (4 validators FluentValidation)
 ├── Exceptions/  TurnoYaAbiertoException · ExternalServiceException
 └── tests/
     ├── POSCartService.AgregarItemTest/
+  ├── POSCartService.CobroCuadreTest/
     └── POSCartService.ManualTest/
 ```
 
@@ -44,13 +46,14 @@ src/POSCartService/
 | POST | `/turnos/abrir` | JWT | [IMPLEMENTADO] |
 | GET | `/turnos/activo` | JWT | [IMPLEMENTADO] |
 | POST | `/turnos/cerrar` | JWT | [IMPLEMENTADO] |
+| POST | `/turnos/cuadre` | JWT | [IMPLEMENTADO — suma pagos EFECTIVO/COMPLETADAS; retorna efectivo_esperado, monto_declarado, diferencia] |
 | POST | `/ventas` | JWT | [IMPLEMENTADO] |
 | POST | `/ventas/{id}/items` | JWT | [IMPLEMENTADO] |
 | PUT | `/ventas/{id}/items/{itemId}` | JWT | [IMPLEMENTADO] |
 | DELETE | `/ventas/{id}/items/{itemId}` | JWT | [IMPLEMENTADO] |
 | GET | `/ventas/{id}` | JWT | [IMPLEMENTADO] |
 | GET | `/ventas/turno/{turnoId}` | JWT | [IMPLEMENTADO] |
-| POST | `/ventas/{id}/cobrar` | JWT | [PLANIFICADO en controller — implementado en VentaService.CompletarAsync] |
+| POST | `/ventas/{id}/cobrar` | JWT | [IMPLEMENTADO — valida monto_recibido ≥ total, calcula vuelto, persiste pago EFECTIVO y publica sale.completed] |
 | POST | `/ventas/{id}/anular` | JWT | [PLANIFICADO en controller — implementado en VentaService.AnularAsync] |
 | GET | `/health` | Público | [IMPLEMENTADO] |
 
@@ -71,10 +74,15 @@ src/POSCartService/
    → Llama TaxClient→MS-2 para recalcular IVA con todos los ítems
    → Actualiza Venta.Subtotal / .Impuestos / .Total
 
-4. POST /ventas/{id}/cobrar  (PARCIAL)
-   → VentaService.CompletarAsync: cambia estado a COMPLETADA
-   → ❌ NO publica sale.completed a Kafka
-   → ❌ NO integra pasarela de pago
+4. POST /ventas/{id}/cobrar  { monto_recibido }
+   → Verifica JWT y venta PENDIENTE
+   → Valida monto_recibido ≥ venta.Total (→ 400 "Monto insuficiente" si no alcanza)
+   → Calcula vuelto = monto_recibido − total
+   → VentaService.CompletarAsync: estado → COMPLETADA + crea Pago { Metodo=EFECTIVO, Monto=monto_recibido, Vuelto=vuelto }
+   → VentaRepository.ActualizarAsync persiste estado y Pago en una sola transacción
+   → Retorna venta completada + monto_recibido + vuelto
+   → ✅ Publica sale.completed a Kafka con event_id único (GUID)
+   → ❌ NO integra pasarela de pago externa
 
 5. POST /ventas/{id}/anular  { motivo }
    → VentaService.AnularAsync: estado → ANULADA
@@ -141,24 +149,55 @@ JWT claims requeridos:
 
 TenantMiddleware inyecta `CurrentTenantId` en `PosCartDbContext`.
 
-## Brecha crítica: sale.completed sin publicar
+## Publicación Kafka: sale.completed [IMPLEMENTADO]
+
+Al completar una venta en `VentaService.CompletarAsync`, se publica el evento `sale.completed` mediante `IKafkaProducerService` (Singleton).
+El evento incluye `EventId = Guid.NewGuid()` como identificador único para garantizar idempotencia en el consumer (MS-4). La suite `POSCartService.CobroCuadreTest` verifica cobro, cuadre, persistencia y payload sin requerir un broker activo.
 
 ```csharp
-// VentaService.CompletarAsync — FALTA agregar:
-// var producer = new ProducerBuilder<string,string>(config).Build();
-// producer.Produce("sale.completed", new Message<string,string> {
-//   Key = venta.TenantId.ToString(),
-//   Value = JsonSerializer.Serialize(new SaleCompletedEvent { ... })
-// });
-
-public async Task<Venta> CompletarAsync(Guid ventaId)
+// VentaService.CompletarAsync:
+if (_kafkaProducer is not null)
 {
-    // ...
-    venta.Estado = EstadoVenta.COMPLETADA;
-    return await _ventaRepository.ActualizarAsync(venta);
-    // ← sale.completed NO se publica aquí
+    var itemsParaEvento = (ventaCompletada.Items != null && ventaCompletada.Items.Count > 0)
+        ? ventaCompletada.Items
+        : venta.Items;
+
+    var evento = new SaleCompletedEvent
+    {
+        EventId    = Guid.NewGuid(),
+        TenantId   = ventaCompletada.TenantId,
+        VentaId    = ventaCompletada.Id,
+        CajeroId   = ventaCompletada.CajeroId,
+        SucursalId = ventaCompletada.SucursalId,
+        Subtotal   = ventaCompletada.Subtotal,
+        Iva        = ventaCompletada.Impuestos,
+        Total      = ventaCompletada.Total,
+        MetodoPago = ventaCompletada.MetodoPago.ToString(),
+        Timestamp  = DateTime.UtcNow,
+        Items      = itemsParaEvento.Select(i => new SaleCompletedItemEvent
+        {
+            ProductoId     = i.ProductoId,
+            Cantidad       = i.Cantidad,
+            PrecioUnitario = i.PrecioUnitario
+        }).ToList()
+    };
+
+    try
+    {
+        await _kafkaProducer.PublicarSaleCompletedAsync(evento);
+    }
+    catch
+    {
+        // Fire-and-forget resiliente
+    }
 }
 ```
+
+## Tests de integración
+
+- `TurnoIntegrationTests`: abre un turno con JWT de cajero y verifica que se persiste en estado `ABIERTO`.
+- `VentaIntegrationTests`: crea una venta con el primer producto, agrega el segundo y verifica subtotal, IVA y total.
+- TI3-224 usa handlers HTTP en memoria para devolver respuestas deterministas de `CatalogClient` (MS-3) y `TaxClient` (MS-2), sin levantar esos microservicios.
 
 ## Casos de uso cubiertos
 
@@ -178,7 +217,7 @@ public async Task<Venta> CompletarAsync(Guid ventaId)
 | PC-12 | Eliminar Ítem del Carrito | [IMPLEMENTADO] |
 | PC-13 | Descuento Manual | [PLANIFICADO] |
 | PC-14 | Calcular Total con Impuestos | [IMPLEMENTADO] |
-| PC-15 | Cobrar en Efectivo | [PARCIAL — sin vuelto automático] |
+| PC-15 | Cobrar en Efectivo | [IMPLEMENTADO — endpoint expuesto, valida monto ≥ total, calcula vuelto y publica sale.completed a Kafka] |
 | PC-16 | Calcular Vuelto | [PLANIFICADO] |
 | PC-17 | Cobrar con Tarjeta | [PLANIFICADO] |
 | PC-18 | Pago Mixto (efectivo + tarjeta) | [PLANIFICADO] |
@@ -187,7 +226,7 @@ public async Task<Venta> CompletarAsync(Guid ventaId)
 | PC-21 | Devolución Parcial | [PLANIFICADO] |
 | PC-22 | Poner Venta en Espera (Hold) | [PLANIFICADO] |
 | PC-23 | Recuperar Venta de Espera | [PLANIFICADO] |
-| PC-24 | Publicar sale.completed | [PLANIFICADO] |
+| PC-24 | Publicar sale.completed | [IMPLEMENTADO] |
 | PC-25 | Publicar sale.reversed | [PLANIFICADO] |
 | PC-26 | Leer Tarjeta en Terminal (NFC/chip/mag) | [PLANIFICADO] |
 | PC-27 | Enviar Solicitud a Pasarela | [PLANIFICADO] |
@@ -204,7 +243,7 @@ public async Task<Venta> CompletarAsync(Guid ventaId)
 
 ## Conexiones
 - Depende de: [[ms2-tax]] (TaxClient), [[ms3-catalog]] (CatalogClient), [[ms1-identity]] (JWT)
-- Debería publicar: `sale.completed` → [[ms4-inventory]], [[ms7-analytics]], [[ms8-loyalty]]
+- Publica: `sale.completed` → [[ms4-inventory]], [[ms7-analytics]], [[ms8-loyalty]] [IMPLEMENTADO]
 - Reglas: [[reglas-negocio]] (RN-02, RN-06), [[multi-tenant]]
 - Kafka: [[kafka-topics]]
 
@@ -213,3 +252,5 @@ public async Task<Venta> CompletarAsync(Guid ventaId)
 - `src/POSCartService/Controllers/TurnosController.cs`
 - `src/POSCartService/Services/VentaService.cs`
 - `src/POSCartService/Services/TurnoService.cs`
+- `tests/GlobalMart.IntegrationTests/TurnoIntegrationTests.cs`
+- `tests/GlobalMart.IntegrationTests/VentaIntegrationTests.cs`

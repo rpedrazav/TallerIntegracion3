@@ -558,4 +558,74 @@ public sealed class VentasController : ControllerBase
         var ventas = await _ventaService.GetByTurnoAsync(turnoId);
         return Ok(ventas.Select(VentaResponse.FromModel));
     }
+
+    // ── POST /ventas/{id}/cobrar ───────────────────────────────────────────────
+
+    /// <summary>
+    /// Cobra una venta PENDIENTE: valida que el monto recibido cubra el total
+    /// y marca la venta como COMPLETADA.
+    /// </summary>
+    /// <remarks>
+    /// Reglas aplicadas:
+    /// - RN-06: el cajero debe tener un turno ABIERTO (validado al crear la venta).
+    /// - monto_recibido debe ser ≥ venta.Total; de lo contrario se retorna 400 "Monto insuficiente".
+    /// - La venta debe estar en estado PENDIENTE; de lo contrario 409.
+    /// </remarks>
+    /// <response code="200">Venta completada. Incluye vuelto calculado.</response>
+    /// <response code="400">monto_recibido es menor al total de la venta ("Monto insuficiente").</response>
+    /// <response code="401">Token JWT ausente o inválido.</response>
+    /// <response code="404">Venta no encontrada.</response>
+    /// <response code="409">La venta no está en estado PENDIENTE.</response>
+    [HttpPost("{id:guid}/cobrar")]
+    [ProducesResponseType(typeof(CobrarVentaResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> Cobrar(
+        [FromRoute] Guid id,
+        [FromBody] CobrarVentaRequest request)
+    {
+        // 1. Extraer claims del JWT
+        if (!TryGetClaims(out _, out _))
+            return Unauthorized(new { error = "Token inválido: faltan cajero_id/sub o tenant_id." });
+
+        // 2. Verificar que la venta exista
+        var venta = await _ventaService.GetByIdAsync(id);
+        if (venta is null)
+            return NotFound(new { error = $"Venta {id} no encontrada." });
+
+        // 3. Verificar que la venta esté PENDIENTE antes de cobrar
+        if (venta.Estado != EstadoVenta.PENDIENTE)
+        {
+            return Conflict(new
+            {
+                error = $"Solo se puede cobrar una venta en estado PENDIENTE. Estado actual: {venta.Estado}."
+            });
+        }
+
+        // 4. Validar monto recibido ≥ total de la venta (regla de negocio del enunciado)
+        if (request.MontoRecibido < venta.Total)
+        {
+            return BadRequest(new
+            {
+                error          = "Monto insuficiente",
+                total_venta    = venta.Total,
+                monto_recibido = request.MontoRecibido,
+                diferencia     = venta.Total - request.MontoRecibido
+            });
+        }
+
+        // 5. Calcular vuelto antes de completar (usamos venta.Total que aún no cambió)
+        var vuelto = Math.Round(request.MontoRecibido - venta.Total, 2);
+
+        // 6. Completar la venta y persistir el Pago EFECTIVO en una sola operación
+        var ventaCompletada = await _ventaService.CompletarAsync(id, request.MontoRecibido, vuelto);
+
+        _logger?.LogInformation(
+            "Venta {VentaId} cobrada. Total: {Total}, Recibido: {Recibido}, Vuelto: {Vuelto}",
+            ventaCompletada.Id, ventaCompletada.Total, request.MontoRecibido, vuelto);
+
+        return Ok(new CobrarVentaResponse(VentaResponse.FromModel(ventaCompletada), request.MontoRecibido, vuelto));
+    }
 }

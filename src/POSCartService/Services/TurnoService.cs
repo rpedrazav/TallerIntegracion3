@@ -55,4 +55,15 @@ public class TurnoService : ITurnoService
     {
         return _turnoRepository.GetActivo(cajeroId, tenantId);
     }
+
+    /// <inheritdoc/>
+    public async Task<(Turno Turno, decimal EfectivoEsperado)> CalcularCuadreAsync(Guid cajeroId, Guid tenantId)
+    {
+        var turno = await _turnoRepository.GetActivo(cajeroId, tenantId)
+            ?? throw new KeyNotFoundException("El cajero no tiene un turno ABIERTO.");
+
+        var efectivoEsperado = await _turnoRepository.GetEfectivoTurnoAsync(turno.Id);
+
+        return (turno, efectivoEsperado);
+    }
 }

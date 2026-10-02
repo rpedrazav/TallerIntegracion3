@@ -23,7 +23,10 @@ builder.Services.AddValidatorsFromAssemblyContaining<TaxCalculateRequestValidato
 builder.Services.AddSingleton<ITaxCalculatorService, TaxCalculatorService>();
 builder.Services.AddSingleton<TaxCalculatorService>();
 
-// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ Cliente HTTP hacia MS-1 (TenantIdentityService) con Polly Retry Policy Ã¢â€â‚¬
+// Servicio de emision de comprobantes: usa TaxDbContext, por lo que debe ser Scoped
+builder.Services.AddScoped<IComprobanteService, ComprobanteService>();
+
+// --- Cliente HTTP hacia MS-1 (TenantIdentityService) con Polly Retry Policy ---
 // IHttpClientFactory gestiona el pool de sockets y evita socket exhaustion.
 var ms1BaseUrl = builder.Configuration["Services:TenantIdentityService:BaseUrl"]
     ?? throw new InvalidOperationException("URL de MS-1 no configurada en Services:TenantIdentityService:BaseUrl");
@@ -167,6 +170,9 @@ app.UseHttpsRedirection();
 app.UseCors("ElectronApp");
 app.UseAuthentication();
 app.UseAuthorization();
+// 3: extrae tenant_id del JWT e inyecta en TaxDbContext.CurrentTenantId
+// para que los HasQueryFilter globales aislen las lecturas por tenant (RN-01)
+app.UseMiddleware<TaxComplianceService.Middleware.TenantMiddleware>();
 
 app.MapControllers();
 app.MapHealthChecks("/health");

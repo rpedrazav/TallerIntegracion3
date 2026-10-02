@@ -5,7 +5,7 @@ titulo: Estrategia de Testing — GlobalMart OS
 estado: parcial
 fuentes: [src/POSCartService/tests/, src/TaxComplianceService/tests/, .github/workflows/ci.yml]
 verificado_contra_codigo: true
-ultima_revision: 2026-09-28
+ultima_revision: 2026-10-01
 depende_de: [stack]
 publica: []
 consume: []
@@ -23,22 +23,25 @@ reglas: [RNF-07]
 | `POSCartService.ManualTest` | Console app (smoke test) | [IMPLEMENTADO] |
 | `TaxComplianceService.ManualTest` | Console app (smoke test) | [IMPLEMENTADO] |
 | `CatalogPricingService/tests/tests_manual_producto.http` | HTTP manual test | [IMPLEMENTADO] |
+| `GlobalMart.IntegrationTests` | xUnit + WebApplicationFactory | [IMPLEMENTADO — TI3-223 y TI3-224] |
 
-**Ninguno de los "tests" es xUnit con assertions reales.** Son console apps que hacen requests HTTP y muestran resultados en consola.
+Los smoke tests existentes son console apps que hacen requests HTTP y muestran resultados en consola. `GlobalMart.IntegrationTests` agrega assertions xUnit reales sobre los flujos de MS-1 y MS-5.
 
 ## Objetivo de tests (RNF-07)
 
 - ≥ 80% de cobertura en lógica crítica de MS-1, MS-2, MS-5 → **NO CUMPLIDO**
-- Tests de integración: flujo completo login → turno → venta → cierre → **SIN IMPLEMENTAR**
+- Tests de integración: apertura de turno y flujo turno → venta → ítems → IVA → **PARCIALMENTE IMPLEMENTADO (TI3-223, TI3-224)**
 - Tests E2E Playwright: **SIN IMPLEMENTAR**
 
-## Stack de testing configurado (pero sin usar)
+## Stack de testing configurado
 
 En las dependencias del proyecto:
 - **xUnit** — framework de tests unitarios
 - **FluentAssertions** — assertions expresivas
 - **Moq** — mocking
 - **WebApplicationFactory** — tests de integración ASP.NET Core
+
+TI3-224 usa handlers HTTP en memoria para simular respuestas deterministas de MS-2 y MS-3 mientras ejecuta el pipeline real de MS-5.
 
 ## Cómo ejecutar los smoke tests
 
