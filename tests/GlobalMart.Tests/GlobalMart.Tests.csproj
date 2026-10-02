@@ -23,12 +23,14 @@
     <PackageReference Include="Moq" Version="4.20.72" />
     <PackageReference Include="FluentAssertions" Version="6.12.2" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="8.0.11" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="8.0.11" />
   </ItemGroup>
 
-  <!-- Referencias a los microservicios MS-1 y MS-2 -->
+  <!-- Referencias a los microservicios MS-1, MS-2 y MS-4 -->
   <ItemGroup>
     <ProjectReference Include="..\..\src\TenantIdentityService\TenantIdentityService.csproj" />
     <ProjectReference Include="..\..\src\TaxComplianceService\TaxComplianceService.csproj" />
+    <ProjectReference Include="..\..\src\WarehouseInventoryService\WarehouseInventoryService.csproj" />
   </ItemGroup>
 
 </Project>
