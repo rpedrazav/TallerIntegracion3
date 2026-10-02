@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
@@ -61,6 +61,11 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger(c => c.SerializeAsV2 = true);
     app.UseSwaggerUI();
+
+    using var scope = app.Services.CreateScope();
+    var db = scope.ServiceProvider.GetRequiredService<CatalogPricingService.Data.CatalogDbContext>();
+    db.Database.Migrate();
+    CatalogPricingService.Data.SeedData.Initialize(db);
 }
 
 app.UseAuthentication(); // 1. Verifica la firma del token

@@ -31,6 +31,7 @@
     <ProjectReference Include="..\..\src\TenantIdentityService\TenantIdentityService.csproj" />
     <ProjectReference Include="..\..\src\TaxComplianceService\TaxComplianceService.csproj" />
     <ProjectReference Include="..\..\src\WarehouseInventoryService\WarehouseInventoryService.csproj" />
+    <ProjectReference Include="..\..\src\CatalogPricingService\CatalogPricingService.csproj" />
   </ItemGroup>
 
 </Project>

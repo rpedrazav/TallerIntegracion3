@@ -45,6 +45,11 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
+
+    using var scope = app.Services.CreateScope();
+    var db = scope.ServiceProvider.GetRequiredService<WarehouseInventoryService.Data.WarehouseDbContext>();
+    db.Database.Migrate();
+    WarehouseInventoryService.Data.SeedData.Initialize(db);
 }
 
 app.UseAuthentication(); // 1. Verifica la firma del token
