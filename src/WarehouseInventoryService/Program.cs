@@ -15,6 +15,7 @@ builder.Services.AddFluentValidationAutoValidation();
 builder.Services.AddDbContext<WarehouseInventoryService.Data.WarehouseDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddScoped<IStockRepository, StockRepository>();
+builder.Services.AddHostedService<WarehouseInventoryService.Messaging.KafkaConsumerService>();
 
 // Inyección de Autenticación JWT Stateless
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -47,7 +48,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseAuthentication(); // 1. Verifica la firma del token
 app.UseAuthorization();  // 2. Verifica los roles del usuario
-
+app.UseMiddleware<WarehouseInventoryService.Middleware.TenantMiddleware>();
 app.MapControllers();
 
 app.Run();

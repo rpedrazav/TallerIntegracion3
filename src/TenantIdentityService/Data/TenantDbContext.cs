@@ -90,6 +90,18 @@ public class TenantDbContext : DbContext
             e.HasKey(s => s.Id);
             e.Property(s => s.Nombre).IsRequired().HasMaxLength(200);
 
+            // Unicidad de nombre por tenant, case-insensitive ("Centro" == "centro").
+            //
+            // NO se declara con HasIndex porque EF Core 8 no modela índices de expresión, y un
+            // índice normal sobre ("TenantId","Nombre") sería case-SENSITIVE, que es más débil de
+            // lo pedido. El índice real lo crea la migración AddSucursalUniqueNombreIndex con SQL:
+            //
+            //   CREATE UNIQUE INDEX "IX_Sucursales_TenantId_NombreLower"
+            //       ON "Sucursales" ("TenantId", lower("Nombre"));
+            //
+            // Como vive fuera del modelo, no aparece en el snapshot: es intencional.EF no lo
+            // eliminará en migraciones futuras. Si alguna vez se toca a mano, hay que rehacerlo.
+
             // FILTRO GLOBAL MULTI-TENANT
             e.HasQueryFilter(s => s.TenantId == CurrentTenantId);
 

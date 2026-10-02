@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using WarehouseInventoryService.Models;
 using System;
 
@@ -15,6 +15,7 @@ public class WarehouseDbContext : DbContext
     public DbSet<Stock> Stocks => Set<Stock>();
     public DbSet<Lote> Lotes => Set<Lote>();
     public DbSet<MovimientoStock> Movimientos => Set<MovimientoStock>();
+    public DbSet<EventoKafkaProcesado> EventosKafkaProcesados => Set<EventoKafkaProcesado>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -27,6 +28,7 @@ public class WarehouseDbContext : DbContext
         modelBuilder.Entity<Stock>().HasQueryFilter(s => s.TenantId == CurrentTenantId);
         modelBuilder.Entity<Lote>().HasQueryFilter(l => l.TenantId == CurrentTenantId);
         modelBuilder.Entity<MovimientoStock>().HasQueryFilter(m => m.TenantId == CurrentTenantId);
+        // EventoKafkaProcesado es una tabla técnica de idempotencia, sin filtro de tenant.
 
         // Indices
         modelBuilder.Entity<Stock>().HasIndex(s => s.TenantId).HasDatabaseName("idx_stock_tenant");

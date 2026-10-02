@@ -101,6 +101,9 @@ namespace TenantIdentityService.Data.Migrations
                     b.Property<Guid>("TenantId")
                         .HasColumnType("uuid");
 
+                    b.Property<string>("ZonaHoraria")
+                        .HasColumnType("text");
+
                     b.HasKey("Id");
 
                     b.HasIndex("TenantId");

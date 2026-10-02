@@ -22,6 +22,22 @@ namespace WarehouseInventoryService.Data.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("WarehouseInventoryService.Models.EventoKafkaProcesado", b =>
+                {
+                    b.Property<Guid>("EventId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("event_id");
+
+                    b.Property<DateTime>("ProcesadoAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("procesado_at");
+
+                    b.HasKey("EventId");
+
+                    b.ToTable("eventos_kafka_procesados");
+                });
+
             modelBuilder.Entity("WarehouseInventoryService.Models.Lote", b =>
                 {
                     b.Property<Guid>("Id")

@@ -1,14 +1,16 @@
 # GlobalMart OS — Documento de Contexto Maestro
 ### Briefing Completo para Transferencia a Cualquier IA
 
-> **Version:** 1.0 Final · Septiembre 2026  
-> **Proposito:** Este documento es el contexto completo y exhaustivo del proyecto GlobalMart OS.  
-> Cualquier IA que lea este documento debe comprender el proyecto al 100% sin necesidad de informacion adicional.
+> **Version:** 2.0 Actualizada · 29 de Septiembre de 2026  
+> **Proposito:** Este documento es el contexto holístico del proyecto GlobalMart OS, actualizado contra el código fuente real.  
+> **Cómo usar este documento:** Este es un documento monolítico de referencia general. Para tareas de desarrollo específicas, navegación modular y contexto granular por servicio, regla o dominio, consulta el **Grafo de Conocimiento** en [`docs/context/index.md`](docs/context/index.md) y el estado real en [`docs/context/estado-actual.md`](docs/context/estado-actual.md).
 
 ---
 
 ## INDICE
 
+0. [Changelog v1.0 → v2.0](#0-changelog-v10--v20)
+0.1. [Estado Real de Implementación (Auditoría 2026-09-29)](#01-estado-real-de-implementación-auditoría-2026-09-29)
 1. [Descripcion General del Proyecto](#1-descripcion-general-del-proyecto)
 2. [Situacion Problema y Solucion](#2-situacion-problema-y-solucion)
 3. [Arquitectura del Sistema](#3-arquitectura-del-sistema)
@@ -28,6 +30,41 @@
 17. [Sprint 1 — Backlog y Planificacion](#17-sprint-1--backlog-y-planificacion)
 18. [Roadmap de Sprints](#18-roadmap-de-sprints)
 19. [Decisiones Arquitectonicas Clave](#19-decisiones-arquitectonicas-clave)
+
+---
+
+## 0. Changelog v1.0 → v2.0
+
+| Fecha | Versión | Cambios Principales |
+|---|---|---|
+| **2026-09-08** | **v1.0** | Versión inicial del documento de contexto maestro. Diseño y especificación teórica del sistema. |
+| **2026-09-29** | **v2.0** | **Auditoría completa contra el repositorio real de código y aclaraciones del equipo de desarrollo:**<br>• **Contexto Académico:** Proyecto formativo de Ingeniería Civil Informática en la Universidad Católica de Temuco (UCT). Servicios externos no accesibles legalmente (SII, terminales de pago bancario físicos) serán simulados.<br>• **Duración de Sprints:** Se corrige la duración del Sprint 1: ciclo de **4 semanas** (de miércoles a miércoles), no 2 semanas. Al 29 de septiembre el equipo se encuentra en el penúltimo día de la Semana 3.<br>• **Estado Real de Servicios:** Incorporación de la matriz de implementación real (MS-1, MS-2, MS-3, MS-4 y MS-5 en estado PARCIAL; MS-6, MS-7 y MS-8 en estado PLANIFICADO).<br>• **Corrección de Discrepancias (D-01 a D-15):**<br>&nbsp;&nbsp;- MS-1: `POST /auth/refresh`, `GET /fx/rates` y `GET /tenants/{id}/sucursales` marcados como PLANIFICADOS (no existen en código). Claim `sucursal_id` documentado como ausente en JWT actual.<br>&nbsp;&nbsp;- MS-5: Se aclara que `POST /ventas` existe en controlador, pero `POST /ventas/{id}/cobrar` y anular residen únicamente en `VentaService.cs` y no están expuestos en `VentasController.cs`.<br>&nbsp;&nbsp;- Brecha crítica Kafka: `VentaService.CompletarAsync` no publica `sale.completed`, dejando inactivo el descuento automático en MS-4.<br>&nbsp;&nbsp;- MS-2: Solo cálculo de IVA implementado; emisión de DTE y conexión con SII marcadas como PLANIFICADAS/SIMULADAS.<br>&nbsp;&nbsp;- MS-8: Registra Kafka en DI pero no tiene loop de consumo activo.<br>&nbsp;&nbsp;- Infraestructura: 17 topics aprovisionados en `docker-compose.yml` vs los 9 del diseño original.<br>&nbsp;&nbsp;- Frontend: Conexión directa a MS-1 en `:5124` eludiendo Kong `:8000`; POS opera con mock local.<br>&nbsp;&nbsp;- Testing: Cobertura real estimada < 5% en smoke console apps.<br>• **Grafo Modular:** El conocimiento del proyecto fue descompuesto en 57 nodos interconectados navegables desde [`docs/context/index.md`](docs/context/index.md). |
+
+---
+
+## 0.1. Estado Real de Implementación (Auditoría 2026-09-29)
+
+> Resumen sincronizado con [`docs/context/estado-actual.md`](docs/context/estado-actual.md).
+
+| Microservicio | Controllers | Kafka | Tests | Estado General |
+|---------------|-------------|-------|-------|----------------|
+| **MS-1 Identity** | ✅ 3 controllers (`Auth`, `Usuario`, `TenantConfig`) | ❌ No Kafka | ❌ Solo seed | **PARCIAL** |
+| **MS-2 Tax** | ✅ 1 controller (`TaxController`) | ❌ No Kafka | ✅ ManualTest | **PARCIAL** |
+| **MS-3 Catalog** | ✅ 2 controllers (`Producto`, `Categoria`) | ❌ No Kafka | ✅ Manual .http | **PARCIAL** |
+| **MS-4 Warehouse** | ✅ 1 controller (`StockController`) | ✅ Consumer `sale.completed` | ❌ No tests | **PARCIAL** |
+| **MS-5 POS** | ✅ 2 controllers (`Turnos`, `Ventas`) | ❌ Sin productor `sale.completed` | ✅ AgregarItemTest | **PARCIAL** |
+| **MS-6 SupplyChain**| ❌ Sin controllers | ❌ Sin Kafka | ❌ Sin tests | **PLANIFICADO** |
+| **MS-7 Analytics** | ❌ Sin controllers | ❌ Sin consumers | ❌ Sin tests | **PLANIFICADO** |
+| **MS-8 Loyalty** | ❌ Sin controllers | ⚠️ Registrado en DI sin consumer loop | ❌ Sin tests | **PLANIFICADO** |
+
+**Brechas Críticas Activas:**
+1. **Cadena de Stock Kafka Rota:** MS-5 no publica `sale.completed`. MS-4 tiene listo el consumidor con tabla de idempotencia `EventosKafkaProcesados`, pero no recibe mensajes.
+2. **Endpoints de Cobro/Anulación en MS-5:** Métodos implementados en `VentaService.cs`, pero sin endpoints HTTP expuestos en `VentasController.cs`.
+3. **Emisión de DTE:** MS-2 solo calcula el desglose de IVA; no emite boletas ni solicita folios al SII (se implementará como simulación en el futuro).
+4. **Pasarela de Cobro con Tarjeta:** No implementada; se planifica simulación de terminales externos tipo Mercado Pago.
+5. **Frontend Mockeado:** `Pos.tsx` utiliza datos hardcodeados en memoria y no invoca las APIs de MS-3 ni MS-5.
+
+---
 
 ---
 
@@ -253,17 +290,19 @@ El sistema gestiona esto mediante:
 
 ## 6. Los 8 Microservicios
 
+> **Nota:** Diseño objetivo; el estado real está en la sección 0.1 y en `docs/context/estado-actual.md`.
+
 ### MS-1 · Tenant & Identity Service
 
 **Responsabilidad:** Gestionar la autenticacion, usuarios, roles, configuracion del tenant y tipos de cambio FX.
 
 **Endpoints principales:**
 - `POST /auth/login` — Genera JWT con tenant_id y roles
-- `POST /auth/refresh` — Renueva token
+- `POST /auth/refresh` [PLANIFICADO] — Renueva token
 - `GET/POST/PUT /users` — CRUD de usuarios
 - `GET/PUT /tenants/{id}/config` — Configuracion de localizacion
-- `GET /tenants/{id}/sucursales` — Gestion de sucursales
-- `GET /fx/rates` — Tasas de cambio actuales
+- `GET /tenants/{id}/sucursales` [PLANIFICADO] — Gestion de sucursales
+- `GET /fx/rates` [PLANIFICADO] — Tasas de cambio actuales
 
 **Datos que gestiona:** Usuarios, roles, permisos, configuracion de tenant (pais, moneda, idioma, zona horaria), historial de tasas FX, tokens de sesion, log de accesos.
 
@@ -277,10 +316,10 @@ El sistema gestiona esto mediante:
 
 **Endpoints principales:**
 - `POST /tax/calculate` — Calcula impuesto para un carrito dado el tenant
-- `POST /dte/solicitar-folio` — Solicita folio a la Entidad Fiscal
-- `POST /dte/emitir` — Emite boleta/factura electronica
-- `GET /dte/{id}/estado` — Consulta estado de un DTE
-- `GET /reportes/declaracion-fiscal` — Reporte fiscal del periodo
+- `POST /dte/solicitar-folio` [PLANIFICADO / SIMULADO] — Solicita folio a la Entidad Fiscal
+- `POST /dte/emitir` [PLANIFICADO / SIMULADO] — Emite boleta/factura electronica
+- `GET /dte/{id}/estado` [PLANIFICADO / SIMULADO] — Consulta estado de un DTE
+- `GET /reportes/declaracion-fiscal` [PLANIFICADO] — Reporte fiscal del periodo
 
 **Logica de impuestos:**
 - Soporta IVA simple (Chile 19%, Argentina 21%), IVA compuesto en cascada, y exenciones por producto o cliente.
@@ -299,9 +338,9 @@ El sistema gestiona esto mediante:
 - `GET/POST/PUT /products` — CRUD de productos
 - `GET /products/lookup?barcode={code}` — Busqueda por codigo de barras
 - `GET /products/search?q={query}` — Busqueda por nombre
-- `GET/POST /prices` — Gestion de precios por producto y sucursal
-- `GET/POST /promotions` — Gestion de promociones con fechas
-- `POST /uom/convert` — Conversion de unidades de medida
+- `GET/POST /prices` [PLANIFICADO] — Gestion de precios por producto y sucursal
+- `GET/POST /promotions` [PLANIFICADO] — Gestion de promociones con fechas
+- `POST /uom/convert` [PLANIFICADO] — Conversion de unidades de medida
 
 **Conversion de unidades de medida (UOM):**
 El sistema soporta conversion entre sistemas de medida para facilitar importaciones internacionales: kg ↔ lb, L ↔ gal, m ↔ ft, etc. Cada producto tiene una UOM base y el sistema convierte automaticamente.
@@ -318,12 +357,12 @@ El sistema soporta conversion entre sistemas de medida para facilitar importacio
 
 **Endpoints principales:**
 - `GET /stock/{productId}` — Consulta stock actual
-- `POST /stock/ajuste` — Ajuste manual de stock
-- `POST /recepciones` — Registrar recepcion de mercancia
-- `GET /lotes` — Consulta lotes y fechas de caducidad
-- `POST /mermas` — Registrar merma o perdida
-- `POST /transferencias` — Transferir stock entre sucursales
-- `POST /conteos` — Registrar conteo fisico de inventario
+- `POST /stock/ajuste` [PLANIFICADO] — Ajuste manual de stock
+- `POST /recepciones` [PLANIFICADO] — Registrar recepcion de mercancia
+- `GET /lotes` [PLANIFICADO] — Consulta lotes y fechas de caducidad
+- `POST /mermas` [PLANIFICADO] — Registrar merma o perdida
+- `POST /transferencias` [PLANIFICADO] — Transferir stock entre sucursales
+- `POST /conteos` [PLANIFICADO] — Registrar conteo fisico de inventario
 
 **Regla FEFO (First Expired, First Out):**
 Al registrar una recepcion de mercancia perecedera, el sistema:
@@ -346,13 +385,13 @@ Al registrar una recepcion de mercancia perecedera, el sistema:
 **Endpoints principales:**
 - `POST /turnos/abrir` — Abre turno con fondo inicial
 - `POST /turnos/cerrar` — Cierra turno y calcula cuadre
-- `POST /ventas/iniciar` — Inicia nueva venta (carrito vacio)
+- `POST /ventas/iniciar` — Inicia nueva venta (carrito vacio) [en controller: `POST /ventas`]
 - `POST /ventas/{id}/items` — Agrega item al carrito
 - `PUT /ventas/{id}/items/{itemId}` — Modifica cantidad
 - `DELETE /ventas/{id}/items/{itemId}` — Elimina item
-- `POST /ventas/{id}/cobrar` — Procesa cobro (efectivo, tarjeta o mixto)
-- `POST /ventas/{id}/anular` — Anula venta y solicita reembolso
-- `GET /ventas/{id}/comprobante` — Obtiene datos del comprobante
+- `POST /ventas/{id}/cobrar` [PLANIFICADO en controller — implementado en VentaService.CompletarAsync] — Procesa cobro (efectivo, tarjeta o mixto)
+- `POST /ventas/{id}/anular` [PLANIFICADO en controller — implementado en VentaService.AnularAsync] — Anula venta y solicita reembolso
+- `GET /ventas/{id}/comprobante` [PLANIFICADO] — Obtiene datos del comprobante
 
 **Flujo de venta completo:**
 1. Cajero abre turno (requiere autenticacion JWT)
@@ -376,16 +415,16 @@ Al registrar una recepcion de mercancia perecedera, el sistema:
 
 ### MS-6 · Supply Chain & Import Service
 
-**Responsabilidad:** Gestionar el ciclo completo de compras e importaciones: proveedores, ordenes de compra, calculo de Costo Landed, tracking de envios con transportista 3PL, y recepcion de importaciones.
+**Responsabilidad:** Gestionar el ciclo completo de compras e importaciones: proveedores, ordenes de compra, calculo de Costo Landed, tracking de envios con transportista 3PL, y recepcion de importaciones. *(Microservicio sin controllers implementados a la fecha; solo modelos y DbContext)*.
 
 **Endpoints principales:**
-- `GET/POST /proveedores` — CRUD de proveedores
-- `POST /ordenes-compra` — Crear orden de compra
-- `PUT /ordenes-compra/{id}/aprobar` — Aprobar OC
-- `POST /ordenes-compra/{id}/landed-cost` — Calcular Costo Landed
-- `POST /importaciones` — Registrar embarque
-- `GET /importaciones/{id}/tracking` — Estado del envio
-- `POST /importaciones/{id}/recepcion` — Confirmar recepcion
+- `GET/POST /proveedores` [PLANIFICADO] — CRUD de proveedores
+- `POST /ordenes-compra` [PLANIFICADO] — Crear orden de compra
+- `PUT /ordenes-compra/{id}/aprobar` [PLANIFICADO] — Aprobar OC
+- `POST /ordenes-compra/{id}/landed-cost` [PLANIFICADO] — Calcular Costo Landed
+- `POST /importaciones` [PLANIFICADO] — Registrar embarque
+- `GET /importaciones/{id}/tracking` [PLANIFICADO] — Estado del envio
+- `POST /importaciones/{id}/recepcion` [PLANIFICADO] — Confirmar recepcion
 
 **Calculo de Costo Landed:**
 ```
@@ -405,17 +444,17 @@ Este calculo permite conocer el costo REAL de cada producto importado para estab
 
 ### MS-7 · Analytics & Notification Service
 
-**Responsabilidad:** Consumir eventos de Kafka para actualizar dashboards en tiempo real, generar reportes, gestionar alertas y despachar notificaciones multicanal (SMS, Email, Push).
+**Responsabilidad:** Consumir eventos de Kafka para actualizar dashboards en tiempo real, generar reportes, gestionar alertas y despachar notificaciones multicanal (SMS, Email, Push). *(Microservicio sin controllers implementados a la fecha; solo modelos y DbContext)*.
 
 **Endpoints principales:**
-- `GET /dashboards/ventas` — Dashboard de ventas con filtros
-- `GET /dashboards/inventario` — Dashboard de inventario
-- `GET /dashboards/financiero` — Dashboard financiero
-- `GET /reportes/ventas` — Generar reporte de ventas
-- `GET /reportes/mermas` — Reporte de mermas
-- `GET /reportes/top-productos` — Productos mas vendidos
-- `POST /alertas/configurar` — Configurar umbrales de alerta
-- `GET /notificaciones/historial` — Historial de envios
+- `GET /dashboards/ventas` [PLANIFICADO] — Dashboard de ventas con filtros
+- `GET /dashboards/inventario` [PLANIFICADO] — Dashboard de inventario
+- `GET /dashboards/financiero` [PLANIFICADO] — Dashboard financiero
+- `GET /reportes/ventas` [PLANIFICADO] — Generar reporte de ventas
+- `GET /reportes/mermas` [PLANIFICADO] — Reporte de mermas
+- `GET /reportes/top-productos` [PLANIFICADO] — Productos mas vendidos
+- `POST /alertas/configurar` [PLANIFICADO] — Configurar umbrales de alerta
+- `GET /notificaciones/historial` [PLANIFICADO] — Historial de envios
 
 **Eventos que consume de Kafka:**
 - `sale.completed` → actualiza KPIs de ventas en tiempo real
@@ -436,16 +475,16 @@ Las plantillas de mensaje son configurables por tenant. El sistema registra hist
 
 ### MS-8 · Loyalty & Customer Service
 
-**Responsabilidad:** Gestionar el programa de lealtad de clientes: registro de clientes afiliados, acumulacion y canje de puntos, tiers de membresia, cupones de descuento y comunicacion de estado de cuenta.
+**Responsabilidad:** Gestionar el programa de lealtad de clientes: registro de clientes afiliados, acumulacion y canje de puntos, tiers de membresia, cupones de descuento y comunicacion de estado de cuenta. *(Microservicio sin controllers implementados a la fecha; solo modelos y DbContext)*.
 
 **Endpoints principales:**
-- `POST /clientes` — Registrar nuevo cliente afiliado
-- `GET /clientes/{id}` — Perfil y saldo de puntos
-- `GET /clientes/{id}/historial` — Historial de compras
-- `POST /clientes/{id}/identificar` — Identificar en POS (por QR, DNI o app)
-- `POST /clientes/{id}/canjear` — Canjear puntos por descuento o producto
-- `GET/POST /programas` — Configurar programa de lealtad
-- `POST /cupones/validar` — Validar cupon en POS
+- `POST /clientes` [PLANIFICADO] — Registrar nuevo cliente afiliado
+- `GET /clientes/{id}` [PLANIFICADO] — Perfil y saldo de puntos
+- `GET /clientes/{id}/historial` [PLANIFICADO] — Historial de compras
+- `POST /clientes/{id}/identificar` [PLANIFICADO] — Identificar en POS (por QR, DNI o app)
+- `POST /clientes/{id}/canjear` [PLANIFICADO] — Canjear puntos por descuento o producto
+- `GET/POST /programas` [PLANIFICADO] — Configurar programa de lealtad
+- `POST /cupones/validar` [PLANIFICADO] — Validar cupon en POS
 
 **Logica de acumulacion de puntos:**
 - Al completar una venta con cliente afiliado identificado, MS-8 consume el evento `sale.completed` de Kafka
@@ -509,6 +548,8 @@ Las plantillas de mensaje son configurables por tenant. El sistema registra hist
 ---
 
 ## 8. Requerimientos Funcionales (MoSCoW)
+
+> **Nota:** Diseño objetivo; el estado real está en la sección 0.1 y en `docs/context/estado-actual.md`.
 
 ### MUST
 
@@ -593,6 +634,8 @@ Las plantillas de mensaje son configurables por tenant. El sistema registra hist
 ---
 
 ## 10. Casos de Uso por Microservicio (MoSCoW)
+
+> **Nota:** Diseño objetivo; el estado real está en la sección 0.1 y en `docs/context/estado-actual.md`.
 
 ### MS-1 · Tenant & Identity Service
 
@@ -801,7 +844,9 @@ Las plantillas de mensaje son configurables por tenant. El sistema registra hist
 
 ## 11. Arquitectura de Eventos Kafka
 
-El sistema utiliza **9 topics de Kafka**. La comunicacion asincrona garantiza que el POS no se bloquee esperando operaciones secundarias.
+> **Nota:** Diseño objetivo; el estado real está en la sección 0.1 y en `docs/context/estado-actual.md`. Actualmente hay 17 topics aprovisionados en Docker (`docker-compose.yml`) y solo 1 consumer real implementado (`sale.completed` en MS-4 Warehouse). En el código real actual, MS-5 todavía no publica `sale.completed` (la cadena Kafka entre producer y consumer está pendiente).
+
+El sistema contempla en su diseño **9 flujos de topics de Kafka** (con 17 topics aprovisionados en el cluster de infraestructura, ver `docs/context/eventos/kafka-topics.md`). La comunicacion asincrona garantiza que el POS no se bloquee esperando operaciones secundarias.
 
 ### Topics y Flujos
 
@@ -1062,7 +1107,7 @@ El proyecto tiene **9 diagramas PlantUML** que representan el sistema completo. 
 
 > *"Un cajero autenticado puede abrir un turno, escanear productos, cobrar en efectivo y cerrar el turno con cuadre de caja. Un administrador puede crear el tenant, usuarios, roles y productos basicos."*
 
-**Duracion:** 2 semanas | **Puntos:** 45 | **Equipo:** 2-3 desarrolladores
+**Duracion:** 4 semanas (ciclos de miercoles a miercoles en la UCT) | **Puntos:** 45 | **Equipo:** 2-3 desarrolladores | **Estado actual:** En curso (Semana 3 de 4 al 29 de Septiembre de 2026)
 
 ### User Stories (11)
 
@@ -1180,4 +1225,4 @@ El Sprint 1 cubre exclusivamente los Must de mayor impacto operativo.
 
 ---
 
-*Este documento representa el estado completo del proyecto GlobalMart OS al 8 de Septiembre de 2026. Cualquier IA que haya leido este documento tiene suficiente contexto para contribuir al proyecto sin informacion adicional.*
+*Este documento representa el estado del proyecto GlobalMart OS v2.0 al 29 de Septiembre de 2026. Para el grafo de conocimiento modular, granular y actualizado por archivo, consultar siempre [`docs/context/index.md`](docs/context/index.md) y [`docs/context/estado-actual.md`](docs/context/estado-actual.md).*

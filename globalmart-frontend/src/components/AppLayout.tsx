@@ -27,6 +27,7 @@ export default function AppLayout() {
           </span>
           <div style={{ display: 'flex', gap: '1.5rem' }}>
             <Link to="/pos" style={{ color: 'white', textDecoration: 'none', fontWeight: 500, opacity: 0.9, transition: 'opacity 0.2s' }} onMouseOver={(e) => e.currentTarget.style.opacity = '1'} onMouseOut={(e) => e.currentTarget.style.opacity = '0.9'}>Punto de Venta</Link>
+            <Link to="/abrir-turno" style={{ color: 'white', textDecoration: 'none', fontWeight: 500, opacity: 0.9, transition: 'opacity 0.2s' }} onMouseOver={(e) => e.currentTarget.style.opacity = '1'} onMouseOut={(e) => e.currentTarget.style.opacity = '0.9'}>Abrir Turno</Link>
             <Link to="/admin" style={{ color: 'white', textDecoration: 'none', fontWeight: 500, opacity: 0.9, transition: 'opacity 0.2s' }} onMouseOver={(e) => e.currentTarget.style.opacity = '1'} onMouseOut={(e) => e.currentTarget.style.opacity = '0.9'}>Administración</Link>
           </div>
         </div>

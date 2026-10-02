@@ -143,9 +143,10 @@ public sealed class VentasController : ControllerBase
     /// <response code="201">Ítem agregado exitosamente con sus datos calculados.</response>
     /// <response code="400">Request inválido o producto inactivo para venta.</response>
     /// <response code="401">Token JWT ausente o inválido.</response>
-    /// <response code="404">Venta o producto no encontrado.</response>
+    /// <response code="404">Venta o producto no encontrado ("Producto no encontrado").</response>
     /// <response code="409">La venta no está en estado PENDIENTE.</response>
-    /// <response code="502">Error de comunicación con MS-2 o MS-3.</response>
+    /// <response code="502">Error de comunicación con MS-3.</response>
+    /// <response code="503">MS-2 no responde (servicio tributario no disponible).</response>
     [HttpPost("{id:guid}/items")]
     [ProducesResponseType(typeof(ItemVentaResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -153,6 +154,7 @@ public sealed class VentasController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     [ProducesResponseType(StatusCodes.Status502BadGateway)]
+    [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
     public async Task<IActionResult> AgregarItem(
         [FromRoute] Guid id,
         [FromBody] AgregarItemRequest request,
@@ -193,7 +195,7 @@ public sealed class VentasController : ControllerBase
 
         if (producto is null)
         {
-            return NotFound(new { error = $"Producto {request.ProductoId} no encontrado en MS-3 (Catálogo)." });
+            return NotFound(new { message = "Producto no encontrado", error = "Producto no encontrado" });
         }
 
         if (!producto.IsActive)
@@ -247,15 +249,23 @@ public sealed class VentasController : ControllerBase
         {
             taxResult = await _taxClient.CalculateTaxAsync(itemsParaCalculo, null, authHeader, cancellationToken);
         }
-        catch (ExternalServiceException ex)
+        catch (Exception ex)
         {
-            _logger?.LogError(ex, "Error llamando a MS-2 TaxComplianceService");
-            return StatusCode(StatusCodes.Status502BadGateway, new { error = ex.Message });
+            _logger?.LogError(ex, "MS-2 TaxComplianceService no responde");
+            return StatusCode(StatusCodes.Status503ServiceUnavailable, new
+            {
+                message = "MS-2 no responde",
+                error   = "El servicio de cálculo de impuestos (MS-2) no responde o no está disponible."
+            });
         }
 
         if (taxResult is null)
         {
-            return StatusCode(StatusCodes.Status502BadGateway, new { error = "MS-2 no retornó resultados de cálculo fiscal." });
+            return StatusCode(StatusCodes.Status503ServiceUnavailable, new
+            {
+                message = "MS-2 no responde",
+                error   = "MS-2 no respondió o no retornó resultados de cálculo fiscal."
+            });
         }
 
         // 8. Persistir ítem y actualizar venta con totales calculados
@@ -263,6 +273,7 @@ public sealed class VentasController : ControllerBase
             id,
             nuevoItem,
             subtotal:  taxResult.Subtotal,
+
             impuestos: taxResult.Iva,
             total:     taxResult.Total);
 
@@ -275,7 +286,237 @@ public sealed class VentasController : ControllerBase
             response);
     }
 
+    // ── PUT /ventas/{id}/items/{itemId} ───────────────────────────────────────
+
+    /// <summary>
+    /// Modifica la cantidad de un ítem en el carrito y recalcula el subtotal de ese ítem y el total de la venta (IVA incluido vía MS-2).
+    /// </summary>
+    /// <response code="200">Ítem modificado exitosamente con subtotal y total recalculados.</response>
+    /// <response code="400">Cantidad o peso inválido (debe ser mayor a 0).</response>
+    /// <response code="401">Token JWT ausente o inválido.</response>
+    /// <response code="404">Venta o ítem no encontrado.</response>
+    /// <response code="409">La venta no está en estado PENDIENTE.</response>
+    /// <response code="503">MS-2 no responde (servicio tributario no disponible).</response>
+    [HttpPut("{id:guid}/items/{itemId:guid}")]
+    [ProducesResponseType(typeof(ItemVentaResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
+    public async Task<IActionResult> ModificarCantidadItem(
+        [FromRoute] Guid id,
+        [FromRoute] Guid itemId,
+        [FromBody] ModificarCantidadItemRequest request,
+        CancellationToken cancellationToken)
+    {
+        // 1. Extraer claims del JWT
+        if (!TryGetClaims(out _, out _))
+            return Unauthorized(new { error = "Token inválido: faltan cajero_id/sub o tenant_id." });
+
+        // 2. Verificar que la venta exista
+        var venta = await _ventaService.GetByIdAsync(id);
+        if (venta is null)
+            return NotFound(new { error = $"Venta {id} no encontrada." });
+
+        // 3. RN-04: Solo se pueden modificar ítems si la venta está en estado PENDIENTE
+        if (venta.Estado != EstadoVenta.PENDIENTE)
+        {
+            return Conflict(new
+            {
+                error = $"Solo se pueden modificar ítems de una venta en estado PENDIENTE. Estado actual: {venta.Estado}."
+            });
+        }
+
+        // 4. Verificar que el ítem exista en la venta
+        var item = venta.Items.FirstOrDefault(i => i.Id == itemId);
+        if (item is null)
+        {
+            return NotFound(new { error = $"Ítem {itemId} no encontrado en la venta {id}." });
+        }
+
+        // 5. Determinar nueva cantidad y peso
+        decimal nuevaCantidad = request.Cantidad;
+        decimal? nuevoPesoKg = request.PesoKg;
+
+        if (nuevoPesoKg.HasValue && nuevoPesoKg.Value > 0)
+        {
+            nuevaCantidad = nuevoPesoKg.Value;
+        }
+        else if (nuevaCantidad <= 0)
+        {
+            return BadRequest(new { error = "La cantidad debe ser mayor a 0." });
+        }
+
+        decimal nuevoSubtotalItem = Math.Round(item.PrecioUnitario * nuevaCantidad, 2);
+
+        // 6. Recalcular IVA y totales consolidados de la venta consultando MS-2
+        var itemsParaCalculo = venta.Items.Select(i => new TaxItemDto
+        {
+            Nombre   = i.NombreProducto,
+            Precio   = i.PrecioUnitario,
+            Cantidad = (i.Id == itemId) ? nuevaCantidad : i.Cantidad
+        }).ToList();
+
+        var authHeader = Request.Headers.Authorization.ToString();
+        TaxCalculationResult? taxResult;
+        try
+        {
+            taxResult = await _taxClient.CalculateTaxAsync(itemsParaCalculo, null, authHeader, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger?.LogError(ex, "MS-2 TaxComplianceService no responde al recalcular impuestos");
+            return StatusCode(StatusCodes.Status503ServiceUnavailable, new
+            {
+                message = "MS-2 no responde",
+                error   = "El servicio de cálculo de impuestos (MS-2) no responde o no está disponible."
+            });
+        }
+
+        if (taxResult is null)
+        {
+            return StatusCode(StatusCodes.Status503ServiceUnavailable, new
+            {
+                message = "MS-2 no responde",
+                error   = "MS-2 no respondió o no retornó resultados de cálculo fiscal."
+            });
+        }
+
+        // 7. Persistir modificación del ítem y actualizar totales de la venta
+        var (_, itemActualizado) = await _ventaService.ModificarCantidadItemAsync(
+            id,
+            itemId,
+            nuevaCantidad:        nuevaCantidad,
+            nuevoPesoKg:          nuevoPesoKg,
+            nuevoSubtotalItem:    nuevoSubtotalItem,
+            nuevoSubtotalVenta:   taxResult.Subtotal,
+            nuevosImpuestosVenta: taxResult.Iva,
+            nuevoTotalVenta:      taxResult.Total);
+
+        var indexItem = venta.Items.ToList().FindIndex(i => i.Id == itemId);
+        var itemTax = (indexItem >= 0 && indexItem < taxResult.Items.Count)
+            ? taxResult.Items[indexItem]
+            : null;
+
+        var response = ItemVentaResponse.FromModel(itemActualizado, itemTax?.Iva, itemTax?.Total);
+        return Ok(response);
+    }
+
+    // ── DELETE /ventas/{id}/items/{itemId} ────────────────────────────────────
+
+    /// <summary>
+    /// Elimina un ítem del carrito / venta pendiente y recalcula los totales de la venta (IVA incluido vía MS-2).
+    /// Si la venta queda sin ítems, subtotal, impuestos y total se ponen a 0.
+    /// </summary>
+    /// <response code="200">Ítem eliminado y totales recalculados correctamente.</response>
+    /// <response code="401">Token JWT ausente o inválido.</response>
+    /// <response code="404">Venta o ítem no encontrado.</response>
+    /// <response code="409">La venta no está en estado PENDIENTE.</response>
+    /// <response code="503">MS-2 no responde (servicio tributario no disponible).</response>
+    [HttpDelete("{id:guid}/items/{itemId:guid}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
+    public async Task<IActionResult> EliminarItem(
+        [FromRoute] Guid id,
+        [FromRoute] Guid itemId,
+        CancellationToken cancellationToken)
+    {
+        // 1. Extraer claims del JWT
+        if (!TryGetClaims(out _, out _))
+            return Unauthorized(new { error = "Token inválido: faltan cajero_id/sub o tenant_id." });
+
+        // 2. Verificar que la venta exista
+        var venta = await _ventaService.GetByIdAsync(id);
+        if (venta is null)
+            return NotFound(new { error = $"Venta {id} no encontrada." });
+
+        // 3. RN-04: Solo se pueden eliminar ítems si la venta está en estado PENDIENTE
+        if (venta.Estado != EstadoVenta.PENDIENTE)
+        {
+            return Conflict(new
+            {
+                error = $"Solo se pueden eliminar ítems de una venta en estado PENDIENTE. Estado actual: {venta.Estado}."
+            });
+        }
+
+        // 4. Verificar que el ítem exista en la venta
+        var item = venta.Items.FirstOrDefault(i => i.Id == itemId);
+        if (item is null)
+            return NotFound(new { error = $"Ítem {itemId} no encontrado en la venta {id}." });
+
+        // 5. Calcular los ítems restantes (sin el ítem eliminado) para recalcular IVA
+        var itemsRestantes = venta.Items
+            .Where(i => i.Id != itemId)
+            .Select(i => new TaxItemDto
+            {
+                Nombre   = i.NombreProducto,
+                Precio   = i.PrecioUnitario,
+                Cantidad = i.Cantidad
+            }).ToList();
+
+        decimal nuevoSubtotal  = 0m;
+        decimal nuevosImpuestos = 0m;
+        decimal nuevoTotal     = 0m;
+
+        // 6. Si quedan ítems, recalcular IVA y totales via MS-2
+        if (itemsRestantes.Count > 0)
+        {
+            var authHeader = Request.Headers.Authorization.ToString();
+            TaxCalculationResult? taxResult;
+            try
+            {
+                taxResult = await _taxClient.CalculateTaxAsync(itemsRestantes, null, authHeader, cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "MS-2 TaxComplianceService no responde al eliminar ítem");
+                return StatusCode(StatusCodes.Status503ServiceUnavailable, new
+                {
+                    message = "MS-2 no responde",
+                    error   = "El servicio de cálculo de impuestos (MS-2) no responde o no está disponible."
+                });
+            }
+
+            if (taxResult is null)
+            {
+                return StatusCode(StatusCodes.Status503ServiceUnavailable, new
+                {
+                    message = "MS-2 no responde",
+                    error   = "MS-2 no respondió o no retornó resultados de cálculo fiscal."
+                });
+            }
+
+            nuevoSubtotal   = taxResult.Subtotal;
+            nuevosImpuestos = taxResult.Iva;
+            nuevoTotal      = taxResult.Total;
+        }
+
+        // 7. Persistir eliminación del ítem y actualizar totales de la venta
+        var (ventaActualizada, itemEliminado) = await _ventaService.EliminarItemAsync(
+            id,
+            itemId,
+            nuevoSubtotalVenta:    nuevoSubtotal,
+            nuevosImpuestosVenta:  nuevosImpuestos,
+            nuevoTotalVenta:       nuevoTotal);
+
+        return Ok(new
+        {
+            message          = $"Ítem '{itemEliminado.NombreProducto}' eliminado exitosamente.",
+            itemEliminadoId  = itemEliminado.Id,
+            ventaId          = ventaActualizada.Id,
+            itemsRestantes   = ventaActualizada.Items.Count,
+            nuevoSubtotal    = ventaActualizada.Subtotal,
+            nuevosImpuestos  = ventaActualizada.Impuestos,
+            nuevoTotal       = ventaActualizada.Total
+        });
+    }
+
     // ── GET /ventas/{id} ───────────────────────────────────────────────────────
+
 
 
     /// <summary>
@@ -316,5 +557,75 @@ public sealed class VentasController : ControllerBase
 
         var ventas = await _ventaService.GetByTurnoAsync(turnoId);
         return Ok(ventas.Select(VentaResponse.FromModel));
+    }
+
+    // ── POST /ventas/{id}/cobrar ───────────────────────────────────────────────
+
+    /// <summary>
+    /// Cobra una venta PENDIENTE: valida que el monto recibido cubra el total
+    /// y marca la venta como COMPLETADA.
+    /// </summary>
+    /// <remarks>
+    /// Reglas aplicadas:
+    /// - RN-06: el cajero debe tener un turno ABIERTO (validado al crear la venta).
+    /// - monto_recibido debe ser ≥ venta.Total; de lo contrario se retorna 400 "Monto insuficiente".
+    /// - La venta debe estar en estado PENDIENTE; de lo contrario 409.
+    /// </remarks>
+    /// <response code="200">Venta completada. Incluye vuelto calculado.</response>
+    /// <response code="400">monto_recibido es menor al total de la venta ("Monto insuficiente").</response>
+    /// <response code="401">Token JWT ausente o inválido.</response>
+    /// <response code="404">Venta no encontrada.</response>
+    /// <response code="409">La venta no está en estado PENDIENTE.</response>
+    [HttpPost("{id:guid}/cobrar")]
+    [ProducesResponseType(typeof(CobrarVentaResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> Cobrar(
+        [FromRoute] Guid id,
+        [FromBody] CobrarVentaRequest request)
+    {
+        // 1. Extraer claims del JWT
+        if (!TryGetClaims(out _, out _))
+            return Unauthorized(new { error = "Token inválido: faltan cajero_id/sub o tenant_id." });
+
+        // 2. Verificar que la venta exista
+        var venta = await _ventaService.GetByIdAsync(id);
+        if (venta is null)
+            return NotFound(new { error = $"Venta {id} no encontrada." });
+
+        // 3. Verificar que la venta esté PENDIENTE antes de cobrar
+        if (venta.Estado != EstadoVenta.PENDIENTE)
+        {
+            return Conflict(new
+            {
+                error = $"Solo se puede cobrar una venta en estado PENDIENTE. Estado actual: {venta.Estado}."
+            });
+        }
+
+        // 4. Validar monto recibido ≥ total de la venta (regla de negocio del enunciado)
+        if (request.MontoRecibido < venta.Total)
+        {
+            return BadRequest(new
+            {
+                error          = "Monto insuficiente",
+                total_venta    = venta.Total,
+                monto_recibido = request.MontoRecibido,
+                diferencia     = venta.Total - request.MontoRecibido
+            });
+        }
+
+        // 5. Calcular vuelto antes de completar (usamos venta.Total que aún no cambió)
+        var vuelto = Math.Round(request.MontoRecibido - venta.Total, 2);
+
+        // 6. Completar la venta y persistir el Pago EFECTIVO en una sola operación
+        var ventaCompletada = await _ventaService.CompletarAsync(id, request.MontoRecibido, vuelto);
+
+        _logger?.LogInformation(
+            "Venta {VentaId} cobrada. Total: {Total}, Recibido: {Recibido}, Vuelto: {Vuelto}",
+            ventaCompletada.Id, ventaCompletada.Total, request.MontoRecibido, vuelto);
+
+        return Ok(new CobrarVentaResponse(VentaResponse.FromModel(ventaCompletada), request.MontoRecibido, vuelto));
     }
 }

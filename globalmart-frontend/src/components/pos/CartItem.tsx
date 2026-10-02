@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 
 export interface CartItemProps {
   id: string;
@@ -44,7 +44,6 @@ export default function CartItem({ id, name, price, quantity, onQuantityChange, 
           min="1"
           value={quantity}
           onChange={handleQuantityChange}
-          onBlur={handleBlur}
           style={{
             width: '60px',
             padding: '0.5rem',

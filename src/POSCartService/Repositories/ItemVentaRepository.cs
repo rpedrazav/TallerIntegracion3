@@ -46,9 +46,36 @@ public class ItemVentaRepository : IItemVentaRepository
     }
 
     /// <inheritdoc/>
+    public async Task<ItemVenta> ActualizarAsync(ItemVenta item)
+    {
+        var tracked = await _context.ItemsVenta
+            .IgnoreQueryFilters()
+            .FirstOrDefaultAsync(i => i.Id == item.Id);
+        if (tracked is null)
+            throw new KeyNotFoundException($"ItemVenta {item.Id} no encontrado para actualizar.");
+
+        tracked.Cantidad       = item.Cantidad;
+        tracked.PesoKg         = item.PesoKg;
+        tracked.PrecioUnitario = item.PrecioUnitario;
+        tracked.Subtotal       = item.Subtotal;
+
+        await _context.SaveChangesAsync();
+        return tracked;
+    }
+
+    /// <inheritdoc/>
     public async Task EliminarAsync(ItemVenta item)
     {
-        _context.ItemsVenta.Remove(item);
-        await _context.SaveChangesAsync();
+        // Buscar la instancia ya rastreada por EF para evitar conflictos de identity map
+        var tracked = await _context.ItemsVenta
+            .IgnoreQueryFilters()
+            .FirstOrDefaultAsync(i => i.Id == item.Id);
+
+        if (tracked is not null)
+        {
+            _context.ItemsVenta.Remove(tracked);
+            await _context.SaveChangesAsync();
+        }
     }
 }
+

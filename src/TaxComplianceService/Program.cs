@@ -1,4 +1,4 @@
-﻿using FluentValidation;
+using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -22,6 +22,9 @@ builder.Services.AddValidatorsFromAssemblyContaining<TaxCalculateRequestValidato
 // â”€â”€â”€ Servicios de Dominio: CÃ¡lculo de Impuestos (MS-2) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 builder.Services.AddSingleton<ITaxCalculatorService, TaxCalculatorService>();
 builder.Services.AddSingleton<TaxCalculatorService>();
+
+// Servicio de emisiÃ³n de comprobantes: usa TaxDbContext, por lo que debe ser Scoped
+builder.Services.AddScoped<IComprobanteService, ComprobanteService>();
 
 // â”€â”€â”€ Cliente HTTP hacia MS-1 (TenantIdentityService) con Polly Retry Policy â”€
 // IHttpClientFactory gestiona el pool de sockets y evita socket exhaustion.
@@ -90,6 +93,7 @@ builder.Services.AddCors(options =>
 
 // â”€â”€â”€ 4. Controllers + Swagger â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 builder.Services.AddControllers();
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
@@ -135,6 +139,9 @@ app.UseHttpsRedirection();
 app.UseCors("ElectronApp");
 app.UseAuthentication();
 app.UseAuthorization();
+// 3: extrae tenant_id del JWT e inyecta en TaxDbContext.CurrentTenantId
+// para que los HasQueryFilter globales aislen las lecturas por tenant (RN-01)
+app.UseMiddleware<TaxComplianceService.Middleware.TenantMiddleware>();
 
 app.MapControllers();
 app.MapHealthChecks("/health");

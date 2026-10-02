@@ -25,4 +25,14 @@ public interface ITurnoService
     /// Obtiene el turno activo del cajero dentro del tenant.
     /// </summary>
     Task<Turno?> GetActivo(Guid cajeroId, Guid tenantId);
+
+    /// <summary>
+    /// Calcula el efectivo esperado del turno activo de un cajero,
+    /// sumando los pagos EFECTIVO de todas sus ventas COMPLETADAS.
+    /// </summary>
+    /// <returns>
+    /// Suma de <see cref="Models.Pago.Monto"/> con Metodo=EFECTIVO del turno activo,
+    /// o cero si el cajero no tiene turno abierto o si no hay ventas en efectivo.
+    /// </returns>
+    Task<(Turno Turno, decimal EfectivoEsperado)> CalcularCuadreAsync(Guid cajeroId, Guid tenantId);
 }

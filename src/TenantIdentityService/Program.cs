@@ -86,6 +86,8 @@ builder.Services.AddHealthChecks();
 // Scoped: una instancia por request HTTP (correcto para servicios con DbContext)
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
+builder.Services.AddScoped<ITenantRepository, TenantRepository>();
+builder.Services.AddScoped<ISucursalRepository, SucursalRepository>();
 builder.Services.AddScoped<IAuthService,    AuthService>();
 builder.Services.AddScoped<IJwtService,     JwtService>();
 
@@ -168,4 +170,5 @@ if (app.Environment.IsDevelopment())
 
 app.Run();
 
+public partial class Program { }
 

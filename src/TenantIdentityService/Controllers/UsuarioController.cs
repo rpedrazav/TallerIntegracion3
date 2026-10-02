@@ -128,6 +128,56 @@ public class UsuarioController : ControllerBase
         return NoContent();
     }
 
+    [HttpPost("{id:guid}/roles")]
+    [ProducesResponseType(typeof(UsuarioDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<UsuarioDto>> AssignRoles(
+        Guid id,
+        [FromBody] AsignarRolesDto request)
+    {
+        if (request.Roles is null || request.Roles.Count == 0)
+            return BadRequest(new { message = "Debe enviar al menos un rol." });
+
+        var requestedRoles = request.Roles
+            .Select(role => role.Trim())
+            .Where(role => role.Length > 0)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        if (requestedRoles.Count == 0)
+            return BadRequest(new { message = "Debe enviar al menos un rol válido." });
+
+        if (requestedRoles.Any(role =>
+                string.Equals(role, "SUPER_ADMIN", StringComparison.OrdinalIgnoreCase)))
+        {
+            return StatusCode(StatusCodes.Status403Forbidden,
+                new { message = "Un administrador de tenant no puede asignar SUPER_ADMIN." });
+        }
+
+        var tenantClaim = User.FindFirst("tenant_id")?.Value;
+        if (!Guid.TryParse(tenantClaim, out var tenantId))
+            return Unauthorized(new { message = "El token no contiene un tenant_id válido." });
+
+        var usuario = await _usuarioRepository.GetByIdAsync(id, tenantId);
+        if (usuario is null)
+            return NotFound(new { message = "Usuario no encontrado." });
+
+        var result = await _usuarioRepository.AssignRolesAsync(id, requestedRoles, tenantId);
+        if (result.InvalidRoles.Count > 0)
+        {
+            return BadRequest(new
+            {
+                message = "Uno o más roles no existen.",
+                invalidRoles = result.InvalidRoles
+            });
+        }
+
+        return Ok(MapToDto(result.Usuario!));
+    }
+
     private static UsuarioDto MapToDto(Usuario usuario)
     {
         return new UsuarioDto
