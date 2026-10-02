@@ -55,8 +55,13 @@ tests/GlobalMart.Tests/
 ├── MS1_TenantIdentity/
 │   ├── AuthController_LoginTests.cs   # Tests de login (TI3-206, TI3-207, TI3-208)
 │   └── AuthService_RoleTests.cs       # Tests de roles RBAC (TI3-209)
-└── MS2_TaxCompliance/
-    └── TaxCalculatorService_Tests.cs  # Tests de cálculo IVA (TI3-210, TI3-211, TI3-212)
+├── MS2_TaxCompliance/
+│   └── TaxCalculatorService_Tests.cs  # Tests de cálculo IVA (TI3-210, TI3-211, TI3-212)
+└── MS4_Warehouse/
+    ├── KafkaConsumer_IdempotenciaTests.cs      # Tests de idempotencia consumer Kafka (TI3-252)
+    ├── SaleEventProcessor_MovimientoStockTests.cs # Tests de log estructurado y caso borde (TI3-253, TI3-254)
+    ├── StockController_Tests.cs                # Tests de endpoints HTTP y multi-tenant (TI3-255)
+    └── SeedData_Tests.cs                       # Tests de script de seed de 30 productos y stock (TI3-256)
 ```
 
 ## Tests Implementados
@@ -100,6 +105,45 @@ tests/GlobalMart.Tests/
 | `Calculate_ConListaVacia_RetornaCeros` | — | Lista vacía → ceros |
 | `Calculate_ConItemsNull_LanzaArgumentNullException` | — | Null → excepción |
 | `Calculate_ConPorcentajeNegativo_LanzaArgumentOutOfRangeException` | — | % negativo → excepción |
+
+### KafkaConsumer_IdempotenciaTests (6 tests)
+
+| Test | Tarea | Qué verifica |
+|------|-------|--------------|
+| `ProcesarEvento_PrimeraVez_DescuentaStockYRegistraEvento` | TI3-252 | Evento nuevo → descuenta stock y registra en EventosKafkaProcesados |
+| `ProcesarEvento_MismoEventIdDosVeces_SegundaVezEsDescartada` | TI3-252 | Mismo event_id dos veces → segunda se descarta, descuenta stock 1 sola vez |
+| `ProcesarEvento_MismoEventIdTresVeces_SoloUnaEjecucion` | TI3-252 | Tres veces el mismo evento → exactamente 1 ejecución |
+| `ProcesarEvento_DosEventosDistintos_AmbosSeProcesanCorrectamente` | TI3-252 | Distintos event_ids → ambos se procesan y descuentan stock |
+| `ProcesarEvento_PayloadInvalido_RetornaFalseSinRegistrar` | TI3-252 | JSON inválido → retorna false sin registrar |
+| `ProcesarEvento_EventoSinItems_RetornaFalseSinRegistrar` | TI3-252 | Evento sin items → no procesa ni registra |
+
+### SaleEventProcessor_MovimientoStockTests (3 tests)
+
+| Test | Tarea | Qué verifica |
+|------|-------|--------------|
+| `ProcesarEvento_ConStockExistente_RegistraMovimientoStockConDetalle` | TI3-253 | Log estructurado y registro en `movimientos_stock` con tipo VENTA, stock anterior y nuevo |
+| `ProcesarEvento_SinStockPrevio_LlamaCrearYDescontarYRegistraMovimiento` | TI3-254 | Producto sin stock previo → llama `CrearYDescontar`, crea stock negativo (discrepancia) |
+| `ProcesarEvento_MultiplesItems_RegistraTodosLosMovimientos` | TI3-253 | Venta con múltiples items → registra un movimiento por cada item |
+
+### StockController_Tests (6 tests)
+
+| Test | Tarea | Qué verifica |
+|------|-------|--------------|
+| `GetByProducto_ProductoExiste_Retorna200ConStock` | TI3-255 | Consulta stock de producto existente → HTTP 200 con objeto Stock |
+| `GetByProducto_ProductoNoExiste_Retorna404` | TI3-255 | Producto inexistente en sucursal → HTTP 404 Not Found |
+| `GetByProducto_SucursalVacia_Retorna400` | TI3-255 | `sucursal_id` vacío (Guid.Empty) → HTTP 400 Bad Request |
+| `GetByProducto_SinTenantClaim_Retorna401` | TI3-255 | Request sin claim `tenant_id` en JWT → HTTP 401 Unauthorized |
+| `GetAll_RetornaListaDeStocksDelTenant` | TI3-255 | Listado general de stock del tenant → HTTP 200 con lista |
+| `GetAll_ConFiltroSucursal_RetornaSoloDeEsaSucursal` | TI3-255 | Filtrado por query param `sucursal_id` → retorna solo de esa sucursal |
+
+### SeedData_Tests (4 tests)
+
+| Test | Tarea | Qué verifica |
+|------|-------|--------------|
+| `CatalogSeedData_InsertaExactamente30ProductosConCategoriasYPrecios` | TI3-256 | Inserta exactamente 30 productos, 4 categorías (Frutas, Carnes, Lácteos, Snacks) con códigos de barras únicos y precios |
+| `CatalogSeedData_EjecutarDosVeces_EsIdempotenteNoDuplica` | TI3-256 | La ejecución reiterada del seed no duplica registros |
+| `WarehouseSeedData_InsertaStockParaLos30Productos` | TI3-256 | Inserta stock inicial (50 unidades) para cada uno de los 30 productos en MS-4 |
+| `WarehouseSeedData_EjecutarDosVeces_EsIdempotente` | TI3-256 | El seed de stock es idempotente |
 
 ## Cobertura de Código (TI3-213)
 
