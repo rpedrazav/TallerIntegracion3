@@ -5,7 +5,7 @@ titulo: Pantallas del Frontend — GlobalMart OS
 estado: parcial
 fuentes: [globalmart-frontend/src/pages/, globalmart-frontend/src/components/]
 verificado_contra_codigo: true
-ultima_revision: 2026-09-28
+ultima_revision: 2026-10-01
 depende_de: [estructura, ms1-identity, ms5-pos]
 publica: []
 consume: []
@@ -55,6 +55,21 @@ NO integra la API de ventas de MS-5
 NO abre turno antes de vender
 ```
 
+## AbrirTurnoPage.tsx [IMPLEMENTADO]
+
+```typescript
+// Pantalla de apertura de turno de caja (RN-06)
+// Ruta: /abrir-turno
+// Campos:
+//   - "Monto inicial de caja" (input numérico con validación >= 0)
+//   - Accesos directos para montos frecuentes ($0, $20.000, $50.000, $100.000)
+//   - Botón "Abrir Turno" con estado de carga y validaciones
+// Integración API:
+//   - GET /turnos/activo: detecta si el cajero ya tiene un turno abierto
+//   - POST /turnos/abrir: registra apertura con sucursal_id y monto_fondo_inicial
+//   - Redirección automática a /pos tras apertura exitosa
+```
+
 ## Admin.tsx [NO VERIFICADO]
 
 Pantalla de administración cuyo contenido completo no fue verificado. Existe en el router como `/admin`.
@@ -86,7 +101,7 @@ Según diagramas `diagramas/rodrigo/`:
 - R4: State Management (gestión de estado)
 
 Pantallas no implementadas:
-- Gestión de Turnos (abrir/cerrar turno)
+- Cierre de Turno y Cuadre de Caja (PC-04)
 - Gestión de Productos (CRUD admin)
 - Dashboard de ventas
 - Gestión de inventario
