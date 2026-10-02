@@ -193,6 +193,12 @@ if (_kafkaProducer is not null)
 }
 ```
 
+## Tests de integración
+
+- `TurnoIntegrationTests`: abre un turno con JWT de cajero y verifica que se persiste en estado `ABIERTO`.
+- `VentaIntegrationTests`: crea una venta con el primer producto, agrega el segundo y verifica subtotal, IVA y total.
+- TI3-224 usa handlers HTTP en memoria para devolver respuestas deterministas de `CatalogClient` (MS-3) y `TaxClient` (MS-2), sin levantar esos microservicios.
+
 ## Casos de uso cubiertos
 
 | ID | Caso de Uso | Estado |
@@ -246,3 +252,5 @@ if (_kafkaProducer is not null)
 - `src/POSCartService/Controllers/TurnosController.cs`
 - `src/POSCartService/Services/VentaService.cs`
 - `src/POSCartService/Services/TurnoService.cs`
+- `tests/GlobalMart.IntegrationTests/TurnoIntegrationTests.cs`
+- `tests/GlobalMart.IntegrationTests/VentaIntegrationTests.cs`

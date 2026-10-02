@@ -128,6 +128,8 @@ reglas: []
 - `POST /ventas/{id}/cobrar` — valida `monto_recibido` ≥ total, completa la venta, retorna vuelto y publica `sale.completed` a Kafka con `event_id` único [IMPLEMENTADO]
 - VentaService con métodos `CompletarAsync` y `AnularAsync` [IMPLEMENTADO en service]
 - KafkaProducerService — publica eventos Kafka con key=tenant_id y event_id único [IMPLEMENTADO]
+- test de integración abre turno con JWT de cajero y verifica persistencia en estado `ABIERTO` [IMPLEMENTADO]
+- test de integración crea venta, agrega dos productos y verifica subtotal, IVA y total con handlers simulados para MS-2/MS-3 [IMPLEMENTADO]
 
 **No implementado / CRÍTICO:**
 - Endpoint HTTP `POST /ventas/{id}/anular` aún no está expuesto en `VentasController.cs`
