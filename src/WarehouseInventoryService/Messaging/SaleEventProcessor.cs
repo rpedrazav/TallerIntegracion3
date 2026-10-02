@@ -77,22 +77,84 @@ public class SaleEventProcessor : ISaleEventProcessor
 
         foreach (var item in evento.Items)
         {
+            // Obtener stock anterior para el log estructurado (TI3-253)
+            var stockAnterior = _stockRepository
+                .GetByProducto(item.ProductoId, evento.SucursalId, evento.TenantId)
+                .GetAwaiter()
+                .GetResult();
+
+            decimal cantidadAnterior = stockAnterior?.CantidadActual ?? 0m;
+
             var stockActualizado = _stockRepository
                 .Descontar(item.ProductoId, item.Cantidad, evento.TenantId, evento.SucursalId)
                 .GetAwaiter()
                 .GetResult();
 
-            if (stockActualizado is null)
+            if (stockActualizado is not null)
             {
-                _logger.LogWarning(
-                    "No existe stock para producto {ProductoId} en sucursal {SucursalId} (venta {VentaId})",
-                    item.ProductoId, evento.SucursalId, evento.VentaId);
+                // TI3-253: Log estructurado con todos los campos del movimiento
+                _logger.LogInformation(
+                    "Movimiento de stock: {Movimiento}",
+                    new
+                    {
+                        tipo = "VENTA",
+                        producto_id = item.ProductoId,
+                        sucursal_id = evento.SucursalId,
+                        tenant_id = evento.TenantId,
+                        venta_id = evento.VentaId,
+                        cantidad_descontada = item.Cantidad,
+                        stock_anterior = cantidadAnterior,
+                        stock_nuevo = stockActualizado.CantidadActual,
+                        timestamp = DateTime.UtcNow
+                    });
+
+                // Persistir movimiento en tabla de auditoría
+                _context.Movimientos.Add(new MovimientoStock
+                {
+                    ProductoId = item.ProductoId,
+                    Tipo = "VENTA",
+                    Cantidad = item.Cantidad,
+                    Motivo = $"Venta {evento.VentaId} — stock {cantidadAnterior} → {stockActualizado.CantidadActual}",
+                    TenantId = evento.TenantId
+                });
             }
             else
             {
+                // TI3-254: Caso borde — producto sin registro en tabla Stock.
+                // Se crea el registro con stock negativo (discrepancia a resolver).
+                _logger.LogWarning(
+                    "Producto {ProductoId} sin registro de stock en sucursal {SucursalId}. Creando registro (TI3-254)",
+                    item.ProductoId, evento.SucursalId);
+
+                var stockCreado = _stockRepository
+                    .CrearYDescontar(item.ProductoId, item.Cantidad, evento.TenantId, evento.SucursalId)
+                    .GetAwaiter()
+                    .GetResult();
+
                 _logger.LogInformation(
-                    "Stock descontado: producto {ProductoId}, sucursal {SucursalId}, cantidad {Cantidad}, venta {VentaId}",
-                    item.ProductoId, evento.SucursalId, item.Cantidad, evento.VentaId);
+                    "Movimiento de stock: {Movimiento}",
+                    new
+                    {
+                        tipo = "VENTA",
+                        producto_id = item.ProductoId,
+                        sucursal_id = evento.SucursalId,
+                        tenant_id = evento.TenantId,
+                        venta_id = evento.VentaId,
+                        cantidad_descontada = item.Cantidad,
+                        stock_anterior = 0m,
+                        stock_nuevo = stockCreado.CantidadActual,
+                        registro_creado = true,
+                        timestamp = DateTime.UtcNow
+                    });
+
+                _context.Movimientos.Add(new MovimientoStock
+                {
+                    ProductoId = item.ProductoId,
+                    Tipo = "VENTA",
+                    Cantidad = item.Cantidad,
+                    Motivo = $"Venta {evento.VentaId} — registro creado, stock 0 → {stockCreado.CantidadActual}",
+                    TenantId = evento.TenantId
+                });
             }
         }
 
