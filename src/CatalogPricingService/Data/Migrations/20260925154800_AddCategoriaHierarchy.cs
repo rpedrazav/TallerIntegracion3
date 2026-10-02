@@ -1,11 +1,15 @@
 using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
+using Microsoft.EntityFrameworkCore.Infrastructure;
+
 #nullable disable
 
 namespace CatalogPricingService.Data.Migrations
 {
     /// <inheritdoc />
+    [DbContext(typeof(CatalogDbContext))]
+    [Migration("20260925154800_AddCategoriaHierarchy")]
     public partial class AddCategoriaHierarchy : Migration
     {
         /// <inheritdoc />

@@ -44,9 +44,10 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateAudience = true,
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
-            ValidIssuer = builder.Configuration["Jwt:Issuer"] ?? "GlobalMart",
-            ValidAudience = builder.Configuration["Jwt:Audience"] ?? "GlobalMartUsers",
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:SecretKey"] ?? "TuSuperSecretoDeDesarrollo1234567890!"))
+            ValidIssuer = builder.Configuration["Jwt:Issuer"] ?? "GlobalMartOS",
+            ValidAudience = builder.Configuration["Jwt:Audience"] ?? "GlobalMartOS_Clients",
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(
+                builder.Configuration["Jwt:Key"] ?? builder.Configuration["Jwt:SecretKey"] ?? "GlobalMartOS_SuperSecretKey_ChangeInProduction_Min32Chars!!"))
         };
     });
 builder.Services.AddAuthorization();

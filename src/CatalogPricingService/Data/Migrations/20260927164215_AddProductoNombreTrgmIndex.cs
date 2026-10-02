@@ -1,16 +1,21 @@
 using Microsoft.EntityFrameworkCore.Migrations;
 
+using Microsoft.EntityFrameworkCore.Infrastructure;
+
 #nullable disable
 
 namespace CatalogPricingService.Data.Migrations
 {
     /// <inheritdoc />
+    [DbContext(typeof(CatalogDbContext))]
+    [Migration("20260927164215_AddProductoNombreTrgmIndex")]
     public partial class AddProductoNombreTrgmIndex : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            // Habilitar la extension pg_trgm necesaria para indices GIN de busqueda LIKE
+            // Habilitar extensiones necesarias para indices GIN multi-columna con UUID y trigramas
+            migrationBuilder.Sql("CREATE EXTENSION IF NOT EXISTS btree_gin;");
             migrationBuilder.Sql("CREATE EXTENSION IF NOT EXISTS pg_trgm;");
 
             // Indice GIN con trigramas sobre (tenant_id, nombre) para busquedas LIKE eficientes.
