@@ -176,6 +176,7 @@ reglas: []
 | Pantalla | Estado | Integración API |
 |----------|--------|-----------------|
 | Login | [IMPLEMENTADO] | Llama directo a `http://127.0.0.1:5124` |
+| Abrir Turno (`AbrirTurnoPage`) | [IMPLEMENTADO] | Llama a MS-5 `/turnos/activo` y `POST /turnos/abrir` |
 | POS/Carrito | [PARCIAL] | UI implementada con datos mockeados; pendiente llamada a APIs |
 | Admin | [PLACEHOLDER] | Componente básico (`<h2>Administración</h2>`) para acceso directo |
 
