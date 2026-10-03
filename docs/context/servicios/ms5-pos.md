@@ -5,7 +5,7 @@ titulo: MS-5 · POS & Cart Service
 estado: parcial
 fuentes: [src/POSCartService/]
 verificado_contra_codigo: true
-ultima_revision: 2026-10-01
+ultima_revision: 2026-10-02
 depende_de: [ms1-identity, ms2-tax, ms3-catalog]
 publica: [sale.completed]
 consume: []
@@ -43,9 +43,9 @@ src/POSCartService/
 
 | Método | Ruta | Auth | Estado |
 |--------|------|------|--------|
-| POST | `/turnos/abrir` | JWT | [IMPLEMENTADO] |
-| GET | `/turnos/activo` | JWT | [IMPLEMENTADO] |
-| POST | `/turnos/cerrar` | JWT | [IMPLEMENTADO] |
+| POST | `/turnos/abrir` o `/api/turnos/abrir` | JWT | [IMPLEMENTADO] |
+| GET | `/turnos/activo` o `/api/turnos/activo` | JWT | [IMPLEMENTADO] |
+| POST | `/turnos/cerrar` o `/api/turnos/cerrar` | JWT | [IMPLEMENTADO] |
 | POST | `/turnos/cuadre` | JWT | [IMPLEMENTADO — suma pagos EFECTIVO/COMPLETADAS; retorna efectivo_esperado, monto_declarado, diferencia] |
 | POST | `/ventas` | JWT | [IMPLEMENTADO] |
 | POST | `/ventas/{id}/items` | JWT | [IMPLEMENTADO] |

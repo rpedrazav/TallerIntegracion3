@@ -5,7 +5,7 @@ titulo: Pantallas del Frontend — GlobalMart OS
 estado: parcial
 fuentes: [globalmart-frontend/src/pages/, globalmart-frontend/src/components/]
 verificado_contra_codigo: true
-ultima_revision: 2026-10-01
+ultima_revision: 2026-10-02
 depende_de: [estructura, ms1-identity, ms5-pos]
 publica: []
 consume: []
@@ -65,9 +65,24 @@ NO abre turno antes de vender
 //   - Accesos directos para montos frecuentes ($0, $20.000, $50.000, $100.000)
 //   - Botón "Abrir Turno" con estado de carga y validaciones
 // Integración API:
-//   - GET /turnos/activo: detecta si el cajero ya tiene un turno abierto
-//   - POST /turnos/abrir: registra apertura con sucursal_id y monto_fondo_inicial
-//   - Redirección automática a /pos tras apertura exitosa
+//   - GET /api/turnos/activo: detecta si el cajero ya tiene un turno abierto
+//   - POST /api/turnos/abrir: registra apertura con sucursal_id y monto_fondo_inicial
+//   - Error 409 Conflict: muestra "Ya tienes un turno abierto"
+//   - Redirección automática a /pos con mensaje de confirmación en location.state
+```
+
+## CerrarTurnoPage.tsx [IMPLEMENTADO]
+
+```typescript
+// Pantalla de cierre de turno y cuadre de caja (PC-04, RF-03)
+// Ruta: /cerrar-turno
+// Componentes y lógica:
+//   - Tabla interactiva con denominaciones de billetes ($20.000, $10.000, $5.000, $2.000, $1.000) y monedas ($500, $100, $50, $10)
+//   - Input numérico de cantidad por fila con stepper (+ / -) y subtotal calculado en tiempo real
+//   - Subtotales por categoría (Billetes / Monedas) y Total Declarado en gaveta
+//   - Botón "Limpiar Conteo"
+//   - Arqueo y Cuadre: POST /api/turnos/cuadre con monto_declarado (compara efectivo esperado vs declarado y calcula diferencia)
+//   - Cierre de turno: POST /api/turnos/cerrar con confirmación y opciones de navegación
 ```
 
 ## Admin.tsx [NO VERIFICADO]
@@ -116,5 +131,7 @@ Pantallas no implementadas:
 ## Fuentes
 - `globalmart-frontend/src/pages/Login.tsx`
 - `globalmart-frontend/src/pages/Pos.tsx`
+- `globalmart-frontend/src/pages/AbrirTurnoPage.tsx`
+- `globalmart-frontend/src/pages/CerrarTurnoPage.tsx`
 - `globalmart-frontend/src/components/pos/BarcodeInput.tsx`
 - `globalmart-frontend/src/components/pos/CartItem.tsx`

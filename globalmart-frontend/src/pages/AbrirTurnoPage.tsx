@@ -4,8 +4,8 @@ import axios, { AxiosError } from 'axios';
 import { useAuth } from '../hooks/useAuth';
 
 // URLs del microservicio MS-5 POS & Cart
+const KONG_GATEWAY_URL = 'http://127.0.0.1:8000';
 const POS_DIRECT_URL = 'http://127.0.0.1:5000';
-const KONG_GATEWAY_URL = 'http://127.0.0.1:8000/api';
 
 interface JwtPayload {
   sub?: string;
@@ -56,21 +56,36 @@ export default function AbrirTurnoPage() {
 
   const userInfo = parseJwt(token);
 
-  // Helper para realizar peticiones intentando Kong o directo a MS-5
+  // Helper para realizar peticiones hacia MS-5 POS (directo en puerto 5000 o vía gateway)
   const callPosApi = useCallback(
     async (path: string, method: 'GET' | 'POST', data?: unknown) => {
       const headers = { Authorization: `Bearer ${token}` };
+      const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+      const apiPath = normalizedPath.startsWith('/api') ? normalizedPath : `/api${normalizedPath}`;
+      const directPath = normalizedPath.startsWith('/api') ? normalizedPath.replace(/^\/api/, '') : normalizedPath;
+
+      // Intentar primero directo al microservicio MS-5 POS (puerto 5000 en dev local)
       try {
-        const url = `${POS_DIRECT_URL}${path}`;
-        return await axios({ method, url, data, headers });
+        const directUrl = `${POS_DIRECT_URL}${apiPath}`;
+        return await axios({ method, url: directUrl, data, headers });
       } catch (err) {
         const axiosErr = err as AxiosError;
-        if (axiosErr.request && !axiosErr.response) {
+        // Si da 404 o error de conexión, intentar sin prefijo /api o a través de Kong Gateway
+        if ((axiosErr.request && !axiosErr.response) || axiosErr.response?.status === 404) {
           try {
-            const kongUrl = `${KONG_GATEWAY_URL}${path}`;
-            return await axios({ method, url: kongUrl, data, headers });
-          } catch {
-            throw axiosErr;
+            const fallbackDirect = `${POS_DIRECT_URL}${directPath}`;
+            return await axios({ method, url: fallbackDirect, data, headers });
+          } catch (innerErr) {
+            const innerAxios = innerErr as AxiosError;
+            if (innerAxios.request && !innerAxios.response) {
+              try {
+                const kongUrl = `${KONG_GATEWAY_URL}${apiPath}`;
+                return await axios({ method, url: kongUrl, data, headers });
+              } catch {
+                throw innerAxios.response ? innerAxios : axiosErr;
+              }
+            }
+            throw innerAxios;
           }
         }
         throw axiosErr;
@@ -86,7 +101,7 @@ export default function AbrirTurnoPage() {
     async function checkTurnoActivo() {
       if (!token) return;
       try {
-        const response = await callPosApi('/turnos/activo', 'GET');
+        const response = await callPosApi('/api/turnos/activo', 'GET');
         if (isMounted && response?.data) {
           setTurnoActivo(response.data as TurnoActivoData);
         }
@@ -124,21 +139,27 @@ export default function AbrirTurnoPage() {
           ? userInfo.sucursal_id
           : '00000000-0000-0000-0000-000000000001';
 
-      await callPosApi('/turnos/abrir', 'POST', {
+      await callPosApi('/api/turnos/abrir', 'POST', {
         sucursal_id: sucursalId,
         monto_fondo_inicial: montoNum,
       });
 
-      setSuccessMsg('¡Turno de caja abierto exitosamente! Redirigiendo al Punto de Venta...');
+      const confirmMsg = '¡Turno de caja abierto exitosamente!';
+      setSuccessMsg(`${confirmMsg} Redirigiendo al Punto de Venta...`);
+
       setTimeout(() => {
-        navigate('/pos');
-      }, 1200);
+        navigate('/pos', {
+          state: {
+            mensajeConfirmacion: confirmMsg,
+          },
+        });
+      }, 800);
     } catch (err) {
       console.error('Error al abrir turno:', err);
       const axiosErr = err as AxiosError<{ error?: string }>;
       if (axiosErr.response) {
         if (axiosErr.response.status === 409) {
-          setError('El cajero ya tiene un turno activo abierto. No es necesario abrir otro.');
+          setError('Ya tienes un turno abierto');
         } else if (axiosErr.response.data?.error) {
           setError(axiosErr.response.data.error);
         } else if (typeof axiosErr.response.data === 'string') {
