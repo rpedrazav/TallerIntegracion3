@@ -5,7 +5,7 @@ titulo: Estado Real de Implementación — GlobalMart OS
 estado: vigente
 fuentes: [docs/context/_reports/inventario.md, src/, git log, docs/context/_reports/preguntas-abiertas.md]
 verificado_contra_codigo: true
-ultima_revision: 2026-10-02
+ultima_revision: 2026-10-03
 depende_de: []
 publica: []
 consume: []
@@ -103,6 +103,7 @@ reglas: []
 - `KafkaConsumerService` — consume `sale.completed`, descuenta stock con idempotencia [IMPLEMENTADO]
 - Tabla `EventosKafkaProcesados` — garantiza exactly-once processing [IMPLEMENTADO]
 - TenantMiddleware [IMPLEMENTADO]
+- Test de integración — publica `sale.completed`, espera el procesamiento asíncrono y verifica el descuento mediante `GET /stock/{productId}` [IMPLEMENTADO]
 
 **No implementado (PLANIFICADO):**
 - `POST /stock/ajuste` — ajuste manual

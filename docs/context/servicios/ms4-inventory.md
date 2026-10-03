@@ -5,7 +5,7 @@ titulo: MS-4 · Warehouse & Inventory Service
 estado: parcial
 fuentes: [src/WarehouseInventoryService/]
 verificado_contra_codigo: true
-ultima_revision: 2026-09-28
+ultima_revision: 2026-10-03
 depende_de: [ms5-pos]
 publica: []
 consume: [sale.completed]
@@ -76,7 +76,9 @@ Flujo por mensaje:
 IMPORTANTE: Si ProcesarEvento lanza excepción → log Error + commit igualmente (no retry infinito)
 ```
 
-**Problema crítico:** MS-5 **NO produce** `sale.completed`. El consumer está listo pero sin eventos entrantes.
+## Test de integración
+
+El flujo de integración publica un evento `sale.completed` real en Kafka, prepara stock y lote en `WarehouseDbContext`, y consulta `GET /stock/{productId}?sucursal_id=` con polling hasta verificar que `cantidad_actual` disminuye según la cantidad vendida.
 
 ## Modelo de datos
 

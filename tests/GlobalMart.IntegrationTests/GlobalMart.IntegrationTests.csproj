@@ -31,6 +31,9 @@
     <ProjectReference Include="..\..\src\POSCartService\POSCartService.csproj">
       <Aliases>POSCartServiceAlias</Aliases>
     </ProjectReference>
+    <ProjectReference Include="..\..\src\WarehouseInventoryService\WarehouseInventoryService.csproj">
+      <Aliases>WarehouseInventoryServiceAlias</Aliases>
+    </ProjectReference>
   </ItemGroup>
 
   <ItemGroup>
@@ -45,6 +48,7 @@
       <ServiceRuntimeFiles Include="..\..\src\TenantIdentityService\bin\Debug\net8.0\**\*.*" Exclude="..\..\src\TenantIdentityService\bin\Debug\net8.0\*.deps.json;..\..\src\TenantIdentityService\bin\Debug\net8.0\*.runtimeconfig.json" />
       <ServiceRuntimeFiles Include="..\..\src\CatalogPricingService\bin\Debug\net8.0\**\*.*" Exclude="..\..\src\CatalogPricingService\bin\Debug\net8.0\*.deps.json;..\..\src\CatalogPricingService\bin\Debug\net8.0\*.runtimeconfig.json" />
       <ServiceRuntimeFiles Include="..\..\src\POSCartService\bin\Debug\net8.0\**\*.*" Exclude="..\..\src\POSCartService\bin\Debug\net8.0\*.deps.json;..\..\src\POSCartService\bin\Debug\net8.0\*.runtimeconfig.json" />
+      <ServiceRuntimeFiles Include="..\..\src\WarehouseInventoryService\bin\Debug\net8.0\**\*.*" Exclude="..\..\src\WarehouseInventoryService\bin\Debug\net8.0\*.deps.json;..\..\src\WarehouseInventoryService\bin\Debug\net8.0\*.runtimeconfig.json" />
       <ServiceRuntimeFiles Include="$(NuGetPackageRoot)microsoft.aspnetcore.mvc.testing\8.0.11\**\*.*" />
       <ServiceRuntimeFiles Include="$(NuGetPackageRoot)microsoft.aspnetcore.testhost\8.0.11\**\*.*" />
     </ItemGroup>

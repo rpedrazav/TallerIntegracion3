@@ -127,6 +127,8 @@ await _kafkaProducer.PublicarSaleCompletedAsync(evento);
 
 La publicación de `sale.completed` está cubierta mediante un test de integración que usa el `KafkaProducerService` real de MS-5 y un `ConsumerBuilder<string, string>` conectado al broker local. El payload consumido se deserializa y valida contra la venta cobrada, incluyendo `VentaId`, `TenantId` y `Total`.
 
+El consumo de `sale.completed` por MS-4 también está cubierto mediante un test de integración que publica un evento real, espera el procesamiento asíncrono y verifica el descuento de stock a través de la API de inventario.
+
 ## Conexiones
 - Produce → [[ms5-pos]] [IMPLEMENTADO]
 - Consume → [[ms4-inventory]] [IMPLEMENTADO]

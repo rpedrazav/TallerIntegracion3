@@ -52,3 +52,5 @@ app.UseMiddleware<WarehouseInventoryService.Middleware.TenantMiddleware>();
 app.MapControllers();
 
 app.Run();
+
+public partial class Program { }
