@@ -18,6 +18,8 @@ reglas: []
 **Contexto del proyecto:** Proyecto académico de Ingeniería Civil Informática, Universidad Católica de Temuco (UCT). Las integraciones externas que no puedan obtenerse legalmente (certificados digitales reales del SII, terminales de pago bancario físicos) serán simuladas.  
 **Sprint en curso:** **Sprint 1** (penúltimo día de la Semana 3 de un ciclo de 4 semanas, de miércoles a miércoles).
 
+**Revisión del DoD:** completada. Ver [dod-sprint1-revision.md](dod-sprint1-revision.md) para el veredicto de los siete criterios y sus hallazgos técnicos.
+
 ---
 
 ## Matriz de Estado por Microservicio
