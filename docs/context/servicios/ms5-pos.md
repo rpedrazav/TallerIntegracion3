@@ -197,7 +197,8 @@ if (_kafkaProducer is not null)
 
 - `TurnoIntegrationTests`: abre un turno con JWT de cajero y verifica que se persiste en estado `ABIERTO`.
 - `VentaIntegrationTests`: crea una venta con el primer producto, agrega el segundo y verifica subtotal, IVA y total.
-- TI3-224 usa handlers HTTP en memoria para devolver respuestas deterministas de `CatalogClient` (MS-3) y `TaxClient` (MS-2), sin levantar esos microservicios.
+- `CobroIntegrationTests`: cobra una venta en efectivo con un monto superior al total y verifica el vuelto, el pago y el estado `COMPLETADA`.
+- Los flujos de venta y cobro usan handlers HTTP en memoria para devolver respuestas deterministas de `CatalogClient` (MS-3) y `TaxClient` (MS-2), sin levantar esos microservicios.
 
 ## Casos de uso cubiertos
 

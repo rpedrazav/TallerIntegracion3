@@ -23,14 +23,14 @@ reglas: [RNF-07]
 | `POSCartService.ManualTest` | Console app (smoke test) | [IMPLEMENTADO] |
 | `TaxComplianceService.ManualTest` | Console app (smoke test) | [IMPLEMENTADO] |
 | `CatalogPricingService/tests/tests_manual_producto.http` | HTTP manual test | [IMPLEMENTADO] |
-| `GlobalMart.IntegrationTests` | xUnit + WebApplicationFactory | [IMPLEMENTADO — TI3-223 y TI3-224] |
+| `GlobalMart.IntegrationTests` | xUnit + WebApplicationFactory | [IMPLEMENTADO] |
 
 Los smoke tests existentes son console apps que hacen requests HTTP y muestran resultados en consola. `GlobalMart.IntegrationTests` agrega assertions xUnit reales sobre los flujos de MS-1 y MS-5.
 
 ## Objetivo de tests (RNF-07)
 
 - ≥ 80% de cobertura en lógica crítica de MS-1, MS-2, MS-5 → **NO CUMPLIDO**
-- Tests de integración: apertura de turno y flujo turno → venta → ítems → IVA → **PARCIALMENTE IMPLEMENTADO (TI3-223, TI3-224)**
+- Tests de integración: apertura de turno y flujo turno → venta → ítems → IVA → **PARCIALMENTE IMPLEMENTADO**
 - Tests E2E Playwright: **SIN IMPLEMENTAR**
 
 ## Stack de testing configurado
@@ -41,7 +41,7 @@ En las dependencias del proyecto:
 - **Moq** — mocking
 - **WebApplicationFactory** — tests de integración ASP.NET Core
 
-TI3-224 usa handlers HTTP en memoria para simular respuestas deterministas de MS-2 y MS-3 mientras ejecuta el pipeline real de MS-5.
+Los flujos de venta y cobro usan handlers HTTP en memoria para simular respuestas deterministas de MS-2 y MS-3 mientras ejecutan el pipeline real de MS-5. El cobro aísla además Kafka con un productor no-op en el host de prueba.
 
 ## Cómo ejecutar los smoke tests
 

@@ -130,6 +130,7 @@ reglas: []
 - KafkaProducerService — publica eventos Kafka con key=tenant_id y event_id único [IMPLEMENTADO]
 - test de integración abre turno con JWT de cajero y verifica persistencia en estado `ABIERTO` [IMPLEMENTADO]
 - test de integración crea venta, agrega dos productos y verifica subtotal, IVA y total con handlers simulados para MS-2/MS-3 [IMPLEMENTADO]
+- test de integración cobra una venta en efectivo, calcula vuelto y verifica persistencia de venta completada y pago [IMPLEMENTADO]
 
 **No implementado / CRÍTICO:**
 - Endpoint HTTP `POST /ventas/{id}/anular` aún no está expuesto en `VentasController.cs`
