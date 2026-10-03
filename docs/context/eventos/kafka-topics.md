@@ -5,7 +5,7 @@ titulo: Kafka Topics — Diseño vs Implementación Real
 estado: parcial
 fuentes: [src/POSCartService/Services/KafkaProducerService.cs, src/POSCartService/Messaging/SaleCompletedEvent.cs, src/WarehouseInventoryService/Messaging/KafkaConsumerService.cs, Docker/docker-compose.yml, Docker/scripts/init-kafka-topics.sh]
 verificado_contra_codigo: true
-ultima_revision: 2026-10-01
+ultima_revision: 2026-10-02
 depende_de: [ms5-pos, ms4-inventory]
 publica: [sale.completed]
 consume: [sale.completed]
@@ -123,6 +123,10 @@ var evento = new SaleCompletedEvent
 await _kafkaProducer.PublicarSaleCompletedAsync(evento);
 ```
 
+## Cobertura de integración
+
+La publicación de `sale.completed` está cubierta mediante un test de integración que usa el `KafkaProducerService` real de MS-5 y un `ConsumerBuilder<string, string>` conectado al broker local. El payload consumido se deserializa y valida contra la venta cobrada, incluyendo `VentaId`, `TenantId` y `Total`.
+
 ## Conexiones
 - Produce → [[ms5-pos]] [IMPLEMENTADO]
 - Consume → [[ms4-inventory]] [IMPLEMENTADO]
@@ -134,3 +138,4 @@ await _kafkaProducer.PublicarSaleCompletedAsync(evento);
 - `src/WarehouseInventoryService/Messaging/SaleCompletedEvent.cs`
 - `Docker/docker-compose.yml` (kafka-init-topics)
 - `Docker/scripts/init-kafka-topics.sh`
+- `tests/GlobalMart.IntegrationTests/KafkaPublishIntegrationTests.cs`

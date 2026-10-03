@@ -5,7 +5,7 @@ titulo: Estrategia de Testing — GlobalMart OS
 estado: parcial
 fuentes: [src/POSCartService/tests/, src/TaxComplianceService/tests/, .github/workflows/ci.yml]
 verificado_contra_codigo: true
-ultima_revision: 2026-10-01
+ultima_revision: 2026-10-02
 depende_de: [stack]
 publica: []
 consume: []
@@ -41,7 +41,7 @@ En las dependencias del proyecto:
 - **Moq** — mocking
 - **WebApplicationFactory** — tests de integración ASP.NET Core
 
-Los flujos de venta y cobro usan handlers HTTP en memoria para simular respuestas deterministas de MS-2 y MS-3 mientras ejecutan el pipeline real de MS-5. El cobro aísla además Kafka con un productor no-op en el host de prueba.
+Los flujos de venta y cobro usan handlers HTTP en memoria para simular respuestas deterministas de MS-2 y MS-3 mientras ejecutan el pipeline real de MS-5. La publicación de `sale.completed` cuenta además con una prueba de integración que usa el productor y consumidor reales de Kafka.
 
 ## Cómo ejecutar los smoke tests
 

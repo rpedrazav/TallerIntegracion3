@@ -198,6 +198,7 @@ if (_kafkaProducer is not null)
 - `TurnoIntegrationTests`: abre un turno con JWT de cajero y verifica que se persiste en estado `ABIERTO`.
 - `VentaIntegrationTests`: crea una venta con el primer producto, agrega el segundo y verifica subtotal, IVA y total.
 - `CobroIntegrationTests`: cobra una venta en efectivo con un monto superior al total y verifica el vuelto, el pago y el estado `COMPLETADA`.
+- `KafkaPublishIntegrationTests`: consume desde `sale.completed` y verifica el payload publicado por el productor real de MS-5.
 - Los flujos de venta y cobro usan handlers HTTP en memoria para devolver respuestas deterministas de `CatalogClient` (MS-3) y `TaxClient` (MS-2), sin levantar esos microservicios.
 
 ## Casos de uso cubiertos
@@ -255,3 +256,4 @@ if (_kafkaProducer is not null)
 - `src/POSCartService/Services/TurnoService.cs`
 - `tests/GlobalMart.IntegrationTests/TurnoIntegrationTests.cs`
 - `tests/GlobalMart.IntegrationTests/VentaIntegrationTests.cs`
+- `tests/GlobalMart.IntegrationTests/KafkaPublishIntegrationTests.cs`
