@@ -185,6 +185,7 @@ reglas: []
 |----------|--------|-----------------|
 | Login | [IMPLEMENTADO] | Llama directo a `http://127.0.0.1:5124` |
 | Abrir Turno (`AbrirTurnoPage`) | [IMPLEMENTADO] | Llama a MS-5 `/api/turnos/activo` y `POST /api/turnos/abrir` (redirección con confirmación a POS y manejo 409) |
+| Cerrar Turno (`CerrarTurnoPage`) | [IMPLEMENTADO] | Tabla de denominaciones (billetes/monedas) con conteo y subtotales automáticos. Llama a MS-5 `POST /api/turnos/cuadre` para obtener efectivo esperado. Muestra resultado: efectivo esperado vs declarado, diferencia en **verde** si es $0, en **rojo** si hay discrepancia (sobrante o faltante). Botón `POST /api/turnos/cerrar` con confirmación. |
 | POS/Carrito | [PARCIAL] | UI con banner de confirmación de apertura de turno y datos mockeados; pendiente llamada a APIs de ventas |
 | Admin | [PLACEHOLDER] | Componente básico (`<h2>Administración</h2>`) para acceso directo |
 

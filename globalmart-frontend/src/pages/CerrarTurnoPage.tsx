@@ -88,8 +88,10 @@ export default function CerrarTurnoPage() {
   const [checkingTurno, setCheckingTurno] = useState<boolean>(true);
   const [noTurnoOpen, setNoTurnoOpen] = useState<boolean>(false);
 
+  const [efectivoEsperado, setEfectivoEsperado] = useState<number | null>(null);
   const [cuadreResult, setCuadreResult] = useState<CuadreResult | null>(null);
   const [isCalculatingCuadre, setIsCalculatingCuadre] = useState<boolean>(false);
+  const [cuadreSynced, setCuadreSynced] = useState<boolean>(false);
 
   const [isClosingTurno, setIsClosingTurno] = useState<boolean>(false);
   const [turnoClosedSuccess, setTurnoClosedSuccess] = useState<boolean>(false);
@@ -133,7 +135,7 @@ export default function CerrarTurnoPage() {
     [token]
   );
 
-  // Verificar turno activo al cargar la pantalla
+  // Verificar turno activo al cargar la pantalla y obtener efectivo esperado inicial
   useEffect(() => {
     let isMounted = true;
 
@@ -147,8 +149,24 @@ export default function CerrarTurnoPage() {
         const res = await callPosApi('/api/turnos/activo', 'GET');
         if (isMounted) {
           if (res?.data) {
-            setTurnoActivo(res.data as TurnoActivoData);
+            const activeTurno = res.data as TurnoActivoData;
+            setTurnoActivo(activeTurno);
             setNoTurnoOpen(false);
+
+            // Llamar a POST /api/turnos/cuadre para obtener el efectivo esperado de ventas del turno
+            try {
+              const cuadreRes = await callPosApi('/api/turnos/cuadre', 'POST', {
+                monto_declarado: 0,
+              });
+              if (isMounted && cuadreRes?.data) {
+                const data = cuadreRes.data as CuadreResult;
+                setEfectivoEsperado(data.efectivo_esperado);
+                setCuadreResult(data);
+                setCuadreSynced(true);
+              }
+            } catch (cuadreErr) {
+              console.warn('No se pudo precargar el efectivo esperado:', cuadreErr);
+            }
           } else {
             setNoTurnoOpen(true);
           }
@@ -180,7 +198,7 @@ export default function CerrarTurnoPage() {
   // Manejo de cambio en el input de cantidad
   const handleCantidadChange = (id: string, valueStr: string) => {
     setErrorMsg('');
-    setCuadreResult(null); // Invalidar resultado de cuadre previo al modificar valores
+    setCuadreSynced(false);
     const parsed = parseInt(valueStr, 10);
     const validQty = isNaN(parsed) || parsed < 0 ? 0 : parsed;
 
@@ -193,7 +211,7 @@ export default function CerrarTurnoPage() {
   // Ajuste rápido con botones +/-
   const handleStepChange = (id: string, delta: number) => {
     setErrorMsg('');
-    setCuadreResult(null);
+    setCuadreSynced(false);
     setCantidades((prev) => {
       const current = prev[id] || 0;
       const next = Math.max(0, current + delta);
@@ -208,11 +226,11 @@ export default function CerrarTurnoPage() {
       reset[d.id] = 0;
     });
     setCantidades(reset);
-    setCuadreResult(null);
+    setCuadreSynced(false);
     setErrorMsg('');
   };
 
-  // Cálculos de subtotales y totales
+  // Cálculos automáticos de subtotales y total declarado sumando (denominacion × cantidad)
   const { totalBilletes, totalMonedas, totalDeclarado } = useMemo(() => {
     let billetes = 0;
     let monedas = 0;
@@ -234,7 +252,13 @@ export default function CerrarTurnoPage() {
     };
   }, [cantidades]);
 
-  // Ejecutar cálculo de cuadre de caja contra MS-5 (POST /api/turnos/cuadre)
+  // Diferencia calculada dinámicamente en tiempo real
+  const diferenciaCalculada = useMemo(() => {
+    if (efectivoEsperado === null) return null;
+    return Math.round((totalDeclarado - efectivoEsperado) * 100) / 100;
+  }, [totalDeclarado, efectivoEsperado]);
+
+  // Ejecutar llamada a POST /api/turnos/cuadre para sincronizar con MS-5
   const handleCalcularCuadre = async () => {
     setErrorMsg('');
     setIsCalculatingCuadre(true);
@@ -245,7 +269,10 @@ export default function CerrarTurnoPage() {
       });
 
       if (res?.data) {
-        setCuadreResult(res.data as CuadreResult);
+        const data = res.data as CuadreResult;
+        setCuadreResult(data);
+        setEfectivoEsperado(data.efectivo_esperado);
+        setCuadreSynced(true);
       }
     } catch (err) {
       console.error('Error al calcular cuadre:', err);
@@ -757,105 +784,124 @@ export default function CerrarTurnoPage() {
                   </button>
                 </div>
 
-                {/* Resultado del Cuadre */}
-                {cuadreResult && (
-                  <div
-                    style={{
-                      marginTop: '1rem',
-                      display: 'grid',
-                      gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-                      gap: '1rem',
-                    }}
-                  >
-                    {/* Efectivo Esperado */}
+                {/* Resultado del Cuadre (calculado automáticamente y verificado con MS-5) */}
+                {efectivoEsperado !== null && (
+                  <div style={{ marginTop: '1rem' }}>
                     <div
                       style={{
-                        background: '#ffffff',
-                        border: '1px solid #e2e8f0',
-                        borderRadius: '8px',
-                        padding: '1rem',
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                        gap: '1rem',
                       }}
                     >
-                      <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: '#64748b', fontWeight: 600 }}>
-                        Efectivo Esperado (Ventas)
-                      </div>
-                      <div style={{ fontSize: '1.35rem', fontWeight: 800, color: '#1e293b', marginTop: '0.25rem' }}>
-                        ${cuadreResult.efectivo_esperado.toLocaleString('es-CL')}
-                      </div>
-                    </div>
-
-                    {/* Efectivo Declarado */}
-                    <div
-                      style={{
-                        background: '#ffffff',
-                        border: '1px solid #e2e8f0',
-                        borderRadius: '8px',
-                        padding: '1rem',
-                      }}
-                    >
-                      <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: '#64748b', fontWeight: 600 }}>
-                        Efectivo Declarado (Gaveta)
-                      </div>
-                      <div style={{ fontSize: '1.35rem', fontWeight: 800, color: '#0284c7', marginTop: '0.25rem' }}>
-                        ${cuadreResult.monto_declarado.toLocaleString('es-CL')}
-                      </div>
-                    </div>
-
-                    {/* Diferencia */}
-                    <div
-                      style={{
-                        background:
-                          cuadreResult.diferencia === 0
-                            ? '#f0fdf4'
-                            : cuadreResult.diferencia > 0
-                            ? '#eff6ff'
-                            : '#fef2f2',
-                        border: `1px solid ${
-                          cuadreResult.diferencia === 0
-                            ? '#86efac'
-                            : cuadreResult.diferencia > 0
-                            ? '#bfdbfe'
-                            : '#fca5a5'
-                        }`,
-                        borderRadius: '8px',
-                        padding: '1rem',
-                      }}
-                    >
+                      {/* Efectivo Esperado */}
                       <div
                         style={{
-                          fontSize: '0.75rem',
-                          textTransform: 'uppercase',
-                          fontWeight: 700,
-                          color:
-                            cuadreResult.diferencia === 0
-                              ? '#15803d'
-                              : cuadreResult.diferencia > 0
-                              ? '#1d4ed8'
-                              : '#b91c1c',
+                          background: '#ffffff',
+                          border: '1px solid #e2e8f0',
+                          borderRadius: '8px',
+                          padding: '1rem',
                         }}
                       >
-                        {cuadreResult.diferencia === 0
-                          ? 'Diferencia (Cuadre Exacto)'
-                          : cuadreResult.diferencia > 0
-                          ? 'Diferencia (Sobrante)'
-                          : 'Diferencia (Faltante)'}
+                        <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: '#64748b', fontWeight: 600 }}>
+                          Efectivo Esperado (Ventas)
+                        </div>
+                        <div style={{ fontSize: '1.35rem', fontWeight: 800, color: '#1e293b', marginTop: '0.25rem' }}>
+                          ${efectivoEsperado.toLocaleString('es-CL')}
+                        </div>
+                        <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '0.25rem' }}>
+                          Vía MS-5 (pagos efectivo completados)
+                        </div>
                       </div>
+
+                      {/* Efectivo Declarado */}
                       <div
                         style={{
-                          fontSize: '1.35rem',
-                          fontWeight: 800,
-                          marginTop: '0.25rem',
-                          color:
-                            cuadreResult.diferencia === 0
-                              ? '#15803d'
-                              : cuadreResult.diferencia > 0
-                              ? '#1d4ed8'
-                              : '#b91c1c',
+                          background: '#ffffff',
+                          border: '1px solid #e2e8f0',
+                          borderRadius: '8px',
+                          padding: '1rem',
                         }}
                       >
-                        {cuadreResult.diferencia > 0 ? '+' : ''}$
-                        {cuadreResult.diferencia.toLocaleString('es-CL')}
-                      </div>
+                        <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: '#64748b', fontWeight: 600 }}>
+                          Efectivo Declarado (Gaveta)
+                        </div>
+                        <div style={{ fontSize: '1.35rem', fontWeight: 800, color: '#0284c7', marginTop: '0.25rem' }}>
+                          ${totalDeclarado.toLocaleString('es-CL')}
+                        </div>
+                        <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '0.25rem' }}>
+                          Suma automática de billetes + monedas
+                        </div>
+                       </div>
+                       {/* Diferencia */}
+                       {(() => {
+                        const diff = diferenciaCalculada ?? 0;
+                        const isExact = diff === 0;
+                        const isSobrante = diff > 0;
+                        // Cualquier discrepancia (sobrante o faltante) se muestra en rojo
+                        const hasDiscrepancy = !isExact;
+                        return (
+                          <div
+                            style={{
+                              background: isExact ? '#f0fdf4' : '#fef2f2',
+                              border: `1px solid ${isExact ? '#86efac' : '#fca5a5'}`,
+                              borderRadius: '8px',
+                              padding: '1rem',
+                            }}
+                          >
+                            <div
+                              style={{
+                                fontSize: '0.75rem',
+                                textTransform: 'uppercase',
+                                fontWeight: 700,
+                                color: isExact ? '#15803d' : '#b91c1c',
+                              }}
+                            >
+                              {isExact
+                                ? '✅ Diferencia (Cuadre Exacto)'
+                                : isSobrante
+                                ? '⚠️ Diferencia (Sobrante)'
+                                : '⚠️ Diferencia (Faltante)'}
+                            </div>
+                            <div
+                              style={{
+                                fontSize: '1.5rem',
+                                fontWeight: 800,
+                                marginTop: '0.25rem',
+                                color: isExact ? '#15803d' : '#dc2626',
+                              }}
+                            >
+                              {isSobrante ? '+' : ''}${diff.toLocaleString('es-CL')}
+                            </div>
+                            <div style={{ fontSize: '0.75rem', marginTop: '0.25rem', color: isExact ? '#15803d' : '#b91c1c' }}>
+                              {isExact
+                                ? 'La gaveta coincide exactamente con las ventas registradas'
+                                : isSobrante
+                                ? 'Hay más efectivo del esperado — revisar conteo'
+                                : 'Falta efectivo respecto a las ventas — revisar conteo'}
+                            </div>
+                            {hasDiscrepancy && (
+                              <div style={{ marginTop: '0.5rem', padding: '0.4rem 0.6rem', background: '#fee2e2', borderRadius: '6px', fontSize: '0.75rem', color: '#991b1b', fontWeight: 600 }}>
+                                Discrepancia detectada: se recomienda revisar el conteo antes de cerrar el turno.
+                              </div>
+                            )}
+                          </div>
+                        );
+                       })()}
+                    </div>
+
+                    {/* Estado de sincronización */}
+                    <div style={{ marginTop: '0.75rem', fontSize: '0.8rem', color: '#64748b', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      {cuadreSynced ? (
+                        <span style={{ color: '#16a34a', fontWeight: 600 }}>
+                          ✓ Cuadre verificado y sincronizado con el microservicio POS (MS-5)
+                          {cuadreResult?.turno_id ? ` (Turno: ${cuadreResult.turno_id.slice(0, 8)}...)` : ''}.
+                        </span>
+                      ) : (
+                        <span>
+                          ℹ️ Conteo actualizado localmente. Puedes presionar <strong>&ldquo;Calcular Cuadre&rdquo;</strong> para re-validar con el servidor.
+                        </span>
+                      )}
                     </div>
                   </div>
                 )}

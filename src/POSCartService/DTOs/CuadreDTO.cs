@@ -14,7 +14,7 @@ public sealed record CuadreRequest
     /// </summary>
     [JsonPropertyName("monto_declarado")]
     [Required]
-    [Range(typeof(decimal), "0", "999999999.99", ErrorMessage = "monto_declarado no puede ser negativo.")]
+    [Range(0.0, 999999999999.0, ErrorMessage = "monto_declarado no puede ser negativo.")]
     public decimal MontoDeclarado { get; init; }
 }
 

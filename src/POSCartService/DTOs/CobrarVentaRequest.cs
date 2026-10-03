@@ -15,6 +15,6 @@ public sealed record CobrarVentaRequest
     /// </summary>
     [JsonPropertyName("monto_recibido")]
     [Required]
-    [Range(typeof(decimal), "0.01", "999999999.99", ErrorMessage = "monto_recibido debe ser mayor a 0.")]
+    [Range(0.01, 999999999999.0, ErrorMessage = "monto_recibido debe ser mayor a 0.")]
     public decimal MontoRecibido { get; init; }
 }

@@ -118,6 +118,35 @@ public class TurnoIntegrationTests : IClassFixture<Ms5WebApplicationFactory>
         Assert.Equal(HttpStatusCode.Conflict, segundoResponse.StatusCode);
     }
 
+    [Fact]
+    public async Task Cuadre_TurnoAbiertoSinVentas_RetornaOkConEfectivoEsperadoCero()
+    {
+        var tenantId = Guid.NewGuid();
+        var cajeroId = Guid.NewGuid();
+        var sucursalId = Guid.NewGuid();
+
+        var configuration = _factory.Services.GetRequiredService<IConfiguration>();
+        var token = CreateCajeroToken(configuration, tenantId, cajeroId);
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        var requestAbrir = new
+        {
+            sucursal_id = sucursalId,
+            monto_fondo_inicial = 20000m
+        };
+
+        var responseAbrir = await _client.PostAsJsonAsync("/api/turnos/abrir", requestAbrir);
+        Assert.Equal(HttpStatusCode.OK, responseAbrir.StatusCode);
+
+        var requestCuadre = new
+        {
+            monto_declarado = 20000m
+        };
+
+        var responseCuadre = await _client.PostAsJsonAsync("/api/turnos/cuadre", requestCuadre);
+        Assert.Equal(HttpStatusCode.OK, responseCuadre.StatusCode);
+    }
+
     private static string CreateCajeroToken(IConfiguration configuration, Guid tenantId, Guid cajeroId)
     {
         var key = configuration["Jwt:Key"]
