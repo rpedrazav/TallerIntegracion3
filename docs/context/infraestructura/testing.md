@@ -41,7 +41,7 @@ En las dependencias del proyecto:
 - **Moq** — mocking
 - **WebApplicationFactory** — tests de integración ASP.NET Core
 
-Los flujos de venta y cobro usan handlers HTTP en memoria para simular respuestas deterministas de MS-2 y MS-3 mientras ejecutan el pipeline real de MS-5. La publicación de `sale.completed` cuenta además con pruebas de integración que cubren productor real, consumidor real de MS-4 y descuento de stock verificado por API mediante polling.
+Los flujos de venta y cobro usan handlers HTTP en memoria para simular respuestas deterministas de MS-2 y MS-3 mientras ejecutan el pipeline real de MS-5. La publicación de `sale.completed` cuenta además con pruebas de integración que cubren productor real, consumidor real de MS-4 y descuento de stock verificado por API mediante polling. El cuadre de caja también se verifica mediante HTTP con una venta y pago efectivo persistidos.
 
 ## Cómo ejecutar los smoke tests
 

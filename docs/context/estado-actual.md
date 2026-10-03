@@ -133,6 +133,7 @@ reglas: []
 - test de integración crea venta, agrega dos productos y verifica subtotal, IVA y total con handlers simulados para MS-2/MS-3 [IMPLEMENTADO]
 - test de integración cobra una venta en efectivo, calcula vuelto y verifica persistencia de venta completada y pago [IMPLEMENTADO]
 - test de integración consume `sale.completed` desde Kafka y verifica `VentaId`, `TenantId` y `Total` del payload [IMPLEMENTADO]
+- test de integración abre turno, registra venta y pago efectivo, y verifica el cuadre con diferencia calculada [IMPLEMENTADO]
 
 **No implementado / CRÍTICO:**
 - Endpoint HTTP `POST /ventas/{id}/anular` aún no está expuesto en `VentasController.cs`

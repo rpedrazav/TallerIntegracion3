@@ -199,6 +199,7 @@ if (_kafkaProducer is not null)
 - `VentaIntegrationTests`: crea una venta con el primer producto, agrega el segundo y verifica subtotal, IVA y total.
 - `CobroIntegrationTests`: cobra una venta en efectivo con un monto superior al total y verifica el vuelto, el pago y el estado `COMPLETADA`.
 - `KafkaPublishIntegrationTests`: consume desde `sale.completed` y verifica el payload publicado por el productor real de MS-5.
+- `CierreTurnoIntegrationTests`: prepara una venta completada en efectivo y verifica el cuadre, el efectivo esperado, el monto declarado y la diferencia.
 - Los flujos de venta y cobro usan handlers HTTP en memoria para devolver respuestas deterministas de `CatalogClient` (MS-3) y `TaxClient` (MS-2), sin levantar esos microservicios.
 
 ## Casos de uso cubiertos
