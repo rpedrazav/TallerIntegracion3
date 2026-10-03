@@ -5,7 +5,7 @@ titulo: Pantallas del Frontend — GlobalMart OS
 estado: parcial
 fuentes: [globalmart-frontend/src/pages/, globalmart-frontend/src/components/]
 verificado_contra_codigo: true
-ultima_revision: 2026-10-01
+ultima_revision: 2026-10-02
 depende_de: [estructura, ms1-identity, ms5-pos]
 publica: []
 consume: []
@@ -65,9 +65,10 @@ NO abre turno antes de vender
 //   - Accesos directos para montos frecuentes ($0, $20.000, $50.000, $100.000)
 //   - Botón "Abrir Turno" con estado de carga y validaciones
 // Integración API:
-//   - GET /turnos/activo: detecta si el cajero ya tiene un turno abierto
-//   - POST /turnos/abrir: registra apertura con sucursal_id y monto_fondo_inicial
-//   - Redirección automática a /pos tras apertura exitosa
+//   - GET /api/turnos/activo: detecta si el cajero ya tiene un turno abierto
+//   - POST /api/turnos/abrir: registra apertura con sucursal_id y monto_fondo_inicial
+//   - Error 409 Conflict: muestra "Ya tienes un turno abierto"
+//   - Redirección automática a /pos con mensaje de confirmación en location.state
 ```
 
 ## Admin.tsx [NO VERIFICADO]

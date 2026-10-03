@@ -69,6 +69,55 @@ public class TurnoIntegrationTests : IClassFixture<Ms5WebApplicationFactory>
         Assert.Equal(EstadoTurno.ABIERTO, turno.Estado);
     }
 
+    [Fact]
+    public async Task AbrirTurno_RutaApiTurnosAbrir_RetornaOk()
+    {
+        var tenantId = Guid.NewGuid();
+        var cajeroId = Guid.NewGuid();
+        var sucursalId = Guid.NewGuid();
+        const decimal montoFondoInicial = 20000m;
+
+        var configuration = _factory.Services.GetRequiredService<IConfiguration>();
+        var token = CreateCajeroToken(configuration, tenantId, cajeroId);
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        var request = new
+        {
+            sucursal_id = sucursalId,
+            monto_fondo_inicial = montoFondoInicial
+        };
+
+        var response = await _client.PostAsJsonAsync("/api/turnos/abrir", request);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task AbrirTurno_CuandoYaExisteTurnoAbierto_Retorna409Conflict()
+    {
+        var tenantId = Guid.NewGuid();
+        var cajeroId = Guid.NewGuid();
+        var sucursalId = Guid.NewGuid();
+
+        var configuration = _factory.Services.GetRequiredService<IConfiguration>();
+        var token = CreateCajeroToken(configuration, tenantId, cajeroId);
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        var request = new
+        {
+            sucursal_id = sucursalId,
+            monto_fondo_inicial = 15000m
+        };
+
+        // Primer intento: Exitoso
+        var primerResponse = await _client.PostAsJsonAsync("/api/turnos/abrir", request);
+        Assert.Equal(HttpStatusCode.OK, primerResponse.StatusCode);
+
+        // Segundo intento: Debe fallar con 409 Conflict (Turno ya abierto)
+        var segundoResponse = await _client.PostAsJsonAsync("/api/turnos/abrir", request);
+        Assert.Equal(HttpStatusCode.Conflict, segundoResponse.StatusCode);
+    }
+
     private static string CreateCajeroToken(IConfiguration configuration, Guid tenantId, Guid cajeroId)
     {
         var key = configuration["Jwt:Key"]

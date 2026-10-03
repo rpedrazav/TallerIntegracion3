@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useMemo } from 'react';
+import { useLocation } from 'react-router-dom';
 import BarcodeInput from '../components/pos/BarcodeInput';
 import CartItem from '../components/pos/CartItem';
 
@@ -9,7 +10,18 @@ export interface ProductItem {
   quantity: number;
 }
 
+interface PosLocationState {
+  mensajeConfirmacion?: string;
+  message?: string;
+}
+
 export default function Pos() {
+  const location = useLocation();
+  const locationState = location.state as PosLocationState | null;
+  const [mensajeConfirmacion, setMensajeConfirmacion] = useState<string | null>(
+    locationState?.mensajeConfirmacion || locationState?.message || null
+  );
+
   const [cartItems, setCartItems] = useState<ProductItem[]>([
     { id: '1', name: 'Coca Cola 2L', price: 2500, quantity: 2 },
     { id: '2', name: 'Pan de Molde Castaño', price: 1800, quantity: 1 }
@@ -59,10 +71,47 @@ export default function Pos() {
   const isCartEmpty = cartItems.length === 0;
 
   return (
-    <div style={{ display: 'flex', height: 'calc(100vh - 100px)', gap: '1rem' }}>
-      
-      {/* Columna Izquierda: Búsqueda y Escaneo */}
-      <div style={{ flex: '0 0 320px', display: 'flex', flexDirection: 'column', background: '#fff', padding: '1rem', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 100px)', gap: '1rem' }}>
+      {mensajeConfirmacion && (
+        <div
+          style={{
+            backgroundColor: '#dcfce7',
+            border: '1px solid #86efac',
+            color: '#15803d',
+            padding: '0.75rem 1rem',
+            borderRadius: '8px',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 600, fontSize: '0.925rem' }}>
+            <span>✅</span>
+            <span>{mensajeConfirmacion}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setMensajeConfirmacion(null)}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: '#15803d',
+              fontWeight: 'bold',
+              cursor: 'pointer',
+              fontSize: '1rem',
+              padding: '0.2rem 0.5rem',
+            }}
+            title="Cerrar mensaje"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
+      <div style={{ display: 'flex', flex: 1, gap: '1rem', minHeight: 0 }}>
+        {/* Columna Izquierda: Búsqueda y Escaneo */}
+        <div style={{ flex: '0 0 320px', display: 'flex', flexDirection: 'column', background: '#fff', padding: '1rem', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
         <h3 style={{ marginTop: 0, color: '#0ea5e9', fontSize: '1.25rem' }}>Buscar Producto</h3>
         <BarcodeInput onSearch={handleSearch} />
         <div style={{ flex: 1, border: '2px dashed #e5e7eb', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9ca3af', backgroundColor: '#f9fafb' }}>
@@ -186,8 +235,8 @@ export default function Pos() {
         </div>
 
       </div>
-
     </div>
+  </div>
   );
 }
 

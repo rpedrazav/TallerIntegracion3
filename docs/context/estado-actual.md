@@ -5,7 +5,7 @@ titulo: Estado Real de Implementación — GlobalMart OS
 estado: vigente
 fuentes: [docs/context/_reports/inventario.md, src/, git log, docs/context/_reports/preguntas-abiertas.md]
 verificado_contra_codigo: true
-ultima_revision: 2026-10-01
+ultima_revision: 2026-10-02
 depende_de: []
 publica: []
 consume: []
@@ -178,8 +178,8 @@ reglas: []
 | Pantalla | Estado | Integración API |
 |----------|--------|-----------------|
 | Login | [IMPLEMENTADO] | Llama directo a `http://127.0.0.1:5124` |
-| Abrir Turno (`AbrirTurnoPage`) | [IMPLEMENTADO] | Llama a MS-5 `/turnos/activo` y `POST /turnos/abrir` |
-| POS/Carrito | [PARCIAL] | UI implementada con datos mockeados; pendiente llamada a APIs |
+| Abrir Turno (`AbrirTurnoPage`) | [IMPLEMENTADO] | Llama a MS-5 `/api/turnos/activo` y `POST /api/turnos/abrir` (redirección con confirmación a POS y manejo 409) |
+| POS/Carrito | [PARCIAL] | UI con banner de confirmación de apertura de turno y datos mockeados; pendiente llamada a APIs de ventas |
 | Admin | [PLACEHOLDER] | Componente básico (`<h2>Administración</h2>`) para acceso directo |
 
 **Nota de integración Electron:** `preload.ts` expone únicamente funciones de autenticación y sesión (`ping`, `getToken`, `setToken`, `logout`). No expone hardware serial ni actualización automática por ahora.
