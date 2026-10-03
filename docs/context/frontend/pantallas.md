@@ -71,6 +71,20 @@ NO abre turno antes de vender
 //   - Redirección automática a /pos con mensaje de confirmación en location.state
 ```
 
+## CerrarTurnoPage.tsx [IMPLEMENTADO]
+
+```typescript
+// Pantalla de cierre de turno y cuadre de caja (PC-04, RF-03)
+// Ruta: /cerrar-turno
+// Componentes y lógica:
+//   - Tabla interactiva con denominaciones de billetes ($20.000, $10.000, $5.000, $2.000, $1.000) y monedas ($500, $100, $50, $10)
+//   - Input numérico de cantidad por fila con stepper (+ / -) y subtotal calculado en tiempo real
+//   - Subtotales por categoría (Billetes / Monedas) y Total Declarado en gaveta
+//   - Botón "Limpiar Conteo"
+//   - Arqueo y Cuadre: POST /api/turnos/cuadre con monto_declarado (compara efectivo esperado vs declarado y calcula diferencia)
+//   - Cierre de turno: POST /api/turnos/cerrar con confirmación y opciones de navegación
+```
+
 ## Admin.tsx [NO VERIFICADO]
 
 Pantalla de administración cuyo contenido completo no fue verificado. Existe en el router como `/admin`.
@@ -117,5 +131,7 @@ Pantallas no implementadas:
 ## Fuentes
 - `globalmart-frontend/src/pages/Login.tsx`
 - `globalmart-frontend/src/pages/Pos.tsx`
+- `globalmart-frontend/src/pages/AbrirTurnoPage.tsx`
+- `globalmart-frontend/src/pages/CerrarTurnoPage.tsx`
 - `globalmart-frontend/src/components/pos/BarcodeInput.tsx`
 - `globalmart-frontend/src/components/pos/CartItem.tsx`

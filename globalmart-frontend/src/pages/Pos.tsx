@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useMemo } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import BarcodeInput from '../components/pos/BarcodeInput';
 import CartItem from '../components/pos/CartItem';
 
@@ -16,6 +16,7 @@ interface PosLocationState {
 }
 
 export default function Pos() {
+  const navigate = useNavigate();
   const location = useLocation();
   const locationState = location.state as PosLocationState | null;
   const [mensajeConfirmacion, setMensajeConfirmacion] = useState<string | null>(
@@ -231,6 +232,30 @@ export default function Pos() {
             }}
           >
             Cancelar Venta
+          </button>
+
+          <button 
+            type="button"
+            onClick={() => navigate('/cerrar-turno')}
+            style={{ 
+              width: '100%', 
+              padding: '0.7rem', 
+              fontSize: '0.9rem', 
+              fontWeight: 600, 
+              color: '#0369a1', 
+              backgroundColor: '#e0f2fe', 
+              border: '1px solid #bae6fd', 
+              borderRadius: '8px', 
+              cursor: 'pointer',
+              transition: 'background-color 0.2s',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '0.5rem'
+            }}
+          >
+            <span>🧾</span>
+            <span>Cerrar Turno / Cuadre de Caja</span>
           </button>
         </div>
 
