@@ -34,6 +34,7 @@ using Xunit;
 
 namespace GlobalMart.IntegrationTests;
 
+[Collection("POS integration tests")]
 public class KafkaPublishIntegrationTests : IClassFixture<Ms5WebApplicationFactory>
 {
     private const string Topic = "sale.completed";
