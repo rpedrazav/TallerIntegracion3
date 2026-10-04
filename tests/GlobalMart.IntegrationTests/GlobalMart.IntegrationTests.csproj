@@ -43,6 +43,12 @@
     </Content>
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="xunit.runner.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
   <Target Name="CopyServiceRuntimeDependencies" AfterTargets="Build">
     <ItemGroup>
       <ServiceRuntimeFiles Include="..\..\src\TenantIdentityService\bin\Debug\net8.0\**\*.*" Exclude="..\..\src\TenantIdentityService\bin\Debug\net8.0\*.deps.json;..\..\src\TenantIdentityService\bin\Debug\net8.0\*.runtimeconfig.json" />
