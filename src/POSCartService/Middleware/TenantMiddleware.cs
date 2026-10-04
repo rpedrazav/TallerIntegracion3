@@ -1,4 +1,4 @@
-using POSCartService.Data;
+﻿using POSCartService.Data;
 
 namespace POSCartService.Middleware;
 
@@ -25,7 +25,7 @@ public sealed class TenantMiddleware
         if (string.IsNullOrWhiteSpace(tenantClaim) || !Guid.TryParse(tenantClaim, out var tenantId))
         {
             context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-            await context.Response.WriteAsJsonAsync(new { error = "Token inválido: falta tenant_id" });
+            await context.Response.WriteAsJsonAsync(new { error = "Token invÃ¡lido: falta tenant_id" });
             return;
         }
 

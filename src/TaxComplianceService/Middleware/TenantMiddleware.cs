@@ -1,4 +1,4 @@
-using TaxComplianceService.Data;
+﻿using TaxComplianceService.Data;
 
 namespace TaxComplianceService.Middleware;
 
@@ -6,7 +6,7 @@ namespace TaxComplianceService.Middleware;
 /// Middleware multi-tenant de MS-2.
 /// Extrae el <c>tenant_id</c> del JWT y lo inyecta en <see cref="TaxDbContext.CurrentTenantId"/>,
 /// de modo que los <c>HasQueryFilter</c> globales aislen las lecturas por tenant (RN-01).
-/// Mismo patrón que el TenantMiddleware de MS-4 (WarehouseInventoryService).
+/// Mismo patrÃ³n que el TenantMiddleware de MS-4 (WarehouseInventoryService).
 /// </summary>
 public sealed class TenantMiddleware
 {
@@ -19,6 +19,7 @@ public sealed class TenantMiddleware
 
     public async Task InvokeAsync(HttpContext context, TaxDbContext db)
     {
+        if (context.Request.Path.StartsWithSegments("/health")) { await _next(context); return; }
         var path = context.Request.Path.Value ?? string.Empty;
         if (path.StartsWith("/health") || path.StartsWith("/swagger"))
         {
@@ -32,7 +33,7 @@ public sealed class TenantMiddleware
         if (string.IsNullOrWhiteSpace(tenantClaim) || !Guid.TryParse(tenantClaim, out var tenantId))
         {
             context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-            await context.Response.WriteAsJsonAsync(new { error = "Token inválido: falta tenant_id" });
+            await context.Response.WriteAsJsonAsync(new { error = "Token invÃ¡lido: falta tenant_id" });
             return;
         }
 
@@ -40,3 +41,4 @@ public sealed class TenantMiddleware
         await _next(context);
     }
 }
+

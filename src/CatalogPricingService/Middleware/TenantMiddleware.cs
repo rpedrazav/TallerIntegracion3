@@ -1,4 +1,4 @@
-using CatalogPricingService.Data;
+﻿using CatalogPricingService.Data;
 
 namespace CatalogPricingService.Middleware;
 
@@ -15,6 +15,7 @@ public sealed class TenantMiddleware
 
     public async Task InvokeAsync(HttpContext context, CatalogDbContext db)
     {
+        if (context.Request.Path.StartsWithSegments("/health")) { await _next(context); return; }
         var tenantValue = context.User.FindFirst("tenant_id")?.Value;
 
         if (_environment.IsDevelopment() &&
@@ -28,7 +29,7 @@ public sealed class TenantMiddleware
             context.Response.StatusCode = StatusCodes.Status401Unauthorized;
             await context.Response.WriteAsJsonAsync(new
             {
-                message = "Falta un tenant_id válido en el JWT o en X-Tenant-ID (solo Development)."
+                message = "Falta un tenant_id vÃ¡lido en el JWT o en X-Tenant-ID (solo Development)."
             });
             return;
         }

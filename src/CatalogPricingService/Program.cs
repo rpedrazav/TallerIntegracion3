@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
@@ -7,46 +7,46 @@ using CatalogPricingService.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// InyecciÃ³n de Controladores y Auto-ValidaciÃ³n
+// InyecciÃƒÂ³n de Controladores y Auto-ValidaciÃƒÂ³n
 builder.Services.AddControllers();
 
-// CORS — permite peticiones desde el renderer de Electron y Swagger UI
+// CORS â€” permite peticiones desde el renderer de Electron y Swagger UI
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
     {
         policy
-            .SetIsOriginAllowed(_ => true)   // Electron usa file:// y localhost dinámico
+            .SetIsOriginAllowed(_ => true)   // Electron usa file:// y localhost dinÃ¡mico
             .AllowAnyHeader()
             .AllowAnyMethod();
     });
 });
 builder.Services.AddFluentValidationAutoValidation();
 
-// InyecciÃ³n de Base de Datos PostgreSQL
+// InyecciÃƒÂ³n de Base de Datos PostgreSQL
 builder.Services.AddDbContext<CatalogPricingService.Data.CatalogDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// InyecciÃ³n del Repositorio
+// InyecciÃƒÂ³n del Repositorio
 builder.Services.AddScoped<CatalogPricingService.Data.IProductoRepository, CatalogPricingService.Data.ProductoRepository>();
 builder.Services.AddScoped<CatalogPricingService.Data.ICategoriaRepository, CatalogPricingService.Data.CategoriaRepository>();
 
-// InyecciÃ³n del Servicio de Productos
+// InyecciÃƒÂ³n del Servicio de Productos
 builder.Services.AddScoped<CatalogPricingService.Services.IProductoService, CatalogPricingService.Services.ProductoService>();
 
-// InyecciÃ³n del Servicio de Categorias
+// InyecciÃƒÂ³n del Servicio de Categorias
 builder.Services.AddScoped<CatalogPricingService.Services.ICategoriaService, CatalogPricingService.Services.CategoriaService>();
 
-// InyecciÃ³n del Validador de Productos
+// InyecciÃƒÂ³n del Validador de Productos
 builder.Services.AddScoped<FluentValidation.IValidator<CatalogPricingService.DTOs.CreateProductoDto>, CatalogPricingService.Validators.CreateProductoDtoValidator>();
 
-// InyecciÃ³n del Validador de ActualizaciÃ³n de Productos (NUEVO - TI3-132)
+// InyecciÃƒÂ³n del Validador de ActualizaciÃƒÂ³n de Productos (NUEVO - TI3-132)
 builder.Services.AddScoped<FluentValidation.IValidator<CatalogPricingService.DTOs.UpdateProductoDto>, CatalogPricingService.Validators.UpdateProductoDtoValidator>();
 
-// InyecciÃ³n del Validador de Categorias
+// InyecciÃƒÂ³n del Validador de Categorias
 builder.Services.AddScoped<FluentValidation.IValidator<CatalogPricingService.DTOs.CreateCategoriaDto>, CatalogPricingService.Validators.CreateCategoriaDtoValidator>();
 
-// InyecciÃ³n de AutenticaciÃ³n JWT Stateless
+// InyecciÃƒÂ³n de AutenticaciÃƒÂ³n JWT Stateless
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -104,6 +104,8 @@ builder.Services.AddSwaggerGen(c =>
     c.IncludeXmlComments(xmlPath);
 });
 
+builder.Services.AddHealthChecks();
+
 var app = builder.Build();
 
 // Pipeline de Middlewares (Orden estricto)
@@ -119,10 +121,12 @@ app.UseAuthentication(); // 1. Verifica la firma del token
 app.UseAuthorization();  // 2. Verifica los roles del usuario
 app.UseMiddleware<TenantMiddleware>();
 
+app.MapHealthChecks("/health");
 app.MapControllers();
 
 app.Run();
 
 public partial class Program { }
+
 
 
