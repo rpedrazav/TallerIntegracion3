@@ -9,6 +9,18 @@ var builder = WebApplication.CreateBuilder(args);
 
 // InyecciÃ³n de Controladores y Auto-ValidaciÃ³n
 builder.Services.AddControllers();
+
+// CORS — permite peticiones desde el renderer de Electron y Swagger UI
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        policy
+            .SetIsOriginAllowed(_ => true)   // Electron usa file:// y localhost dinámico
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+});
 builder.Services.AddFluentValidationAutoValidation();
 
 // InyecciÃ³n de Base de Datos PostgreSQL
@@ -44,9 +56,10 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateAudience = true,
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
-            ValidIssuer = builder.Configuration["Jwt:Issuer"] ?? "GlobalMart",
-            ValidAudience = builder.Configuration["Jwt:Audience"] ?? "GlobalMartUsers",
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:SecretKey"] ?? "TuSuperSecretoDeDesarrollo1234567890!"))
+            ValidIssuer = builder.Configuration["Jwt:Issuer"] ?? "GlobalMartOS",
+            ValidAudience = builder.Configuration["Jwt:Audience"] ?? "GlobalMartOS_Clients",
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(
+                builder.Configuration["Jwt:SecretKey"] ?? builder.Configuration["Jwt:Key"] ?? "GlobalMartOS_SuperSecretKey_ChangeInProduction_Min32Chars!!"))
         };
     });
 builder.Services.AddAuthorization();
@@ -94,6 +107,8 @@ builder.Services.AddSwaggerGen(c =>
 var app = builder.Build();
 
 // Pipeline de Middlewares (Orden estricto)
+app.UseCors(); // debe ir ANTES de Authentication
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger(c => c.SerializeAsV2 = true);
