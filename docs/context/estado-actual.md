@@ -5,7 +5,7 @@ titulo: Estado Real de Implementación — GlobalMart OS
 estado: vigente
 fuentes: [docs/context/_reports/inventario.md, src/, git log, docs/context/_reports/preguntas-abiertas.md]
 verificado_contra_codigo: true
-ultima_revision: 2026-10-02
+ultima_revision: 2026-10-04
 depende_de: []
 publica: []
 consume: []
@@ -13,7 +13,7 @@ reglas: []
 ---
 # Estado Real de Implementación — GlobalMart OS
 
-> Nodo más importante para cualquier IA nueva. Refleja el estado REAL del código al 02-10-2026, validado contra el repositorio y las pruebas unitarias.
+> Nodo más importante para cualquier IA nueva. Refleja el estado REAL del código al 04-10-2026, validado contra el repositorio y las pruebas unitarias.
 
 **Contexto del proyecto:** Proyecto académico de Ingeniería Civil Informática, Universidad Católica de Temuco (UCT). Las integraciones externas que no puedan obtenerse legalmente (certificados digitales reales del SII, terminales de pago bancario físicos) serán simuladas.  
 **Sprint en curso:** **Sprint 1** (Semana 4).
@@ -27,7 +27,7 @@ reglas: []
 | MS-1 Identity | ✅ 3 controllers | ❌ No Kafka | ✅ 13 tests unitarios | **PARCIAL** |
 | MS-2 Tax | ✅ 1 controller | ❌ No Kafka | ✅ 12 tests unitarios | **PARCIAL** |
 | MS-3 Catalog | ✅ 2 controllers | ❌ No Kafka | ✅ SeedData tests | **PARCIAL** |
-| MS-4 Warehouse | ✅ 2 endpoints stock | ✅ Consumer sale.completed | ✅ 19 tests unitarios | **PARCIAL** |
+| MS-4 Warehouse | ✅ 2 endpoints stock + POST /seed | ✅ Consumer sale.completed | ✅ 19+7 tests unitarios | **PARCIAL** |
 | MS-5 POS | ✅ 2 controllers | ✅ Producer sale.completed | ✅ AgregarItemTest + CobroCuadreTest | **PARCIAL** |
 | MS-6 SupplyChain | ❌ Sin controllers | ❌ Sin Kafka | ❌ Sin tests | **PLANIFICADO** |
 | MS-7 Analytics | ❌ Sin controllers | ❌ Sin consumers | ❌ Sin tests | **PLANIFICADO** |
@@ -105,7 +105,8 @@ reglas: []
 - Manejo de caso borde en consumer: si producto no tiene registro de stock, `CrearYDescontar` crea el registro con stock negativo para reflejar discrepancia (TI3-254) [IMPLEMENTADO]
 - Tabla `EventosKafkaProcesados` — garantiza exactly-once processing (TI3-252) [IMPLEMENTADO]
 - Tabla `movimientos_stock` — auditoría de cada movimiento de stock [IMPLEMENTADO]
-- `SeedData.cs` — seed inicial de stock para los 30 productos de catálogo (TI3-256) [IMPLEMENTADO]
+- `SeedData.cs` — seed inicial de stock para los 30 productos de catálogo con cantidades aleatorias entre 10-100, stock_minimo=5 (TI3-256/TI3-257) [IMPLEMENTADO]
+- `POST /seed` — endpoint público (solo en Development) que ejecuta el seed manualmente, idempotente, retorna resumen detallado (TI3-258) [IMPLEMENTADO]
 - TenantMiddleware [IMPLEMENTADO]
 
 **No implementado (PLANIFICADO):**

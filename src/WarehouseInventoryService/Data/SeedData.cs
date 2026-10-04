@@ -4,13 +4,26 @@ using WarehouseInventoryService.Models;
 namespace WarehouseInventoryService.Data;
 
 /// <summary>
-/// TI3-256: Seed inicial de stock en MS-4 para los 30 productos variados
+/// TI3-256 / TI3-257: Seed inicial de stock en MS-4 para los 30 productos variados
 /// del catálogo (frutas, carnes, lácteos, snacks).
+/// TI3-257: Cada producto recibe una cantidad aleatoria entre 10 y 100 unidades,
+/// stock_minimo = 5. Se usa Random con semilla fija (42) para reproducibilidad.
 /// </summary>
 public static class SeedData
 {
     public static readonly Guid DemoTenantId   = Guid.Parse("aaaaaaaa-0000-0000-0000-000000000001");
     public static readonly Guid DemoSucursalId = Guid.Parse("bbbbbbbb-0000-0000-0000-000000000001");
+
+    /// <summary>
+    /// Semilla fija para el generador aleatorio, garantiza reproducibilidad
+    /// del seed en distintos entornos de desarrollo.
+    /// </summary>
+    public const int RandomSeed = 42;
+
+    /// <summary>
+    /// Stock mínimo estándar para todos los productos del seed (TI3-257).
+    /// </summary>
+    public const decimal StockMinimoDefault = 5m;
 
     public static readonly Guid[] ProductoIds = new[]
     {
@@ -53,6 +66,11 @@ public static class SeedData
         Guid.Parse("20000000-0000-0000-0000-000000000030")  // Gomitas Frutales
     };
 
+    /// <summary>
+    /// Inicializa el seed de stock para los 30 productos del catálogo.
+    /// Es idempotente: si ya existen registros de stock del tenant demo, no hace nada.
+    /// TI3-257: Cantidad aleatoria entre 10 y 100 unidades, stock_minimo = 5.
+    /// </summary>
     public static void Initialize(WarehouseDbContext context)
     {
         if (context.Stocks.IgnoreQueryFilters().Any(s => s.TenantId == DemoTenantId))
@@ -60,15 +78,21 @@ public static class SeedData
             return;
         }
 
+        // Semilla fija para que el seed sea reproducible en cualquier entorno
+        var random = new Random(RandomSeed);
+
         foreach (var productoId in ProductoIds)
         {
+            // TI3-257: cantidad aleatoria entre 10 y 100 (incluyendo ambos extremos)
+            var cantidadInicial = random.Next(10, 101);
+
             context.Stocks.Add(new Stock
             {
                 ProductoId = productoId,
                 SucursalId = DemoSucursalId,
                 TenantId = DemoTenantId,
-                CantidadActual = 50m,
-                StockMinimo = 10m
+                CantidadActual = cantidadInicial,
+                StockMinimo = StockMinimoDefault
             });
         }
 

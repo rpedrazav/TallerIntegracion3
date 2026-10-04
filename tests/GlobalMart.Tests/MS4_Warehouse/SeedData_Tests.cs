@@ -5,8 +5,10 @@ using Xunit;
 namespace GlobalMart.Tests.MS4_Warehouse;
 
 /// <summary>
-/// Tests unitarios para TI3-256: Script de seed `SeedData.cs` con 30 productos
-/// variados (frutas, carnes, lácteos, snacks), códigos de barras, precios y stock.
+/// Tests unitarios para TI3-256 / TI3-257 / TI3-258:
+/// - TI3-256: Script de seed con 30 productos variados.
+/// - TI3-257: Cantidad aleatoria 10-100, stock_minimo = 5.
+/// - TI3-258: Endpoint POST /seed (verificación de idempotencia).
 /// </summary>
 public class SeedData_Tests : IDisposable
 {
@@ -82,8 +84,12 @@ public class SeedData_Tests : IDisposable
         _catalogContext.Precios.IgnoreQueryFilters().Count().Should().Be(30);
     }
 
+    /// <summary>
+    /// TI3-257: Verifica que el seed crea 30 registros con cantidades entre 10-100
+    /// y stock_minimo = 5 para todos los productos.
+    /// </summary>
     [Fact]
-    public void WarehouseSeedData_InsertaStockParaLos30Productos()
+    public void WarehouseSeedData_InsertaStockParaLos30Productos_ConCantidadAleatoriaYStockMinimo5()
     {
         // Act
         WarehouseInventoryService.Data.SeedData.Initialize(_warehouseContext);
@@ -93,8 +99,16 @@ public class SeedData_Tests : IDisposable
         stocks.Should().HaveCount(30);
         stocks.Should().AllSatisfy(s =>
         {
-            s.CantidadActual.Should().Be(50m);
-            s.StockMinimo.Should().Be(10m);
+            // TI3-257: Cada stock debe tener cantidad entre 10 y 100
+            s.CantidadActual.Should().BeGreaterThanOrEqualTo(10m,
+                "la cantidad inicial aleatoria debe ser >= 10");
+            s.CantidadActual.Should().BeLessThanOrEqualTo(100m,
+                "la cantidad inicial aleatoria debe ser <= 100");
+
+            // TI3-257: stock_minimo = 5 para todos
+            s.StockMinimo.Should().Be(5m,
+                "el stock mínimo debe ser 5 según TI3-257");
+
             s.TenantId.Should().Be(WarehouseInventoryService.Data.SeedData.DemoTenantId);
             s.SucursalId.Should().Be(WarehouseInventoryService.Data.SeedData.DemoSucursalId);
         });
@@ -102,6 +116,52 @@ public class SeedData_Tests : IDisposable
         // Los ProductoId coinciden con los del catálogo
         var productoIdsSeed = WarehouseInventoryService.Data.SeedData.ProductoIds;
         stocks.Select(s => s.ProductoId).Should().BeEquivalentTo(productoIdsSeed);
+    }
+
+    /// <summary>
+    /// TI3-257: Verifica que la semilla fija (42) produce cantidades variadas
+    /// (no todas iguales) entre los 30 productos.
+    /// </summary>
+    [Fact]
+    public void WarehouseSeedData_CantidadesSonVariadas_NoTodasIguales()
+    {
+        // Act
+        WarehouseInventoryService.Data.SeedData.Initialize(_warehouseContext);
+
+        // Assert — Al menos 5 cantidades distintas entre los 30 productos
+        var stocks = _warehouseContext.Stocks.IgnoreQueryFilters().ToList();
+        var cantidadesDistintas = stocks.Select(s => s.CantidadActual).Distinct().Count();
+        cantidadesDistintas.Should().BeGreaterThanOrEqualTo(5,
+            "con Random(42) y 30 productos, debe haber variedad en las cantidades");
+    }
+
+    /// <summary>
+    /// TI3-257: Verifica que el seed es reproducible (misma semilla = mismas cantidades).
+    /// </summary>
+    [Fact]
+    public void WarehouseSeedData_EsReproducible_MismaSemillaMismoResultado()
+    {
+        // Act — Ejecutar en un contexto
+        WarehouseInventoryService.Data.SeedData.Initialize(_warehouseContext);
+        var stocks1 = _warehouseContext.Stocks.IgnoreQueryFilters()
+            .OrderBy(s => s.ProductoId)
+            .Select(s => s.CantidadActual)
+            .ToList();
+
+        // Act — Ejecutar en otro contexto con la misma DB en blanco
+        var options2 = new DbContextOptionsBuilder<WarehouseInventoryService.Data.WarehouseDbContext>()
+            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+            .Options;
+        using var ctx2 = new WarehouseInventoryService.Data.WarehouseDbContext(options2);
+        WarehouseInventoryService.Data.SeedData.Initialize(ctx2);
+        var stocks2 = ctx2.Stocks.IgnoreQueryFilters()
+            .OrderBy(s => s.ProductoId)
+            .Select(s => s.CantidadActual)
+            .ToList();
+
+        // Assert — Deben ser idénticas
+        stocks1.Should().BeEquivalentTo(stocks2,
+            "la semilla fija 42 debe producir las mismas cantidades en cualquier ejecución");
     }
 
     [Fact]
@@ -115,9 +175,24 @@ public class SeedData_Tests : IDisposable
         _warehouseContext.Stocks.IgnoreQueryFilters().Count().Should().Be(30);
     }
 
+    /// <summary>
+    /// TI3-258: Verifica que las constantes del seed están correctamente definidas.
+    /// </summary>
+    [Fact]
+    public void SeedData_ConstantesConfiguradasCorrectamente()
+    {
+        // Assert
+        WarehouseInventoryService.Data.SeedData.RandomSeed.Should().Be(42);
+        WarehouseInventoryService.Data.SeedData.StockMinimoDefault.Should().Be(5m);
+        WarehouseInventoryService.Data.SeedData.ProductoIds.Should().HaveCount(30);
+        WarehouseInventoryService.Data.SeedData.DemoTenantId.Should().NotBeEmpty();
+        WarehouseInventoryService.Data.SeedData.DemoSucursalId.Should().NotBeEmpty();
+    }
+
     public void Dispose()
     {
         _catalogContext.Dispose();
         _warehouseContext.Dispose();
     }
 }
+

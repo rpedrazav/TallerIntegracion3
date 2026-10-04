@@ -5,7 +5,7 @@ titulo: MS-4 · Warehouse & Inventory Service
 estado: parcial
 fuentes: [src/WarehouseInventoryService/]
 verificado_contra_codigo: true
-ultima_revision: 2026-10-02
+ultima_revision: 2026-10-04
 depende_de: [ms5-pos]
 publica: []
 consume: [sale.completed]
@@ -13,13 +13,15 @@ reglas: [RN-04, RN-05, RF-09, RF-10, WI-04, WI-05, WI-13, WI-14]
 ---
 # MS-4 · Warehouse & Inventory Service
 
-> Gestiona el stock de productos por sucursal. Cuenta con consumidor Kafka de `sale.completed` con garantía de idempotencia (tabla EventosKafkaProcesados), log estructurado de movimientos (TI3-253), manejo de caso borde con `CrearYDescontar` (TI3-254), endpoints HTTP finalizados (TI3-255) y seed de 30 productos (TI3-256).
+> Gestiona el stock de productos por sucursal. Cuenta con consumidor Kafka de `sale.completed` con garantía de idempotencia (tabla EventosKafkaProcesados), log estructurado de movimientos (TI3-253), manejo de caso borde con `CrearYDescontar` (TI3-254), endpoints HTTP finalizados (TI3-255), seed de 30 productos con cantidades aleatorias 10-100 y stock_minimo=5 (TI3-256/TI3-257) y endpoint `POST /seed` solo en Development (TI3-258).
 
 ## Estructura del proyecto
 
 ```
 src/WarehouseInventoryService/
-├── Controllers/  StockController.cs
+├── Controllers/
+│   ├── StockController.cs
+│   └── SeedController.cs            ← POST /seed (solo Development)
 ├── Data/
 │   ├── WarehouseDbContext.cs
 │   ├── SeedData.cs               ← Seed de stock sincronizado con catálogo
@@ -45,6 +47,7 @@ src/WarehouseInventoryService/
 |--------|------|------|--------|
 | GET | `/stock/{productId}?sucursal_id=` | JWT | [IMPLEMENTADO] |
 | GET | `/stock?sucursal_id=` | JWT | [IMPLEMENTADO] |
+| POST | `/seed` | Público (solo Development) | [IMPLEMENTADO] TI3-258 |
 | GET | `/health` | Público | [IMPLEMENTADO] |
 
 ### No implementados
@@ -158,4 +161,6 @@ EventoKafkaProcesado
 ## Fuentes
 - `src/WarehouseInventoryService/Messaging/KafkaConsumerService.cs`
 - `src/WarehouseInventoryService/Controllers/StockController.cs`
+- `src/WarehouseInventoryService/Controllers/SeedController.cs`
+- `src/WarehouseInventoryService/Data/SeedData.cs`
 - `src/WarehouseInventoryService/Data/Migrations/20260927195722_AddEventosKafkaProcesados.cs`
