@@ -28,8 +28,8 @@ jobs:
 
     env:
       # Variables mínimas para que docker compose arranque en CI
-      DB_USER: ci_user
-      DB_PASSWORD: ci_password
+      DB_USER: admin
+      DB_PASSWORD: admin_password
       COMPOSE_FILE: Docker/docker-compose.yml
 
     steps:
