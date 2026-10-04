@@ -3,11 +3,11 @@ id: kafka-topics
 tipo: evento
 titulo: Kafka Topics — Diseño vs Implementación Real
 estado: parcial
-fuentes: [src/WarehouseInventoryService/Messaging/KafkaConsumerService.cs, Docker/docker-compose.yml, Docker/scripts/init-kafka-topics.sh]
+fuentes: [src/POSCartService/Services/KafkaProducerService.cs, src/POSCartService/Messaging/SaleCompletedEvent.cs, src/WarehouseInventoryService/Messaging/KafkaConsumerService.cs, Docker/docker-compose.yml, Docker/scripts/init-kafka-topics.sh]
 verificado_contra_codigo: true
-ultima_revision: 2026-09-29
+ultima_revision: 2026-10-02
 depende_de: [ms5-pos, ms4-inventory]
-publica: []
+publica: [sale.completed]
 consume: [sale.completed]
 diseno_publica: [sale.completed, sale.reversed, stock.alert, expiry.alert, stock.updated, purchase.received, fx.rate.updated, points.updated]
 diseno_consume: [sale.completed, sale.reversed, stock.alert, expiry.alert, stock.updated, purchase.received, fx.rate.updated, points.updated]
@@ -15,7 +15,7 @@ reglas: [RN-04, RF-09]
 ---
 # Kafka Topics — Diseño vs Implementación Real
 
-> Contraste entre los topics diseñados en el ContextMaster y lo que realmente existe en el código. **Estado crítico:** Solo 1 consumer implementado, 0 producers implementados.
+> Contraste entre los topics diseñados en el ContextMaster y lo que realmente existe en el código. **Estado:** 1 consumer (MS-4) y 1 producer (MS-5) implementados para `sale.completed`.
 
 ## Topics aprovisionados (docker-compose init)
 
@@ -36,7 +36,7 @@ product.expiring_soon   purchase_order.received
 
 | Topic | Productor real | Consumidor real | Estado |
 |-------|---------------|-----------------|--------|
-| `sale.completed` | ❌ NINGUNO | ✅ MS-4 KafkaConsumerService | [PARCIAL — consumer sin producer] |
+| `sale.completed` | ✅ MS-5 KafkaProducerService | ✅ MS-4 KafkaConsumerService | [IMPLEMENTADO] |
 | `stock.alert` | ❌ NINGUNO | ❌ NINGUNO | [PLANIFICADO] |
 | `expiry.alert` | ❌ NINGUNO | ❌ NINGUNO | [PLANIFICADO] |
 | `sale.reversed` | ❌ NINGUNO | ❌ NINGUNO | [PLANIFICADO] |
@@ -50,23 +50,32 @@ product.expiring_soon   purchase_order.received
 ## Payload real de sale.completed (SaleCompletedEvent)
 
 ```csharp
-// src/WarehouseInventoryService/Messaging/SaleCompletedEvent.cs
-public class SaleCompletedEvent
+// src/POSCartService/Messaging/SaleCompletedEvent.cs  [IMPLEMENTADO]
+public sealed class SaleCompletedEvent
 {
-    public Guid VentaId    { get; set; }  // también usado como EventId de idempotencia
-    public Guid TenantId   { get; set; }
-    public Guid SucursalId { get; set; }
-    public List<SaleItemEvent> Items { get; set; }
+    public Guid     EventId    { get; init; }  // GUID nuevo por cada publicación
+    public Guid     TenantId   { get; init; }
+    public Guid     VentaId    { get; init; }  // también clave de idempotencia en MS-4
+    public Guid     CajeroId   { get; init; }
+    public Guid     SucursalId { get; init; }
+    public List<SaleCompletedItemEvent> Items { get; init; }
+    public decimal  Subtotal   { get; init; }
+    public decimal  Iva        { get; init; }  // = Venta.Impuestos
+    public decimal  Total      { get; init; }
+    public string   MetodoPago { get; init; }  // "EFECTIVO" | "TARJETA" | "MIXTO"
+    public DateTime Timestamp  { get; init; }
 }
 
-public class SaleItemEvent
+public sealed class SaleCompletedItemEvent
 {
-    public Guid    ProductoId { get; set; }
-    public decimal Cantidad   { get; set; }
+    public Guid    ProductoId     { get; init; }
+    public decimal Cantidad       { get; init; }
+    public decimal PrecioUnitario { get; init; }
 }
 ```
 
-**Nota:** No hay `EventId` explícito — se usa `VentaId` como identificador de idempotencia.
+**Clave Kafka:** `tenant_id` (garantiza orden de eventos por tenant en la misma partición).  
+**Idempotencia MS-4:** el consumer usa `EventId` (GUID único generado por MS-5) con fallback a `VentaId` en `EventosKafkaProcesados`.
 
 ## Diseño del ContextMaster (9 topics)
 
@@ -91,29 +100,38 @@ MS-1 Identity → fx.rate.updated → MS-3 Catalog, MS-6 Supply, MS-7 Analytics 
 MS-8 Loyalty → points.updated → MS-7 Analytics ❌
 ```
 
-## Acción requerida (crítica)
+## Publicación implementada en MS-5
 
-Para que la cadena funcione, MS-5 debe publicar `sale.completed` al completar una venta:
-
-> [!NOTE]
-> **Sugerencia sin verificar:** El siguiente bloque representa una sugerencia de implementación de referencia que debe ser validada por el equipo antes de introducirse en el código:
+MS-5 publica `sale.completed` mediante `IKafkaProducerService` (Singleton) al completar la venta en `VentaService.CompletarAsync`:
 
 ```csharp
-// Sugerencia sin verificar para MS-5 (VentaService.CompletarAsync):
-await _kafkaProducer.ProduceAsync("sale.completed", new Message<string,string> {
-    Key = venta.TenantId.ToString(),
-    Value = JsonSerializer.Serialize(new {
-        VentaId    = venta.Id,
-        TenantId   = venta.TenantId,
-        SucursalId = venta.SucursalId,
-        Items      = venta.Items.Select(i => new { i.ProductoId, i.Cantidad })
-    })
-});
+// MS-5 (VentaService.CompletarAsync):
+var evento = new SaleCompletedEvent
+{
+    EventId    = Guid.NewGuid(), // GUID único para idempotencia
+    TenantId   = ventaCompletada.TenantId,
+    VentaId    = ventaCompletada.Id,
+    CajeroId   = ventaCompletada.CajeroId,
+    SucursalId = ventaCompletada.SucursalId,
+    Subtotal   = ventaCompletada.Subtotal,
+    Iva        = ventaCompletada.Impuestos,
+    Total      = ventaCompletada.Total,
+    MetodoPago = ventaCompletada.MetodoPago.ToString(),
+    Timestamp  = DateTime.UtcNow,
+    Items      = itemsParaEvento.Select(i => new SaleCompletedItemEvent { ... }).ToList()
+};
+await _kafkaProducer.PublicarSaleCompletedAsync(evento);
 ```
 
+## Cobertura de integración
+
+La publicación de `sale.completed` está cubierta mediante un test de integración que usa el `KafkaProducerService` real de MS-5 y un `ConsumerBuilder<string, string>` conectado al broker local. El payload consumido se deserializa y valida contra la venta cobrada, incluyendo `VentaId`, `TenantId` y `Total`.
+
+El consumo de `sale.completed` por MS-4 también está cubierto mediante un test de integración que publica un evento real, espera el procesamiento asíncrono y verifica el descuento de stock a través de la API de inventario.
+
 ## Conexiones
-- Produce → [[ms5-pos]] (cuando se implemente)
-- Consume → [[ms4-inventory]]
+- Produce → [[ms5-pos]] [IMPLEMENTADO]
+- Consume → [[ms4-inventory]] [IMPLEMENTADO]
 - Arquitectura: [[arquitectura]]
 - Decisión de Kafka: [[001-kafka-vs-rabbitmq]]
 
@@ -122,3 +140,4 @@ await _kafkaProducer.ProduceAsync("sale.completed", new Message<string,string> {
 - `src/WarehouseInventoryService/Messaging/SaleCompletedEvent.cs`
 - `Docker/docker-compose.yml` (kafka-init-topics)
 - `Docker/scripts/init-kafka-topics.sh`
+- `tests/GlobalMart.IntegrationTests/KafkaPublishIntegrationTests.cs`

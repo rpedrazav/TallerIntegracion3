@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using FluentValidation;
 using CatalogPricingService.DTOs;
@@ -26,50 +26,40 @@ public class CategoriaController : ControllerBase
         _environment = environment;
     }
 
-    // ──────────────────────────────────────────────────────────────
-    // GET /categories
-    // ──────────────────────────────────────────────────────────────
-
-    /// <summary>
+    // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        /// <summary>
     /// Lista todas las categorias activas del tenant autenticado.
-    ///
-    /// Responses:
-    ///   200 OK           – arreglo de categorias (puede ser vacio []).
-    ///   401 Unauthorized – JWT ausente o tenant_id invalido.
     /// </summary>
+    /// <returns>Lista de categorias.</returns>
+    /// <response code="200">Retorna un arreglo de categorias (puede estar vacío).</response>
+    /// <response code="401">No autorizado.</response>
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
         var tenantId = GetTenantIdFromToken();
         if (tenantId == null)
-            return StatusCode(401, new { message = "Token inválido o tenant_id ausente." });
+            return StatusCode(401, new { message = "Token invÃ¡lido o tenant_id ausente." });
 
         var categorias = await _service.GetAllCategoriasAsync(tenantId.Value);
         return Ok(categorias);
     }
 
-    // ──────────────────────────────────────────────────────────────
-    // POST /categories
-    // ──────────────────────────────────────────────────────────────
-
-    /// <summary>
+    // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        /// <summary>
     /// Crea una nueva categoria para el tenant autenticado.
-    /// 
-    /// Request body:
-    ///   { "nombre": "Lacteos", "parentId": null }
-    ///
-    /// Responses:
-    ///   201 Created  – categoria creada con exito.
-    ///   400 Bad Request – validacion fallida (nombre duplicado, padre invalido, etc.).
-    ///   401 Unauthorized – JWT ausente o tenant_id invalido.
     /// </summary>
+    /// <param name="rawBody">Datos de la categoría.</param>
+    /// <returns>La categoría creada.</returns>
+    /// <response code="201">Categoría creada con éxito.</response>
+    /// <response code="400">Validación fallida (nombre duplicado, padre inválido).</response>
+    /// <response code="401">No autorizado.</response>
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] JsonElement rawBody)
     {
         // 1. Extraer tenant del JWT (o del header X-Tenant-ID en Development)
         var tenantId = GetTenantIdFromToken();
         if (tenantId == null)
-            return StatusCode(401, new { message = "Token inválido o tenant_id ausente." });
+            return StatusCode(401, new { message = "Token invÃ¡lido o tenant_id ausente." });
 
         // 2. Deserializar y asignar tenant
         var dto = JsonSerializer.Deserialize<CreateCategoriaDto>(
@@ -77,7 +67,7 @@ public class CategoriaController : ControllerBase
             new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
         if (dto == null)
-            return BadRequest(new { message = "Cuerpo JSON inválido." });
+            return BadRequest(new { message = "Cuerpo JSON invÃ¡lido." });
 
         dto.TenantId = tenantId.Value;
 
@@ -92,9 +82,9 @@ public class CategoriaController : ControllerBase
         return StatusCode(201, created);
     }
 
-    // ──────────────────────────────────────────────────────────────
+    // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     // helpers
-    // ──────────────────────────────────────────────────────────────
+    // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     private Guid? GetTenantIdFromToken()
     {
@@ -111,3 +101,4 @@ public class CategoriaController : ControllerBase
         return null;
     }
 }
+

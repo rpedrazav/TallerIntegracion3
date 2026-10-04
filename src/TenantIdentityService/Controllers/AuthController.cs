@@ -1,4 +1,4 @@
-using FluentValidation;
+﻿using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 using TenantIdentityService.DTOs;
 using TenantIdentityService.Services;
@@ -6,13 +6,13 @@ using TenantIdentityService.Services;
 namespace TenantIdentityService.Controllers;
 
 /// <summary>
-/// Controlador de autenticación — MS-1 Tenant &amp; Identity Service.
+/// Controlador de autenticaciÃ³n â€” MS-1 Tenant &amp; Identity Service.
 ///
-/// Endpoint público (sin JWT requerido):
-///   POST /auth/login  →  retorna JWT si las credenciales son válidas.
+/// Endpoint pÃºblico (sin JWT requerido):
+///   POST /auth/login  â†’  retorna JWT si las credenciales son vÃ¡lidas.
 ///
-/// Este es el ÚNICO endpoint del sistema que no requiere token.
-/// Kong está configurado para dejarlo pasar sin validación JWT.
+/// Este es el ÃšNICO endpoint del sistema que no requiere token.
+/// Kong estÃ¡ configurado para dejarlo pasar sin validaciÃ³n JWT.
 /// </summary>
 [ApiController]
 [Route("auth")]
@@ -42,12 +42,15 @@ public class AuthController : ControllerBase
     /// Autentica a un usuario y retorna un JWT firmado.
     /// </summary>
     /// <param name="request">Credenciales del usuario y tenant al que accede.</param>
-    /// <param name="cancellationToken">Token de cancelación.</param>
+    /// <param name="cancellationToken">Token de cancelaciÃ³n.</param>
     /// <returns>
     /// 200 con <see cref="LoginResponse"/> (JWT + info del usuario) si las credenciales son correctas.<br/>
-    /// 400 si el body tiene errores de validación (email inválido, password vacía, etc.).<br/>
-    /// 401 si las credenciales son incorrectas (mensaje genérico sin revelar el motivo exacto).
+    /// 400 si el body tiene errores de validaciÃ³n (email invÃ¡lido, password vacÃ­a, etc.).<br/>
+    /// 401 si las credenciales son incorrectas (mensaje genÃ©rico sin revelar el motivo exacto).
     /// </returns>
+    /// <response code="200">Retorna el JWT y datos del usuario si las credenciales son válidas.</response>
+    /// <response code="400">Si el body tiene errores de validación (email inválido, password vacía).</response>
+    /// <response code="401">Si las credenciales son incorrectas.</response>
     [HttpPost("login")]
     [ProducesResponseType(typeof(LoginResponse),          StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
@@ -56,28 +59,28 @@ public class AuthController : ControllerBase
         [FromBody] LoginRequest   request,
         CancellationToken         cancellationToken)
     {
-        // ── 1. Validar el request con FluentValidation ────────────────────────
+        // â”€â”€ 1. Validar el request con FluentValidation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         var validacion = await _validator.ValidateAsync(request, cancellationToken);
         if (!validacion.IsValid)
         {
-            _logger.LogDebug("Login rechazado por validación: {Errores}",
+            _logger.LogDebug("Login rechazado por validaciÃ³n: {Errores}",
                 string.Join(", ", validacion.Errors.Select(e => e.ErrorMessage)));
 
-            // Retorna 400 con el formato estándar de ASP.NET Core ValidationProblemDetails
+            // Retorna 400 con el formato estÃ¡ndar de ASP.NET Core ValidationProblemDetails
             foreach (var error in validacion.Errors)
                 ModelState.AddModelError(error.PropertyName, error.ErrorMessage);
 
             return ValidationProblem(ModelState);
         }
 
-        // ── 2. Validar credenciales contra la base de datos ───────────────────
+        // â”€â”€ 2. Validar credenciales contra la base de datos â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         var usuario = await _authService.ValidateCredentialsAsync(
             request.Email,
             request.Password,
             request.TenantId);
 
-        // ── 3. Si las credenciales son incorrectas → 401 genérico ─────────────
-        //    NUNCA se indica si falló el email, la contraseña o si el usuario no existe.
+        // â”€â”€ 3. Si las credenciales son incorrectas â†’ 401 genÃ©rico â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        //    NUNCA se indica si fallÃ³ el email, la contraseÃ±a o si el usuario no existe.
         if (usuario is null)
         {
             _logger.LogWarning(
@@ -88,16 +91,16 @@ public class AuthController : ControllerBase
             return Unauthorized(new { message = "Credenciales incorrectas." });
         }
 
-        // ── 4. Generar el JWT ─────────────────────────────────────────────────
+        // â”€â”€ 4. Generar el JWT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         var token     = _jwtService.GenerateToken(usuario);
         var horasExp  = _config.GetValue<int>("Jwt:ExpirationHours", 8);
         var expiresAt = DateTime.UtcNow.AddHours(horasExp);
 
-        // ── 5. Construir la respuesta ─────────────────────────────────────────
+        // â”€â”€ 5. Construir la respuesta â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         var roles = usuario.UsuarioRoles.Select(ur => ur.Rol.Nombre).ToList();
 
-        // El active_role en la respuesta debe coincidir con el que se grabó en el JWT.
-        // Usamos la misma lógica de prioridad que JwtService.
+        // El active_role en la respuesta debe coincidir con el que se grabÃ³ en el JWT.
+        // Usamos la misma lÃ³gica de prioridad que JwtService.
         string[] prioridadRoles = ["SUPER_ADMIN", "ADMIN", "CAJERO", "REPONEDOR", "CLIENTE_AFILIADO"];
         var activeRole = prioridadRoles.FirstOrDefault(r => roles.Contains(r)) ?? "CAJERO";
 
@@ -122,3 +125,4 @@ public class AuthController : ControllerBase
         return Ok(response);
     }
 }
+

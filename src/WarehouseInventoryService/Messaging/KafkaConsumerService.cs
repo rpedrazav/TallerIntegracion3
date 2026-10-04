@@ -127,8 +127,8 @@ public sealed class KafkaConsumerService : IHostedService, IDisposable
             return;
         }
 
-        // event_id = VentaId (ver decisión de diseño acordada: no hay eventId explícito en el payload).
-        var eventId = evento.VentaId;
+        // Idempotencia: usa EventId (GUID único del evento) si está presente, o VentaId como fallback.
+        var eventId = evento.EventId != Guid.Empty ? evento.EventId : evento.VentaId;
 
         using var scope = _scopeFactory.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<WarehouseDbContext>();

@@ -28,8 +28,8 @@ jobs:
 
     env:
       # Variables mínimas para que docker compose arranque en CI
-      DB_USER: ci_user
-      DB_PASSWORD: ci_password
+      DB_USER: admin
+      DB_PASSWORD: admin_password
       COMPOSE_FILE: Docker/docker-compose.yml
 
     steps:
@@ -79,6 +79,9 @@ jobs:
 
       - name: Build TaxComplianceService
         run: dotnet build src/TaxComplianceService/TaxComplianceService.csproj --no-restore --configuration Release
+
+      - name: Build IntegrationTests
+        run: dotnet build tests/GlobalMart.IntegrationTests/GlobalMart.IntegrationTests.csproj --no-restore --configuration Release
 
       # ------------------------------------------------------------------
       # 5. Levantar infraestructura con Docker Compose

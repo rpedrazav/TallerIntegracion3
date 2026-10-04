@@ -115,4 +115,13 @@ public sealed record ItemVentaResponse
     };
 }
 
-
+/// <summary>
+/// Respuesta de POST /ventas/{id}/cobrar — venta completada con vuelto calculado.
+/// </summary>
+/// <param name="Venta">Venta en estado COMPLETADA.</param>
+/// <param name="MontoRecibido">Monto entregado por el cliente.</param>
+/// <param name="Vuelto">Diferencia entre el monto recibido y el total de la venta.</param>
+public sealed record CobrarVentaResponse(
+    VentaResponse Venta,
+    decimal MontoRecibido,
+    decimal Vuelto);

@@ -22,6 +22,7 @@ public class TaxDbContext : DbContext
     // DbSets (tablas)
     public DbSet<ConfiguracionFiscal> ConfiguracionesFiscales => Set<ConfiguracionFiscal>();
     public DbSet<DocumentoTributario> DocumentosTributarios => Set<DocumentoTributario>();
+    public DbSet<Comprobante> Comprobantes => Set<Comprobante>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -63,6 +64,22 @@ public class TaxDbContext : DbContext
              .WithMany(c => c.Documentos)
              .HasForeignKey(d => d.ConfiguracionFiscalId)
              .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // ── Comprobante ──────────────────────────────────────────────────────
+        modelBuilder.Entity<Comprobante>(e =>
+        {
+            e.HasKey(c => c.Id);
+            e.Property(c => c.Items).HasColumnType("jsonb");
+            e.Property(c => c.Subtotal).HasPrecision(12, 2);
+            e.Property(c => c.Iva).HasPrecision(12, 2);
+            e.Property(c => c.Total).HasPrecision(12, 2);
+
+            // FILTRO GLOBAL MULTI-TENANT
+            e.HasQueryFilter(c => c.TenantId == CurrentTenantId);
+
+            // Un correlativo no debería repetirse dentro del mismo tenant
+            e.HasIndex(c => new { c.TenantId, c.NumeroCorrelativo }).IsUnique();
         });
     }
 }

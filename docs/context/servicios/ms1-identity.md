@@ -5,7 +5,7 @@ titulo: MS-1 · Tenant & Identity Service
 estado: parcial
 fuentes: [src/TenantIdentityService/, Docker/config/kong.yaml]
 verificado_contra_codigo: true
-ultima_revision: 2026-09-28
+ultima_revision: 2026-10-01
 depende_de: []
 publica: []
 consume: []
@@ -43,15 +43,93 @@ src/TenantIdentityService/
 | POST | `/api/v1/users/{id}/roles` | JWT + ADMIN | [IMPLEMENTADO] |
 | GET | `/tenants/{id}/config` | JWT | [IMPLEMENTADO] |
 | PUT | `/tenants/{id}/config` | JWT + ADMIN | [IMPLEMENTADO] |
+| GET | `/sucursales` | JWT | [IMPLEMENTADO] |
 | GET | `/health` | Público | [IMPLEMENTADO] |
+
+### GET /sucursales
+
+```
+GET /sucursales
+Auth: Bearer <JWT con tenant_id>
+
+200 → [ { id, tenantId, nombre, direccion, activa, zonaHoraria } ]
+401 → sin JWT, JWT inválido o sin claim tenant_id
+```
+
+El tenant se obtiene **solo** del claim `tenant_id` del JWT: no se recibe como parámetro de ruta ni
+de query, para que no se puedan pedir sucursales de otro tenant. El aislamiento lo aplica el
+`HasQueryFilter` global de `TenantDbContext` alimentado por `TenantMiddleware` (`SucursalRepository`
+no filtra manualmente). Devuelve las sucursales **inactivas también**, ordenadas por nombre, sin
+paginación; la lista puede estar vacía.
+
+`zonaHoraria` en la respuesta es la **efectiva**: `Sucursal.ZonaHoraria ?? Tenant.ZonaHoraria`.
+Para resolverla el repository hace `Include(s => s.Tenant)`. Así queda ejecutada la regla de negocio
+que hasta ahora estaba solo documentada.
+
+**Discrepancia de contrato:** el ContextMaster y este nodo documentaban `GET /tenants/{id}/sucursales`.
+El endpoint implementado es `GET /sucursales`, porque el tenant viene del JWT y el `{id}` en la ruta
+sería redundante además de permitir consultar otro tenant. La ruta con `{id}` queda [NO IMPLEMENTADA].
 
 **Nota:** TenantConfigController registra doble prefijo: `/api/v1/tenants` y `/tenants`.
 
+### POST /sucursales
+
+```
+POST /sucursales
+Auth: Bearer <JWT con tenant_id y rol ADMIN>
+Body: { "nombre": "...", "direccion": "...", "zonaHoraria": "America/Santiago" | "" | null }
+
+201 → { id, tenantId, nombre, direccion, activa, zonaHoraria }
+400 → body inválido o zona horaria que no es un id IANA real
+401 → sin JWT, JWT inválido o sin claim tenant_id
+403 → el usuario no tiene el rol ADMIN
+409 → ya existe una sucursal con ese nombre en el tenant (case-insensitive)
+```
+
+Crea una sucursal del tenant del JWT. `201` **sin** header `Location` porque no existe
+`GET /sucursales/{id}`, solo el listado.
+
+| Decisión | Valor | Motivo |
+|---|---|---|
+| Rol requerido | `ADMIN` | Crear una sucursal es una operación de nivel tenant, igual que crear usuarios o editar la config del tenant. Un CAJERO no abre sucursales |
+| `tenant_id` | Solo del JWT | El body no lo acepta. Enviarlo se ignora en silencio: la sucursal queda en el tenant del token (RN-01) |
+| `zonaHoraria` | Opcional | Vacía o `null` = hereda `Tenant.ZonaHoraria`; informada = específica de la sucursal |
+| `activa` | Siempre `true` | No se pide en el request |
+| Nombre duplicado | `409 Conflict` | Índice único como garantía real |
+
+**Validación de zona horaria.** `CrearSucursalRequestValidator` exige prefijo de área IANA
+(`Africa`, `America`, `Antarctica`, `Arctic`, `Asia`, `Atlantic`, `Australia`, `Europe`, `Indian`,
+`Pacific`, `Etc`, o el literal `UTC`) y luego que la zona exista en el runtime.
+
+> [!IMPORTANT]
+> El prefijo es obligatorio porque `TimeZoneInfo.FindSystemTimeZoneById` **no** es un validador IANA
+> en .NET 8: con ICU también resuelve ids de Windows (`Chile/Continental`,
+> `SA Pacific Standard Time`) y los acepta. Sin el filtro por prefijo, un id de Windows se
+> guardaría y `GET /sucursales` devolvería una zona no IANA. La comparación es **ordinal**: la base
+> IANA distingue mayúsculas, así que `america/santiago` se rechaza con 400.
+
+**Unicidad de nombre (case-insensitive).** Garantizada por el índice único
+`IX_Sucursales_TenantId_NombreLower` sobre `("TenantId", lower("Nombre"))`, creado por la migración
+`20261001194639_AddSucursalUniqueNombreIndex` con SQL crudo. `"Centro"` y `"centro"` colisionan, y
+también `"Centro"` y `"  centro  "` porque `CreateAsync` aplica `Trim()` antes de insertar.
+
+> [!NOTE]
+> El índice **no** está en el modelo de EF: EF Core 8 no modela índices de expresión, y un
+> `HasIndex` normal sobre `("TenantId","Nombre")` sería case-**sensitive**, más débil de lo pedido.
+> Consecuencia: no aparece en el snapshot, y EF no lo eliminará en migraciones futuras.
+> `TenantDbContext` lo documenta en un comentario junto a la entidad.
+
+`SucursalRepository.CreateAsync` hace un chequeo previo para el caso común (mensaje claro sin
+viaje de ida y vuelta) y además captura la violación de índice único (SQLSTATE `23505`) para
+traducir la carrera de dos POST simultáneos. Verificado: 8 POST concurrentes con el mismo nombre
+→ 1 `201`, 7 `409`, 1 fila en la base.
+
 ### Endpoints diseñados pero NO implementados
 - `POST /auth/refresh` — renovar JWT [PLANIFICADO]
-- `GET /tenants/{id}/sucursales` — gestión de sucursales [PLANIFICADO]
+- `GET /tenants/{id}/sucursales` — ruta con `{id}`; superseded por `GET /sucursales` [PLANIFICADO]
 - `GET /fx/rates` — tipos de cambio actuales [PLANIFICADO]
 - `POST /fx/convert` — conversión entre monedas [PLANIFICADO]
+- `PUT`/`DELETE /sucursales/{id}` — desactivar y eliminar sucursales [PLANIFICADO]
 
 ## Modelo de datos
 
@@ -83,7 +161,32 @@ Rol
 UsuarioRol
   usuario_id  GUID FK
   rol_id      GUID FK
+
+Sucursal
+  id             GUID PK
+  tenant_id      GUID FK → Tenant (discriminador multi-tenant)
+  nombre         string
+  direccion      string
+  zona_horaria   string? (IANA; null = hereda Tenant.zona_horaria)
+  activa         bool
+  creada_en      DateTime
 ```
+
+**Zona horaria por sucursal:** la zona efectiva es
+`Sucursal.ZonaHoraria ?? Tenant.ZonaHoraria`. Si `Sucursal.ZonaHoraria` es `null` la sucursal hereda
+la del tenant, lo que evita hardcodear una zona por sucursal y permite que un tenant opere sucursales
+en zonas horarias distintas. La columna es nullable a propósito y no tiene valor por defecto.
+
+**Alcance actual:** la columna nullable y la resolución de la zona horaria efectiva están
+implementadas, y ambas rutas de creación están cerradas: `GET /sucursales` ejecuta el fallback en
+lectura y `POST /sucursales` decide si una sucursal nueva nace con zona propia o heredada, validando
+que el id sea IANA real. Lo que sigue pendiente es la parte destructiva del CRUD: no hay `PUT` ni
+`DELETE /sucursales/{id}`, así que no se puede **editar ni desactivar** una sucursal creada.
+
+Consumidores actuales de `SucursalId` (como `Guid`, sin FK por ser otro microservicio):
+- MS-4 `WarehouseDbContext` lo usa como parte de la clave primaria de `Stock`
+- MS-4 `SaleCompletedEvent` lo transporta en `sale.completed` para descontar stock por sucursal
+- MS-5 `Turno` lo transporta al crear una venta
 
 ## JWT generado (estructura real)
 
@@ -139,7 +242,9 @@ GET/POST/PUT/DELETE /api/tenants
 | Brecha | Impacto |
 |--------|---------|
 | Sin endpoint `/auth/refresh` | Sesiones no renovables |
-| Sin gestión de sucursales | `sucursal_id` en JWT es campo libre |
+| No hay `PUT`/`DELETE /sucursales/{id}` | No se puede editar ni desactivar una sucursal ya creada. `Activa` solo se puede leer |
+| Sin asignación de usuarios a sucursales | No existe `POST /sucursales/{id}/usuarios`; la tabla `UsuarioSucursales` no tiene endpoint |
+| `sucursal_id` en JWT es campo libre | No lo emite el token (D-04). Un cajero no puede indicar su sucursal al autenticar |
 | Sin integración FX (Fixer.io) | TI-15..19 no implementados |
 | `sucursal_id` falta en JWT | RN-08 no cumplido al 100% |
 | Sin log de auditoría | RNF-05 no implementado |
@@ -158,7 +263,7 @@ GET/POST/PUT/DELETE /api/tenants
 | TI-08 | Definir Idioma del Sistema | [IMPLEMENTADO via TenantConfig] |
 | TI-09 | Configurar Moneda Base | [IMPLEMENTADO via TenantConfig] |
 | TI-10 | Configurar País y Zona Horaria | [IMPLEMENTADO via TenantConfig] |
-| TI-11 | Gestionar Sucursales | [PLANIFICADO] |
+| TI-11 | Gestionar Sucursales | [PARCIAL — GET y POST /sucursales; sin PUT/DELETE] |
 | TI-14 | Auditar Log de Accesos | [PLANIFICADO] |
 | TI-15 | Obtener Tipo de Cambio en Tiempo Real | [PLANIFICADO] |
 | TI-16 | Actualizar Tabla de Tipos de Cambio | [PLANIFICADO] |

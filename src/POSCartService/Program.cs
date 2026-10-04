@@ -1,3 +1,4 @@
+using Confluent.Kafka;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using FluentValidation;
@@ -5,6 +6,7 @@ using FluentValidation.AspNetCore;
 using Microsoft.Extensions.Http;
 using Microsoft.IdentityModel.Tokens;
 using POSCartService.Data;
+using POSCartService.Messaging;
 using POSCartService.Middleware;
 using POSCartService.Repositories;
 using POSCartService.Services;
@@ -20,6 +22,24 @@ builder.Services.AddScoped<IVentaRepository, VentaRepository>();
 builder.Services.AddScoped<IItemVentaRepository, ItemVentaRepository>();
 builder.Services.AddScoped<ITurnoService, TurnoService>();
 builder.Services.AddScoped<IVentaService, VentaService>();
+
+// ─── Kafka Producer ─────────────────────────────────────────────────────────
+// IProducer<string,string> se registra como Singleton para reutilizar la
+// conexión al broker entre requests (patrón recomendado por Confluent).
+// KafkaProducerService recibe este producer por inyección de dependencias.
+builder.Services.AddSingleton<IProducer<string, string>>(sp =>
+{
+    var config = sp.GetRequiredService<IConfiguration>();
+    var producerConfig = new ProducerConfig
+    {
+        BootstrapServers      = config["Kafka:BootstrapServers"] ?? "localhost:9092",
+        Acks                  = Acks.Leader,
+        MessageSendMaxRetries = 3,
+        RetryBackoffMs        = 500
+    };
+    return new ProducerBuilder<string, string>(producerConfig).Build();
+});
+builder.Services.AddSingleton<IKafkaProducerService, KafkaProducerService>();
 builder.Services.AddFluentValidationAutoValidation();
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
@@ -50,7 +70,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("ElectronApp", policy =>
     {
-        policy.WithOrigins("http://localhost:3000", "http://localhost:5173")
+        policy.AllowAnyOrigin()
               .AllowAnyHeader()
               .AllowAnyMethod();
     });
@@ -144,3 +164,5 @@ app.MapHealthChecks("/health");
 // TODO: auto-migraciÃ³n en desarrollo, una vez exista el DbContext
 
 app.Run();
+
+public partial class Program { }

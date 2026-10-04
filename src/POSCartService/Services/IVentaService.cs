@@ -41,10 +41,14 @@ public interface IVentaService
         MetodoPagoVenta metodoPago);
 
     /// <summary>
-    /// Marca una venta PENDIENTE como COMPLETADA.
+    /// Marca una venta PENDIENTE como COMPLETADA, registra el pago en efectivo
+    /// y publica el evento <c>sale.completed</c> a Kafka.
     /// </summary>
+    /// <param name="ventaId">Id de la venta a completar.</param>
+    /// <param name="montoRecibido">Monto entregado por el cliente (≥ venta.Total).</param>
+    /// <param name="vuelto">Diferencia monto_recibido − total de la venta.</param>
     /// <exception cref="InvalidOperationException">Si la venta no está en estado PENDIENTE.</exception>
-    Task<Venta> CompletarAsync(Guid ventaId);
+    Task<Venta> CompletarAsync(Guid ventaId, decimal montoRecibido, decimal vuelto);
 
     /// <summary>
     /// Marca una venta como ANULADA y registra el motivo de anulación.

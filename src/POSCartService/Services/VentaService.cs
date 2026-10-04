@@ -1,3 +1,4 @@
+using POSCartService.Messaging;
 using POSCartService.Models;
 using POSCartService.Repositories;
 
@@ -7,11 +8,16 @@ public class VentaService : IVentaService
 {
     private readonly IVentaRepository _ventaRepository;
     private readonly IItemVentaRepository? _itemVentaRepository;
+    private readonly IKafkaProducerService? _kafkaProducer;
 
-    public VentaService(IVentaRepository ventaRepository, IItemVentaRepository? itemVentaRepository = null)
+    public VentaService(
+        IVentaRepository ventaRepository,
+        IItemVentaRepository? itemVentaRepository = null,
+        IKafkaProducerService? kafkaProducer = null)
     {
-        _ventaRepository = ventaRepository ?? throw new ArgumentNullException(nameof(ventaRepository));
+        _ventaRepository     = ventaRepository ?? throw new ArgumentNullException(nameof(ventaRepository));
         _itemVentaRepository = itemVentaRepository;
+        _kafkaProducer       = kafkaProducer;
     }
 
 
@@ -66,7 +72,7 @@ public class VentaService : IVentaService
     }
 
     /// <inheritdoc/>
-    public async Task<Venta> CompletarAsync(Guid ventaId)
+    public async Task<Venta> CompletarAsync(Guid ventaId, decimal montoRecibido, decimal vuelto)
     {
         var venta = await _ventaRepository.GetByIdAsync(ventaId)
             ?? throw new KeyNotFoundException($"Venta {ventaId} no encontrada.");
@@ -76,7 +82,58 @@ public class VentaService : IVentaService
                 $"Solo se puede completar una venta PENDIENTE. Estado actual: {venta.Estado}.");
 
         venta.Estado = EstadoVenta.COMPLETADA;
-        return await _ventaRepository.ActualizarAsync(venta);
+
+        // Registrar el pago en efectivo (Pago.Metodo=EFECTIVO, con monto y vuelto)
+        venta.Pagos.Add(new Pago
+        {
+            Id      = Guid.NewGuid(),
+            VentaId = venta.Id,
+            Metodo  = MetodoPago.EFECTIVO,
+            Monto   = montoRecibido,
+            Vuelto  = vuelto
+        });
+
+        var ventaCompletada = await _ventaRepository.ActualizarAsync(venta);
+
+        // Publicar evento sale.completed a Kafka (fire-and-forget resiliente:
+        // el error de Kafka no revierte la transacción de BD ya persistida).
+        if (_kafkaProducer is not null)
+        {
+            var itemsParaEvento = (ventaCompletada.Items != null && ventaCompletada.Items.Count > 0)
+                ? ventaCompletada.Items
+                : venta.Items;
+
+            var evento = new SaleCompletedEvent
+            {
+                EventId    = Guid.NewGuid(),
+                TenantId   = ventaCompletada.TenantId,
+                VentaId    = ventaCompletada.Id,
+                CajeroId   = ventaCompletada.CajeroId,
+                SucursalId = ventaCompletada.SucursalId,
+                Subtotal   = ventaCompletada.Subtotal,
+                Iva        = ventaCompletada.Impuestos,
+                Total      = ventaCompletada.Total,
+                MetodoPago = ventaCompletada.MetodoPago.ToString(),
+                Timestamp  = DateTime.UtcNow,
+                Items      = itemsParaEvento.Select(i => new SaleCompletedItemEvent
+                {
+                    ProductoId     = i.ProductoId,
+                    Cantidad       = i.Cantidad,
+                    PrecioUnitario = i.PrecioUnitario
+                }).ToList()
+            };
+
+            try
+            {
+                await _kafkaProducer.PublicarSaleCompletedAsync(evento);
+            }
+            catch
+            {
+                // Fire-and-forget resiliente: no interrumpir la confirmación de la venta si la mensajería falla.
+            }
+        }
+
+        return ventaCompletada;
     }
 
     /// <inheritdoc/>

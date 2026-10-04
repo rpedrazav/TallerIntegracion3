@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
@@ -9,6 +9,18 @@ var builder = WebApplication.CreateBuilder(args);
 
 // InyecciÃ³n de Controladores y Auto-ValidaciÃ³n
 builder.Services.AddControllers();
+
+// CORS — permite peticiones desde el renderer de Electron y Swagger UI
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        policy
+            .SetIsOriginAllowed(_ => true)   // Electron usa file:// y localhost dinámico
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+});
 builder.Services.AddFluentValidationAutoValidation();
 
 // InyecciÃ³n de Base de Datos PostgreSQL
@@ -44,19 +56,59 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateAudience = true,
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
-            ValidIssuer = builder.Configuration["Jwt:Issuer"] ?? "GlobalMart",
-            ValidAudience = builder.Configuration["Jwt:Audience"] ?? "GlobalMartUsers",
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:SecretKey"] ?? "TuSuperSecretoDeDesarrollo1234567890!"))
+            ValidIssuer = builder.Configuration["Jwt:Issuer"] ?? "GlobalMartOS",
+            ValidAudience = builder.Configuration["Jwt:Audience"] ?? "GlobalMartOS_Clients",
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(
+                builder.Configuration["Jwt:SecretKey"] ?? builder.Configuration["Jwt:Key"] ?? "GlobalMartOS_SuperSecretKey_ChangeInProduction_Min32Chars!!"))
         };
     });
 builder.Services.AddAuthorization();
 
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new() 
+    { 
+        Title = "GlobalMart OS - Catalog & Pricing Service (MS-3)", 
+        Version = "v1",
+        Description = "Microservicio encargado de la gestion del catalogo de productos, categorias y listas de precios."
+    });
+
+    c.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+    {
+        Type = Microsoft.OpenApi.Models.SecuritySchemeType.ApiKey,
+        Scheme = "bearer", 
+        In = Microsoft.OpenApi.Models.ParameterLocation.Header, 
+        Name = "Authorization",
+        BearerFormat = "JWT",
+        Description = "Ingresa el JWT token generado en el endpoint de Login."
+    });
+
+    c.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
+    {
+        {
+            new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+            {
+                Reference = new Microsoft.OpenApi.Models.OpenApiReference
+                {
+                    Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            Array.Empty<string>()
+        }
+    });
+
+    var xmlFile = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    var xmlPath = System.IO.Path.Combine(AppContext.BaseDirectory, xmlFile);
+    c.IncludeXmlComments(xmlPath);
+});
 
 var app = builder.Build();
 
 // Pipeline de Middlewares (Orden estricto)
+app.UseCors(); // debe ir ANTES de Authentication
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger(c => c.SerializeAsV2 = true);
@@ -70,4 +122,7 @@ app.UseMiddleware<TenantMiddleware>();
 app.MapControllers();
 
 app.Run();
+
+public partial class Program { }
+
 
