@@ -5,8 +5,8 @@ titulo: Pantallas del Frontend — GlobalMart OS
 estado: parcial
 fuentes: [globalmart-frontend/src/pages/, globalmart-frontend/src/components/]
 verificado_contra_codigo: true
-ultima_revision: 2026-10-02
-depende_de: [estructura, ms1-identity, ms5-pos]
+ultima_revision: 2026-10-06
+depende_de: [estructura, ms1-identity, ms5-pos, guia-estilo]
 publica: []
 consume: []
 reglas: []
@@ -125,6 +125,7 @@ Pantallas no implementadas:
 
 ## Conexiones
 - Estructura: [[estructura]]
+- Guía visual aprobada: [[guia-estilo]]
 - Auth: [[auth-y-roles]]
 - Diagramas UI: [[indice-diagramas]]
 

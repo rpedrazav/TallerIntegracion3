@@ -5,7 +5,7 @@ titulo: Estado Real de Implementación — GlobalMart OS
 estado: vigente
 fuentes: [docs/context/_reports/inventario.md, src/, git log, docs/context/_reports/preguntas-abiertas.md]
 verificado_contra_codigo: true
-ultima_revision: 2026-10-03
+ultima_revision: 2026-10-06
 depende_de: []
 publica: []
 consume: []
@@ -180,6 +180,12 @@ reglas: []
 ---
 
 ## Estado del Frontend
+
+### Guía visual aprobada
+
+El archivo `docs/GlobalMart OS — Guía de estilo.html` fue aprobado como referencia visual del frontend el 2026-10-06. Define tokens CSS, tipografías `Inter`/`IBM Plex Mono`, paleta cálida con pimentón, estados salvia/mostaza/ladrillo/pizarra, modo oscuro, reglas de contraste y composición de referencia para el POS. La guía es normativa para nuevas implementaciones, pero no cambia el estado funcional de las pantallas: POS sigue [PARCIAL] y Admin sigue [PLACEHOLDER].
+
+Ver el nodo [[guia-estilo]] para el resumen y las reglas aplicables.
 
 | Pantalla | Estado | Integración API |
 |----------|--------|-----------------|

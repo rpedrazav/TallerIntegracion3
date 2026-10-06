@@ -88,6 +88,7 @@ reglas: []
 |------|---------------|
 | `[[estructura]]` | Estructura del proyecto frontend |
 | `[[pantallas]]` | Pantallas implementadas |
+| `[[guia-estilo]]` | Sistema visual aprobado, tokens y reglas de accesibilidad |
 | `[[electron-ipc]]` | Comunicación Electron main/renderer |
 | `[[auth-y-roles]]` | Manejo de JWT en el frontend |
 
@@ -126,6 +127,7 @@ reglas: []
 
 ## Conexiones
 - Estado real: [[estado-actual]]
+- Frontend: [[estructura]], [[pantallas]], [[guia-estilo]]
 - Servicios principales: [[ms1-identity]], [[ms5-pos]], [[ms4-inventory]]
 - Eventos: [[kafka-topics]]
 - Infraestructura: [[docker-compose]], [[kong]]

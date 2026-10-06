@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>GlobalMart OS · Guía de estilo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style id="tokens"></style>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:var(--color-bg);color:var(--color-ink);font:var(--text-body);-webkit-font-smoothing:antialiased}
+.wrap{max-width:920px;margin:0 auto;padding:64px 24px 96px}
+.eyebrow{font:var(--text-code);color:var(--color-ink-soft)}
+h1.brand{font:700 clamp(36px,7vw,60px)/1.02 var(--font-mono);margin:10px 0 6px}
+h1.brand span{color:var(--color-primary)}
+.tagline{color:var(--color-ink-soft);max-width:54ch;margin:0 0 8px}
+h2{font:var(--text-title-xl);margin:0 0 4px}
+.lead{margin:0 0 22px;max-width:62ch;color:var(--color-ink-soft);font:var(--text-body-sm)}
+hr.rule{border:0;border-top:2px dashed var(--color-line);margin:52px 0}
+h3{font:var(--text-title);margin:26px 0 10px}
+button{font:var(--text-button);cursor:pointer}
+button:focus-visible{outline:2px solid var(--color-primary);outline-offset:2px}
+#theme{position:fixed;top:calc(16px + env(safe-area-inset-top,0px));right:16px;z-index:5;font:var(--text-label);background:var(--color-surface);color:var(--color-ink);border:1px solid var(--color-line);border-radius:999px;padding:8px 14px}
+.lock{display:flex;align-items:center;gap:14px}
+.mark{width:52px;height:52px;border-radius:13px;background:var(--color-primary);color:var(--color-on-primary);display:grid;place-items:center;font:700 19px var(--font-mono);flex:none}
+.wm{font:700 26px var(--font-mono)}.wm span{color:var(--color-primary)}
+.chips{display:flex;gap:14px;flex-wrap:wrap}
+.chip{border:1px solid var(--color-line);border-radius:10px;padding:16px 20px;background:var(--color-surface)}
+.chip.inv{background:var(--color-ink)}.chip.inv .wm{color:var(--color-surface)}.chip.inv .wm span{color:var(--color-primary)}
+.chip.inv .mark{background:var(--color-surface);color:var(--color-ink)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px}
+.sw{all:unset;box-sizing:border-box;cursor:pointer;background:var(--color-surface);border:1px solid var(--color-line);border-radius:10px;overflow:hidden;display:block}
+.sw:hover{border-color:var(--color-primary)}
+.sw .f{height:58px}
+.sw .i{padding:10px 12px}.sw b{display:block;font:var(--text-label)}
+.sw code,.sw small{display:block;font:var(--text-caption);color:var(--color-ink-soft)}
+.sw code{font-family:var(--font-mono)}
+.card{background:var(--color-surface);border:1px solid var(--color-line);border-radius:10px;padding:18px 20px}
+.fam{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:14px}
+.fam .big{font-size:56px;line-height:1;margin:0 0 8px}.fam .nm{font:var(--text-title)}
+.fam p{font:var(--text-body-sm);color:var(--color-ink-soft);margin:4px 0 0}
+.scale{background:var(--color-surface);border:1px solid var(--color-line);border-radius:10px;overflow:hidden}
+.row{all:unset;box-sizing:border-box;cursor:pointer;display:grid;grid-template-columns:190px 1fr;gap:18px;align-items:center;width:100%;padding:12px 20px;border-bottom:1px solid var(--color-line)}
+.row:last-child{border-bottom:0}.row:hover{background:var(--color-bg)}
+.row b{display:block;font:var(--text-label)}.row code{display:block;font:var(--text-caption);font-family:var(--font-mono);color:var(--color-ink-soft)}
+.row .s{overflow-wrap:anywhere;min-width:0}
+.num{font-variant-numeric:tabular-nums lining-nums}
+.icons{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:12px}
+.ic{background:var(--color-surface);border:1px solid var(--color-line);border-radius:10px;padding:16px 8px;text-align:center;font:var(--text-caption);color:var(--color-ink-soft)}
+.ic svg{width:28px;height:28px;display:block;margin:0 auto 8px;stroke:var(--color-primary);fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.btns{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.btn{border:1px solid transparent;border-radius:9px;padding:11px 18px}
+.btn:hover{filter:brightness(1.06)}
+.b-pay{background:var(--color-success);color:var(--color-on-success);font-size:18px;padding:13px 28px}
+.b-pri{background:var(--color-primary);color:var(--color-on-primary)}
+.b-sec{background:transparent;color:var(--color-ink);border-color:var(--color-line)}
+.b-dan{background:var(--color-danger);color:var(--color-on-danger)}
+.badge{font:600 12px var(--font-mono);padding:5px 10px;border-radius:999px;display:inline-flex;align-items:center;gap:6px;color:var(--t);background:color-mix(in srgb,var(--c) var(--p),var(--color-surface))}
+.badge::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+.alerts{display:grid;gap:12px;margin-top:18px}
+.alert{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;background:var(--color-bg);border:1px solid var(--color-line);border-left:5px solid var(--c);border-radius:10px;padding:12px 16px}
+.alert .ai{flex:none;width:38px;height:38px;border-radius:50%;display:grid;place-items:center;color:var(--t);background:color-mix(in srgb,var(--c) 18%,transparent)}
+.alert .ai svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.alert .m{flex:1 1 220px;min-width:0}.alert .m b{display:block;font:600 15px/1.3 var(--font-sans)}
+.alert .m span{display:block;font:var(--text-body-sm);color:var(--color-ink-soft);margin-top:2px}
+.alert .side{display:flex;align-items:center;gap:10px;margin-left:auto}
+.act{background:transparent;color:var(--color-ink);border:1px solid var(--color-line);border-radius:8px;padding:7px 12px;font:var(--text-label)}
+.act:hover{border-color:var(--c)}
+.ctx{display:grid;grid-template-columns:1.4fr 1fr;gap:16px;margin-top:22px}
+.scan{width:100%;background:var(--color-bg);border:1px solid var(--color-line);border-radius:8px;padding:10px 12px;font:500 16px var(--font-mono);color:var(--color-ink);margin:6px 0 12px}
+.line{display:grid;grid-template-columns:44px 1fr auto;gap:10px;padding:9px 0;border-bottom:1px solid var(--color-line);align-items:baseline}
+.line .q{font:var(--text-label);color:var(--color-ink-soft)}.line small{display:block;font:var(--text-caption);color:var(--color-ink-soft)}
+.line .p{font:var(--text-price);font-size:18px;line-height:24px}
+.tot{display:flex;justify-content:space-between;align-items:baseline;margin:8px 0 12px}
+.tot span{font:var(--text-label);color:var(--color-ink-soft)}.tot strong{font:var(--text-total)}
+.receipt{font:var(--text-ticket)}
+.receipt .r{display:flex;justify-content:space-between;padding:4px 0;color:var(--color-ink-soft)}
+.receipt .r.t{color:var(--color-ink);font-weight:700;border-top:2px dashed var(--color-line);margin-top:8px;padding-top:10px}
+ul.rules{margin:0;padding-left:20px}ul.rules li{margin:6px 0}
+pre{background:#211A14;color:#EADFCF;border-radius:10px;padding:16px;overflow:auto;font:var(--text-code);line-height:1.55;margin:0}
+#copy{margin-top:10px;background:var(--color-primary);color:var(--color-on-primary);border:0;border-radius:8px;padding:9px 16px}
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#332A22;color:#fff;padding:9px 16px;border-radius:8px;font:var(--text-body-sm);opacity:0;transition:opacity .2s;pointer-events:none}
+#toast.on{opacity:1}
+@media (max-width:720px){.row{grid-template-columns:1fr;gap:4px}.ctx{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){#toast{transition:none}}
+</style>
+</head>
+<body>
+<button id="theme" type="button">Modo oscuro</button>
+<div class="wrap">
+  <p class="eyebrow">Guía de estilo para la app de escritorio</p>
+  <h1 class="brand">GlobalMart<span>.</span>OS</h1>
+  <p class="tagline">Lino cálido, pimentón y tipografía de ticket de caja. Pensada para turnos largos: nada vibra, salvo las alertas.</p>
+
+  <hr class="rule">
+  <h2>Logo</h2>
+  <p class="lead">Isotipo cuadrado y wordmark monoespaciado, como el encabezado de una boleta.</p>
+  <div class="chips">
+    <div class="chip"><div class="lock"><div class="mark">GM</div><div class="wm">Global<span>Mart</span></div></div></div>
+    <div class="chip inv"><div class="lock"><div class="mark">GM</div><div class="wm">Global<span>Mart</span></div></div></div>
+  </div>
+
+  <hr class="rule">
+  <h2>Color</h2>
+  <p class="lead">El pimentón es de marca y navegación. El verde salvia queda para cobrar y confirmar, así el primario no se confunde con una alerta. Los ratios se calculan para el modo activo.</p>
+  <h3>Marca y neutros</h3><div class="grid" id="g-base"></div>
+  <h3>Estados</h3><div class="grid" id="g-states"></div>
+
+  <hr class="rule">
+  <h2>Tipografía</h2>
+  <p class="lead">Plex Mono para marca, precios y códigos. Inter para interfaz y texto. Los precios y totales siempre con cifras tabulares.</p>
+  <div class="fam">
+    <div class="card"><p class="big" style="font:700 56px/1 var(--font-mono)">Aa</p><div class="nm">IBM Plex Mono</div><p>Marca, precios, totales, SKU, lotes, folios y ticket. Pesos 400, 500, 600 y 700.</p></div>
+    <div class="card"><p class="big" style="font:600 56px/1 var(--font-sans)">Aa</p><div class="nm">Inter</div><p>Títulos, botones, etiquetas y texto de apoyo. Pesos 400, 500 y 600.</p></div>
+  </div>
+  <h3>Escala</h3><div class="scale" id="scale"></div>
+
+  <hr class="rule">
+  <h2>Íconos</h2>
+  <p class="lead">Trazo de 1.6 px, sin relleno, en color primario. Cada estado tiene su propia forma para no depender solo del color.</p>
+  <div class="icons" id="icons"></div>
+
+  <hr class="rule">
+  <h2>Componentes</h2>
+  <p class="lead">Botones, badges y alertas con los tokens de arriba.</p>
+  <div class="btns">
+    <button class="btn b-pay" type="button">Cobrar</button>
+    <button class="btn b-pri" type="button">Abrir turno</button>
+    <button class="btn b-sec" type="button">Cancelar</button>
+    <button class="btn b-dan" type="button">Anular venta</button>
+  </div>
+  <div class="btns" style="margin-top:14px">
+    <span class="badge" style="--c:var(--color-success);--t:var(--color-success-text);--p:14%">Venta completada</span>
+    <span class="badge" style="--c:var(--color-warning);--t:var(--color-warning-text);--p:16%">Stock bajo</span>
+    <span class="badge" style="--c:var(--color-danger);--t:var(--color-danger-text);--p:12%">Vence en 2 días</span>
+    <span class="badge" style="--c:var(--color-info);--t:var(--color-info-text);--p:14%">Balanza conectada</span>
+  </div>
+  <div class="alerts" id="alerts"></div>
+
+  <h3>En contexto</h3>
+  <div class="ctx">
+    <div class="card">
+      <div style="font:var(--text-title)">Venta en curso</div>
+      <input class="scan" value="7801234567890" aria-label="Código de barras" readonly>
+      <div class="line"><span class="q num">2×</span><span>Leche entera 1 L<small>Lote L-0425, vence 12/10/2026</small></span><span class="p num">$3.780</span></div>
+      <div class="line"><span class="q num">1×</span><span>Pan de molde integral<small>Lote L-0431, vence 09/10/2026</small></span><span class="p num">$2.490</span></div>
+      <div class="line"><span class="q num">0,8 kg</span><span>Tomate<small>Peso desde la balanza</small></span><span class="p num">$1.832</span></div>
+      <div class="tot"><span>Total a pagar</span><strong class="num">$8.102</strong></div>
+      <button class="btn b-pay" type="button" style="width:100%">Cobrar</button>
+    </div>
+    <div class="card receipt">
+      <div class="r"><span>Leche 1 L x2</span><span class="num">$3.780</span></div>
+      <div class="r"><span>Pan integral</span><span class="num">$2.490</span></div>
+      <div class="r"><span>Tomate 0,8 kg</span><span class="num">$1.832</span></div>
+      <div class="r"><span>IVA incluido (19%)</span><span class="num">$1.294</span></div>
+      <div class="r t"><span>Total</span><span class="num">$8.102</span></div>
+      <div class="r" style="margin-top:10px"><span>Folio 000482</span><span>05/10/2026</span></div>
+    </div>
+  </div>
+
+  <hr class="rule">
+  <h2>Reglas de uso</h2>
+  <ul class="rules">
+    <li>El pimentón es solo marca y navegación. Cobrar y confirmar van en verde salvia; anular y errores, en ladrillo.</li>
+    <li>El texto de estado siempre usa el token <code>-text</code>, que cumple 4.5:1 sobre el fondo tintado.</li>
+    <li>Toda alerta lleva ícono, título y detalle. Nunca se comunica solo con color.</li>
+    <li>Precios, cantidades y totales usan <code>tabular-nums</code>. Los códigos van en monoespaciada.</li>
+    <li>Nada que el cajero lea para cobrar baja de 14 px. El mínimo absoluto es 12 px.</li>
+    <li>Las fuentes se empaquetan en la app de Electron para que el POS abra sin internet.</li>
+  </ul>
+
+  <hr class="rule">
+  <h2>Tokens CSS</h2>
+  <p class="lead">Cada tenant puede sobrescribir solo <code>--color-primary</code> y <code>--color-on-primary</code>.</p>
+  <pre id="css"></pre>
+  <button id="copy" type="button">Copiar tokens</button>
+</div>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+const L={bg:'#F1ECE3',surface:'#FBF8F3',ink:'#332A22','ink-soft':'#6E6456',line:'#DCD3C3',primary:'#A25A33','on-primary':'#FBF8F3',secondary:'#6F6330',
+ success:'#4A6540','success-text':'#4A6540','on-success':'#FBF8F3',warning:'#B5842A','warning-text':'#7D5A10',danger:'#9C3B2E','danger-text':'#9C3B2E','on-danger':'#FBF8F3',info:'#42607D','info-text':'#42607D'};
+const D={bg:'#211A14',surface:'#2A2219',ink:'#F1ECE3','ink-soft':'#BFB29E',line:'#46392A',primary:'#D98656','on-primary':'#241509',secondary:'#B9A663',
+ success:'#8CAE7C','success-text':'#8CAE7C','on-success':'#14200F',warning:'#DCAE50','warning-text':'#DCAE50',danger:'#E88F82','danger-text':'#E88F82','on-danger':'#2A140F',info:'#8FB0D0','info-text':'#8FB0D0'};
+const TINT={success:14,warning:16,danger:12,info:14};
+const TYPE=[
+ ["total","Total",700,44,48,"m","Total de la venta","$8.102",1],
+ ["price","Precio",600,28,32,"m","Precios destacados","$1.890",1],
+ ["title-xl","Título de pantalla",600,24,32,"s","Encabezado de pantalla","Cierre de turno"],
+ ["title","Título de sección",600,18,26,"s","Paneles y modales","Resumen del carrito"],
+ ["body","Texto base",400,16,24,"s","Nombre de producto","Leche entera 1 L, caja de 12"],
+ ["body-sm","Texto pequeño",400,14,20,"s","Detalles y tablas","Lote L-0425, vence 12/10/2026"],
+ ["button","Botón",600,16,20,"s","Botones y acciones","Cobrar"],
+ ["label","Etiqueta",500,13,18,"s","Campos y encabezados","Cantidad"],
+ ["caption","Apoyo",400,12,16,"s","Notas y marcas de tiempo","Actualizado hace 2 min"],
+ ["code","Código",500,14,20,"m","Barras, lotes, folios","7801234567890"],
+ ["ticket","Ticket",400,13.5,20,"m","Ticket impreso","2 x LECHE ENT 1L   $3.780"]];
+const rem=n=>+(n/16).toFixed(4)+'rem',fam=f=>f=='m'?'var(--font-mono)':'var(--font-sans)';
+const blk=(sel,o,keys)=>sel+" {\n"+keys.map(k=>`  --color-${k}: ${o[k]};`).join("\n")+"\n}";
+const lk=Object.keys(L),dk=lk.filter(k=>D[k]!==L[k]);
+const tints=Object.keys(TINT).map(k=>`  --color-${k}-bg: color-mix(in srgb, var(--color-${k}) ${TINT[k]}%, var(--color-surface));`).join("\n");
+const css=`:root {
+  --font-sans: "Inter", system-ui, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+
+`+TYPE.map(s=>`  --text-${s[0]}: ${s[2]} ${rem(s[3])}/${rem(s[4])} ${fam(s[5])};`).join("\n")+`
+
+`+lk.map(k=>`  --color-${k}: ${L[k]};`).join("\n")+`
+${tints}
+}
+
+[data-theme="dark"] {
+`+dk.map(k=>`  --color-${k}: ${D[k]};`).join("\n")+`
+}
+
+.num { font-variant-numeric: tabular-nums lining-nums; }`;
+document.getElementById('tokens').textContent=css;
+document.getElementById('css').textContent=css;
+
+function lum(h){const c=[1,3,5].map(i=>parseInt(h.substr(i,2),16)/255).map(v=>v<=.03928?v/12.92:Math.pow((v+.055)/1.055,2.4));return .2126*c[0]+.7152*c[1]+.0722*c[2]}
+const ratio=(a,b)=>{const x=lum(a),y=lum(b);return (Math.max(x,y)+.05)/(Math.min(x,y)+.05)};
+const mixc=(a,b,p)=>'#'+[1,3,5].map(i=>Math.round(parseInt(a.substr(i,2),16)*p+parseInt(b.substr(i,2),16)*(1-p)).toString(16).padStart(2,'0')).join('');
+const toast=document.getElementById('toast');let tm;
+function copy(txt,label){(navigator.clipboard?navigator.clipboard.writeText(txt):Promise.reject()).catch(()=>{const e=document.createElement('textarea');e.value=txt;document.body.appendChild(e);e.select();document.execCommand('copy');e.remove()});
+ toast.textContent='Copiado: '+label;toast.classList.add('on');clearTimeout(tm);tm=setTimeout(()=>toast.classList.remove('on'),1400)}
+function sw(T,[name,key,use,fg,bg]){
+  const hex=T[key];let rt='';
+  if(fg){const r=ratio(T[fg]||fg,bg.startsWith('#')?bg:T[bg]);rt=`<small>${r.toFixed(1)}:1 ${r>=4.5?'AA ✔':'✖'}</small>`}
+  const b=document.createElement('button');b.type='button';b.className='sw';b.setAttribute('aria-label',`${name} ${hex}, copiar`);
+  b.innerHTML=`<div class="f" style="background:${hex}"></div><div class="i"><b>${name}</b><code>${hex}</code><small>${use}</small>${rt}</div>`;
+  b.onclick=()=>copy(hex,hex);return b}
+function renderColors(){
+  const dark=document.documentElement.dataset.theme==='dark',T=dark?D:L;
+  const base=[["Fondo · Lino","bg","Fondo base de la app"],["Superficie · Crema","surface","Tarjetas y paneles"],["Tinta","ink","Texto principal","ink","bg"],["Tinta suave","ink-soft","Texto secundario","ink-soft","surface"],["Arena","line","Líneas y bordes"],["Primario · Pimentón","primary","Marca, navegación, acciones","on-primary","primary"],["Secundario · Oliva","secondary","Tags y detalles","secondary","surface"]];
+  const st=[["Éxito · Salvia","success","Cobrar, venta OK, stock normal","success-text","success"],["Advertencia · Mostaza","warning","Stock bajo (el texto usa un tono más oscuro)","warning-text","warning"],["Peligro · Ladrillo","danger","Error, anulación, vence pronto","danger-text","danger"],["Información · Pizarra","info","Balanza conectada, sincronización","info-text","info"]];
+  const gb=document.getElementById('g-base'),gs=document.getElementById('g-states');gb.innerHTML=gs.innerHTML='';
+  base.forEach(x=>gb.appendChild(sw(T,x)));
+  st.forEach(([n,k,u,fg])=>{const tint=mixc(T[k],T.surface,TINT[k]/100);const e=sw(T,[n,k,u,fg,tint]);gs.appendChild(e)});
+  document.getElementById('theme').textContent=dark?'Modo claro':'Modo oscuro';
+}
+const ICONS=[["Carrito",'<path d="M3 4h2l2.4 12.4a2 2 0 0 0 2 1.6h8.2a2 2 0 0 0 2-1.6L22 8H6"/><circle cx="9" cy="21" r="1.4"/><circle cx="18" cy="21" r="1.4"/>'],
+["Caja",'<rect x="3" y="7" width="18" height="12" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 12h18"/>'],
+["Código",'<path d="M4 5h16v14H4zM8 5v14M12 5v14M16 5v14"/>'],
+["Sucursal",'<path d="M3 9l9-6 9 6v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM9 21v-9h6v9"/>'],
+["Cajero",'<circle cx="12" cy="8" r="3.6"/><path d="M5 20c1.2-4 4-6 7-6s5.8 2 7 6"/>'],
+["Inventario",'<rect x="3" y="3" width="8" height="8" rx="1"/><rect x="13" y="3" width="8" height="8" rx="1"/><rect x="3" y="13" width="8" height="8" rx="1"/><rect x="13" y="13" width="8" height="8" rx="1"/>'],
+["Stock bajo",'<path d="M12 3 2.5 20h19L12 3Z"/><path d="M12 10v4M12 17.2v.1"/>'],
+["Vence pronto",'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>'],
+["Completado",'<circle cx="12" cy="12" r="9"/><path d="m8 12.5 2.8 2.8L16 9.8"/>']];
+const ig=document.getElementById('icons');
+ICONS.forEach(([n,p])=>{const d=document.createElement('div');d.className='ic';d.innerHTML=`<svg viewBox="0 0 24 24" aria-hidden="true">${p}</svg>${n}`;ig.appendChild(d)});
+const sc=document.getElementById('scale');
+TYPE.forEach(s=>{const b=document.createElement('button');b.type='button';b.className='row';b.setAttribute('aria-label',`${s[1]}, copiar token`);
+ b.innerHTML=`<div><b>${s[1]}</b><code>--text-${s[0]}</code><code>${s[2]} · ${s[3]}/${s[4]} px · ${s[5]=='m'?'Mono':'Sans'}</code></div><div class="s ${s[8]?'num':''}" style="font:var(--text-${s[0]})">${s[7]}</div>`;
+ b.title=s[6];b.onclick=()=>copy(`font: var(--text-${s[0]});`,'--text-'+s[0]);sc.appendChild(b)});
+const AL=[["warning","Stock bajo el mínimo","Quedan 4 unidades de Leche entera 1 L; el mínimo es 10.","Advertencia","Reponer",1],["danger","Vence en 2 días","Yogurt natural, lote L-0425, 12 unidades en bodega.","Crítico","Ver lote",7],["success","Venta completada","El ticket se envió a imprimir.","","Reimprimir",8]];
+document.getElementById('alerts').innerHTML=AL.map(([k,t,d,tag,act,i])=>`<div class="alert" style="--c:var(--color-${k});--t:var(--color-${k}-text)" role="${k=='danger'?'alert':'status'}"><span class="ai"><svg viewBox="0 0 24 24" aria-hidden="true">${ICONS[i][1]}</svg></span><div class="m"><b>${t}</b><span>${d}</span></div><div class="side">${tag?`<span class="badge" style="--c:var(--color-${k});--t:var(--color-${k}-text);--p:16%">${tag}</span>`:''}<button class="act" type="button">${act}</button></div></div>`).join('');
+document.getElementById('copy').onclick=()=>copy(css,'tokens CSS');
+const root=document.documentElement;
+if(window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches)root.dataset.theme='dark';
+document.getElementById('theme').onclick=()=>{root.dataset.theme=root.dataset.theme==='dark'?'light':'dark';renderColors()};
+renderColors();
+</script>
+</body>
+</html>

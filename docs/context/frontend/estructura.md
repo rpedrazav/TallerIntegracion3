@@ -5,8 +5,8 @@ titulo: Frontend — Estructura del Proyecto Electron + React
 estado: parcial
 fuentes: [globalmart-frontend/src/, globalmart-frontend/package.json, globalmart-frontend/forge.config.ts]
 verificado_contra_codigo: true
-ultima_revision: 2026-09-28
-depende_de: [stack, ms1-identity]
+ultima_revision: 2026-10-06
+depende_de: [stack, ms1-identity, guia-estilo]
 publica: []
 consume: []
 reglas: [RNF-06]
@@ -14,6 +14,10 @@ reglas: [RNF-06]
 # Frontend — Estructura del Proyecto Electron + React
 
 > App de escritorio multiplataforma construida con Electron + React + TypeScript. Actualmente solo tiene 3 páginas y está en etapa inicial de integración con el backend.
+
+## Sistema visual
+
+La aplicación debe seguir la [[guia-estilo]], aprobada el 2026-10-06. El HTML fuente contiene los tokens CSS, escalas tipográficas, colores de estado, modo oscuro y reglas de accesibilidad. La guía define la apariencia objetivo; no implica que todas las pantallas actuales ya estén adaptadas.
 
 ## Árbol de archivos
 
@@ -82,6 +86,7 @@ globalmart-frontend/
 ## Conexiones
 - Autenticación: [[auth-y-roles]]
 - Pantallas detalle: [[pantallas]]
+- Guía visual: [[guia-estilo]]
 - IPC Electron: [[electron-ipc]]
 - API que consume: [[ms1-identity]], [[ms5-pos]], [[ms3-catalog]]
 
