@@ -29,6 +29,8 @@ public class UsuarioRepository : IUsuarioRepository
     {
         var query = _db.Usuarios
             .IgnoreQueryFilters()
+            .Include(usuario => usuario.UsuarioRoles)
+                .ThenInclude(usuarioRol => usuarioRol.Rol)
             .Where(usuario => usuario.TenantId == tenantId && usuario.Activo);
 
         var totalItems = await query.CountAsync();
