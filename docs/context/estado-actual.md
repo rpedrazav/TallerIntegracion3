@@ -1,4 +1,4 @@
-﻿---
+---
 id: estado-actual
 tipo: indice
 titulo: Estado Real de Implementación — GlobalMart OS
@@ -194,7 +194,7 @@ Ver el nodo [[guia-estilo]] para el resumen y las reglas aplicables.
 | Cerrar Turno (`CerrarTurnoPage`) | [IMPLEMENTADO] | Tabla de denominaciones (billetes/monedas) con conteo y subtotales automáticos. Llama a MS-5 `POST /api/turnos/cuadre` para obtener efectivo esperado. Muestra resultado: efectivo esperado vs declarado, diferencia en **verde** si es $0, en **rojo** si hay discrepancia (sobrante o faltante). Botón `POST /api/turnos/cerrar` con confirmación. |
 | Productos Admin (`ProductosPage`) | [IMPLEMENTADO] | `GET /products?page=1&pageSize=500` + `GET /categories` en MS-3 (puerto 5203). Tabla con nombre, código de barras, categoría, precio base, tipo (peso variable/unidad) y estado. Filtro instantáneo en frontend por texto (nombre, código, descripción, categoría), filtro por categoría dropdown y toggle "solo activos". Accesible desde `/admin/productos`. |
 | POS/Carrito | [PARCIAL] | UI con banner de confirmación de apertura de turno y datos mockeados; pendiente llamada a APIs de ventas |
-| Admin | [PARCIAL] | Lista usuarios (`GET /api/v1/users`) y `CrearUsuarioModal` (`POST /api/v1/users` + `POST /api/v1/users/{id}/roles`) con validación frontend; usa tokens de la guía de estilo. Sin edición/desactivación. |
+| Admin | [PARCIAL] | Lista usuarios con `UsuariosList` (`GET /api/v1/users`, nombre, correo, roles y estado) y `CrearUsuarioModal` (`POST /api/v1/users` + `POST /api/v1/users/{id}/roles`) con validación frontend; usa tokens de la guía de estilo. Sin edición/desactivación. |
 
 **Nota de integración Electron:** `preload.ts` expone únicamente funciones de autenticación y sesión (`ping`, `getToken`, `setToken`, `logout`). No expone hardware serial ni actualización automática por ahora.
 

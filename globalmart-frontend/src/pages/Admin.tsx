@@ -2,23 +2,10 @@ import { useCallback, useEffect, useState } from 'react';
 import axios from 'axios';
 import { useAuth } from '../hooks/useAuth';
 import CrearUsuarioModal, { CrearUsuarioValues } from '../components/admin/CrearUsuarioModal';
+import UsuariosList, { Usuario } from '../components/admin/UsuariosList';
 
 // MS-1 Tenant & Identity
 const IDENTITY_URL = 'https://auth-rpedraza.dev.censei.cl';
-
-interface Usuario {
-  id: string;
-  nombre: string;
-  email: string;
-  activo: boolean;
-  creadoEn: string;
-}
-
-const th: React.CSSProperties = {
-  textAlign: 'left', padding: '0.6rem 0.9rem', fontSize: '0.875rem',
-  color: 'var(--color-ink-soft)', borderBottom: '1px solid var(--color-line)',
-};
-const td: React.CSSProperties = { padding: '0.6rem 0.9rem', borderBottom: '1px solid var(--color-line)' };
 
 export default function Admin() {
   const { token } = useAuth();
@@ -90,34 +77,7 @@ export default function Admin() {
         </div>
       )}
 
-      <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-line)', borderRadius: '12px', overflow: 'hidden' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-          <thead>
-            <tr><th style={th}>Nombre</th><th style={th}>Correo</th><th style={th}>Estado</th></tr>
-          </thead>
-          <tbody>
-            {loading && <tr><td style={td} colSpan={3}>Cargando…</td></tr>}
-            {!loading && usuarios.length === 0 && !error && (
-              <tr><td style={td} colSpan={3}>No hay usuarios.</td></tr>
-            )}
-            {usuarios.map(u => (
-              <tr key={u.id}>
-                <td style={td}>{u.nombre}</td>
-                <td style={td}>{u.email}</td>
-                <td style={td}>
-                  <span style={{
-                    padding: '0.1rem 0.6rem', borderRadius: '9999px', fontSize: '0.875rem', fontWeight: 600,
-                    background: u.activo ? 'var(--color-success-bg)' : 'var(--color-danger-bg)',
-                    color: u.activo ? 'var(--color-success-text)' : 'var(--color-danger-text)',
-                  }}>
-                    {u.activo ? 'Activo' : 'Inactivo'}
-                  </span>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <UsuariosList usuarios={usuarios} loading={loading} error={error} />
 
       <CrearUsuarioModal
         isOpen={modalAbierto}
