@@ -260,7 +260,12 @@ public class UsuarioController : ControllerBase
             Email = usuario.Email,
             Activo = usuario.Activo,
             CreadoEn = usuario.CreadoEn,
-            UltimoLogin = usuario.UltimoLogin
+            UltimoLogin = usuario.UltimoLogin,
+            Roles = usuario.UsuarioRoles
+                .Where(ur => ur.Rol != null)
+                .Select(ur => ur.Rol.Nombre)
+                .OrderBy(nombre => nombre)
+                .ToList()
         };
     }
 }

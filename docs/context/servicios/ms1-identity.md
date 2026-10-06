@@ -36,7 +36,7 @@ src/TenantIdentityService/
 | Método | Ruta | Auth | Estado |
 |--------|------|------|--------|
 | POST | `/auth/login` | Público (sin JWT) | [IMPLEMENTADO] |
-| GET | `/api/v1/users?page=&pageSize=` | JWT + ADMIN | [IMPLEMENTADO] |
+| GET | `/api/v1/users?page=&pageSize=` | JWT + ADMIN | [IMPLEMENTADO] (cada item incluye `roles: string[]`) |
 | POST | `/api/v1/users` | JWT + ADMIN | [IMPLEMENTADO] |
 | PUT | `/api/v1/users/{id}` | JWT + ADMIN | [IMPLEMENTADO] |
 | DELETE | `/api/v1/users/{id}` | JWT + ADMIN | [IMPLEMENTADO] |

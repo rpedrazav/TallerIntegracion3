@@ -15,4 +15,7 @@ public class UsuarioDto
     public DateTime CreadoEn { get; init; }
 
     public DateTime? UltimoLogin { get; init; }
+
+    /// <summary>Nombres de los roles asignados (poblado en el listado de usuarios).</summary>
+    public IReadOnlyList<string> Roles { get; init; } = Array.Empty<string>();
 }
