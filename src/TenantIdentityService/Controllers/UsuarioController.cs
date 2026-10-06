@@ -10,6 +10,8 @@ namespace TenantIdentityService.Controllers;
 
 [ApiController]
 [Route("api/v1/users")]
+[Route("api/users")]
+[Route("users")]
 [Authorize(Roles = "ADMIN")] // Cumple el requisito ADMINISTRADOR del backlog con el rol vigente del dominio.
 public class UsuarioController : ControllerBase
 {
@@ -21,19 +23,12 @@ public class UsuarioController : ControllerBase
     }
 
     /// <summary>
-
     /// Obtiene todos los usuarios del tenant.
-
     /// </summary>
-
     /// <returns>Lista de usuarios.</returns>
-
     /// <response code="200">Retorna la lista de usuarios.</response>
-
     /// <response code="401">No autorizado.</response>
-
     /// <response code="403">No tienes permisos.</response>
-
     [HttpGet]
     [ProducesResponseType(typeof(PagedResult<UsuarioDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -63,23 +58,14 @@ public class UsuarioController : ControllerBase
     }
 
     /// <summary>
-
     /// Crea un nuevo usuario en el tenant.
-
     /// </summary>
-
-    /// <param name="dto">Datos del nuevo usuario.</param>
-
+    /// <param name="request">Datos del nuevo usuario.</param>
     /// <returns>El usuario creado.</returns>
-
     /// <response code="201">Usuario creado exitosamente.</response>
-
     /// <response code="400">Datos inválidos.</response>
-
     /// <response code="401">No autorizado.</response>
-
     /// <response code="403">No tienes permisos.</response>
-
     [HttpPost]
     [ProducesResponseType(typeof(UsuarioDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -89,7 +75,7 @@ public class UsuarioController : ControllerBase
     {
         var tenantClaim = User.FindFirst("tenant_id")?.Value;
         if (!Guid.TryParse(tenantClaim, out var tenantId))
-            return Unauthorized(new { message = "El token no contiene un tenant_id vÃ¡lido." });
+            return Unauthorized(new { message = "El token no contiene un tenant_id válido." });
 
         var usuario = new Usuario
         {
@@ -104,31 +90,20 @@ public class UsuarioController : ControllerBase
         var usuarioCreado = await _usuarioRepository.CreateAsync(usuario);
         var usuarioDto = MapToDto(usuarioCreado);
 
-        return Created($"/api/v1/users/{usuarioCreado.Id}", usuarioDto);
+        return Created($"/users/{usuarioCreado.Id}", usuarioDto);
     }
 
     /// <summary>
-
     /// Actualiza un usuario existente.
-
     /// </summary>
-
     /// <param name="id">ID del usuario.</param>
-
-    /// <param name="dto">Nuevos datos.</param>
-
+    /// <param name="request">Nuevos datos.</param>
     /// <returns>El usuario actualizado.</returns>
-
     /// <response code="200">Usuario actualizado.</response>
-
     /// <response code="400">Datos inválidos.</response>
-
     /// <response code="401">No autorizado.</response>
-
     /// <response code="403">No tienes permisos.</response>
-
     /// <response code="404">Usuario no encontrado.</response>
-
     [HttpPut("{id:guid}")]
     [ProducesResponseType(typeof(UsuarioDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -141,7 +116,7 @@ public class UsuarioController : ControllerBase
     {
         var tenantClaim = User.FindFirst("tenant_id")?.Value;
         if (!Guid.TryParse(tenantClaim, out var tenantId))
-            return Unauthorized(new { message = "El token no contiene un tenant_id vÃ¡lido." });
+            return Unauthorized(new { message = "El token no contiene un tenant_id válido." });
 
         var usuario = await _usuarioRepository.GetByIdAsync(id, tenantId);
         if (usuario is null)
@@ -156,23 +131,14 @@ public class UsuarioController : ControllerBase
     }
 
     /// <summary>
-
     /// Elimina (lógicamente) un usuario.
-
     /// </summary>
-
     /// <param name="id">ID del usuario.</param>
-
     /// <returns>No content.</returns>
-
     /// <response code="204">Usuario eliminado.</response>
-
     /// <response code="401">No autorizado.</response>
-
     /// <response code="403">No tienes permisos.</response>
-
     /// <response code="404">Usuario no encontrado.</response>
-
     [HttpDelete("{id:guid}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -183,15 +149,15 @@ public class UsuarioController : ControllerBase
     {
         var tenantClaim = User.FindFirst("tenant_id")?.Value;
         if (!Guid.TryParse(tenantClaim, out var tenantId))
-            return Unauthorized(new { message = "El token no contiene un tenant_id vÃ¡lido." });
+            return Unauthorized(new { message = "El token no contiene un tenant_id válido." });
 
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
                        ?? User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
         if (!Guid.TryParse(userIdClaim, out var authenticatedUserId))
-            return Unauthorized(new { message = "El token no contiene un identificador de usuario vÃ¡lido." });
+            return Unauthorized(new { message = "El token no contiene un identificador de usuario válido." });
 
         if (id == authenticatedUserId)
-            return BadRequest(new { message = "Un administrador no puede desactivarse a sÃ­ mismo." });
+            return BadRequest(new { message = "Un administrador no puede desactivarse a sí mismo." });
 
         var deactivated = await _usuarioRepository.DeactivateAsync(id, tenantId);
         if (!deactivated)
@@ -201,27 +167,16 @@ public class UsuarioController : ControllerBase
     }
 
     /// <summary>
-
     /// Asigna roles a un usuario.
-
     /// </summary>
-
     /// <param name="id">ID del usuario.</param>
-
-    /// <param name="dto">Lista de IDs de roles.</param>
-
+    /// <param name="request">Lista de roles.</param>
     /// <returns>El usuario actualizado.</returns>
-
     /// <response code="200">Roles asignados.</response>
-
     /// <response code="400">Datos inválidos.</response>
-
     /// <response code="401">No autorizado.</response>
-
     /// <response code="403">No tienes permisos.</response>
-
     /// <response code="404">Usuario no encontrado.</response>
-
     [HttpPost("{id:guid}/roles")]
     [ProducesResponseType(typeof(UsuarioDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]

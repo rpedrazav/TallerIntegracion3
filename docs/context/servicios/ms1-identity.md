@@ -36,11 +36,11 @@ src/TenantIdentityService/
 | Método | Ruta | Auth | Estado |
 |--------|------|------|--------|
 | POST | `/auth/login` | Público (sin JWT) | [IMPLEMENTADO] |
-| GET | `/api/v1/users?page=&pageSize=` | JWT + ADMIN | [IMPLEMENTADO] (cada item incluye `roles: string[]`) |
-| POST | `/api/v1/users` | JWT + ADMIN | [IMPLEMENTADO] |
-| PUT | `/api/v1/users/{id}` | JWT + ADMIN | [IMPLEMENTADO] |
-| DELETE | `/api/v1/users/{id}` | JWT + ADMIN | [IMPLEMENTADO] |
-| POST | `/api/v1/users/{id}/roles` | JWT + ADMIN | [IMPLEMENTADO] |
+| GET | `/users` (alias `/api/v1/users`, `/api/users`) | JWT + ADMIN | [IMPLEMENTADO] (cada item incluye `roles: string[]`) |
+| POST | `/users` (alias `/api/v1/users`) | JWT + ADMIN | [IMPLEMENTADO] |
+| PUT | `/users/{id}` (alias `/api/v1/users/{id}`) | JWT + ADMIN | [IMPLEMENTADO] |
+| DELETE | `/users/{id}` (alias `/api/v1/users/{id}`) | JWT + ADMIN | [IMPLEMENTADO] |
+| POST | `/users/{id}/roles` (alias `/api/v1/users/{id}/roles`) | JWT + ADMIN | [IMPLEMENTADO] |
 | GET | `/tenants/{id}/config` | JWT | [IMPLEMENTADO] |
 | PUT | `/tenants/{id}/config` | JWT + ADMIN | [IMPLEMENTADO] |
 | GET | `/sucursales` | JWT | [IMPLEMENTADO] |
