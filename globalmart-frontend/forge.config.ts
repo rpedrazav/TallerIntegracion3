@@ -1,4 +1,4 @@
-import type { ForgeConfig } from '@electron-forge/shared-types';
+﻿import type { ForgeConfig } from '@electron-forge/shared-types';
 import { MakerSquirrel } from '@electron-forge/maker-squirrel';
 import { MakerZIP } from '@electron-forge/maker-zip';
 import { MakerDeb } from '@electron-forge/maker-deb';
@@ -28,7 +28,7 @@ const config: ForgeConfig = {
       mainConfig,
       loggerPort: 9005,
       port: 3005,
-      devContentSecurityPolicy: "default-src 'self' 'unsafe-inline' data:; script-src 'self' 'unsafe-eval' 'unsafe-inline' data:; connect-src 'self' http://localhost:* http://127.0.0.1:* ws://localhost:*;",
+      devContentSecurityPolicy: "default-src 'self' 'unsafe-inline' data:; script-src 'self' 'unsafe-eval' 'unsafe-inline' data:; connect-src 'self' http://localhost:* http://127.0.0.1:* https://auth-rpedraza.dev.censei.cl https://catalog-rpedraza.dev.censei.cl https://pos-rpedraza.dev.censei.cl ws://localhost:*;",
       renderer: {
         config: rendererConfig,
         entryPoints: [
@@ -58,3 +58,7 @@ const config: ForgeConfig = {
 };
 
 export default config;
+
+
+
+

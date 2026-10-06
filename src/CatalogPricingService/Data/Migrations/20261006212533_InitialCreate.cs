@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace CatalogPricingService.Data.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate_Catalog : Migration
+    public partial class InitialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -17,11 +17,21 @@ namespace CatalogPricingService.Data.Migrations
                 {
                     id = table.Column<Guid>(type: "uuid", nullable: false),
                     nombre = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                    tenant_id = table.Column<Guid>(type: "uuid", nullable: false)
+                    tenant_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    parent_id = table.Column<Guid>(type: "uuid", nullable: true),
+                    level = table.Column<int>(type: "integer", nullable: false),
+                    is_active = table.Column<bool>(type: "boolean", nullable: false),
+                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_categorias", x => x.id);
+                    table.ForeignKey(
+                        name: "FK_categorias_categorias_parent_id",
+                        column: x => x.parent_id,
+                        principalTable: "categorias",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -29,12 +39,17 @@ namespace CatalogPricingService.Data.Migrations
                 columns: table => new
                 {
                     id = table.Column<Guid>(type: "uuid", nullable: false),
-                    nombre = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
-                    codigo_barras = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
-                    precio = table.Column<decimal>(type: "numeric(12,4)", nullable: false),
-                    categoria_id = table.Column<Guid>(type: "uuid", nullable: false),
                     tenant_id = table.Column<Guid>(type: "uuid", nullable: false),
-                    activo = table.Column<bool>(type: "boolean", nullable: false)
+                    nombre = table.Column<string>(type: "character varying(150)", maxLength: 150, nullable: false),
+                    descripcion = table.Column<string>(type: "text", nullable: true),
+                    codigo_barras = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    codigo_qr_url = table.Column<string>(type: "text", nullable: true),
+                    categoria_id = table.Column<Guid>(type: "uuid", nullable: true),
+                    uom_base_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    precio_base = table.Column<decimal>(type: "numeric(12,4)", nullable: false),
+                    es_peso_variable = table.Column<bool>(type: "boolean", nullable: false),
+                    is_active = table.Column<bool>(type: "boolean", nullable: false),
+                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -43,8 +58,7 @@ namespace CatalogPricingService.Data.Migrations
                         name: "FK_productos_categorias_categoria_id",
                         column: x => x.categoria_id,
                         principalTable: "categorias",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "id");
                 });
 
             migrationBuilder.CreateTable(
@@ -73,6 +87,11 @@ namespace CatalogPricingService.Data.Migrations
                 name: "idx_categorias_tenant",
                 table: "categorias",
                 column: "tenant_id");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_categorias_parent_id",
+                table: "categorias",
+                column: "parent_id");
 
             migrationBuilder.CreateIndex(
                 name: "idx_precios_tenant",

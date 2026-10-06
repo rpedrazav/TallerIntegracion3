@@ -161,9 +161,16 @@ app.UseMiddleware<TenantMiddleware>();
 app.MapControllers();
 app.MapHealthChecks("/health");
 
-// TODO: auto-migraciÃƒÂ³n en desarrollo, una vez exista el DbContext
+
+// Ejecutar migraciones automaticamente
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<POSCartService.Data.PosCartDbContext>();
+    db.Database.Migrate();
+}
 
 app.Run();
 
 public partial class Program { }
+
 

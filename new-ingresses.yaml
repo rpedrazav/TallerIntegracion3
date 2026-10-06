@@ -1,0 +1,62 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: auth-ingress
+  namespace: student-rpedraza
+  annotations:
+    external-dns.alpha.kubernetes.io/target: proxy.inf.uct.cl
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: auth-rpedraza.dev.censei.cl
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: tenantidentityservice
+            port:
+              number: 80
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: catalog-ingress
+  namespace: student-rpedraza
+  annotations:
+    external-dns.alpha.kubernetes.io/target: proxy.inf.uct.cl
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: catalog-rpedraza.dev.censei.cl
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: catalogpricingservice
+            port:
+              number: 80
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: pos-ingress
+  namespace: student-rpedraza
+  annotations:
+    external-dns.alpha.kubernetes.io/target: proxy.inf.uct.cl
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: pos-rpedraza.dev.censei.cl
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: poscartservice
+            port:
+              number: 80

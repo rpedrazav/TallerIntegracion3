@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace CatalogPricingService.Data.Migrations
 {
     [DbContext(typeof(CatalogDbContext))]
-    [Migration("20260913033933_InitialCreate_Catalog")]
-    partial class InitialCreate_Catalog
+    [Migration("20261006212533_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -32,17 +32,35 @@ namespace CatalogPricingService.Data.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
+
+                    b.Property<int>("Level")
+                        .HasColumnType("integer")
+                        .HasColumnName("level");
+
                     b.Property<string>("Nombre")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)")
                         .HasColumnName("nombre");
 
+                    b.Property<Guid?>("ParentId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("parent_id");
+
                     b.Property<Guid>("TenantId")
                         .HasColumnType("uuid")
                         .HasColumnName("tenant_id");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ParentId");
 
                     b.HasIndex("TenantId")
                         .HasDatabaseName("idx_categorias_tenant");
@@ -93,11 +111,7 @@ namespace CatalogPricingService.Data.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
-                    b.Property<bool>("Activo")
-                        .HasColumnType("boolean")
-                        .HasColumnName("activo");
-
-                    b.Property<Guid>("CategoriaId")
+                    b.Property<Guid?>("CategoriaId")
                         .HasColumnType("uuid")
                         .HasColumnName("categoria_id");
 
@@ -107,19 +121,43 @@ namespace CatalogPricingService.Data.Migrations
                         .HasColumnType("character varying(50)")
                         .HasColumnName("codigo_barras");
 
+                    b.Property<string>("CodigoQrUrl")
+                        .HasColumnType("text")
+                        .HasColumnName("codigo_qr_url");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Descripcion")
+                        .HasColumnType("text")
+                        .HasColumnName("descripcion");
+
+                    b.Property<bool>("EsPesoVariable")
+                        .HasColumnType("boolean")
+                        .HasColumnName("es_peso_variable");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
+
                     b.Property<string>("Nombre")
                         .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)")
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)")
                         .HasColumnName("nombre");
 
-                    b.Property<decimal>("Precio")
+                    b.Property<decimal>("PrecioBase")
                         .HasColumnType("decimal(12,4)")
-                        .HasColumnName("precio");
+                        .HasColumnName("precio_base");
 
                     b.Property<Guid>("TenantId")
                         .HasColumnType("uuid")
                         .HasColumnName("tenant_id");
+
+                    b.Property<Guid>("UomBaseId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("uom_base_id");
 
                     b.HasKey("Id");
 
@@ -135,10 +173,20 @@ namespace CatalogPricingService.Data.Migrations
                     b.ToTable("productos");
                 });
 
+            modelBuilder.Entity("CatalogPricingService.Models.Categoria", b =>
+                {
+                    b.HasOne("CatalogPricingService.Models.Categoria", "Parent")
+                        .WithMany("Children")
+                        .HasForeignKey("ParentId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Parent");
+                });
+
             modelBuilder.Entity("CatalogPricingService.Models.Precio", b =>
                 {
                     b.HasOne("CatalogPricingService.Models.Producto", "Producto")
-                        .WithMany("Precios")
+                        .WithMany()
                         .HasForeignKey("ProductoId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -148,23 +196,16 @@ namespace CatalogPricingService.Data.Migrations
 
             modelBuilder.Entity("CatalogPricingService.Models.Producto", b =>
                 {
-                    b.HasOne("CatalogPricingService.Models.Categoria", "Categoria")
+                    b.HasOne("CatalogPricingService.Models.Categoria", null)
                         .WithMany("Productos")
-                        .HasForeignKey("CategoriaId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Categoria");
+                        .HasForeignKey("CategoriaId");
                 });
 
             modelBuilder.Entity("CatalogPricingService.Models.Categoria", b =>
                 {
-                    b.Navigation("Productos");
-                });
+                    b.Navigation("Children");
 
-            modelBuilder.Entity("CatalogPricingService.Models.Producto", b =>
-                {
-                    b.Navigation("Precios");
+                    b.Navigation("Productos");
                 });
 #pragma warning restore 612, 618
         }

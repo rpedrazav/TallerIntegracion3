@@ -3,7 +3,7 @@ import axios, { AxiosError } from 'axios';
 import { useAuth } from '../hooks/useAuth';
 
 // Puerto del CatalogPricingService (MS-3)
-const CATALOG_URL = 'http://127.0.0.1:5203';
+const CATALOG_URL = 'https://catalog-rpedraza.dev.censei.cl';
 
 // UomBaseId requerido por el DTO (uuid genérico para "unidad")
 const DEFAULT_UOM_ID = '00000000-0000-0000-0000-000000000001';

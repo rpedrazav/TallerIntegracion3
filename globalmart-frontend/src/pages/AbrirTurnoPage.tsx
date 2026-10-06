@@ -4,8 +4,8 @@ import axios, { AxiosError } from 'axios';
 import { useAuth } from '../hooks/useAuth';
 
 // URLs del microservicio MS-5 POS & Cart
-const KONG_GATEWAY_URL = 'http://127.0.0.1:8000';
-const POS_DIRECT_URL = 'http://127.0.0.1:5000';
+const KONG_GATEWAY_URL = 'https://pos-rpedraza.dev.censei.cl';
+const POS_DIRECT_URL = 'https://pos-rpedraza.dev.censei.cl';
 
 interface JwtPayload {
   sub?: string;
