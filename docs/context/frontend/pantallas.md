@@ -85,9 +85,9 @@ NO abre turno antes de vender
 //   - Cierre de turno: POST /api/turnos/cerrar con confirmación y opciones de navegación
 ```
 
-## Admin.tsx [NO VERIFICADO]
+## Admin.tsx [PARCIAL]
 
-Pantalla de administración cuyo contenido completo no fue verificado. Existe en el router como `/admin`.
+Ruta `/admin`. Lista usuarios (`GET /api/v1/users` en MS-1) y abre `components/admin/CrearUsuarioModal.tsx` (nombre, correo, contraseña ≥ 8 con confirmación, rol CAJERO/REPONEDOR/ADMIN; validación en frontend alineada a `CrearUsuarioDto`). Al enviar llama `POST /api/v1/users` y luego `POST /api/v1/users/{id}/roles`. Usa los tokens de color de la [[guia-estilo]] definidos en `index.css`. [NO VERIFICADO] contra el backend en ejecución. No hay edición ni desactivación de usuarios en UI.
 
 ## BarcodeInput.tsx [IMPLEMENTADO]
 

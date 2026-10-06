@@ -1,8 +1,60 @@
-body {
-  font-family:
-    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial,
-    sans-serif;
-  margin: auto;
-  max-width: 38rem;
-  padding: 2rem;
+﻿:root {
+  --font-sans: "Inter", system-ui, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+
+  --color-bg: #E7E9E4;
+  --color-surface: #F6F7F4;
+  --color-ink: #2F2235;
+  --color-ink-soft: #5C4F61;
+  --color-line: #BFC3BA;
+  --color-muted: #A9ACA9;
+  --color-sidebar: #3F3244;
+  --color-primary: #60495A;
+  --color-primary-hover: #3F3244;
+  --color-on-primary: #F6F7F4;
+  --color-success: #3B6B4A;
+  --color-success-text: #3B6B4A;
+  --color-on-success: #F6F7F4;
+  --color-warning: #B8872E;
+  --color-warning-text: #7A5710;
+  --color-danger: #A8372C;
+  --color-danger-text: #A8372C;
+  --color-on-danger: #F6F7F4;
+  --color-info: #2F6A8A;
+  --color-info-text: #2F6A8A;
+  --color-success-bg: color-mix(in srgb, var(--color-success) 14%, var(--color-surface));
+  --color-warning-bg: color-mix(in srgb, var(--color-warning) 16%, var(--color-surface));
+  --color-danger-bg: color-mix(in srgb, var(--color-danger) 12%, var(--color-surface));
+  --color-info-bg: color-mix(in srgb, var(--color-info) 14%, var(--color-surface));
+  --color-primary-bg: color-mix(in srgb, var(--color-primary) 10%, var(--color-surface));
 }
+
+[data-theme="dark"] {
+  --color-bg: #2F2235;
+  --color-surface: #3F3244;
+  --color-ink: #ECEEE9;
+  --color-ink-soft: #BFC3BA;
+  --color-line: #60495A;
+  --color-sidebar: #261B2B;
+  --color-primary: #D2B0C3;
+  --color-primary-hover: #E0C4D2;
+  --color-on-primary: #2F2235;
+  --color-success: #9CCCA9;
+  --color-success-text: #9CCCA9;
+  --color-on-success: #2F2235;
+  --color-warning: #E2B65C;
+  --color-warning-text: #E2B65C;
+  --color-danger: #F6A59B;
+  --color-danger-text: #F6A59B;
+  --color-on-danger: #2F2235;
+  --color-info: #94C4E2;
+  --color-info-text: #94C4E2;
+}
+body {
+  font-family: var(--font-sans);
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-ink);
+}
+
+

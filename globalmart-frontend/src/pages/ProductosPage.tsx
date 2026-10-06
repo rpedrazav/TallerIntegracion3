@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+﻿import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import axios, { AxiosError } from 'axios';
 import { useAuth } from '../hooks/useAuth';
 
@@ -52,20 +52,20 @@ const FORM_VACÍO: FormState = {
 const inputStyle: React.CSSProperties = {
   width: '100%',
   padding: '0.6rem 0.85rem',
-  border: '1px solid #cbd5e1',
+  border: '1px solid var(--color-line)',
   borderRadius: '8px',
   fontSize: '0.95rem',
   outline: 'none',
   boxSizing: 'border-box',
-  color: '#0f172a',
-  backgroundColor: '#f8fafc',
+  color: 'var(--color-ink)',
+  backgroundColor: 'var(--color-bg)',
 };
 
 const labelStyle: React.CSSProperties = {
   display: 'block',
   fontSize: '0.82rem',
   fontWeight: 600,
-  color: '#475569',
+  color: 'var(--color-ink-soft)',
   marginBottom: '0.35rem',
   textTransform: 'uppercase',
   letterSpacing: '0.04em',
@@ -91,7 +91,7 @@ function ProductoModal({
     <div
       style={{
         position: 'fixed', inset: 0, zIndex: 1000,
-        background: 'rgba(15, 23, 42, 0.55)',
+        background: 'color-mix(in srgb, var(--color-ink) 55%, transparent)',
         backdropFilter: 'blur(4px)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         padding: '1rem',
@@ -100,7 +100,7 @@ function ProductoModal({
     >
       <div
         style={{
-          background: '#ffffff',
+          background: 'var(--color-surface)',
           borderRadius: '18px',
           width: '100%',
           maxWidth: '520px',
@@ -112,7 +112,7 @@ function ProductoModal({
         {/* Cabecera del modal */}
         <div
           style={{
-            background: 'linear-gradient(135deg, #0f172a 0%, #1e3a5f 60%, #0369a1 100%)',
+            background: 'linear-gradient(135deg, var(--color-ink) 0%, var(--color-sidebar) 60%, var(--color-primary) 100%)',
             padding: '1.5rem 1.75rem',
             display: 'flex',
             justifyContent: 'space-between',
@@ -122,7 +122,7 @@ function ProductoModal({
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
             <span style={{ fontSize: '1.6rem' }}>{modo === 'crear' ? '➕' : '✏️'}</span>
             <div>
-              <h2 style={{ margin: 0, color: 'white', fontSize: '1.2rem', fontWeight: 800 }}>
+              <h2 style={{ margin: 0, color: 'var(--color-surface)', fontSize: '1.2rem', fontWeight: 800 }}>
                 {modo === 'crear' ? 'Nuevo Producto' : 'Editar Producto'}
               </h2>
               <p style={{ margin: 0, color: 'rgba(255,255,255,0.7)', fontSize: '0.8rem' }}>
@@ -138,7 +138,7 @@ function ProductoModal({
               background: 'rgba(255,255,255,0.15)',
               border: 'none',
               borderRadius: '8px',
-              color: 'white',
+              color: 'var(--color-surface)',
               fontSize: '1.1rem',
               width: '32px', height: '32px',
               cursor: 'pointer',
@@ -155,9 +155,9 @@ function ProductoModal({
 
           {errorModal && (
             <div style={{
-              background: '#fef2f2', border: '1px solid #fca5a5',
+              background: 'var(--color-danger-bg)', border: '1px solid var(--color-danger)',
               borderRadius: '8px', padding: '0.75rem 1rem',
-              color: '#b91c1c', fontSize: '0.875rem',
+              color: 'var(--color-danger)', fontSize: '0.875rem',
               display: 'flex', gap: '0.5rem', alignItems: 'flex-start',
             }}>
               <span>⚠️</span><span>{errorModal}</span>
@@ -246,7 +246,7 @@ function ProductoModal({
               style={{
                 display: 'flex', alignItems: 'center', gap: '0.5rem',
                 cursor: 'pointer', userSelect: 'none',
-                fontSize: '0.9rem', color: '#374151', fontWeight: 500,
+                fontSize: '0.9rem', color: 'var(--color-ink)', fontWeight: 500,
               }}
             >
               <input
@@ -255,7 +255,7 @@ function ProductoModal({
                 checked={form.esPesoVariable}
                 onChange={(e) => onChange('esPesoVariable', e.target.checked)}
                 disabled={guardando}
-                style={{ width: '16px', height: '16px', accentColor: '#0284c7' }}
+                style={{ width: '16px', height: '16px', accentColor: 'var(--color-primary)' }}
               />
               ⚖️ Peso variable
             </label>
@@ -265,7 +265,7 @@ function ProductoModal({
               style={{
                 display: 'flex', alignItems: 'center', gap: '0.5rem',
                 cursor: 'pointer', userSelect: 'none',
-                fontSize: '0.9rem', color: '#374151', fontWeight: 500,
+                fontSize: '0.9rem', color: 'var(--color-ink)', fontWeight: 500,
               }}
             >
               <input
@@ -274,7 +274,7 @@ function ProductoModal({
                 checked={form.isActive}
                 onChange={(e) => onChange('isActive', e.target.checked)}
                 disabled={guardando}
-                style={{ width: '16px', height: '16px', accentColor: '#16a34a' }}
+                style={{ width: '16px', height: '16px', accentColor: 'var(--color-success)' }}
               />
               ✅ Activo
             </label>
@@ -285,8 +285,8 @@ function ProductoModal({
         <div
           style={{
             padding: '1rem 1.75rem',
-            borderTop: '1px solid #e2e8f0',
-            background: '#f8fafc',
+            borderTop: '1px solid var(--color-line)',
+            background: 'var(--color-bg)',
             display: 'flex',
             justifyContent: 'flex-end',
             gap: '0.75rem',
@@ -300,12 +300,12 @@ function ProductoModal({
             style={{
               padding: '0.6rem 1.25rem',
               background: 'transparent',
-              border: '1px solid #cbd5e1',
+              border: '1px solid var(--color-line)',
               borderRadius: '8px',
               fontWeight: 600,
               fontSize: '0.9rem',
               cursor: 'pointer',
-              color: '#475569',
+              color: 'var(--color-ink-soft)',
             }}
           >
             Cancelar
@@ -317,8 +317,8 @@ function ProductoModal({
             disabled={guardando}
             style={{
               padding: '0.6rem 1.5rem',
-              background: guardando ? '#93c5fd' : '#0284c7',
-              color: 'white',
+              background: guardando ? 'var(--color-muted)' : 'var(--color-primary)',
+              color: 'var(--color-surface)',
               border: 'none',
               borderRadius: '8px',
               fontWeight: 700,
@@ -515,12 +515,12 @@ export default function ProductosPage() {
       {/* ── Cabecera ── */}
       <div
         style={{
-          background: 'linear-gradient(135deg, #0f172a 0%, #1e3a5f 60%, #0369a1 100%)',
+          background: 'linear-gradient(135deg, var(--color-ink) 0%, var(--color-sidebar) 60%, var(--color-primary) 100%)',
           borderRadius: '16px',
           padding: '2rem 2.5rem',
           marginBottom: '1.75rem',
-          color: 'white',
-          boxShadow: '0 10px 25px -5px rgba(3, 105, 161, 0.35)',
+          color: 'var(--color-surface)',
+          boxShadow: '0 10px 25px -5px color-mix(in srgb, var(--color-primary) 35%, transparent)',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
@@ -548,22 +548,22 @@ export default function ProductosPage() {
             onClick={abrirCrear}
             style={{
               padding: '0.7rem 1.35rem',
-              background: 'linear-gradient(135deg, #16a34a, #15803d)',
-              color: 'white',
+              background: 'linear-gradient(135deg, var(--color-success), var(--color-success))',
+              color: 'var(--color-surface)',
               border: 'none',
               borderRadius: '10px',
               fontWeight: 700,
               fontSize: '0.95rem',
               cursor: 'pointer',
-              boxShadow: '0 4px 12px rgba(22,163,74,0.4)',
+              boxShadow: '0 4px 12px color-mix(in srgb, var(--color-success) 40%, transparent)',
               display: 'flex',
               alignItems: 'center',
               gap: '0.5rem',
               whiteSpace: 'nowrap',
               transition: 'transform 0.1s, box-shadow 0.1s',
             }}
-            onMouseEnter={e => { (e.currentTarget.style.transform = 'translateY(-1px)'); (e.currentTarget.style.boxShadow = '0 6px 16px rgba(22,163,74,0.5)'); }}
-            onMouseLeave={e => { (e.currentTarget.style.transform = 'translateY(0)'); (e.currentTarget.style.boxShadow = '0 4px 12px rgba(22,163,74,0.4)'); }}
+            onMouseEnter={e => { (e.currentTarget.style.transform = 'translateY(-1px)'); (e.currentTarget.style.boxShadow = '0 6px 16px color-mix(in srgb, var(--color-success) 50%, transparent)'); }}
+            onMouseLeave={e => { (e.currentTarget.style.transform = 'translateY(0)'); (e.currentTarget.style.boxShadow = '0 4px 12px color-mix(in srgb, var(--color-success) 40%, transparent)'); }}
           >
             ➕ Nuevo Producto
           </button>
@@ -592,8 +592,8 @@ export default function ProductosPage() {
       {/* ── Panel de filtros ── */}
       <div
         style={{
-          background: '#ffffff',
-          border: '1px solid #e2e8f0',
+          background: 'var(--color-surface)',
+          border: '1px solid var(--color-line)',
           borderRadius: '14px',
           padding: '1.25rem 1.5rem',
           marginBottom: '1.5rem',
@@ -623,13 +623,13 @@ export default function ProductosPage() {
             style={{
               width: '100%',
               padding: '0.65rem 0.9rem 0.65rem 2.4rem',
-              border: `1px solid ${query ? '#38bdf8' : '#cbd5e1'}`,
+              border: `1px solid ${query ? 'var(--color-primary)' : 'var(--color-line)'}`,
               borderRadius: '10px',
               fontSize: '0.95rem',
               outline: 'none',
               boxSizing: 'border-box',
-              color: '#0f172a',
-              backgroundColor: query ? '#f0f9ff' : '#f8fafc',
+              color: 'var(--color-ink)',
+              backgroundColor: query ? 'var(--color-primary-bg)' : 'var(--color-bg)',
             }}
           />
           {query && (
@@ -640,7 +640,7 @@ export default function ProductosPage() {
                 position: 'absolute', right: '0.6rem', top: '50%',
                 transform: 'translateY(-50%)', background: 'none',
                 border: 'none', cursor: 'pointer', fontSize: '1rem',
-                color: '#94a3b8', padding: '0.2rem',
+                color: 'var(--color-muted)', padding: '0.2rem',
               }}
               title="Limpiar búsqueda"
             >
@@ -657,11 +657,11 @@ export default function ProductosPage() {
           style={{
             flex: '0 1 200px',
             padding: '0.65rem 0.9rem',
-            border: `1px solid ${categoriaFiltro ? '#38bdf8' : '#cbd5e1'}`,
+            border: `1px solid ${categoriaFiltro ? 'var(--color-primary)' : 'var(--color-line)'}`,
             borderRadius: '10px',
             fontSize: '0.9rem',
-            backgroundColor: categoriaFiltro ? '#f0f9ff' : '#f8fafc',
-            color: '#0f172a',
+            backgroundColor: categoriaFiltro ? 'var(--color-primary-bg)' : 'var(--color-bg)',
+            color: 'var(--color-ink)',
             cursor: 'pointer',
             outline: 'none',
           }}
@@ -678,7 +678,7 @@ export default function ProductosPage() {
           style={{
             display: 'flex', alignItems: 'center', gap: '0.5rem',
             cursor: 'pointer', userSelect: 'none',
-            fontSize: '0.9rem', color: '#475569', fontWeight: 500, whiteSpace: 'nowrap',
+            fontSize: '0.9rem', color: 'var(--color-ink-soft)', fontWeight: 500, whiteSpace: 'nowrap',
           }}
         >
           <input
@@ -686,7 +686,7 @@ export default function ProductosPage() {
             type="checkbox"
             checked={soloActivos}
             onChange={(e) => setSoloActivos(e.target.checked)}
-            style={{ width: '16px', height: '16px', accentColor: '#0284c7', cursor: 'pointer' }}
+            style={{ width: '16px', height: '16px', accentColor: 'var(--color-primary)', cursor: 'pointer' }}
           />
           Solo activos
         </label>
@@ -698,8 +698,8 @@ export default function ProductosPage() {
           disabled={loading}
           style={{
             padding: '0.65rem 1.2rem',
-            background: loading ? '#e2e8f0' : '#0284c7',
-            color: loading ? '#94a3b8' : 'white',
+            background: loading ? 'var(--color-line)' : 'var(--color-primary)',
+            color: loading ? 'var(--color-muted)' : 'var(--color-surface)',
             border: 'none', borderRadius: '10px',
             fontWeight: 600, fontSize: '0.9rem',
             cursor: loading ? 'not-allowed' : 'pointer',
@@ -715,9 +715,9 @@ export default function ProductosPage() {
       {errorMsg && (
         <div
           style={{
-            background: '#fef2f2', border: '1px solid #fca5a5',
+            background: 'var(--color-danger-bg)', border: '1px solid var(--color-danger)',
             borderRadius: '12px', padding: '1rem 1.25rem',
-            color: '#b91c1c', marginBottom: '1.5rem',
+            color: 'var(--color-danger)', marginBottom: '1.5rem',
             display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '0.925rem',
           }}
         >
@@ -729,15 +729,15 @@ export default function ProductosPage() {
       {/* ── Tabla de productos ── */}
       <div
         style={{
-          background: '#ffffff',
-          border: '1px solid #e2e8f0',
+          background: 'var(--color-surface)',
+          border: '1px solid var(--color-line)',
           borderRadius: '14px',
           overflow: 'hidden',
           boxShadow: '0 4px 12px rgba(0,0,0,0.06)',
         }}
       >
         {loading ? (
-          <div style={{ padding: '3rem', textAlign: 'center', color: '#94a3b8' }}>
+          <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--color-muted)' }}>
             <div style={{ fontSize: '2.5rem', marginBottom: '0.75rem' }}>⏳</div>
             <div style={{ fontWeight: 600, fontSize: '1rem' }}>Cargando catálogo de productos…</div>
             <div style={{ fontSize: '0.85rem', marginTop: '0.35rem' }}>
@@ -745,9 +745,9 @@ export default function ProductosPage() {
             </div>
           </div>
         ) : productosFiltrados.length === 0 ? (
-          <div style={{ padding: '3rem', textAlign: 'center', color: '#94a3b8' }}>
+          <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--color-muted)' }}>
             <div style={{ fontSize: '2.5rem', marginBottom: '0.75rem' }}>🔍</div>
-            <div style={{ fontWeight: 600, fontSize: '1rem', color: '#475569' }}>
+            <div style={{ fontWeight: 600, fontSize: '1rem', color: 'var(--color-ink-soft)' }}>
               {query || categoriaFiltro || soloActivos
                 ? 'Ningún producto coincide con los filtros aplicados'
                 : 'No hay productos registrados para este tenant'}
@@ -758,7 +758,7 @@ export default function ProductosPage() {
                 onClick={() => { setQuery(''); setCategoriaFiltro(''); setSoloActivos(false); }}
                 style={{
                   marginTop: '1rem', padding: '0.5rem 1.2rem',
-                  background: '#0284c7', color: 'white',
+                  background: 'var(--color-primary)', color: 'var(--color-surface)',
                   border: 'none', borderRadius: '8px',
                   fontWeight: 600, cursor: 'pointer', fontSize: '0.9rem',
                 }}
@@ -773,8 +773,8 @@ export default function ProductosPage() {
                 onClick={abrirCrear}
                 style={{
                   padding: '0.65rem 1.35rem',
-                  background: 'linear-gradient(135deg, #16a34a, #15803d)',
-                  color: 'white', border: 'none', borderRadius: '10px',
+                  background: 'linear-gradient(135deg, var(--color-success), var(--color-success))',
+                  color: 'var(--color-surface)', border: 'none', borderRadius: '10px',
                   fontWeight: 700, fontSize: '0.9rem', cursor: 'pointer',
                 }}
               >
@@ -788,8 +788,8 @@ export default function ProductosPage() {
               <thead>
                 <tr
                   style={{
-                    background: 'linear-gradient(90deg, #0f172a 0%, #1e3a5f 100%)',
-                    color: 'white',
+                    background: 'linear-gradient(90deg, var(--color-ink) 0%, var(--color-sidebar) 100%)',
+                    color: 'var(--color-surface)',
                   }}
                 >
                   {['Nombre', 'Código de Barras', 'Categoría', 'Precio Base', 'Tipo', 'Estado', 'Acciones'].map(
@@ -820,18 +820,18 @@ export default function ProductosPage() {
                     <tr
                       key={prod.id}
                       style={{
-                        backgroundColor: isEven ? '#ffffff' : '#f8fafc',
-                        borderBottom: '1px solid #f1f5f9',
+                        backgroundColor: isEven ? 'var(--color-surface)' : 'var(--color-bg)',
+                        borderBottom: '1px solid var(--color-bg)',
                         transition: 'background-color 0.12s',
                       }}
-                      onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#e0f2fe')}
-                      onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = isEven ? '#ffffff' : '#f8fafc')}
+                      onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'var(--color-primary-bg)')}
+                      onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = isEven ? 'var(--color-surface)' : 'var(--color-bg)')}
                     >
                       {/* Nombre */}
                       <td style={{ padding: '0.85rem 1.25rem', maxWidth: '260px' }}>
                         <div
                           style={{
-                            fontWeight: 700, color: '#0f172a', fontSize: '0.95rem',
+                            fontWeight: 700, color: 'var(--color-ink)', fontSize: '0.95rem',
                             whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
                           }}
                           title={prod.nombre}
@@ -841,7 +841,7 @@ export default function ProductosPage() {
                         {prod.descripcion && (
                           <div
                             style={{
-                              fontSize: '0.78rem', color: '#64748b', marginTop: '0.15rem',
+                              fontSize: '0.78rem', color: 'var(--color-ink-soft)', marginTop: '0.15rem',
                               whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '240px',
                             }}
                             title={prod.descripcion}
@@ -855,9 +855,9 @@ export default function ProductosPage() {
                       <td style={{ padding: '0.85rem 1.25rem' }}>
                         <code
                           style={{
-                            fontSize: '0.85rem', background: '#f1f5f9',
+                            fontSize: '0.85rem', background: 'var(--color-bg)',
                             padding: '0.2rem 0.5rem', borderRadius: '6px',
-                            color: '#334155', fontFamily: 'monospace', letterSpacing: '0.05em',
+                            color: 'var(--color-ink)', fontFamily: 'monospace', letterSpacing: '0.05em',
                           }}
                         >
                           {prod.codigoBarras || '—'}
@@ -869,7 +869,7 @@ export default function ProductosPage() {
                         {prod.categoriaId ? (
                           <span
                             style={{
-                              background: '#dbeafe', color: '#1d4ed8',
+                              background: 'var(--color-primary-bg)', color: 'var(--color-primary)',
                               padding: '0.22rem 0.65rem', borderRadius: '9999px',
                               fontSize: '0.78rem', fontWeight: 600, whiteSpace: 'nowrap',
                             }}
@@ -877,13 +877,13 @@ export default function ProductosPage() {
                             {categoriaNombre}
                           </span>
                         ) : (
-                          <span style={{ color: '#94a3b8', fontSize: '0.85rem' }}>Sin categoría</span>
+                          <span style={{ color: 'var(--color-muted)', fontSize: '0.85rem' }}>Sin categoría</span>
                         )}
                       </td>
 
                       {/* Precio base */}
                       <td style={{ padding: '0.85rem 1.25rem', whiteSpace: 'nowrap' }}>
-                        <span style={{ fontWeight: 800, fontSize: '1rem', color: '#0369a1' }}>
+                        <span style={{ fontWeight: 800, fontSize: '1rem', color: 'var(--color-primary)' }}>
                           ${Number(prod.precioBase).toLocaleString('es-CL', {
                             minimumFractionDigits: 0,
                             maximumFractionDigits: 0,
@@ -895,8 +895,8 @@ export default function ProductosPage() {
                       <td style={{ padding: '0.85rem 1.25rem' }}>
                         <span
                           style={{
-                            background: prod.esPesoVariable ? '#fef3c7' : '#f0fdf4',
-                            color: prod.esPesoVariable ? '#b45309' : '#15803d',
+                            background: prod.esPesoVariable ? 'var(--color-warning-bg)' : 'var(--color-success-bg)',
+                            color: prod.esPesoVariable ? 'var(--color-warning-text)' : 'var(--color-success)',
                             padding: '0.22rem 0.65rem', borderRadius: '9999px',
                             fontSize: '0.78rem', fontWeight: 600, whiteSpace: 'nowrap',
                           }}
@@ -910,8 +910,8 @@ export default function ProductosPage() {
                         <span
                           style={{
                             display: 'inline-flex', alignItems: 'center', gap: '0.3rem',
-                            background: prod.isActive ? '#dcfce7' : '#fee2e2',
-                            color: prod.isActive ? '#15803d' : '#b91c1c',
+                            background: prod.isActive ? 'var(--color-success-bg)' : 'var(--color-danger-bg)',
+                            color: prod.isActive ? 'var(--color-success)' : 'var(--color-danger)',
                             padding: '0.22rem 0.65rem', borderRadius: '9999px',
                             fontSize: '0.78rem', fontWeight: 700,
                           }}
@@ -919,7 +919,7 @@ export default function ProductosPage() {
                           <span
                             style={{
                               width: '7px', height: '7px', borderRadius: '50%',
-                              background: prod.isActive ? '#16a34a' : '#dc2626',
+                              background: prod.isActive ? 'var(--color-success)' : 'var(--color-danger)',
                               display: 'inline-block',
                             }}
                           />
@@ -935,9 +935,9 @@ export default function ProductosPage() {
                           onClick={() => abrirEditar(prod)}
                           style={{
                             padding: '0.35rem 0.85rem',
-                            background: '#f0f9ff',
-                            color: '#0284c7',
-                            border: '1px solid #bae6fd',
+                            background: 'var(--color-primary-bg)',
+                            color: 'var(--color-primary)',
+                            border: '1px solid var(--color-muted)',
                             borderRadius: '7px',
                             fontWeight: 600,
                             fontSize: '0.82rem',
@@ -946,12 +946,12 @@ export default function ProductosPage() {
                             transition: 'background 0.12s, border-color 0.12s',
                           }}
                           onMouseEnter={e => {
-                            (e.currentTarget.style.background = '#0284c7');
-                            (e.currentTarget.style.color = 'white');
+                            (e.currentTarget.style.background = 'var(--color-primary)');
+                            (e.currentTarget.style.color = 'var(--color-surface)');
                           }}
                           onMouseLeave={e => {
-                            (e.currentTarget.style.background = '#f0f9ff');
-                            (e.currentTarget.style.color = '#0284c7');
+                            (e.currentTarget.style.background = 'var(--color-primary-bg)');
+                            (e.currentTarget.style.color = 'var(--color-primary)');
                           }}
                           title={`Editar ${prod.nombre}`}
                         >
@@ -971,22 +971,22 @@ export default function ProductosPage() {
           <div
             style={{
               padding: '0.85rem 1.5rem',
-              borderTop: '1px solid #e2e8f0',
-              background: '#f8fafc',
+              borderTop: '1px solid var(--color-line)',
+              background: 'var(--color-bg)',
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center',
               flexWrap: 'wrap',
               gap: '0.5rem',
               fontSize: '0.85rem',
-              color: '#64748b',
+              color: 'var(--color-ink-soft)',
             }}
           >
             <span>
-              Mostrando <strong style={{ color: '#0f172a' }}>{productosFiltrados.length}</strong> de{' '}
-              <strong style={{ color: '#0f172a' }}>{productos.length}</strong> productos
+              Mostrando <strong style={{ color: 'var(--color-ink)' }}>{productosFiltrados.length}</strong> de{' '}
+              <strong style={{ color: 'var(--color-ink)' }}>{productos.length}</strong> productos
               {(query || categoriaFiltro || soloActivos) && (
-                <span style={{ color: '#0284c7', marginLeft: '0.5rem' }}>(filtrado)</span>
+                <span style={{ color: 'var(--color-primary)', marginLeft: '0.5rem' }}>(filtrado)</span>
               )}
             </span>
             <span style={{ fontSize: '0.78rem' }}>MS-3 Catalog &amp; Pricing · Puerto 5203</span>

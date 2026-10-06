@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+﻿import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios, { AxiosError } from 'axios';
 import { useAuth } from '../hooks/useAuth';
@@ -187,18 +187,18 @@ export default function AbrirTurnoPage() {
       {/* Tarjeta Principal */}
       <div
         style={{
-          background: '#ffffff',
+          background: 'var(--color-surface)',
           borderRadius: '12px',
           boxShadow: '0 4px 16px rgba(0, 0, 0, 0.08)',
-          border: '1px solid #e2e8f0',
+          border: '1px solid var(--color-line)',
           overflow: 'hidden',
         }}
       >
         {/* Cabecera */}
         <div
           style={{
-            background: 'linear-gradient(135deg, #0284c7 0%, #38bdf8 100%)',
-            color: 'white',
+            background: 'linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary) 100%)',
+            color: 'var(--color-surface)',
             padding: '1.75rem 2rem',
           }}
         >
@@ -221,10 +221,10 @@ export default function AbrirTurnoPage() {
               style={{
                 marginBottom: '1.5rem',
                 padding: '1rem',
-                background: '#eff6ff',
-                border: '1px solid #bfdbfe',
+                background: 'var(--color-primary-bg)',
+                border: '1px solid var(--color-muted)',
                 borderRadius: '8px',
-                color: '#1e40af',
+                color: 'var(--color-primary)',
                 fontSize: '0.9rem',
               }}
             >
@@ -233,7 +233,7 @@ export default function AbrirTurnoPage() {
               </div>
               <p style={{ margin: '0 0 0.75rem 0' }}>
                 Ya tienes un turno activo abierto (ID:{' '}
-                <code style={{ background: '#dbeafe', padding: '0.1rem 0.3rem', borderRadius: '4px' }}>
+                <code style={{ background: 'var(--color-primary-bg)', padding: '0.1rem 0.3rem', borderRadius: '4px' }}>
                   {turnoActivo.id}
                 </code>
                 ). Puedes continuar directamente al Punto de Venta.
@@ -242,8 +242,8 @@ export default function AbrirTurnoPage() {
                 type="button"
                 onClick={() => navigate('/pos')}
                 style={{
-                  background: '#2563eb',
-                  color: 'white',
+                  background: 'var(--color-primary)',
+                  color: 'var(--color-surface)',
                   border: 'none',
                   padding: '0.5rem 1rem',
                   borderRadius: '6px',
@@ -263,30 +263,30 @@ export default function AbrirTurnoPage() {
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center',
-              background: '#f8fafc',
-              border: '1px solid #e2e8f0',
+              background: 'var(--color-bg)',
+              border: '1px solid var(--color-line)',
               borderRadius: '8px',
               padding: '0.875rem 1rem',
               marginBottom: '1.5rem',
             }}
           >
             <div>
-              <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: '#64748b', fontWeight: 600 }}>
+              <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--color-ink-soft)', fontWeight: 600 }}>
                 Cajero en Sesión
               </div>
-              <div style={{ fontWeight: 600, color: '#1e293b', fontSize: '0.95rem' }}>
+              <div style={{ fontWeight: 600, color: 'var(--color-ink)', fontSize: '0.95rem' }}>
                 {userInfo?.nombre || 'Cajero Autenticado'}
               </div>
             </div>
             <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: '#64748b', fontWeight: 600 }}>
+              <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--color-ink-soft)', fontWeight: 600 }}>
                 Rol
               </div>
               <span
                 style={{
                   display: 'inline-block',
-                  background: '#e0f2fe',
-                  color: '#0369a1',
+                  background: 'var(--color-primary-bg)',
+                  color: 'var(--color-primary)',
                   padding: '0.2rem 0.6rem',
                   borderRadius: '9999px',
                   fontSize: '0.75rem',
@@ -302,9 +302,9 @@ export default function AbrirTurnoPage() {
           {error && (
             <div
               style={{
-                backgroundColor: '#fee2e2',
-                border: '1px solid #fca5a5',
-                color: '#b91c1c',
+                backgroundColor: 'var(--color-danger-bg)',
+                border: '1px solid var(--color-danger)',
+                color: 'var(--color-danger)',
                 padding: '0.875rem 1rem',
                 borderRadius: '8px',
                 fontSize: '0.875rem',
@@ -322,9 +322,9 @@ export default function AbrirTurnoPage() {
           {successMsg && (
             <div
               style={{
-                backgroundColor: '#dcfce7',
-                border: '1px solid #86efac',
-                color: '#15803d',
+                backgroundColor: 'var(--color-success-bg)',
+                border: '1px solid var(--color-success)',
+                color: 'var(--color-success)',
                 padding: '0.875rem 1rem',
                 borderRadius: '8px',
                 fontSize: '0.875rem',
@@ -347,7 +347,7 @@ export default function AbrirTurnoPage() {
                 style={{
                   display: 'block',
                   fontWeight: 600,
-                  color: '#1e293b',
+                  color: 'var(--color-ink)',
                   fontSize: '0.95rem',
                   marginBottom: '0.5rem',
                 }}
@@ -363,7 +363,7 @@ export default function AbrirTurnoPage() {
                     top: '50%',
                     transform: 'translateY(-50%)',
                     fontWeight: 700,
-                    color: '#64748b',
+                    color: 'var(--color-ink-soft)',
                     fontSize: '1.25rem',
                   }}
                 >
@@ -388,22 +388,22 @@ export default function AbrirTurnoPage() {
                     fontSize: '1.25rem',
                     fontWeight: 600,
                     borderRadius: '8px',
-                    border: !isMontoValid && montoInicial !== '' ? '2px solid #ef4444' : '1px solid #cbd5e1',
+                    border: !isMontoValid && montoInicial !== '' ? '2px solid var(--color-danger)' : '1px solid var(--color-line)',
                     outline: 'none',
                     transition: 'border-color 0.2s',
-                    color: '#0f172a',
+                    color: 'var(--color-ink)',
                   }}
-                  onFocus={(e) => (e.target.style.borderColor = '#0284c7')}
+                  onFocus={(e) => (e.target.style.borderColor = 'var(--color-primary)')}
                   onBlur={(e) =>
-                    (e.target.style.borderColor = !isMontoValid && montoInicial !== '' ? '#ef4444' : '#cbd5e1')
+                    (e.target.style.borderColor = !isMontoValid && montoInicial !== '' ? 'var(--color-danger)' : 'var(--color-line)')
                   }
                 />
               </div>
 
               {/* Mensaje de validación rápida */}
-              <div style={{ marginTop: '0.375rem', fontSize: '0.8rem', color: '#64748b' }}>
+              <div style={{ marginTop: '0.375rem', fontSize: '0.8rem', color: 'var(--color-ink-soft)' }}>
                 {!isMontoValid && montoInicial !== '' ? (
-                  <span style={{ color: '#ef4444', fontWeight: 600 }}>
+                  <span style={{ color: 'var(--color-danger)', fontWeight: 600 }}>
                     El monto debe ser un número mayor o igual a 0.
                   </span>
                 ) : (
@@ -413,7 +413,7 @@ export default function AbrirTurnoPage() {
 
               {/* Botones de montos frecuentes */}
               <div style={{ marginTop: '1rem' }}>
-                <div style={{ fontSize: '0.8rem', color: '#64748b', marginBottom: '0.4rem', fontWeight: 500 }}>
+                <div style={{ fontSize: '0.8rem', color: 'var(--color-ink-soft)', marginBottom: '0.4rem', fontWeight: 500 }}>
                   Montos frecuentes sugeridos:
                 </div>
                 <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
@@ -423,9 +423,9 @@ export default function AbrirTurnoPage() {
                       type="button"
                       onClick={() => handlePresetClick(val)}
                       style={{
-                        background: montoNum === val ? '#e0f2fe' : '#f1f5f9',
-                        color: montoNum === val ? '#0284c7' : '#475569',
-                        border: montoNum === val ? '1px solid #38bdf8' : '1px solid #e2e8f0',
+                        background: montoNum === val ? 'var(--color-primary-bg)' : 'var(--color-bg)',
+                        color: montoNum === val ? 'var(--color-primary)' : 'var(--color-ink-soft)',
+                        border: montoNum === val ? '1px solid var(--color-primary)' : '1px solid var(--color-line)',
                         borderRadius: '6px',
                         padding: '0.4rem 0.8rem',
                         fontSize: '0.85rem',
@@ -448,21 +448,21 @@ export default function AbrirTurnoPage() {
               style={{
                 width: '100%',
                 padding: '0.95rem',
-                backgroundColor: isLoading || !isMontoValid ? '#94a3b8' : '#0284c7',
-                color: 'white',
+                backgroundColor: isLoading || !isMontoValid ? 'var(--color-muted)' : 'var(--color-primary)',
+                color: 'var(--color-surface)',
                 border: 'none',
                 borderRadius: '8px',
                 fontSize: '1.05rem',
                 fontWeight: 700,
                 cursor: isLoading || !isMontoValid ? 'not-allowed' : 'pointer',
                 transition: 'background-color 0.2s, transform 0.1s',
-                boxShadow: '0 4px 6px -1px rgba(2, 132, 199, 0.25)',
+                boxShadow: '0 4px 6px -1px color-mix(in srgb, var(--color-primary) 25%, transparent)',
               }}
               onMouseOver={(e) => {
-                if (!isLoading && isMontoValid) e.currentTarget.style.backgroundColor = '#0369a1';
+                if (!isLoading && isMontoValid) e.currentTarget.style.backgroundColor = 'var(--color-primary)';
               }}
               onMouseOut={(e) => {
-                if (!isLoading && isMontoValid) e.currentTarget.style.backgroundColor = '#0284c7';
+                if (!isLoading && isMontoValid) e.currentTarget.style.backgroundColor = 'var(--color-primary)';
               }}
             >
               {isLoading ? 'Abriendo Turno...' : 'Abrir Turno'}

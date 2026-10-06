@@ -35,13 +35,13 @@ export default function Login() {
   };
 
   return (
-    <div style={{ display: 'flex', height: '100vh', justifyContent: 'center', alignItems: 'center', backgroundColor: '#f3f4f6' }}>
-      <div style={{ backgroundColor: 'white', padding: '2rem', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)', width: '350px' }}>
-        <h1 style={{ textAlign: 'center', color: '#3b82f6', marginBottom: '0.5rem' }}>GlobalMart OS</h1>
-        <p style={{ textAlign: 'center', color: '#6b7280', marginBottom: '1.5rem' }}>Inicia Sesin</p>
+    <div style={{ display: 'flex', height: '100vh', justifyContent: 'center', alignItems: 'center', backgroundColor: 'var(--color-bg)' }}>
+      <div style={{ backgroundColor: 'var(--color-surface)', padding: '2rem', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)', width: '350px' }}>
+        <h1 style={{ textAlign: 'center', color: 'var(--color-primary)', marginBottom: '0.5rem' }}>GlobalMart OS</h1>
+        <p style={{ textAlign: 'center', color: 'var(--color-ink-soft)', marginBottom: '1.5rem' }}>Inicia Sesin</p>
         
         {error && (
-          <div style={{ backgroundColor: '#fee2e2', color: '#ef4444', padding: '0.75rem', borderRadius: '4px', marginBottom: '1rem', fontSize: '0.875rem' }}>
+          <div style={{ backgroundColor: 'var(--color-danger-bg)', color: 'var(--color-danger)', padding: '0.75rem', borderRadius: '4px', marginBottom: '1rem', fontSize: '0.875rem' }}>
             {error}
           </div>
         )}
@@ -53,7 +53,7 @@ export default function Login() {
               type="text" 
               value={tenantId}
               onChange={(e) => setTenantId(e.target.value)}
-              style={{ width: '100%', padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '4px' }} 
+              style={{ width: '100%', padding: '0.5rem', border: '1px solid var(--color-line)', borderRadius: '4px' }} 
             />
           </div>
           <div style={{ marginBottom: '1rem' }}>
@@ -62,19 +62,19 @@ export default function Login() {
               type="email" 
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              style={{ width: '100%', padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '4px' }} 
+              style={{ width: '100%', padding: '0.5rem', border: '1px solid var(--color-line)', borderRadius: '4px' }} 
             />
           </div>
           <div style={{ marginBottom: '1.5rem' }}>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem' }}>Contrasea</label>
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem' }}>Contraseña</label>
             <input 
               type="password" 
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              style={{ width: '100%', padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '4px' }} 
+              style={{ width: '100%', padding: '0.5rem', border: '1px solid var(--color-line)', borderRadius: '4px' }} 
             />
           </div>
-          <button type="submit" style={{ width: '100%', padding: '0.75rem', backgroundColor: '#3b82f6', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>
+          <button type="submit" style={{ width: '100%', padding: '0.75rem', backgroundColor: 'var(--color-primary)', color: 'var(--color-surface)', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>
             Ingresar
           </button>
         </form>

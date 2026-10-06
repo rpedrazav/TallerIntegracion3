@@ -28,8 +28,13 @@ button:focus-visible{outline:2px solid var(--color-primary);outline-offset:2px}
 .wm{font:700 26px var(--font-mono)}.wm span{color:var(--color-primary)}
 .chips{display:flex;gap:14px;flex-wrap:wrap}
 .chip{border:1px solid var(--color-line);border-radius:10px;padding:16px 20px;background:var(--color-surface)}
-.chip.inv{background:var(--color-ink)}.chip.inv .wm{color:var(--color-surface)}.chip.inv .wm span{color:var(--color-primary)}
-.chip.inv .mark{background:var(--color-surface);color:var(--color-ink)}
+.chip.inv{background:#2F2235;border-color:#2F2235}.chip.inv .wm{color:#F6F7F4}.chip.inv .wm span{color:#D2B0C3}
+.chip.inv .mark{background:#F6F7F4;color:#2F2235}
+.strip{display:grid;grid-template-columns:repeat(5,1fr);border-radius:12px;overflow:hidden;border:1px solid var(--color-line)}
+.band{all:unset;box-sizing:border-box;cursor:pointer;min-height:170px;padding:14px 12px;display:flex;flex-direction:column;justify-content:flex-end;gap:2px}
+.band b{font:600 15px var(--font-mono)}.band span{font:var(--text-label)}.band small{font:var(--text-caption);opacity:.85}
+.band:focus-visible{outline:2px solid var(--color-primary);outline-offset:-4px}
+@media (max-width:720px){.strip{grid-template-columns:1fr}.band{min-height:84px}}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px}
 .sw{all:unset;box-sizing:border-box;cursor:pointer;background:var(--color-surface);border:1px solid var(--color-line);border-radius:10px;overflow:hidden;display:block}
 .sw:hover{border-color:var(--color-primary)}
@@ -79,9 +84,9 @@ button:focus-visible{outline:2px solid var(--color-primary);outline-offset:2px}
 .receipt .r{display:flex;justify-content:space-between;padding:4px 0;color:var(--color-ink-soft)}
 .receipt .r.t{color:var(--color-ink);font-weight:700;border-top:2px dashed var(--color-line);margin-top:8px;padding-top:10px}
 ul.rules{margin:0;padding-left:20px}ul.rules li{margin:6px 0}
-pre{background:#211A14;color:#EADFCF;border-radius:10px;padding:16px;overflow:auto;font:var(--text-code);line-height:1.55;margin:0}
+pre{background:#231A28;color:#E6E3E8;border-radius:10px;padding:16px;overflow:auto;font:var(--text-code);line-height:1.55;margin:0}
 #copy{margin-top:10px;background:var(--color-primary);color:var(--color-on-primary);border:0;border-radius:8px;padding:9px 16px}
-#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#332A22;color:#fff;padding:9px 16px;border-radius:8px;font:var(--text-body-sm);opacity:0;transition:opacity .2s;pointer-events:none}
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#2F2235;color:#fff;padding:9px 16px;border-radius:8px;font:var(--text-body-sm);opacity:0;transition:opacity .2s;pointer-events:none}
 #toast.on{opacity:1}
 @media (max-width:720px){.row{grid-template-columns:1fr;gap:4px}.ctx{grid-template-columns:1fr}}
 @media (prefers-reduced-motion:reduce){#toast{transition:none}}
@@ -92,7 +97,7 @@ pre{background:#211A14;color:#EADFCF;border-radius:10px;padding:16px;overflow:au
 <div class="wrap">
   <p class="eyebrow">Guía de estilo para la app de escritorio</p>
   <h1 class="brand">GlobalMart<span>.</span>OS</h1>
-  <p class="tagline">Lino cálido, pimentón y tipografía de ticket de caja. Pensada para turnos largos: nada vibra, salvo las alertas.</p>
+  <p class="tagline">Ceniza, ciruela y violeta profundo, con tipografía de ticket de caja. Pensada para turnos largos: nada vibra, salvo las alertas.</p>
 
   <hr class="rule">
   <h2>Logo</h2>
@@ -104,7 +109,9 @@ pre{background:#211A14;color:#EADFCF;border-radius:10px;padding:16px;overflow:au
 
   <hr class="rule">
   <h2>Color</h2>
-  <p class="lead">El pimentón es de marca y navegación. El verde salvia queda para cobrar y confirmar, así el primario no se confunde con una alerta. Los ratios se calculan para el modo activo.</p>
+  <p class="lead">La base son cinco colores definidos por el equipo. El malva es de marca y navegación, y los colores de estado (verde, ámbar, ladrillo y azul acero) son el complemento: cada uno se distingue del primario y entre sí. Los ratios se calculan para el modo activo.</p>
+  <h3>Paleta base</h3>
+  <div class="strip" id="strip"></div>
   <h3>Marca y neutros</h3><div class="grid" id="g-base"></div>
   <h3>Estados</h3><div class="grid" id="g-states"></div>
 
@@ -163,7 +170,7 @@ pre{background:#211A14;color:#EADFCF;border-radius:10px;padding:16px;overflow:au
   <hr class="rule">
   <h2>Reglas de uso</h2>
   <ul class="rules">
-    <li>El pimentón es solo marca y navegación. Cobrar y confirmar van en verde salvia; anular y errores, en ladrillo.</li>
+    <li>El malva es solo marca y navegación. Cobrar y confirmar van en verde; anular y errores, en ladrillo.</li>
     <li>El texto de estado siempre usa el token <code>-text</code>, que cumple 4.5:1 sobre el fondo tintado.</li>
     <li>Toda alerta lleva ícono, título y detalle. Nunca se comunica solo con color.</li>
     <li>Precios, cantidades y totales usan <code>tabular-nums</code>. Los códigos van en monoespaciada.</li>
@@ -180,10 +187,10 @@ pre{background:#211A14;color:#EADFCF;border-radius:10px;padding:16px;overflow:au
 <div id="toast" role="status" aria-live="polite"></div>
 
 <script>
-const L={bg:'#F1ECE3',surface:'#FBF8F3',ink:'#332A22','ink-soft':'#6E6456',line:'#DCD3C3',primary:'#A25A33','on-primary':'#FBF8F3',secondary:'#6F6330',
- success:'#4A6540','success-text':'#4A6540','on-success':'#FBF8F3',warning:'#B5842A','warning-text':'#7D5A10',danger:'#9C3B2E','danger-text':'#9C3B2E','on-danger':'#FBF8F3',info:'#42607D','info-text':'#42607D'};
-const D={bg:'#211A14',surface:'#2A2219',ink:'#F1ECE3','ink-soft':'#BFB29E',line:'#46392A',primary:'#D98656','on-primary':'#241509',secondary:'#B9A663',
- success:'#8CAE7C','success-text':'#8CAE7C','on-success':'#14200F',warning:'#DCAE50','warning-text':'#DCAE50',danger:'#E88F82','danger-text':'#E88F82','on-danger':'#2A140F',info:'#8FB0D0','info-text':'#8FB0D0'};
+const L={bg:'#E7E9E4',surface:'#F6F7F4',ink:'#2F2235','ink-soft':'#5C4F61',line:'#BFC3BA',muted:'#A9ACA9',sidebar:'#3F3244',primary:'#60495A','primary-hover':'#3F3244','on-primary':'#F6F7F4',
+ success:'#3B6B4A','success-text':'#3B6B4A','on-success':'#F6F7F4',warning:'#B8872E','warning-text':'#7A5710',danger:'#A8372C','danger-text':'#A8372C','on-danger':'#F6F7F4',info:'#2F6A8A','info-text':'#2F6A8A'};
+const D={bg:'#2F2235',surface:'#3F3244',ink:'#ECEEE9','ink-soft':'#BFC3BA',line:'#60495A',muted:'#A9ACA9',sidebar:'#261B2B',primary:'#D2B0C3','primary-hover':'#E0C4D2','on-primary':'#2F2235',
+ success:'#9CCCA9','success-text':'#9CCCA9','on-success':'#2F2235',warning:'#E2B65C','warning-text':'#E2B65C',danger:'#F6A59B','danger-text':'#F6A59B','on-danger':'#2F2235',info:'#94C4E2','info-text':'#94C4E2'};
 const TINT={success:14,warning:16,danger:12,info:14};
 const TYPE=[
  ["total","Total",700,44,48,"m","Total de la venta","$8.102",1],
@@ -233,13 +240,16 @@ function sw(T,[name,key,use,fg,bg]){
   b.onclick=()=>copy(hex,hex);return b}
 function renderColors(){
   const dark=document.documentElement.dataset.theme==='dark',T=dark?D:L;
-  const base=[["Fondo · Lino","bg","Fondo base de la app"],["Superficie · Crema","surface","Tarjetas y paneles"],["Tinta","ink","Texto principal","ink","bg"],["Tinta suave","ink-soft","Texto secundario","ink-soft","surface"],["Arena","line","Líneas y bordes"],["Primario · Pimentón","primary","Marca, navegación, acciones","on-primary","primary"],["Secundario · Oliva","secondary","Tags y detalles","secondary","surface"]];
-  const st=[["Éxito · Salvia","success","Cobrar, venta OK, stock normal","success-text","success"],["Advertencia · Mostaza","warning","Stock bajo (el texto usa un tono más oscuro)","warning-text","warning"],["Peligro · Ladrillo","danger","Error, anulación, vence pronto","danger-text","danger"],["Información · Pizarra","info","Balanza conectada, sincronización","info-text","info"]];
+  const base=[["Fondo · Ceniza clara","bg","Fondo base de la app"],["Superficie","surface","Tarjetas y paneles"],["Tinta · Violeta medianoche","ink","Texto principal","ink","bg"],["Tinta suave","ink-soft","Texto secundario","ink-soft","surface"],["Borde · Ceniza","line","Líneas y bordes"],["Plata","muted","Deshabilitado, íconos inactivos, bordes de input"],["Primario · Sombra malva","primary","Marca, navegación, acciones","on-primary","primary"],["Barra lateral · Uva añeja","sidebar","Menú lateral y encabezado"]];
+  const st=[["Éxito · Verde bosque","success","Cobrar, venta OK, stock normal","success-text","success"],["Advertencia · Ámbar","warning","Stock bajo (el texto usa un tono más oscuro)","warning-text","warning"],["Peligro · Ladrillo","danger","Error, anulación, vence pronto","danger-text","danger"],["Información · Azul acero","info","Balanza conectada, sincronización","info-text","info"]];
   const gb=document.getElementById('g-base'),gs=document.getElementById('g-states');gb.innerHTML=gs.innerHTML='';
   base.forEach(x=>gb.appendChild(sw(T,x)));
   st.forEach(([n,k,u,fg])=>{const tint=mixc(T[k],T.surface,TINT[k]/100);const e=sw(T,[n,k,u,fg,tint]);gs.appendChild(e)});
   document.getElementById('theme').textContent=dark?'Modo claro':'Modo oscuro';
 }
+const BASE=[["Ash Grey · Ceniza","#BFC3BA","Bordes y fondos suaves","#2F2235"],["Silver · Plata","#A9ACA9","Deshabilitado e íconos inactivos","#2F2235"],["Mauve Shadow · Sombra malva","#60495A","Primario de marca","#F6F7F4"],["Vintage Grape · Uva añeja","#3F3244","Barra lateral y hover","#F6F7F4"],["Midnight Violet · Violeta medianoche","#2F2235","Tinta y fondo oscuro","#F6F7F4"]];
+document.getElementById('strip').innerHTML=BASE.map(([n,h,u,f])=>`<button type="button" class="band" style="background:${h};color:${f}" data-hex="${h}" aria-label="${n} ${h}, copiar"><b>${h}</b><span>${n}</span><small>${u}</small></button>`).join('');
+document.querySelectorAll('.band').forEach(b=>b.onclick=()=>copy(b.dataset.hex,b.dataset.hex));
 const ICONS=[["Carrito",'<path d="M3 4h2l2.4 12.4a2 2 0 0 0 2 1.6h8.2a2 2 0 0 0 2-1.6L22 8H6"/><circle cx="9" cy="21" r="1.4"/><circle cx="18" cy="21" r="1.4"/>'],
 ["Caja",'<rect x="3" y="7" width="18" height="12" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 12h18"/>'],
 ["Código",'<path d="M4 5h16v14H4zM8 5v14M12 5v14M16 5v14"/>'],

@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 
 export interface CartItemProps {
   id: string;
@@ -31,11 +31,11 @@ export default function CartItem({ id, name, price, quantity, onQuantityChange, 
   const subtotal = price * quantity;
 
   return (
-    <tr style={{ borderBottom: '1px solid #e5e7eb', transition: 'background-color 0.2s' }}>
-      <td style={{ padding: '1rem 0.5rem', fontWeight: 500, color: '#374151' }}>
+    <tr style={{ borderBottom: '1px solid var(--color-line)', transition: 'background-color 0.2s' }}>
+      <td style={{ padding: '1rem 0.5rem', fontWeight: 500, color: 'var(--color-ink)' }}>
         {name}
       </td>
-      <td style={{ padding: '1rem 0.5rem', color: '#6b7280' }}>
+      <td style={{ padding: '1rem 0.5rem', color: 'var(--color-ink-soft)' }}>
         $ {price.toLocaleString('es-CL')}
       </td>
       <td style={{ padding: '1rem 0.5rem' }}>
@@ -48,18 +48,18 @@ export default function CartItem({ id, name, price, quantity, onQuantityChange, 
             width: '60px',
             padding: '0.5rem',
             borderRadius: '4px',
-            border: '1px solid #d1d5db',
+            border: '1px solid var(--color-line)',
             textAlign: 'center',
             outline: 'none',
           }}
-          onFocus={(e) => e.target.style.borderColor = '#0ea5e9'}
+          onFocus={(e) => e.target.style.borderColor = 'var(--color-primary)'}
           onBlur={(e) => {
-            e.target.style.borderColor = '#d1d5db';
+            e.target.style.borderColor = 'var(--color-line)';
             handleBlur(e);
           }}
         />
       </td>
-      <td style={{ padding: '1rem 0.5rem', fontWeight: 600, color: '#111827' }}>
+      <td style={{ padding: '1rem 0.5rem', fontWeight: 600, color: 'var(--color-ink)' }}>
         $ {subtotal.toLocaleString('es-CL')}
       </td>
       <td style={{ padding: '1rem 0.5rem', textAlign: 'center' }}>
@@ -68,13 +68,13 @@ export default function CartItem({ id, name, price, quantity, onQuantityChange, 
           style={{
             background: 'none',
             border: 'none',
-            color: '#ef4444',
+            color: 'var(--color-danger)',
             cursor: 'pointer',
             padding: '0.5rem',
             borderRadius: '4px',
             transition: 'background-color 0.2s'
           }}
-          onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#fee2e2'}
+          onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'var(--color-danger-bg)'}
           onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
           title="Eliminar producto"
         >

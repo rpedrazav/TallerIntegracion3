@@ -17,7 +17,7 @@ reglas: [RNF-06]
 
 ## Dirección visual
 
-- Base cálida de lino, crema y tinta, con **pimentón** como color de marca.
+- Base neutra de ceniza clara y superficie hueso con tinta ciruela, y **sombra malva** como color de marca; barra lateral/encabezado en uva añeja.
 - Tipografía sans para la interfaz (`Inter`) y monoespaciada para códigos, folios y tickets (`IBM Plex Mono`).
 - Interfaz sobria para turnos largos: sin animaciones distractoras; las alertas deben ser claras y accionables.
 - La guía incluye modo claro y modo oscuro. El botón de tema es parte del prototipo visual.
@@ -29,15 +29,15 @@ Los tokens completos y sus valores están en `docs/GlobalMart OS — Guía de es
 - Tipografía: `--font-sans`, `--font-mono`.
 - Escala de texto: `--text-total`, `--text-price`, `--text-title-xl`, `--text-title`, `--text-body`, `--text-body-sm`, `--text-button`, `--text-label`, `--text-caption`, `--text-code`, `--text-ticket`.
 - Color base: `--color-bg`, `--color-surface`, `--color-ink`, `--color-ink-soft`, `--color-line`.
-- Marca y estados: `--color-primary`, `--color-secondary`, `--color-success`, `--color-warning`, `--color-danger`, `--color-info`, junto con sus tokens de texto y contraste.
+- Marca y estados: `--color-primary`, `--color-muted`, `--color-sidebar`, `--color-primary-hover`, `--color-success`, `--color-warning`, `--color-danger`, `--color-info`, junto con sus tokens de texto y contraste.
 - Personalización por tenant: solo se pueden sobrescribir `--color-primary` y `--color-on-primary`.
 
 ## Reglas de interacción y accesibilidad
 
-- Pimentón: marca, navegación y acciones primarias.
-- Verde salvia: cobrar, confirmar y estados exitosos.
+- Sombra malva: marca, navegación y acciones primarias.
+- Verde bosque: cobrar, confirmar y estados exitosos.
 - Ladrillo: anular, errores y vencimientos próximos.
-- Mostaza: advertencias; el texto usa el token de contraste oscuro correspondiente.
+- Ámbar: advertencias; el texto usa el token de contraste oscuro correspondiente.
 - Toda alerta debe incluir ícono, título y detalle; nunca comunicar información solo mediante color.
 - Precios, cantidades y totales usan `tabular-nums`; los códigos usan tipografía monoespaciada.
 - El texto que el cajero necesita para cobrar no baja de 14 px; el mínimo absoluto es 12 px.
@@ -51,6 +51,8 @@ La guía muestra una venta en curso con lectura de código de barras, productos 
 ## Aplicación
 
 Esta guía está aprobada como contexto de diseño. Su adopción en cada pantalla debe hacerse al implementar o modificar componentes, sin cambiar por ello el estado funcional documentado en [[pantallas]].
+
+**Adopción (2026-10-06):** los colores de Login, POS (`Pos`, `BarcodeInput`, `CartItem`), Abrir/Cerrar Turno, Productos, Admin, `CrearUsuarioModal` y la barra de navegación usan los tokens CSS de `globalmart-frontend/src/index.css` (importado en `renderer.tsx`). Tipografía, tamaños y fuentes empaquetadas aún no se adoptaron. No se verificó visualmente.
 
 ## Conexiones
 

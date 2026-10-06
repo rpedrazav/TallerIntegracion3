@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { Outlet, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 
@@ -12,14 +12,14 @@ export default function AppLayout() {
   };
 
   return (
-    <div style={{ backgroundColor: '#f4f6f8', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ backgroundColor: 'var(--color-bg)', color: 'var(--color-ink)', fontFamily: 'var(--font-sans)', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       <nav style={{ 
         display: 'flex', 
         justifyContent: 'space-between', 
         alignItems: 'center', 
         padding: '1rem 2rem', 
-        backgroundColor: '#38bdf8', /* Azul del logo GlobalMart */
-        color: 'white',
+        backgroundColor: 'var(--color-primary)', /* Primario (guía de estilo) */
+        color: 'var(--color-on-primary)',
         boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
@@ -27,11 +27,11 @@ export default function AppLayout() {
             GLOBALMART
           </span>
           <div style={{ display: 'flex', gap: '1.5rem' }}>
-            <Link to="/pos" style={{ color: 'white', textDecoration: 'none', fontWeight: 500, opacity: 0.9, transition: 'opacity 0.2s' }} onMouseOver={(e) => e.currentTarget.style.opacity = '1'} onMouseOut={(e) => e.currentTarget.style.opacity = '0.9'}>Punto de Venta</Link>
-            <Link to="/abrir-turno" style={{ color: 'white', textDecoration: 'none', fontWeight: 500, opacity: 0.9, transition: 'opacity 0.2s' }} onMouseOver={(e) => e.currentTarget.style.opacity = '1'} onMouseOut={(e) => e.currentTarget.style.opacity = '0.9'}>Abrir Turno</Link>
-            <Link to="/cerrar-turno" style={{ color: 'white', textDecoration: 'none', fontWeight: 500, opacity: 0.9, transition: 'opacity 0.2s' }} onMouseOver={(e) => e.currentTarget.style.opacity = '1'} onMouseOut={(e) => e.currentTarget.style.opacity = '0.9'}>Cerrar Turno</Link>
-            <Link to="/admin/productos" style={{ color: 'white', textDecoration: 'none', fontWeight: 500, opacity: 0.9, transition: 'opacity 0.2s' }} onMouseOver={(e) => e.currentTarget.style.opacity = '1'} onMouseOut={(e) => e.currentTarget.style.opacity = '0.9'}>Productos</Link>
-            <Link to="/admin" style={{ color: 'white', textDecoration: 'none', fontWeight: 500, opacity: 0.9, transition: 'opacity 0.2s' }} onMouseOver={(e) => e.currentTarget.style.opacity = '1'} onMouseOut={(e) => e.currentTarget.style.opacity = '0.9'}>Administración</Link>
+            <Link to="/pos" style={{ color: 'var(--color-on-primary)', textDecoration: 'none', fontWeight: 500, opacity: 0.9, transition: 'opacity 0.2s' }} onMouseOver={(e) => e.currentTarget.style.opacity = '1'} onMouseOut={(e) => e.currentTarget.style.opacity = '0.9'}>Punto de Venta</Link>
+            <Link to="/abrir-turno" style={{ color: 'var(--color-on-primary)', textDecoration: 'none', fontWeight: 500, opacity: 0.9, transition: 'opacity 0.2s' }} onMouseOver={(e) => e.currentTarget.style.opacity = '1'} onMouseOut={(e) => e.currentTarget.style.opacity = '0.9'}>Abrir Turno</Link>
+            <Link to="/cerrar-turno" style={{ color: 'var(--color-on-primary)', textDecoration: 'none', fontWeight: 500, opacity: 0.9, transition: 'opacity 0.2s' }} onMouseOver={(e) => e.currentTarget.style.opacity = '1'} onMouseOut={(e) => e.currentTarget.style.opacity = '0.9'}>Cerrar Turno</Link>
+            <Link to="/admin/productos" style={{ color: 'var(--color-on-primary)', textDecoration: 'none', fontWeight: 500, opacity: 0.9, transition: 'opacity 0.2s' }} onMouseOver={(e) => e.currentTarget.style.opacity = '1'} onMouseOut={(e) => e.currentTarget.style.opacity = '0.9'}>Productos</Link>
+            <Link to="/admin" style={{ color: 'var(--color-on-primary)', textDecoration: 'none', fontWeight: 500, opacity: 0.9, transition: 'opacity 0.2s' }} onMouseOver={(e) => e.currentTarget.style.opacity = '1'} onMouseOut={(e) => e.currentTarget.style.opacity = '0.9'}>Administración</Link>
           </div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
@@ -39,8 +39,8 @@ export default function AppLayout() {
           <button 
             onClick={handleLogout}
             style={{
-              backgroundColor: 'white',
-              color: '#38bdf8',
+              backgroundColor: 'var(--color-surface)',
+              color: 'var(--color-primary)',
               border: 'none',
               padding: '0.5rem 1rem',
               borderRadius: '9999px',

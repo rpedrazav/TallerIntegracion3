@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+﻿import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios, { AxiosError } from 'axios';
 import { useAuth } from '../hooks/useAuth';
@@ -324,18 +324,18 @@ export default function CerrarTurnoPage() {
       {/* Contenedor Principal */}
       <div
         style={{
-          background: '#ffffff',
+          background: 'var(--color-surface)',
           borderRadius: '16px',
           boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.04)',
-          border: '1px solid #e2e8f0',
+          border: '1px solid var(--color-line)',
           overflow: 'hidden',
         }}
       >
         {/* Cabecera */}
         <div
           style={{
-            background: 'linear-gradient(135deg, #0369a1 0%, #0284c7 60%, #38bdf8 100%)',
-            color: 'white',
+            background: 'linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary) 60%, var(--color-primary) 100%)',
+            color: 'var(--color-surface)',
             padding: '2rem',
             position: 'relative',
           }}
@@ -385,9 +385,9 @@ export default function CerrarTurnoPage() {
           {errorMsg && (
             <div
               style={{
-                backgroundColor: '#fee2e2',
-                border: '1px solid #fca5a5',
-                color: '#b91c1c',
+                backgroundColor: 'var(--color-danger-bg)',
+                border: '1px solid var(--color-danger)',
+                color: 'var(--color-danger)',
                 padding: '1rem',
                 borderRadius: '10px',
                 fontSize: '0.925rem',
@@ -405,9 +405,9 @@ export default function CerrarTurnoPage() {
           {successMsg && (
             <div
               style={{
-                backgroundColor: '#dcfce7',
-                border: '1px solid #86efac',
-                color: '#15803d',
+                backgroundColor: 'var(--color-success-bg)',
+                border: '1px solid var(--color-success)',
+                color: 'var(--color-success)',
                 padding: '1.25rem',
                 borderRadius: '10px',
                 fontSize: '0.95rem',
@@ -430,8 +430,8 @@ export default function CerrarTurnoPage() {
                   type="button"
                   onClick={() => navigate('/abrir-turno')}
                   style={{
-                    backgroundColor: '#16a34a',
-                    color: 'white',
+                    backgroundColor: 'var(--color-success)',
+                    color: 'var(--color-surface)',
                     border: 'none',
                     padding: '0.6rem 1.2rem',
                     borderRadius: '8px',
@@ -445,9 +445,9 @@ export default function CerrarTurnoPage() {
                   type="button"
                   onClick={() => navigate('/pos')}
                   style={{
-                    backgroundColor: '#ffffff',
-                    color: '#15803d',
-                    border: '1px solid #86efac',
+                    backgroundColor: 'var(--color-surface)',
+                    color: 'var(--color-success)',
+                    border: '1px solid var(--color-success)',
                     padding: '0.6rem 1.2rem',
                     borderRadius: '8px',
                     fontWeight: 600,
@@ -464,9 +464,9 @@ export default function CerrarTurnoPage() {
           {noTurnoOpen && !turnoClosedSuccess && (
             <div
               style={{
-                backgroundColor: '#fef3c7',
-                border: '1px solid #fde68a',
-                color: '#92400e',
+                backgroundColor: 'var(--color-warning-bg)',
+                border: '1px solid var(--color-warning)',
+                color: 'var(--color-warning-text)',
                 padding: '1.25rem',
                 borderRadius: '10px',
                 marginBottom: '1.5rem',
@@ -489,8 +489,8 @@ export default function CerrarTurnoPage() {
                 type="button"
                 onClick={() => navigate('/abrir-turno')}
                 style={{
-                  background: '#d97706',
-                  color: 'white',
+                  background: 'var(--color-warning)',
+                  color: 'var(--color-surface)',
                   border: 'none',
                   padding: '0.6rem 1.2rem',
                   borderRadius: '8px',
@@ -519,10 +519,10 @@ export default function CerrarTurnoPage() {
                 }}
               >
                 <div>
-                  <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700, color: '#1e293b' }}>
+                  <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700, color: 'var(--color-ink)' }}>
                     Desglose de Efectivo en Gaveta
                   </h2>
-                  <span style={{ fontSize: '0.85rem', color: '#64748b' }}>
+                  <span style={{ fontSize: '0.85rem', color: 'var(--color-ink-soft)' }}>
                     Indica la cantidad física de cada billete y moneda encontrada.
                   </span>
                 </div>
@@ -531,9 +531,9 @@ export default function CerrarTurnoPage() {
                     type="button"
                     onClick={handleReset}
                     style={{
-                      background: '#f1f5f9',
-                      color: '#475569',
-                      border: '1px solid #cbd5e1',
+                      background: 'var(--color-bg)',
+                      color: 'var(--color-ink-soft)',
+                      border: '1px solid var(--color-line)',
                       padding: '0.5rem 1rem',
                       borderRadius: '8px',
                       fontSize: '0.85rem',
@@ -552,14 +552,14 @@ export default function CerrarTurnoPage() {
               <div
                 style={{
                   overflowX: 'auto',
-                  border: '1px solid #e2e8f0',
+                  border: '1px solid var(--color-line)',
                   borderRadius: '12px',
                   marginBottom: '2rem',
                 }}
               >
                 <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
                   <thead>
-                    <tr style={{ background: '#f8fafc', borderBottom: '2px solid #e2e8f0', color: '#475569' }}>
+                    <tr style={{ background: 'var(--color-bg)', borderBottom: '2px solid var(--color-line)', color: 'var(--color-ink-soft)' }}>
                       <th style={{ padding: '0.875rem 1.25rem', fontSize: '0.85rem', fontWeight: 700, textTransform: 'uppercase' }}>
                         Tipo
                       </th>
@@ -601,8 +601,8 @@ export default function CerrarTurnoPage() {
                         <tr
                           key={den.id}
                           style={{
-                            backgroundColor: isEven ? '#ffffff' : '#fcfcfd',
-                            borderBottom: '1px solid #f1f5f9',
+                            backgroundColor: isEven ? 'var(--color-surface)' : 'var(--color-bg)',
+                            borderBottom: '1px solid var(--color-bg)',
                             transition: 'background-color 0.15s',
                           }}
                         >
@@ -617,8 +617,8 @@ export default function CerrarTurnoPage() {
                                 borderRadius: '9999px',
                                 fontSize: '0.75rem',
                                 fontWeight: 700,
-                                background: den.tipo === 'billete' ? '#dbeafe' : '#fef3c7',
-                                color: den.tipo === 'billete' ? '#1d4ed8' : '#b45309',
+                                background: den.tipo === 'billete' ? 'var(--color-primary-bg)' : 'var(--color-warning-bg)',
+                                color: den.tipo === 'billete' ? 'var(--color-primary)' : 'var(--color-warning-text)',
                               }}
                             >
                               <span>{den.tipo === 'billete' ? '💵' : '🪙'}</span>
@@ -627,7 +627,7 @@ export default function CerrarTurnoPage() {
                           </td>
 
                           {/* Denominación */}
-                          <td style={{ padding: '0.875rem 1.25rem', fontWeight: 700, fontSize: '1.05rem', color: '#1e293b' }}>
+                          <td style={{ padding: '0.875rem 1.25rem', fontWeight: 700, fontSize: '1.05rem', color: 'var(--color-ink)' }}>
                             {den.label}
                           </td>
 
@@ -641,11 +641,11 @@ export default function CerrarTurnoPage() {
                                   width: '32px',
                                   height: '34px',
                                   borderRadius: '6px',
-                                  border: '1px solid #cbd5e1',
-                                  background: '#f8fafc',
+                                  border: '1px solid var(--color-line)',
+                                  background: 'var(--color-bg)',
                                   fontWeight: 'bold',
                                   fontSize: '1rem',
-                                  color: '#334155',
+                                  color: 'var(--color-ink)',
                                   cursor: 'pointer',
                                   display: 'flex',
                                   alignItems: 'center',
@@ -671,11 +671,11 @@ export default function CerrarTurnoPage() {
                                   fontSize: '1rem',
                                   fontWeight: 700,
                                   borderRadius: '6px',
-                                  border: '1px solid #cbd5e1',
+                                  border: '1px solid var(--color-line)',
                                   outline: 'none',
-                                  color: '#0f172a',
-                                  backgroundColor: qty > 0 ? '#f0fdf4' : '#ffffff',
-                                  borderColor: qty > 0 ? '#86efac' : '#cbd5e1',
+                                  color: 'var(--color-ink)',
+                                  backgroundColor: qty > 0 ? 'var(--color-success-bg)' : 'var(--color-surface)',
+                                  borderColor: qty > 0 ? 'var(--color-success)' : 'var(--color-line)',
                                   transition: 'all 0.15s ease',
                                 }}
                               />
@@ -687,11 +687,11 @@ export default function CerrarTurnoPage() {
                                   width: '32px',
                                   height: '34px',
                                   borderRadius: '6px',
-                                  border: '1px solid #cbd5e1',
-                                  background: '#f8fafc',
+                                  border: '1px solid var(--color-line)',
+                                  background: 'var(--color-bg)',
                                   fontWeight: 'bold',
                                   fontSize: '1rem',
-                                  color: '#334155',
+                                  color: 'var(--color-ink)',
                                   cursor: 'pointer',
                                   display: 'flex',
                                   alignItems: 'center',
@@ -705,7 +705,7 @@ export default function CerrarTurnoPage() {
                           </td>
 
                           {/* Subtotal */}
-                          <td style={{ padding: '0.875rem 1.25rem', textAlign: 'right', fontWeight: 700, color: subtotal > 0 ? '#0284c7' : '#94a3b8' }}>
+                          <td style={{ padding: '0.875rem 1.25rem', textAlign: 'right', fontWeight: 700, color: subtotal > 0 ? 'var(--color-primary)' : 'var(--color-muted)' }}>
                             ${subtotal.toLocaleString('es-CL')}
                           </td>
                         </tr>
@@ -714,29 +714,29 @@ export default function CerrarTurnoPage() {
                   </tbody>
                   <tfoot>
                     {/* Fila Total Billetes */}
-                    <tr style={{ background: '#f8fafc', borderTop: '2px solid #e2e8f0' }}>
-                      <td colSpan={2} style={{ padding: '0.75rem 1.25rem', fontWeight: 600, color: '#475569' }}>
+                    <tr style={{ background: 'var(--color-bg)', borderTop: '2px solid var(--color-line)' }}>
+                      <td colSpan={2} style={{ padding: '0.75rem 1.25rem', fontWeight: 600, color: 'var(--color-ink-soft)' }}>
                         💵 Subtotal Billetes:
                       </td>
-                      <td colSpan={2} style={{ padding: '0.75rem 1.25rem', textAlign: 'right', fontWeight: 700, color: '#1e293b' }}>
+                      <td colSpan={2} style={{ padding: '0.75rem 1.25rem', textAlign: 'right', fontWeight: 700, color: 'var(--color-ink)' }}>
                         ${totalBilletes.toLocaleString('es-CL')}
                       </td>
                     </tr>
                     {/* Fila Total Monedas */}
-                    <tr style={{ background: '#f8fafc' }}>
-                      <td colSpan={2} style={{ padding: '0.75rem 1.25rem', fontWeight: 600, color: '#475569' }}>
+                    <tr style={{ background: 'var(--color-bg)' }}>
+                      <td colSpan={2} style={{ padding: '0.75rem 1.25rem', fontWeight: 600, color: 'var(--color-ink-soft)' }}>
                         🪙 Subtotal Monedas:
                       </td>
-                      <td colSpan={2} style={{ padding: '0.75rem 1.25rem', textAlign: 'right', fontWeight: 700, color: '#1e293b' }}>
+                      <td colSpan={2} style={{ padding: '0.75rem 1.25rem', textAlign: 'right', fontWeight: 700, color: 'var(--color-ink)' }}>
                         ${totalMonedas.toLocaleString('es-CL')}
                       </td>
                     </tr>
                     {/* Total Declarado */}
-                    <tr style={{ background: '#e0f2fe', borderTop: '2px solid #38bdf8' }}>
-                      <td colSpan={2} style={{ padding: '1rem 1.25rem', fontWeight: 800, fontSize: '1.15rem', color: '#0369a1' }}>
+                    <tr style={{ background: 'var(--color-primary-bg)', borderTop: '2px solid var(--color-primary)' }}>
+                      <td colSpan={2} style={{ padding: '1rem 1.25rem', fontWeight: 800, fontSize: '1.15rem', color: 'var(--color-primary)' }}>
                         TOTAL DECLARADO EN CAJA:
                       </td>
-                      <td colSpan={2} style={{ padding: '1rem 1.25rem', textAlign: 'right', fontWeight: 800, fontSize: '1.45rem', color: '#0284c7' }}>
+                      <td colSpan={2} style={{ padding: '1rem 1.25rem', textAlign: 'right', fontWeight: 800, fontSize: '1.45rem', color: 'var(--color-primary)' }}>
                         ${totalDeclarado.toLocaleString('es-CL')}
                       </td>
                     </tr>
@@ -747,8 +747,8 @@ export default function CerrarTurnoPage() {
               {/* SECCIÓN DE CUADRE DE CAJA */}
               <div
                 style={{
-                  background: '#f8fafc',
-                  border: '1px solid #e2e8f0',
+                  background: 'var(--color-bg)',
+                  border: '1px solid var(--color-line)',
                   borderRadius: '12px',
                   padding: '1.5rem',
                   marginBottom: '2rem',
@@ -756,10 +756,10 @@ export default function CerrarTurnoPage() {
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
                   <div>
-                    <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 700, color: '#1e293b' }}>
+                    <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 700, color: 'var(--color-ink)' }}>
                       Arqueo y Comparación de Cuadre
                     </h3>
-                    <div style={{ fontSize: '0.85rem', color: '#64748b' }}>
+                    <div style={{ fontSize: '0.85rem', color: 'var(--color-ink-soft)' }}>
                       Verifica la diferencia entre el efectivo esperado por ventas y lo contado físicamente.
                     </div>
                   </div>
@@ -769,15 +769,15 @@ export default function CerrarTurnoPage() {
                     onClick={handleCalcularCuadre}
                     disabled={isCalculatingCuadre || noTurnoOpen}
                     style={{
-                      background: '#0284c7',
-                      color: 'white',
+                      background: 'var(--color-primary)',
+                      color: 'var(--color-surface)',
                       border: 'none',
                       padding: '0.65rem 1.25rem',
                       borderRadius: '8px',
                       fontWeight: 700,
                       fontSize: '0.9rem',
                       cursor: isCalculatingCuadre || noTurnoOpen ? 'not-allowed' : 'pointer',
-                      boxShadow: '0 2px 4px rgba(2, 132, 199, 0.2)',
+                      boxShadow: '0 2px 4px color-mix(in srgb, var(--color-primary) 20%, transparent)',
                     }}
                   >
                     {isCalculatingCuadre ? 'Calculando...' : '🔍 Calcular Cuadre'}
@@ -797,19 +797,19 @@ export default function CerrarTurnoPage() {
                       {/* Efectivo Esperado */}
                       <div
                         style={{
-                          background: '#ffffff',
-                          border: '1px solid #e2e8f0',
+                          background: 'var(--color-surface)',
+                          border: '1px solid var(--color-line)',
                           borderRadius: '8px',
                           padding: '1rem',
                         }}
                       >
-                        <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: '#64748b', fontWeight: 600 }}>
+                        <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--color-ink-soft)', fontWeight: 600 }}>
                           Efectivo Esperado (Ventas)
                         </div>
-                        <div style={{ fontSize: '1.35rem', fontWeight: 800, color: '#1e293b', marginTop: '0.25rem' }}>
+                        <div style={{ fontSize: '1.35rem', fontWeight: 800, color: 'var(--color-ink)', marginTop: '0.25rem' }}>
                           ${efectivoEsperado.toLocaleString('es-CL')}
                         </div>
-                        <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '0.25rem' }}>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--color-ink-soft)', marginTop: '0.25rem' }}>
                           Vía MS-5 (pagos efectivo completados)
                         </div>
                       </div>
@@ -817,19 +817,19 @@ export default function CerrarTurnoPage() {
                       {/* Efectivo Declarado */}
                       <div
                         style={{
-                          background: '#ffffff',
-                          border: '1px solid #e2e8f0',
+                          background: 'var(--color-surface)',
+                          border: '1px solid var(--color-line)',
                           borderRadius: '8px',
                           padding: '1rem',
                         }}
                       >
-                        <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: '#64748b', fontWeight: 600 }}>
+                        <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--color-ink-soft)', fontWeight: 600 }}>
                           Efectivo Declarado (Gaveta)
                         </div>
-                        <div style={{ fontSize: '1.35rem', fontWeight: 800, color: '#0284c7', marginTop: '0.25rem' }}>
+                        <div style={{ fontSize: '1.35rem', fontWeight: 800, color: 'var(--color-primary)', marginTop: '0.25rem' }}>
                           ${totalDeclarado.toLocaleString('es-CL')}
                         </div>
-                        <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '0.25rem' }}>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--color-ink-soft)', marginTop: '0.25rem' }}>
                           Suma automática de billetes + monedas
                         </div>
                        </div>
@@ -843,8 +843,8 @@ export default function CerrarTurnoPage() {
                         return (
                           <div
                             style={{
-                              background: isExact ? '#f0fdf4' : '#fef2f2',
-                              border: `1px solid ${isExact ? '#86efac' : '#fca5a5'}`,
+                              background: isExact ? 'var(--color-success-bg)' : 'var(--color-danger-bg)',
+                              border: `1px solid ${isExact ? 'var(--color-success)' : 'var(--color-danger)'}`,
                               borderRadius: '8px',
                               padding: '1rem',
                             }}
@@ -854,7 +854,7 @@ export default function CerrarTurnoPage() {
                                 fontSize: '0.75rem',
                                 textTransform: 'uppercase',
                                 fontWeight: 700,
-                                color: isExact ? '#15803d' : '#b91c1c',
+                                color: isExact ? 'var(--color-success)' : 'var(--color-danger)',
                               }}
                             >
                               {isExact
@@ -868,12 +868,12 @@ export default function CerrarTurnoPage() {
                                 fontSize: '1.5rem',
                                 fontWeight: 800,
                                 marginTop: '0.25rem',
-                                color: isExact ? '#15803d' : '#dc2626',
+                                color: isExact ? 'var(--color-success)' : 'var(--color-danger)',
                               }}
                             >
                               {isSobrante ? '+' : ''}${diff.toLocaleString('es-CL')}
                             </div>
-                            <div style={{ fontSize: '0.75rem', marginTop: '0.25rem', color: isExact ? '#15803d' : '#b91c1c' }}>
+                            <div style={{ fontSize: '0.75rem', marginTop: '0.25rem', color: isExact ? 'var(--color-success)' : 'var(--color-danger)' }}>
                               {isExact
                                 ? 'La gaveta coincide exactamente con las ventas registradas'
                                 : isSobrante
@@ -881,7 +881,7 @@ export default function CerrarTurnoPage() {
                                 : 'Falta efectivo respecto a las ventas — revisar conteo'}
                             </div>
                             {hasDiscrepancy && (
-                              <div style={{ marginTop: '0.5rem', padding: '0.4rem 0.6rem', background: '#fee2e2', borderRadius: '6px', fontSize: '0.75rem', color: '#991b1b', fontWeight: 600 }}>
+                              <div style={{ marginTop: '0.5rem', padding: '0.4rem 0.6rem', background: 'var(--color-danger-bg)', borderRadius: '6px', fontSize: '0.75rem', color: 'var(--color-danger)', fontWeight: 600 }}>
                                 Discrepancia detectada: se recomienda revisar el conteo antes de cerrar el turno.
                               </div>
                             )}
@@ -891,9 +891,9 @@ export default function CerrarTurnoPage() {
                     </div>
 
                     {/* Estado de sincronización */}
-                    <div style={{ marginTop: '0.75rem', fontSize: '0.8rem', color: '#64748b', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <div style={{ marginTop: '0.75rem', fontSize: '0.8rem', color: 'var(--color-ink-soft)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                       {cuadreSynced ? (
-                        <span style={{ color: '#16a34a', fontWeight: 600 }}>
+                        <span style={{ color: 'var(--color-success)', fontWeight: 600 }}>
                           ✓ Cuadre verificado y sincronizado con el microservicio POS (MS-5)
                           {cuadreResult?.turno_id ? ` (Turno: ${cuadreResult.turno_id.slice(0, 8)}...)` : ''}.
                         </span>
@@ -914,9 +914,9 @@ export default function CerrarTurnoPage() {
                   onClick={() => navigate('/pos')}
                   style={{
                     padding: '0.85rem 1.5rem',
-                    background: '#ffffff',
-                    color: '#475569',
-                    border: '1px solid #cbd5e1',
+                    background: 'var(--color-surface)',
+                    color: 'var(--color-ink-soft)',
+                    border: '1px solid var(--color-line)',
                     borderRadius: '8px',
                     fontWeight: 600,
                     fontSize: '1rem',
@@ -932,21 +932,21 @@ export default function CerrarTurnoPage() {
                   disabled={isClosingTurno || noTurnoOpen}
                   style={{
                     padding: '0.85rem 2rem',
-                    backgroundColor: isClosingTurno || noTurnoOpen ? '#94a3b8' : '#e11d48',
-                    color: 'white',
+                    backgroundColor: isClosingTurno || noTurnoOpen ? 'var(--color-muted)' : 'var(--color-danger)',
+                    color: 'var(--color-surface)',
                     border: 'none',
                     borderRadius: '8px',
                     fontWeight: 700,
                     fontSize: '1.05rem',
                     cursor: isClosingTurno || noTurnoOpen ? 'not-allowed' : 'pointer',
-                    boxShadow: '0 4px 6px -1px rgba(225, 29, 72, 0.25)',
+                    boxShadow: '0 4px 6px -1px color-mix(in srgb, var(--color-danger) 25%, transparent)',
                     transition: 'all 0.15s ease',
                   }}
                   onMouseOver={(e) => {
-                    if (!isClosingTurno && !noTurnoOpen) e.currentTarget.style.backgroundColor = '#be123c';
+                    if (!isClosingTurno && !noTurnoOpen) e.currentTarget.style.backgroundColor = 'var(--color-danger)';
                   }}
                   onMouseOut={(e) => {
-                    if (!isClosingTurno && !noTurnoOpen) e.currentTarget.style.backgroundColor = '#e11d48';
+                    if (!isClosingTurno && !noTurnoOpen) e.currentTarget.style.backgroundColor = 'var(--color-danger)';
                   }}
                 >
                   {isClosingTurno ? 'Cerrando Turno...' : '🔒 Confirmar y Cerrar Turno'}

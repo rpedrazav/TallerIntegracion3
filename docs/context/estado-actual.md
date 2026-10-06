@@ -1,4 +1,4 @@
----
+﻿---
 id: estado-actual
 tipo: indice
 titulo: Estado Real de Implementación — GlobalMart OS
@@ -183,7 +183,7 @@ reglas: []
 
 ### Guía visual aprobada
 
-El archivo `docs/GlobalMart OS — Guía de estilo.html` fue aprobado como referencia visual del frontend el 2026-10-06. Define tokens CSS, tipografías `Inter`/`IBM Plex Mono`, paleta cálida con pimentón, estados salvia/mostaza/ladrillo/pizarra, modo oscuro, reglas de contraste y composición de referencia para el POS. La guía es normativa para nuevas implementaciones, pero no cambia el estado funcional de las pantallas: POS sigue [PARCIAL] y Admin sigue [PLACEHOLDER].
+El archivo `docs/GlobalMart OS — Guía de estilo.html` fue aprobado como referencia visual del frontend el 2026-10-06. Define tokens CSS, tipografías `Inter`/`IBM Plex Mono`, paleta de ceniza/malva (primario sombra malva), estados verde bosque/ámbar/ladrillo/azul acero, modo oscuro, reglas de contraste y composición de referencia para el POS. La guía es normativa para nuevas implementaciones, pero no cambia el estado funcional de las pantallas: POS sigue [PARCIAL] y Admin sigue [PLACEHOLDER].
 
 Ver el nodo [[guia-estilo]] para el resumen y las reglas aplicables.
 
@@ -194,7 +194,7 @@ Ver el nodo [[guia-estilo]] para el resumen y las reglas aplicables.
 | Cerrar Turno (`CerrarTurnoPage`) | [IMPLEMENTADO] | Tabla de denominaciones (billetes/monedas) con conteo y subtotales automáticos. Llama a MS-5 `POST /api/turnos/cuadre` para obtener efectivo esperado. Muestra resultado: efectivo esperado vs declarado, diferencia en **verde** si es $0, en **rojo** si hay discrepancia (sobrante o faltante). Botón `POST /api/turnos/cerrar` con confirmación. |
 | Productos Admin (`ProductosPage`) | [IMPLEMENTADO] | `GET /products?page=1&pageSize=500` + `GET /categories` en MS-3 (puerto 5203). Tabla con nombre, código de barras, categoría, precio base, tipo (peso variable/unidad) y estado. Filtro instantáneo en frontend por texto (nombre, código, descripción, categoría), filtro por categoría dropdown y toggle "solo activos". Accesible desde `/admin/productos`. |
 | POS/Carrito | [PARCIAL] | UI con banner de confirmación de apertura de turno y datos mockeados; pendiente llamada a APIs de ventas |
-| Admin | [PLACEHOLDER] | Componente básico (`<h2>Administración</h2>`) para acceso directo |
+| Admin | [PARCIAL] | Lista usuarios (`GET /api/v1/users`) y `CrearUsuarioModal` (`POST /api/v1/users` + `POST /api/v1/users/{id}/roles`) con validación frontend; usa tokens de la guía de estilo. Sin edición/desactivación. |
 
 **Nota de integración Electron:** `preload.ts` expone únicamente funciones de autenticación y sesión (`ping`, `getToken`, `setToken`, `logout`). No expone hardware serial ni actualización automática por ahora.
 
