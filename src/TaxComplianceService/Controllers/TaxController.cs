@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using TaxComplianceService.Data;
 using TaxComplianceService.Models;
 using TaxComplianceService.Services;
 
@@ -16,15 +17,18 @@ public class TaxController : ControllerBase
 {
     private readonly ITenantConfigClient _tenantConfigClient;
     private readonly ITaxCalculatorService _taxCalculatorService;
+    private readonly TaxDbContext _db;
     private readonly ILogger<TaxController> _logger;
 
     public TaxController(
         ITenantConfigClient tenantConfigClient,
         ITaxCalculatorService taxCalculatorService,
+        TaxDbContext db,
         ILogger<TaxController> logger)
     {
         _tenantConfigClient   = tenantConfigClient   ?? throw new ArgumentNullException(nameof(tenantConfigClient));
         _taxCalculatorService = taxCalculatorService ?? throw new ArgumentNullException(nameof(taxCalculatorService));
+        _db                   = db                   ?? throw new ArgumentNullException(nameof(db));
         _logger               = logger               ?? throw new ArgumentNullException(nameof(logger));
     }
 
@@ -74,15 +78,9 @@ public class TaxController : ControllerBase
         [FromBody] TaxCalculateRequest request,
         CancellationToken cancellationToken)
     {
-        // 1. Extraer tenant_id del claim del JWT
-        var tenantClaim = User.FindFirst("tenant_id")?.Value
-            ?? User.FindFirst("TenantId")?.Value;
-
-        if (string.IsNullOrWhiteSpace(tenantClaim) || !Guid.TryParse(tenantClaim, out var tenantId))
-        {
-            _logger.LogWarning("[TaxController] Solicitud rechazada: falta claim tenant_id vÃ¡lido en el token JWT");
-            return Unauthorized(new { error = "Token invÃ¡lido: falta claim tenant_id vÃ¡lido" });
-        }
+        // 1. tenant_id ya validado por TenantMiddleware (401 si faltaba o era inválido)
+        var tenantId = _db.CurrentTenantId
+            ?? throw new InvalidOperationException("TenantMiddleware no estableció CurrentTenantId.");
 
         // 2. ValidaciÃ³n defensiva del cuerpo de la solicitud
         if (request == null || request.Items == null || request.Items.Count == 0)
