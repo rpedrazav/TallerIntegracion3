@@ -1,7 +1,10 @@
-﻿import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import BarcodeInput from '../components/pos/BarcodeInput';
 import CartItem from '../components/pos/CartItem';
+
+const CATALOG_URL = 'https://catalog-rpedraza.dev.censei.cl';
 
 export interface ProductItem {
   id: string;
@@ -23,13 +26,109 @@ export default function Pos() {
     locationState?.mensajeConfirmacion || locationState?.message || null
   );
 
-  const [cartItems, setCartItems] = useState<ProductItem[]>([
-    { id: '1', name: 'Coca Cola 2L', price: 2500, quantity: 2 },
-    { id: '2', name: 'Pan de Molde Castaño', price: 1800, quantity: 1 }
-  ]);
+  // Inicializar leyendo de localStorage
+  const [cartItems, setCartItems] = useState<ProductItem[]>(() => {
+    const saved = localStorage.getItem('pos_cart');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        console.error('Error al leer carrito:', e);
+      }
+    }
+    return [];
+  });
 
-  const handleSearch = useCallback((query: string) => {
-    console.log('Buscando producto (debounce disparado):', query);
+  // Guardar en localStorage cada vez que cambie
+  useEffect(() => {
+    localStorage.setItem('pos_cart', JSON.stringify(cartItems));
+  }, [cartItems]);
+
+    const [searchResults, setSearchResults] = useState<any[]>([]);
+
+  const addProductToCart = useCallback((product: any) => {
+    setCartItems(prev => {
+      const existing = prev.find(item => item.id === product.id);
+      if (existing) {
+        return prev.map(item => item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item);
+      }
+      return [...prev, {
+        id: product.id,
+        name: product.nombre,
+        price: product.precioBase,
+        quantity: 1
+      }];
+    });
+    setSearchResults([]);
+  }, []);
+
+  const handleTypingSearch = useCallback(async (query: string) => {
+    if (!query || query.trim() === '') {
+      setSearchResults([]);
+      return;
+    }
+    try {
+      const token = await window.api?.getToken();
+      if (!token) return;
+      
+      // En lugar de usar /search (que es case-sensitive en Postgres), 
+      // pedimos la lista de productos y filtramos localmente ignorando mayúsculas
+      const response = await axios.get(`${CATALOG_URL}/products`, {
+        params: { page: 1, pageSize: 500 },
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      const todos = response.data?.data ?? response.data ?? [];
+      const q = query.trim().toLowerCase();
+      
+      const filtrados = todos.filter((p: any) => 
+        (p.nombre && p.nombre.toLowerCase().includes(q)) || 
+        (p.codigoBarras && p.codigoBarras.includes(q))
+      ).slice(0, 15); // Mostrar solo los primeros 15
+      
+      setSearchResults(filtrados);
+    } catch (error) {
+      console.error('Error buscando productos:', error);
+      setSearchResults([]);
+    }
+  }, []);
+
+  const handleSearch = useCallback(async (query: string) => {
+    try {
+      const token = await window.api?.getToken();
+      if (!token) {
+        alert('No hay sesiÃ³n activa. Por favor inicie sesiÃ³n.');
+        return;
+      }
+      
+      const response = await axios.get(`${CATALOG_URL}/products/lookup`, {
+        params: { barcode: query },
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (response.data) {
+        const product = response.data;
+        setCartItems(prev => {
+          const existing = prev.find(item => item.id === product.id);
+          if (existing) {
+            return prev.map(item => item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item);
+          }
+          return [...prev, {
+            id: product.id,
+            name: product.nombre,
+            price: product.precioBase,
+            quantity: 1
+          }];
+        });
+      }
+    } catch (error: any) {
+      console.error('Error al buscar producto:', error);
+      if (error.response?.status === 404) {
+        alert(`Producto con cÃ³digo de barras '${query}' no encontrado.`);
+      } else {
+        alert('Error de conexiÃ³n al buscar el producto.');
+      }
+    }
   }, []);
 
   const handleQuantityChange = useCallback((id: string, newQuantity: number) => {
@@ -44,14 +143,14 @@ export default function Pos() {
 
   const handleCancelSale = () => {
     if (cartItems.length === 0) return;
-    if (window.confirm('¿Estás seguro de que deseas cancelar la venta actual? Se vaciará el carrito.')) {
+    if (window.confirm('Â¿EstÃ¡s seguro de que deseas cancelar la venta actual? Se vaciarÃ¡ el carrito.')) {
       setCartItems([]);
     }
   };
 
   const handleCheckout = () => {
     console.log('Iniciando proceso de cobro...');
-    alert('Funcionalidad de cobro se implementará en el futuro.');
+    alert('Funcionalidad de cobro se implementarÃ¡ en el futuro.');
   };
 
   const { subtotal, totalItems } = useMemo(() => {
@@ -88,7 +187,7 @@ export default function Pos() {
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 600, fontSize: '0.925rem' }}>
-            <span>✅</span>
+            <span>âœ…</span>
             <span>{mensajeConfirmacion}</span>
           </div>
           <button
@@ -105,18 +204,57 @@ export default function Pos() {
             }}
             title="Cerrar mensaje"
           >
-            ✕
+            âœ•
           </button>
         </div>
       )}
 
       <div style={{ display: 'flex', flex: 1, gap: '1rem', minHeight: 0 }}>
-        {/* Columna Izquierda: Búsqueda y Escaneo */}
+        {/* Columna Izquierda: BÃºsqueda y Escaneo */}
         <div style={{ flex: '0 0 320px', display: 'flex', flexDirection: 'column', background: 'var(--color-surface)', padding: '1rem', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-        <h3 style={{ marginTop: 0, color: 'var(--color-primary)', fontSize: '1.25rem' }}>Buscar Producto</h3>
-        <BarcodeInput onSearch={handleSearch} />
-        <div style={{ flex: 1, border: '2px dashed var(--color-line)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-muted)', backgroundColor: 'var(--color-bg)' }}>
-          [Resultados de búsqueda]
+                <h3 style={{ marginTop: 0, color: 'var(--color-primary)', fontSize: '1.25rem' }}>Buscar Producto</h3>
+        <BarcodeInput onSearch={handleSearch} onTyping={handleTypingSearch} />
+        <div style={{ flex: 1, border: searchResults.length === 0 ? '2px dashed var(--color-line)' : 'none', borderRadius: '8px', overflow: 'auto', backgroundColor: searchResults.length === 0 ? 'var(--color-bg)' : 'transparent', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+          {searchResults.length === 0 ? (
+            <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-muted)', textAlign: 'center', padding: '1rem' }}>
+              Escribe el nombre del producto o escanea el código de barras
+            </div>
+          ) : (
+            searchResults.map(prod => (
+              <div 
+                key={prod.id}
+                onClick={() => addProductToCart(prod)}
+                style={{
+                  padding: '0.75rem',
+                  border: '1px solid var(--color-line)',
+                  borderRadius: '8px',
+                  backgroundColor: 'var(--color-surface)',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  transition: 'all 0.2s',
+                  boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
+                }}
+                onMouseOver={(e) => {
+                  e.currentTarget.style.borderColor = 'var(--color-primary)';
+                  e.currentTarget.style.backgroundColor = 'var(--color-primary-bg)';
+                }}
+                onMouseOut={(e) => {
+                  e.currentTarget.style.borderColor = 'var(--color-line)';
+                  e.currentTarget.style.backgroundColor = 'var(--color-surface)';
+                }}
+              >
+                <div>
+                  <div style={{ fontWeight: 600, color: 'var(--color-ink)' }}>{prod.nombre}</div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--color-ink-soft)' }}>{prod.codigoBarras}</div>
+                </div>
+                <div style={{ fontWeight: 'bold', color: 'var(--color-primary)' }}>
+                  ${prod.precioBase.toLocaleString('es-CL')}
+                </div>
+              </div>
+            ))
+          )}
         </div>
       </div>
 
@@ -134,7 +272,7 @@ export default function Pos() {
                 <circle cx="20" cy="21" r="1"></circle>
                 <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
               </svg>
-              <p style={{ fontSize: '1.25rem', margin: '0 0 0.5rem 0', color: 'var(--color-ink-soft)', fontWeight: 500 }}>Carrito vacío</p>
+              <p style={{ fontSize: '1.25rem', margin: '0 0 0.5rem 0', color: 'var(--color-ink-soft)', fontWeight: 500 }}>Carrito vacÃ­o</p>
               <p style={{ fontSize: '0.875rem', margin: 0 }}>Escanea o busca un producto para comenzar</p>
             </div>
           ) : (
@@ -254,7 +392,7 @@ export default function Pos() {
               gap: '0.5rem'
             }}
           >
-            <span>🧾</span>
+            <span>ðŸ§¾</span>
             <span>Cerrar Turno / Cuadre de Caja</span>
           </button>
         </div>
@@ -264,4 +402,6 @@ export default function Pos() {
   </div>
   );
 }
+
+
 

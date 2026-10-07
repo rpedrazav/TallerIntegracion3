@@ -1,4 +1,4 @@
-using CatalogPricingService.Models;
+﻿using CatalogPricingService.Models;
 
 namespace CatalogPricingService.Data
 {
@@ -10,5 +10,6 @@ namespace CatalogPricingService.Data
         Task<Producto?> GetByBarcodeAsync(string barcode, Guid tenantId);
         Task<Producto> CreateAsync(Producto producto);
         Task UpdateAsync(Producto producto);
+        Task DeleteAsync(Producto producto);
     }
 }

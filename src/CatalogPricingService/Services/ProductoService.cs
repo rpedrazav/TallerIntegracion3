@@ -1,4 +1,4 @@
-using CatalogPricingService.Data;
+﻿using CatalogPricingService.Data;
 using CatalogPricingService.Models;
 
 namespace CatalogPricingService.Services
@@ -57,3 +57,4 @@ namespace CatalogPricingService.Services
         }
     }
 }
+

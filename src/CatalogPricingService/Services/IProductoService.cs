@@ -1,4 +1,4 @@
-using CatalogPricingService.Models;
+﻿using CatalogPricingService.Models;
 
 namespace CatalogPricingService.Services
 {
@@ -12,3 +12,4 @@ namespace CatalogPricingService.Services
         Task<(IEnumerable<Producto> Productos, int TotalCount)> SearchProductosAsync(Guid tenantId, string query, int page, int pageSize);
     }
 }
+

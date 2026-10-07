@@ -441,6 +441,21 @@ export default function ProductosPage() {
     setModalAbierto(true);
   };
 
+  const handleEliminar = async (id: string, nombre: string) => {
+    if (!window.confirm(`¿Estás seguro de que deseas eliminar permanentemente el producto '${nombre}'?`)) return;
+    try {
+      const token = await window.api?.getToken();
+      if (!token) return;
+      await axios.delete(`${CATALOG_URL}/products/${id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      fetchDatos();
+    } catch (error) {
+      console.error('Error al eliminar producto', error);
+      alert('Error al eliminar producto.');
+    }
+  };
+
   const abrirEditar = (prod: Producto) => {
     setForm({
       nombre: prod.nombre,
@@ -929,34 +944,62 @@ export default function ProductosPage() {
 
                       {/* Acciones */}
                       <td style={{ padding: '0.85rem 1.25rem' }}>
-                        <button
-                          id={`btn-editar-producto-${prod.id}`}
-                          type="button"
-                          onClick={() => abrirEditar(prod)}
-                          style={{
-                            padding: '0.35rem 0.85rem',
-                            background: 'var(--color-primary-bg)',
-                            color: 'var(--color-primary)',
-                            border: '1px solid var(--color-muted)',
-                            borderRadius: '7px',
-                            fontWeight: 600,
-                            fontSize: '0.82rem',
-                            cursor: 'pointer',
-                            whiteSpace: 'nowrap',
-                            transition: 'background 0.12s, border-color 0.12s',
-                          }}
-                          onMouseEnter={e => {
-                            (e.currentTarget.style.background = 'var(--color-primary)');
-                            (e.currentTarget.style.color = 'var(--color-surface)');
-                          }}
-                          onMouseLeave={e => {
-                            (e.currentTarget.style.background = 'var(--color-primary-bg)');
-                            (e.currentTarget.style.color = 'var(--color-primary)');
-                          }}
-                          title={`Editar ${prod.nombre}`}
-                        >
-                          ✏️ Editar
-                        </button>
+                                                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                            <button
+                              id={tn-editar-producto-}
+                              type="button"
+                              onClick={() => abrirEditar(prod)}
+                              style={{
+                                padding: '0.35rem 0.85rem',
+                                background: 'var(--color-primary-bg)',
+                                color: 'var(--color-primary)',
+                                border: '1px solid var(--color-muted)',
+                                borderRadius: '4px',
+                                cursor: 'pointer',
+                                fontSize: '0.85rem',
+                                fontWeight: 600,
+                                transition: 'all 0.2s',
+                              }}
+                              onMouseOver={(e) => {
+                                e.currentTarget.style.background = 'var(--color-primary)';
+                                e.currentTarget.style.color = 'var(--color-surface)';
+                              }}
+                              onMouseOut={(e) => {
+                                e.currentTarget.style.background = 'var(--color-primary-bg)';
+                                e.currentTarget.style.color = 'var(--color-primary)';
+                              }}
+                              title={Editar }
+                            >
+                              ✏️ Editar
+                            </button>
+                            <button
+                              id={tn-eliminar-producto-}
+                              type="button"
+                              onClick={() => handleEliminar(prod.id, prod.nombre)}
+                              style={{
+                                padding: '0.35rem 0.85rem',
+                                background: 'var(--color-danger-bg)',
+                                color: 'var(--color-danger)',
+                                border: '1px solid var(--color-danger)',
+                                borderRadius: '4px',
+                                cursor: 'pointer',
+                                fontSize: '0.85rem',
+                                fontWeight: 600,
+                                transition: 'all 0.2s',
+                              }}
+                              onMouseOver={(e) => {
+                                e.currentTarget.style.background = 'var(--color-danger)';
+                                e.currentTarget.style.color = 'white';
+                              }}
+                              onMouseOut={(e) => {
+                                e.currentTarget.style.background = 'var(--color-danger-bg)';
+                                e.currentTarget.style.color = 'var(--color-danger)';
+                              }}
+                              title={Eliminar }
+                            >
+                              🗑️ Eliminar
+                            </button>
+                          </div>
                       </td>
                     </tr>
                   );
@@ -1010,3 +1053,5 @@ export default function ProductosPage() {
     </div>
   );
 }
+
+

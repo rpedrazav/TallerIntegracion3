@@ -1,29 +1,27 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 
 interface BarcodeInputProps {
   onSearch: (query: string) => void;
+  onTyping?: (query: string) => void;
 }
 
-export default function BarcodeInput({ onSearch }: BarcodeInputProps) {
+export default function BarcodeInput({ onSearch, onTyping }: BarcodeInputProps) {
   const [value, setValue] = useState('');
 
-  // Efecto Debounce de 300ms
+  // Debounce solo para el onTyping (búsqueda visual)
   useEffect(() => {
-    if (!value.trim()) return; // No busca si est vaco
-
+    if (!onTyping) return;
     const timerId = setTimeout(() => {
-      onSearch(value);
+      onTyping(value);
     }, 300);
-
-    return () => {
-      clearTimeout(timerId);
-    };
-  }, [value, onSearch]);
+    return () => clearTimeout(timerId);
+  }, [value, onTyping]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       if (value.trim()) {
         onSearch(value);
+        setValue('');
       }
     }
   };
