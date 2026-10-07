@@ -45,6 +45,24 @@ export default function Pos() {
   }, [cartItems]);
 
     const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [todosProductos, setTodosProductos] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchTodos = async () => {
+      try {
+        const token = await window.api?.getToken();
+        if (!token) return;
+        const response = await axios.get(`${CATALOG_URL}/products`, {
+          params: { page: 1, pageSize: 500 },
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setTodosProductos(response.data?.data ?? response.data ?? []);
+      } catch (e) {
+        console.error('Error al cargar catalogo POS', e);
+      }
+    };
+    fetchTodos();
+  }, []);
 
   const addProductToCart = useCallback((product: any) => {
     setCartItems(prev => {
@@ -62,74 +80,56 @@ export default function Pos() {
     setSearchResults([]);
   }, []);
 
-  const handleTypingSearch = useCallback(async (query: string) => {
+  const handleTypingSearch = useCallback((query: string) => {
     if (!query || query.trim() === '') {
       setSearchResults([]);
       return;
     }
-    try {
-      const token = await window.api?.getToken();
-      if (!token) return;
-      
-      // En lugar de usar /search (que es case-sensitive en Postgres), 
-      // pedimos la lista de productos y filtramos localmente ignorando mayúsculas
-      const response = await axios.get(`${CATALOG_URL}/products`, {
-        params: { page: 1, pageSize: 500 },
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      const todos = response.data?.data ?? response.data ?? [];
-      const q = query.trim().toLowerCase();
-      
-      const filtrados = todos.filter((p: any) => 
-        (p.nombre && p.nombre.toLowerCase().includes(q)) || 
-        (p.codigoBarras && p.codigoBarras.includes(q))
-      ).slice(0, 15); // Mostrar solo los primeros 15
-      
-      setSearchResults(filtrados);
-    } catch (error) {
-      console.error('Error buscando productos:', error);
-      setSearchResults([]);
-    }
-  }, []);
+    const q = query.trim().toLowerCase();
+    const filtrados = todosProductos.filter((p: any) => 
+      (p.nombre && p.nombre.toLowerCase().includes(q)) || 
+      (p.codigoBarras && p.codigoBarras.includes(q))
+    ).slice(0, 15);
+    
+    setSearchResults(filtrados);
+  }, [todosProductos]);
 
   const handleSearch = useCallback(async (query: string) => {
-    try {
-      const token = await window.api?.getToken();
-      if (!token) {
-        alert('No hay sesiÃ³n activa. Por favor inicie sesiÃ³n.');
-        return;
-      }
-      
-      const response = await axios.get(`${CATALOG_URL}/products/lookup`, {
-        params: { barcode: query },
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      if (response.data) {
-        const product = response.data;
-        setCartItems(prev => {
-          const existing = prev.find(item => item.id === product.id);
-          if (existing) {
-            return prev.map(item => item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item);
-          }
-          return [...prev, {
-            id: product.id,
-            name: product.nombre,
-            price: product.precioBase,
-            quantity: 1
-          }];
+    const q = query.trim();
+    if (!q) return;
+
+    const exactMatch = todosProductos.find(p => p.codigoBarras === q);
+    if (exactMatch) {
+      addProductToCart(exactMatch);
+      return;
+    }
+
+    const qLower = q.toLowerCase();
+    const matches = todosProductos.filter(p => 
+      (p.nombre && p.nombre.toLowerCase().includes(qLower)) || 
+      (p.codigoBarras && p.codigoBarras.includes(qLower))
+    );
+
+    if (matches.length === 1) {
+      addProductToCart(matches[0]);
+    } else if (matches.length > 1) {
+      setSearchResults(matches.slice(0, 15));
+    } else {
+      try {
+        const token = await window.api?.getToken();
+        if (!token) return;
+        const response = await axios.get(`${CATALOG_URL}/products/lookup`, {
+          params: { barcode: query },
+          headers: { Authorization: `Bearer ${token}` }
         });
-      }
-    } catch (error: any) {
-      console.error('Error al buscar producto:', error);
-      if (error.response?.status === 404) {
-        alert(`Producto con cÃ³digo de barras '${query}' no encontrado.`);
-      } else {
-        alert('Error de conexiÃ³n al buscar el producto.');
+        if (response.data) addProductToCart(response.data);
+      } catch (error: any) {
+        if (error.response?.status === 404) {
+          alert(`Producto con el término '${query}' no encontrado.`);
+        }
       }
     }
-  }, []);
+  }, [todosProductos, addProductToCart]);
 
   const handleQuantityChange = useCallback((id: string, newQuantity: number) => {
     setCartItems(prev => prev.map(item => 

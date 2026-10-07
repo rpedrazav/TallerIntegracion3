@@ -826,10 +826,10 @@ export default function ProductosPage() {
                   )}
                 </tr>
               </thead>
-              <tbody>
+              ﻿<tbody>
                 {productosFiltrados.map((prod, index) => {
                   const isEven = index % 2 === 0;
-                  const categoriaNombre = prod.categoriaId ? catMap[prod.categoriaId] ?? '—' : '—';
+                  const categoriaNombre = prod.categoriaId ? catMap[prod.categoriaId] ?? '-' : '-';
 
                   return (
                     <tr
@@ -868,15 +868,22 @@ export default function ProductosPage() {
 
                       {/* Código de barras */}
                       <td style={{ padding: '0.85rem 1.25rem' }}>
-                        <code
-                          style={{
-                            fontSize: '0.85rem', background: 'var(--color-bg)',
-                            padding: '0.2rem 0.5rem', borderRadius: '6px',
-                            color: 'var(--color-ink)', fontFamily: 'monospace', letterSpacing: '0.05em',
-                          }}
-                        >
-                          {prod.codigoBarras || '—'}
-                        </code>
+                        {prod.codigoBarras ? (
+                          <span
+                            style={{
+                              fontFamily: 'monospace',
+                              background: 'var(--color-bg)',
+                              padding: '0.2rem 0.5rem',
+                              borderRadius: '4px',
+                              border: '1px solid var(--color-muted)',
+                              fontSize: '0.85rem',
+                            }}
+                          >
+                            {prod.codigoBarras}
+                          </span>
+                        ) : (
+                          <span style={{ color: 'var(--color-muted)', fontSize: '0.85rem' }}>-</span>
+                        )}
                       </td>
 
                       {/* Categoría */}
@@ -944,9 +951,9 @@ export default function ProductosPage() {
 
                       {/* Acciones */}
                       <td style={{ padding: '0.85rem 1.25rem' }}>
-                                                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                          <div style={{ display: 'flex', gap: '0.5rem' }}>
                             <button
-                              id={tn-editar-producto-}
+                              id={`btn-editar-producto-${prod.id}`}
                               type="button"
                               onClick={() => abrirEditar(prod)}
                               style={{
@@ -968,12 +975,12 @@ export default function ProductosPage() {
                                 e.currentTarget.style.background = 'var(--color-primary-bg)';
                                 e.currentTarget.style.color = 'var(--color-primary)';
                               }}
-                              title={Editar }
+                              title={`Editar ${prod.nombre}`}
                             >
                               ✏️ Editar
                             </button>
                             <button
-                              id={tn-eliminar-producto-}
+                              id={`btn-eliminar-producto-${prod.id}`}
                               type="button"
                               onClick={() => handleEliminar(prod.id, prod.nombre)}
                               style={{
@@ -995,7 +1002,7 @@ export default function ProductosPage() {
                                 e.currentTarget.style.background = 'var(--color-danger-bg)';
                                 e.currentTarget.style.color = 'var(--color-danger)';
                               }}
-                              title={Eliminar }
+                              title={`Eliminar ${prod.nombre}`}
                             >
                               🗑️ Eliminar
                             </button>
@@ -1005,6 +1012,7 @@ export default function ProductosPage() {
                   );
                 })}
               </tbody>
+
             </table>
           </div>
         )}
