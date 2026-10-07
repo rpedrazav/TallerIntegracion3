@@ -38,7 +38,7 @@ export default function Login() {
     <div style={{ display: 'flex', height: '100vh', justifyContent: 'center', alignItems: 'center', backgroundColor: 'var(--color-bg)' }}>
       <div style={{ backgroundColor: 'var(--color-surface)', padding: '2rem', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)', width: '350px' }}>
         <h1 style={{ textAlign: 'center', color: 'var(--color-primary)', marginBottom: '0.5rem' }}>GlobalMart OS</h1>
-        <p style={{ textAlign: 'center', color: 'var(--color-ink-soft)', marginBottom: '1.5rem' }}>Inicia Sesin</p>
+        <p style={{ textAlign: 'center', color: 'var(--color-ink-soft)', marginBottom: '1.5rem' }}>Inicia Sesión</p>
         
         {error && (
           <div style={{ backgroundColor: 'var(--color-danger-bg)', color: 'var(--color-danger)', padding: '0.75rem', borderRadius: '4px', marginBottom: '1rem', fontSize: '0.875rem' }}>

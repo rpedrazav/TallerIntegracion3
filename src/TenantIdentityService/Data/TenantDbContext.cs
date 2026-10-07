@@ -23,6 +23,7 @@ public class TenantDbContext : DbContext
     // DbSets (tablas)
     public DbSet<Tenant> Tenants => Set<Tenant>();
     public DbSet<Usuario> Usuarios => Set<Usuario>();
+    public DbSet<UsuarioCuenta> CuentasUsuarios => Set<UsuarioCuenta>();
     public DbSet<Rol> Roles => Set<Rol>();
     public DbSet<UsuarioRol> UsuarioRoles => Set<UsuarioRol>();
     public DbSet<Sucursal> Sucursales => Set<Sucursal>();
@@ -31,6 +32,21 @@ public class TenantDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        // users es un esquema existente externo a las migraciones legacy de Usuarios.
+        // Mapear solo las columnas usadas por PUT evita modificar credenciales y roles.
+        modelBuilder.Entity<UsuarioCuenta>(e =>
+        {
+            e.ToTable("users", table => table.ExcludeFromMigrations());
+            e.HasKey(u => u.Id);
+            e.Property(u => u.Id).HasColumnName("id");
+            e.Property(u => u.TenantId).HasColumnName("tenant_id");
+            e.Property(u => u.SucursalId).HasColumnName("sucursal_id");
+            e.Property(u => u.Email).HasColumnName("email").IsRequired().HasMaxLength(200);
+            e.HasIndex(u => new { u.TenantId, u.Email }).IsUnique()
+                .HasDatabaseName("uq_users_tenant_email");
+            e.HasQueryFilter(u => u.TenantId == CurrentTenantId);
+        });
 
         // ── Tenant ──────────────────────────────────────────────────────────
         modelBuilder.Entity<Tenant>(e =>

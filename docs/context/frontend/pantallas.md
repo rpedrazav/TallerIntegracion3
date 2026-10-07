@@ -88,8 +88,9 @@ NO abre turno antes de vender
 ## Admin.tsx [PARCIAL]
 
 Ruta `/admin`. Panel de administración con pestañas ("Usuarios" y "Configuración del Tenant"):
-- **Usuarios:** Lista usuarios (`GET /api/v1/users` en MS-1) mediante el componente `UsuariosList` (`components/admin/UsuariosList.tsx`, mostrando nombre, correo, roles con badges/chips y estado activo/inactivo) y abre `components/admin/CrearUsuarioModal.tsx` (nombre, correo, contraseña ≥ 8 con confirmación, rol CAJERO/REPONEDOR/ADMIN; validación en frontend alineada a `CrearUsuarioDto`). Al enviar llama `POST /api/v1/users` y luego `POST /api/v1/users/{id}/roles`.
-- **Configuración del Tenant:** Componente `TenantConfig` (`components/admin/TenantConfig.tsx`) que conecta con `GET /tenants/{id}/config` y `PUT /tenants/{id}/config` en MS-1. Permite ver y actualizar parámetros regionales y fiscales: país, moneda, idioma, zona horaria IANA y porcentaje de IVA. Maneja validaciones frontend, feedback de carga, éxito (`var(--color-success)`) y errores.
+- **Usuarios:** Lista usuarios (`GET /users` en MS-1, con alias `/api/v1/users` y `/api/users`) mediante el componente `UsuariosList` (`components/admin/UsuariosList.tsx`, mostrando nombre, correo, roles con badges/chips y estado activo/inactivo), botón de refresco y formulario modal `CrearUsuarioModal` (`components/admin/CrearUsuarioModal.tsx`, nombre, correo, contraseña ≥ 8 con confirmación, rol CAJERO/REPONEDOR/ADMIN; validación en frontend alineada a `CrearUsuarioDto`). Al enviar llama `POST /users` y luego `POST /users/{id}/roles` con extracción de errores de validación/conflicto.
+- **Configuración del Tenant:** Componente `TenantConfig` (`components/admin/TenantConfig.tsx`) que conecta con `GET /tenants/{id}/config` y `PUT /tenants/{id}/config` en MS-1. Permite ver y actualizar parámetros regionales y fiscales: país, moneda, idioma, zona horaria IANA y porcentaje de IVA. Maneja validaciones frontend, feedback de carga, éxito (`var(--color-success)`), advertencia en modo lectura para no administradores y errores.
+
 Usa los tokens de color de la [[guia-estilo]] definidos en `index.css`. No hay edición ni desactivación individual de usuarios en UI todavía.
 
 ## BarcodeInput.tsx [IMPLEMENTADO]
