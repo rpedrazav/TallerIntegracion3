@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios, { AxiosError } from 'axios';
 import { useAuth } from '../hooks/useAuth';
@@ -457,6 +457,10 @@ export default function AbrirTurnoPage() {
                 cursor: isLoading || !isMontoValid ? 'not-allowed' : 'pointer',
                 transition: 'background-color 0.2s, transform 0.1s',
                 boxShadow: '0 4px 6px -1px color-mix(in srgb, var(--color-primary) 25%, transparent)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '0.5rem'
               }}
               onMouseOver={(e) => {
                 if (!isLoading && isMontoValid) e.currentTarget.style.backgroundColor = 'var(--color-primary)';
@@ -465,6 +469,7 @@ export default function AbrirTurnoPage() {
                 if (!isLoading && isMontoValid) e.currentTarget.style.backgroundColor = 'var(--color-primary)';
               }}
             >
+              {isLoading && <span className="spinner" />}
               {isLoading ? 'Abriendo Turno...' : 'Abrir Turno'}
             </button>
           </form>

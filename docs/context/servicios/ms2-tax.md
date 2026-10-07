@@ -5,7 +5,7 @@ titulo: MS-2 · Tax & Compliance Service
 estado: parcial
 fuentes: [src/TaxComplianceService/, src/POSCartService/Services/TaxClient.cs]
 verificado_contra_codigo: true
-ultima_revision: 2026-10-02
+ultima_revision: 2026-10-06
 depende_de: [ms1-identity]
 publica: []
 consume: []
@@ -126,8 +126,10 @@ Auth: Bearer <JWT con tenant_id>
 ```
 
 La lectura se aísla por el `HasQueryFilter` global de `TaxDbContext`, alimentado por
-`Middleware/TenantMiddleware.cs`, que corre después de `UseAuthorization()` y antes de
+`Middleware/TenantMiddleware.cs` (TI3-460), que corre después de `UseAuthorization()` y antes de
 `MapControllers()`. `TenantMiddleware` salta `/health` y `/swagger` para que sigan siendo públicos.
+Soporta claims `tenant_id` y `TenantId`, loguea advertencias estructuradas cuando falta el claim y retorna 401 Unauthorized `{ error = "Token inválido: falta tenant_id" }`.
+Validado con pruebas unitarias en `Ms2TenantMiddlewareTests.cs` (8 pruebas).
 
 **Diferencia con POST:** `POST` no dependía de `TenantMiddleware` porque los `HasQueryFilter` solo
 afectan lecturas; el tenant se asignaba explícitamente desde el claim. `GET` sí lo requiere: sin

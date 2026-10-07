@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using FluentValidation;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TenantIdentityService.DTOs;
 using TenantIdentityService.Repositories;
@@ -6,8 +7,8 @@ using TenantIdentityService.Repositories;
 namespace TenantIdentityService.Controllers;
 
 /// <summary>
-/// Expone la configuraciÃ³n regional y fiscal del tenant autenticado.
-/// Endpoint: GET /tenants/{id}/config
+/// Expone la configuración regional y fiscal del tenant autenticado.
+/// Endpoint: GET/PUT /tenants/{id}/config
 /// Consumidor principal: MS-2 TaxComplianceService (TenantConfigClient).
 /// </summary>
 [ApiController]
@@ -17,18 +18,21 @@ namespace TenantIdentityService.Controllers;
 public class TenantConfigController : ControllerBase
 {
     private readonly ITenantRepository _tenantRepository;
+    private readonly IValidator<ActualizarTenantConfigDto> _validator;
     private readonly ILogger<TenantConfigController> _logger;
 
     public TenantConfigController(
         ITenantRepository tenantRepository,
+        IValidator<ActualizarTenantConfigDto> validator,
         ILogger<TenantConfigController> logger)
     {
         _tenantRepository = tenantRepository ?? throw new ArgumentNullException(nameof(tenantRepository));
+        _validator = validator ?? throw new ArgumentNullException(nameof(validator));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
     /// <summary>
-    /// Retorna la configuraciÃ³n del tenant autenticado.
+    /// Retorna la configuración del tenant autenticado.
     /// </summary>
     /// <param name="id">Identificador del tenant.</param>
     /// <returns>Configuración del tenant.</returns>
@@ -44,7 +48,7 @@ public class TenantConfigController : ControllerBase
     {
         var tenantClaim = User.FindFirst("tenant_id")?.Value;
         if (!Guid.TryParse(tenantClaim, out var tokenTenantId))
-            return Unauthorized(new { message = "El token no contiene un tenant_id vÃ¡lido." });
+            return Unauthorized(new { message = "El token no contiene un tenant_id válido." });
 
         if (tokenTenantId != id)
             return Forbid();
@@ -69,34 +73,72 @@ public class TenantConfigController : ControllerBase
         });
     }
 
+    /// <summary>
+    /// TI3-458/TI3-459: Actualiza la configuración del tenant autenticado.
+    /// Solo accesible por usuarios con rol ADMIN del mismo tenant.
+    /// Valida campos Moneda, Idioma, ZonaHoraria, PorcentajeIva via FluentValidation.
+    /// </summary>
     [HttpPut("{id:guid}/config")]
     [Authorize(Roles = "ADMIN")]
     [ProducesResponseType(typeof(TenantConfigDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> UpdateConfig(
         Guid id,
-        [FromBody] ActualizarTenantConfigDto request)
+        [FromBody] ActualizarTenantConfigDto request,
+        CancellationToken cancellationToken)
     {
+        // TI3-459: Validar el request vía FluentValidation
+        var validacion = await _validator.ValidateAsync(request, cancellationToken);
+        if (!validacion.IsValid)
+        {
+            _logger.LogWarning("PUT /tenants/{TenantId}/config rechazado por validación: {Errores}",
+                id, string.Join(", ", validacion.Errors.Select(e => e.ErrorMessage)));
+
+            foreach (var error in validacion.Errors)
+                ModelState.AddModelError(error.PropertyName, error.ErrorMessage);
+
+            return ValidationProblem(ModelState);
+        }
+
+        // TI3-458: Validar que el usuario tiene un tenant_id válido en el JWT
         var tenantClaim = User.FindFirst("tenant_id")?.Value;
         if (!Guid.TryParse(tenantClaim, out var tokenTenantId))
-            return Unauthorized(new { message = "El token no contiene un tenant_id vÃ¡lido." });
+            return Unauthorized(new { message = "El token no contiene un tenant_id válido." });
 
+        // TI3-458: Validar que el usuario pertenece al mismo tenant que intenta modificar
         if (tokenTenantId != id)
-            return Forbid();
+        {
+            _logger.LogWarning(
+                "Intento de modificar config de tenant {TargetTenantId} por usuario del tenant {UserTenantId}",
+                id, tokenTenantId);
+            return StatusCode(StatusCodes.Status403Forbidden, new
+            {
+                message = "No tienes permiso para modificar la configuración de otro tenant."
+            });
+        }
 
-        var tenant = await _tenantRepository.GetByIdAsync(id);
+        // TI3-458: Usar GetByIdForUpdateAsync para obtener entidad con tracking
+        var tenant = await _tenantRepository.GetByIdForUpdateAsync(id);
         if (tenant is null)
             return NotFound(new { message = $"Tenant {id} no encontrado o inactivo." });
 
-        tenant.Pais = request.Pais;
-        tenant.Moneda = request.Moneda;
-        tenant.Idioma = request.Idioma;
+        // TI3-459: Actualizar los campos de configuración (normalizando)
+        tenant.Pais = request.Pais.ToUpperInvariant();
+        tenant.Moneda = request.Moneda.ToUpperInvariant();
+        tenant.Idioma = request.Idioma.ToLowerInvariant();
         tenant.PorcentajeIva = request.PorcentajeIva;
         tenant.ZonaHoraria = request.ZonaHoraria;
 
         var tenantActualizado = await _tenantRepository.UpdateAsync(tenant);
+
+        _logger.LogInformation(
+            "Config de tenant {TenantId} actualizada: Pais={Pais}, Moneda={Moneda}, Idioma={Idioma}, IVA={Iva}%, ZH={ZH}",
+            id, tenantActualizado.Pais, tenantActualizado.Moneda,
+            tenantActualizado.Idioma, tenantActualizado.PorcentajeIva,
+            tenantActualizado.ZonaHoraria);
 
         return Ok(new TenantConfigDto
         {
@@ -108,4 +150,3 @@ public class TenantConfigController : ControllerBase
         });
     }
 }
-

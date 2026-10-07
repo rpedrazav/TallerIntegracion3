@@ -13,10 +13,23 @@ public class TenantRepository : ITenantRepository
         _db = db;
     }
 
+    /// <summary>
+    /// Obtiene un tenant por ID sin tracking (para lecturas).
+    /// </summary>
     public async Task<Tenant?> GetByIdAsync(Guid id)
     {
         return await _db.Tenants
             .AsNoTracking()
+            .FirstOrDefaultAsync(tenant => tenant.Id == id && tenant.Activo);
+    }
+
+    /// <summary>
+    /// TI3-458: Obtiene un tenant por ID CON tracking (para actualizaciones).
+    /// Necesario porque EF Core requiere tracking para Update/SaveChanges.
+    /// </summary>
+    public async Task<Tenant?> GetByIdForUpdateAsync(Guid id)
+    {
+        return await _db.Tenants
             .FirstOrDefaultAsync(tenant => tenant.Id == id && tenant.Activo);
     }
 

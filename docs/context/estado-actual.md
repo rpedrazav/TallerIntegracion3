@@ -45,7 +45,7 @@ reglas: []
 - `GET/POST/PUT/DELETE /users` (alias `/api/v1/users`, `/api/users`) — CRUD usuarios con RBAC [IMPLEMENTADO]
 - `DELETE /api/v1/users/{id}` (mismos alias) actualiza solo `users.is_active=false`, filtrando ID y tenant del JWT; retorna 204 también si ya estaba inactivo, 400 ante autodesactivación y 404 para ID inexistente/ajeno. Siete casos DELETE y tres de regresión PUT aprobados con PostgreSQL aislado en Release el 2026-10-06 [IMPLEMENTADO]. PUT/DELETE usan `users`; creación, listado y login aún usan `Usuarios`. Ver [MS-1](servicios/ms1-identity.md).
 - `POST /users/{id}/roles` (alias `/api/v1/users/{id}/roles`) — asignar roles (sin SUPER_ADMIN) [IMPLEMENTADO]
-- `GET/PUT /tenants/{id}/config` — config de tenant (país, moneda, IVA) [IMPLEMENTADO]
+- `GET/PUT /tenants/{id}/config` — config de tenant (país, moneda, IVA), validación con FluentValidation (TI3-459), tracking EF Core y rol ADMIN del mismo tenant (TI3-458) [IMPLEMENTADO]
 - `GET /sucursales` — lista sucursales del tenant del JWT, con zona horaria efectiva [IMPLEMENTADO]
 - `POST /sucursales` — crea sucursal (solo ADMIN), zona horaria IANA opcional y validada, nombre único por tenant sin distinguir mayúsculas (409) [IMPLEMENTADO]
 - TenantMiddleware — extrae tenant_id del JWT e inyecta en DbContext [IMPLEMENTADO]
@@ -66,7 +66,7 @@ reglas: []
 - `POST /tax/calculate` — calcula IVA para lista de items usando config del tenant [IMPLEMENTADO]
 - `POST /comprobantes` — emite comprobante de venta con correlativo atómico por tenant [IMPLEMENTADO]
 - `GET /comprobantes/{id}` — obtiene comprobante para reimpresión, aislado por tenant [IMPLEMENTADO]
-- TenantMiddleware — inyecta tenant_id del JWT en TaxDbContext para los HasQueryFilter [IMPLEMENTADO]
+- TenantMiddleware — inyecta tenant_id del JWT en TaxDbContext para los HasQueryFilter (RN-01), bypass de /health y /swagger, logging y tests (TI3-460) [IMPLEMENTADO]
 - TaxCalculatorService — IVA simple (configurable por tenant) [IMPLEMENTADO]
 - ComprobanteService — calcula importes en servidor y persiste comprobante (jsonb) [IMPLEMENTADO]
 - `obtener_correlativo_comprobante(uuid)` — secuencia PostgreSQL por tenant, correlativo único bajo concurrencia [IMPLEMENTADO]
@@ -190,8 +190,8 @@ Ver el nodo [[guia-estilo]] para el resumen y las reglas aplicables.
 
 | Pantalla | Estado | Integración API |
 |----------|--------|-----------------|
-| Login | [IMPLEMENTADO] | Llama directo a `http://127.0.0.1:5124` |
-| Abrir Turno (`AbrirTurnoPage`) | [IMPLEMENTADO] | Llama a MS-5 `/api/turnos/activo` y `POST /api/turnos/abrir` (redirección con confirmación a POS y manejo 409) |
+| Login | [IMPLEMENTADO] | Llama directo a auth service con manejo de errores específicos por HTTP status/red, timeout de 15s y spinner de carga en botón (TI3-471) |
+| Abrir Turno (`AbrirTurnoPage`) | [IMPLEMENTADO] | Llama a MS-5 `/api/turnos/activo` y `POST /api/turnos/abrir` (spinner de carga en botón, redirección con confirmación a POS y manejo 409) (TI3-471) |
 | Cerrar Turno (`CerrarTurnoPage`) | [IMPLEMENTADO] | Tabla de denominaciones (billetes/monedas) con conteo y subtotales automáticos. Llama a MS-5 `POST /api/turnos/cuadre` para obtener efectivo esperado. Muestra resultado: efectivo esperado vs declarado, diferencia en **verde** si es $0, en **rojo** si hay discrepancia (sobrante o faltante). Botón `POST /api/turnos/cerrar` con confirmación. |
 | Productos Admin (`ProductosPage`) | [IMPLEMENTADO] | `GET /products?page=1&pageSize=500` + `GET /categories` en MS-3 (puerto 5203). Tabla con nombre, código de barras, categoría, precio base, tipo (peso variable/unidad) y estado. Filtro instantáneo en frontend por texto (nombre, código, descripción, categoría), filtro por categoría dropdown y toggle "solo activos". Accesible desde `/admin/productos`. |
 | Admin | [PARCIAL] | Panel con pestañas: Lista usuarios con `UsuariosList` (`GET /users` con soporte `/api/v1/users` y `/api/users`, nombre, correo, roles y estado), botón de refresco y formulario modal `CrearUsuarioModal` (`POST /users` + `POST /users/{id}/roles`). Pestaña "Configuración del Tenant" con `TenantConfig` (`GET` y `PUT /tenants/{id}/config` para país, moneda, idioma, IVA y zona horaria). Sin edición/desactivación individual de usuarios. |

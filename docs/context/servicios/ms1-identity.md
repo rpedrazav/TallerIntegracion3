@@ -28,7 +28,7 @@ src/TenantIdentityService/
 ├── Repositories/  IUsuarioRepository · UsuarioRepository · ITenantRepository · TenantRepository
 ├── Services/  IAuthService · AuthService · IJwtService · JwtService
 ├── Middleware/  TenantMiddleware.cs
-└── Validators/  LoginRequestValidator.cs · CrearSucursalRequestValidator.cs · CrearUsuarioDtoValidator.cs
+└── Validators/  LoginRequestValidator.cs · CrearSucursalRequestValidator.cs · CrearUsuarioDtoValidator.cs · ActualizarTenantConfigDtoValidator.cs
 ```
 
 ## Endpoints reales
@@ -65,6 +65,18 @@ src/TenantIdentityService/
 - `204` para usuario existente, incluso ya inactivo; `404` para ID inexistente o de otro tenant; `401` sin JWT y `403` sin rol ADMIN.
 - [DesactivarUsuarioIntegrationTests](../../../tests/GlobalMart.IntegrationTests/DesactivarUsuarioIntegrationTests.cs): seis métodos, siete casos (la teoría 404 distingue otro tenant e ID inexistente). Verifican fila conservada, otros campos intactos, autodesactivación rechazada, idempotencia y autorización. Conexión estándar de la factoría y esquema PostgreSQL aislado por caso.
 - Verificado el 2026-10-06 en .NET 8 / Release: siete casos DELETE y tres de regresión PUT aprobados. No implica que login/listado legacy consulten `users.is_active`.
+
+### PUT /tenants/{id}/config — TI3-458 / TI3-459
+
+- Requiere JWT con rol `ADMIN` y `tenant_id` idéntico al parámetro `{id}` de la ruta (RN-01 / RN-07).
+- Soluciona problema de tracking EF Core en `TenantRepository` añadiendo `GetByIdForUpdateAsync(id)` (TI3-458).
+- Validación de entrada vía `ActualizarTenantConfigDtoValidator` (TI3-459):
+  - `Pais`: código ISO 3166-1 alpha-2 válido (normalizado a mayúsculas).
+  - `Moneda`: código ISO 4217 de 3 caracteres (normalizado a mayúsculas).
+  - `Idioma`: código de 2 a 5 caracteres (ej. "es", "en", "pt", normalizado a minúsculas).
+  - `PorcentajeIva`: decimal entre 0 y 50.
+  - `ZonaHoraria`: identificador IANA válido (ej. "America/Santiago").
+- Tests automatizados en `ActualizarTenantConfigDtoValidatorTests.cs` (55 tests unitarios) y `TenantConfigIntegrationTests.cs` (7 tests de integración).
 
 ### GET /sucursales
 

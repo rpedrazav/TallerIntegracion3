@@ -34,6 +34,9 @@
     <ProjectReference Include="..\..\src\WarehouseInventoryService\WarehouseInventoryService.csproj">
       <Aliases>WarehouseInventoryServiceAlias</Aliases>
     </ProjectReference>
+    <ProjectReference Include="..\..\src\TaxComplianceService\TaxComplianceService.csproj">
+      <Aliases>TaxComplianceServiceAlias</Aliases>
+    </ProjectReference>
   </ItemGroup>
 
   <ItemGroup>
@@ -55,6 +58,7 @@
       <ServiceRuntimeFiles Include="..\..\src\CatalogPricingService\bin\Debug\net8.0\**\*.*" Exclude="..\..\src\CatalogPricingService\bin\Debug\net8.0\*.deps.json;..\..\src\CatalogPricingService\bin\Debug\net8.0\*.runtimeconfig.json" />
       <ServiceRuntimeFiles Include="..\..\src\POSCartService\bin\Debug\net8.0\**\*.*" Exclude="..\..\src\POSCartService\bin\Debug\net8.0\*.deps.json;..\..\src\POSCartService\bin\Debug\net8.0\*.runtimeconfig.json" />
       <ServiceRuntimeFiles Include="..\..\src\WarehouseInventoryService\bin\Debug\net8.0\**\*.*" Exclude="..\..\src\WarehouseInventoryService\bin\Debug\net8.0\*.deps.json;..\..\src\WarehouseInventoryService\bin\Debug\net8.0\*.runtimeconfig.json" />
+      <ServiceRuntimeFiles Include="..\..\src\TaxComplianceService\bin\Debug\net8.0\**\*.*" Exclude="..\..\src\TaxComplianceService\bin\Debug\net8.0\*.deps.json;..\..\src\TaxComplianceService\bin\Debug\net8.0\*.runtimeconfig.json" />
       <ServiceRuntimeFiles Include="$(NuGetPackageRoot)microsoft.aspnetcore.mvc.testing\8.0.11\**\*.*" />
       <ServiceRuntimeFiles Include="$(NuGetPackageRoot)microsoft.aspnetcore.testhost\8.0.11\**\*.*" />
     </ItemGroup>
