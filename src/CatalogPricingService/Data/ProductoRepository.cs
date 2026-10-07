@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using CatalogPricingService.Models;
 
 namespace CatalogPricingService.Data
@@ -44,14 +44,14 @@ namespace CatalogPricingService.Data
 
         public async Task<Producto?> GetByIdAsync(Guid id, Guid tenantId)
         {
-            // Verificamos el ID y que además pertenezca al minimarket correcto
+            // Verificamos el ID y que ademÃ¡s pertenezca al minimarket correcto
             return await _context.Productos
                 .FirstOrDefaultAsync(p => p.Id == id && p.TenantId == tenantId);
         }
 
         public async Task<Producto?> GetByBarcodeAsync(string barcode, Guid tenantId)
         {
-            // Búsqueda exacta por índice único (tenant_id, codigo_barras)
+            // BÃºsqueda exacta por Ã­ndice Ãºnico (tenant_id, codigo_barras)
             return await _context.Productos
                 .AsNoTracking()
                 .FirstOrDefaultAsync(p => p.CodigoBarras == barcode && p.TenantId == tenantId);
@@ -69,5 +69,11 @@ namespace CatalogPricingService.Data
             _context.Productos.Update(producto);
             await _context.SaveChangesAsync();
         }
+        public async Task DeleteAsync(Producto producto)
+        {
+            _context.Productos.Remove(producto);
+            await _context.SaveChangesAsync();
+        }
     }
 }
+
