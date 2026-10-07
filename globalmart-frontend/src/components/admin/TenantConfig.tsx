@@ -1,17 +1,31 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useEffect, useState } from 'react';
 import axios, { isAxiosError } from 'axios';
-import { parseJwt } from '../../utils/jwt';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { useTenantStore } from '../../store/useTenantStore';
 
-// MS-1 Tenant & Identity URL
 const IDENTITY_URL = 'https://auth-rpedraza.dev.censei.cl';
 
-export interface TenantConfigData {
-  pais: string;
-  moneda: string;
-  idioma: string;
-  zonaHoraria: string;
-  porcentajeIva: number;
-}
+const configSchema = z.object({
+  pais: z.string()
+    .length(2, 'El código de país debe tener exactamente 2 letras (ej: CL)')
+    .toUpperCase(),
+  moneda: z.string()
+    .length(3, 'La moneda debe tener exactamente 3 letras (ej: CLP)')
+    .toUpperCase(),
+  idioma: z.string()
+    .min(2, 'Mínimo 2 letras')
+    .max(5, 'Máximo 5 letras')
+    .toLowerCase(),
+  porcentajeIva: z.coerce.number({ invalid_type_error: 'Debe ser un número' })
+    .min(0, 'El IVA no puede ser negativo')
+    .max(100, 'El IVA máximo es 100'),
+  zonaHoraria: z.string()
+    .regex(/^(?:Africa|America|Antarctica|Arctic|Asia|Atlantic|Australia|Europe|Indian|Pacific|Etc|UTC)(?:\/[A-Za-z_]+)*$/, 'Debe ser un identificador IANA válido (ej. America/Santiago)')
+});
+
+export type TenantConfigFormData = z.infer<typeof configSchema>;
 
 interface TenantConfigProps {
   token: string | null;
@@ -41,58 +55,53 @@ const fieldContainer: React.CSSProperties = {
   marginBottom: '1.25rem',
 };
 
-export default function TenantConfig({ token }: TenantConfigProps) {
-  // Derivar tenantId y permisos de rol desde el token JWT
-  const { tenantId, esAdmin } = useMemo(() => {
-    if (!token) {
-      return {
-        tenantId: localStorage.getItem('tenant') || '',
-        esAdmin: false,
-      };
-    }
-    const payload = parseJwt(token);
-    const id = payload?.tenant_id || localStorage.getItem('tenant') || '';
-    const rolActivo = payload?.active_role?.toUpperCase();
-    const roles = Array.isArray(payload?.roles)
-      ? payload.roles.map((r) => r.toUpperCase())
-      : [];
-    const tieneRolAdmin =
-      rolActivo === 'ADMIN' ||
-      rolActivo === 'SUPER_ADMIN' ||
-      roles.includes('ADMIN') ||
-      roles.includes('SUPER_ADMIN');
+const errorStyle: React.CSSProperties = {
+  color: 'var(--color-danger)',
+  fontSize: '0.75rem',
+  marginTop: '0.25rem',
+  display: 'block',
+};
 
-    return {
-      tenantId: id,
-      esAdmin: tieneRolAdmin,
-    };
-  }, [token]);
+export default function TenantConfig({ token: tokenProp }: TenantConfigProps) {
+  const { setToken, tenantId, esAdmin, token } = useTenantStore();
 
-  const [formData, setFormData] = useState<TenantConfigData>({
-    pais: '',
-    moneda: '',
-    idioma: '',
-    zonaHoraria: '',
-    porcentajeIva: 19,
-  });
+  useEffect(() => {
+    setToken(tokenProp);
+  }, [tokenProp, setToken]);
 
   const [loading, setLoading] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string>('');
+  const [errorMsg, setErrorMsg] = useState<string>('');
   const [successMsg, setSuccessMsg] = useState<string>('');
 
-  const cargarConfig = useCallback(async (id: string, jwtToken: string) => {
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors, isSubmitting },
+  } = useForm<TenantConfigFormData>({
+    resolver: zodResolver(configSchema),
+    defaultValues: {
+      pais: '',
+      moneda: '',
+      idioma: '',
+      porcentajeIva: 19,
+      zonaHoraria: '',
+    },
+  });
+
+  const cargarConfig = async () => {
+    if (!tenantId || !token) return;
     setLoading(true);
-    setError('');
+    setErrorMsg('');
     setSuccessMsg('');
     try {
-      const res = await axios.get<TenantConfigData>(`${IDENTITY_URL}/tenants/${id}/config`, {
+      const res = await axios.get(`${IDENTITY_URL}/tenants/${tenantId}/config`, {
         headers: {
-          Authorization: `Bearer ${jwtToken}`,
-          'x-tenant-id': id,
+          Authorization: `Bearer ${token}`,
+          'x-tenant-id': tenantId,
         },
       });
-      setFormData({
+      reset({
         pais: res.data.pais || '',
         moneda: res.data.moneda || '',
         idioma: res.data.idioma || '',
@@ -108,88 +117,40 @@ export default function TenantConfig({ token }: TenantConfigProps) {
           msg = err.response.data.message;
         }
       }
-      setError(msg);
+      setErrorMsg(msg);
     } finally {
       setLoading(false);
     }
-  }, []);
-
-  useEffect(() => {
-    let cancel = false;
-    if (tenantId && token) {
-      (async () => {
-        if (!cancel) {
-          await cargarConfig(tenantId, token);
-        }
-      })();
-    }
-    return () => {
-      cancel = true;
-    };
-  }, [tenantId, token, cargarConfig]);
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: name === 'porcentajeIva' ? parseFloat(value) || 0 : value,
-    }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  useEffect(() => {
+    cargarConfig();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tenantId, token]);
+
+  const onSubmit = async (data: TenantConfigFormData) => {
     if (!token || !tenantId) {
-      setError('No hay sesión activa o identificador de tenant disponible.');
+      setErrorMsg('No hay sesión activa o identificador de tenant disponible.');
       return;
     }
 
     if (!esAdmin) {
-      setError('Solo los usuarios con rol Administrador pueden guardar cambios en la configuración.');
+      setErrorMsg('Solo los usuarios con rol Administrador pueden guardar cambios en la configuración.');
       return;
     }
 
-    if (!formData.pais.trim()) {
-      setError('El código de país es obligatorio (ej: CL).');
-      return;
-    }
-    if (!formData.moneda.trim()) {
-      setError('La moneda es obligatoria (ej: CLP).');
-      return;
-    }
-    if (!formData.idioma.trim()) {
-      setError('El idioma es obligatorio (ej: es).');
-      return;
-    }
-    if (formData.porcentajeIva < 0 || formData.porcentajeIva > 100) {
-      setError('El porcentaje de IVA debe estar entre 0 y 100.');
-      return;
-    }
-
-    setSaving(true);
-    setError('');
+    setErrorMsg('');
     setSuccessMsg('');
 
     try {
-      const payload = {
-        pais: formData.pais.trim().toUpperCase(),
-        moneda: formData.moneda.trim().toUpperCase(),
-        idioma: formData.idioma.trim().toLowerCase(),
-        zonaHoraria: formData.zonaHoraria.trim(),
-        porcentajeIva: Number(formData.porcentajeIva),
-      };
+      const res = await axios.put(`${IDENTITY_URL}/tenants/${tenantId}/config`, data, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'x-tenant-id': tenantId,
+        },
+      });
 
-      const res = await axios.put<TenantConfigData>(
-        `${IDENTITY_URL}/tenants/${tenantId}/config`,
-        payload,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'x-tenant-id': tenantId,
-          },
-        }
-      );
-
-      setFormData({
+      reset({
         pais: res.data.pais,
         moneda: res.data.moneda,
         idioma: res.data.idioma,
@@ -207,9 +168,7 @@ export default function TenantConfig({ token }: TenantConfigProps) {
           msg = err.response.data.message;
         }
       }
-      setError(msg);
-    } finally {
-      setSaving(false);
+      setErrorMsg(msg);
     }
   };
 
@@ -245,7 +204,6 @@ export default function TenantConfig({ token }: TenantConfigProps) {
         )}
       </div>
 
-      {/* Banner informativo de modo lectura si no es Admin */}
       {!esAdmin && (
         <div
           role="note"
@@ -264,7 +222,7 @@ export default function TenantConfig({ token }: TenantConfigProps) {
         </div>
       )}
 
-      {error && (
+      {errorMsg && (
         <div
           role="alert"
           style={{
@@ -277,7 +235,7 @@ export default function TenantConfig({ token }: TenantConfigProps) {
             fontSize: '0.875rem',
           }}
         >
-          <b>Error:</b> {error}
+          <b>Error:</b> {errorMsg}
         </div>
       )}
 
@@ -303,7 +261,7 @@ export default function TenantConfig({ token }: TenantConfigProps) {
           Cargando configuración del tenant...
         </div>
       ) : (
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit(onSubmit)}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
             <div style={fieldContainer}>
               <label htmlFor="input-pais" style={labelStyle}>
@@ -312,20 +270,19 @@ export default function TenantConfig({ token }: TenantConfigProps) {
               <input
                 id="input-pais"
                 type="text"
-                name="pais"
-                value={formData.pais}
-                onChange={handleChange}
                 placeholder="CL"
                 maxLength={2}
-                disabled={!esAdmin}
-                required
+                disabled={!esAdmin || isSubmitting}
                 style={{
                   ...inputStyle,
                   opacity: esAdmin ? 1 : 0.75,
                   cursor: esAdmin ? 'text' : 'not-allowed',
+                  borderColor: errors.pais ? 'var(--color-danger)' : 'var(--color-line)',
                 }}
+                {...register('pais')}
               />
-              <small style={{ color: 'var(--color-ink-soft)', fontSize: '0.75rem' }}>Ej: CL, AR, US</small>
+              {errors.pais && <span style={errorStyle}>{errors.pais.message}</span>}
+              {!errors.pais && <small style={{ color: 'var(--color-ink-soft)', fontSize: '0.75rem' }}>Ej: CL, AR, US</small>}
             </div>
 
             <div style={fieldContainer}>
@@ -335,20 +292,19 @@ export default function TenantConfig({ token }: TenantConfigProps) {
               <input
                 id="input-moneda"
                 type="text"
-                name="moneda"
-                value={formData.moneda}
-                onChange={handleChange}
                 placeholder="CLP"
                 maxLength={3}
-                disabled={!esAdmin}
-                required
+                disabled={!esAdmin || isSubmitting}
                 style={{
                   ...inputStyle,
                   opacity: esAdmin ? 1 : 0.75,
                   cursor: esAdmin ? 'text' : 'not-allowed',
+                  borderColor: errors.moneda ? 'var(--color-danger)' : 'var(--color-line)',
                 }}
+                {...register('moneda')}
               />
-              <small style={{ color: 'var(--color-ink-soft)', fontSize: '0.75rem' }}>Ej: CLP, ARS, USD</small>
+              {errors.moneda && <span style={errorStyle}>{errors.moneda.message}</span>}
+              {!errors.moneda && <small style={{ color: 'var(--color-ink-soft)', fontSize: '0.75rem' }}>Ej: CLP, ARS, USD</small>}
             </div>
           </div>
 
@@ -360,20 +316,19 @@ export default function TenantConfig({ token }: TenantConfigProps) {
               <input
                 id="input-idioma"
                 type="text"
-                name="idioma"
-                value={formData.idioma}
-                onChange={handleChange}
                 placeholder="es"
                 maxLength={5}
-                disabled={!esAdmin}
-                required
+                disabled={!esAdmin || isSubmitting}
                 style={{
                   ...inputStyle,
                   opacity: esAdmin ? 1 : 0.75,
                   cursor: esAdmin ? 'text' : 'not-allowed',
+                  borderColor: errors.idioma ? 'var(--color-danger)' : 'var(--color-line)',
                 }}
+                {...register('idioma')}
               />
-              <small style={{ color: 'var(--color-ink-soft)', fontSize: '0.75rem' }}>Ej: es, en</small>
+              {errors.idioma && <span style={errorStyle}>{errors.idioma.message}</span>}
+              {!errors.idioma && <small style={{ color: 'var(--color-ink-soft)', fontSize: '0.75rem' }}>Ej: es, en</small>}
             </div>
 
             <div style={fieldContainer}>
@@ -384,20 +339,17 @@ export default function TenantConfig({ token }: TenantConfigProps) {
                 id="input-porcentajeIva"
                 type="number"
                 step="0.01"
-                min="0"
-                max="100"
-                name="porcentajeIva"
-                value={formData.porcentajeIva}
-                onChange={handleChange}
-                disabled={!esAdmin}
-                required
+                disabled={!esAdmin || isSubmitting}
                 style={{
                   ...inputStyle,
                   opacity: esAdmin ? 1 : 0.75,
                   cursor: esAdmin ? 'text' : 'not-allowed',
+                  borderColor: errors.porcentajeIva ? 'var(--color-danger)' : 'var(--color-line)',
                 }}
+                {...register('porcentajeIva')}
               />
-              <small style={{ color: 'var(--color-ink-soft)', fontSize: '0.75rem' }}>Ej: 19 para 19%</small>
+              {errors.porcentajeIva && <span style={errorStyle}>{errors.porcentajeIva.message}</span>}
+              {!errors.porcentajeIva && <small style={{ color: 'var(--color-ink-soft)', fontSize: '0.75rem' }}>Ej: 19 para 19%</small>}
             </div>
           </div>
 
@@ -408,27 +360,29 @@ export default function TenantConfig({ token }: TenantConfigProps) {
             <input
               id="input-zonaHoraria"
               type="text"
-              name="zonaHoraria"
-              value={formData.zonaHoraria}
-              onChange={handleChange}
               placeholder="America/Santiago"
-              disabled={!esAdmin}
+              disabled={!esAdmin || isSubmitting}
               style={{
                 ...inputStyle,
                 opacity: esAdmin ? 1 : 0.75,
                 cursor: esAdmin ? 'text' : 'not-allowed',
+                borderColor: errors.zonaHoraria ? 'var(--color-danger)' : 'var(--color-line)',
               }}
+              {...register('zonaHoraria')}
             />
-            <small style={{ color: 'var(--color-ink-soft)', fontSize: '0.75rem' }}>
-              Identificador IANA oficial (ej: America/Santiago, America/Argentina/Buenos_Aires)
-            </small>
+            {errors.zonaHoraria && <span style={errorStyle}>{errors.zonaHoraria.message}</span>}
+            {!errors.zonaHoraria && (
+              <small style={{ color: 'var(--color-ink-soft)', fontSize: '0.75rem' }}>
+                Identificador IANA oficial (ej: America/Santiago, America/Argentina/Buenos_Aires)
+              </small>
+            )}
           </div>
 
           <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1.5rem', gap: '0.75rem' }}>
             <button
               type="button"
-              onClick={() => tenantId && token && cargarConfig(tenantId, token)}
-              disabled={saving}
+              onClick={cargarConfig}
+              disabled={isSubmitting}
               style={{
                 backgroundColor: 'transparent',
                 color: 'var(--color-ink)',
@@ -436,14 +390,14 @@ export default function TenantConfig({ token }: TenantConfigProps) {
                 padding: '0.6rem 1.2rem',
                 borderRadius: '8px',
                 fontWeight: 600,
-                cursor: saving ? 'not-allowed' : 'pointer',
+                cursor: isSubmitting ? 'not-allowed' : 'pointer',
               }}
             >
               Recargar
             </button>
             <button
               type="submit"
-              disabled={saving || !esAdmin}
+              disabled={isSubmitting || !esAdmin}
               title={!esAdmin ? 'Se requiere rol Administrador para guardar cambios' : ''}
               style={{
                 backgroundColor: 'var(--color-primary)',
@@ -452,11 +406,11 @@ export default function TenantConfig({ token }: TenantConfigProps) {
                 padding: '0.6rem 1.4rem',
                 borderRadius: '8px',
                 fontWeight: 600,
-                cursor: saving || !esAdmin ? 'not-allowed' : 'pointer',
-                opacity: saving || !esAdmin ? 0.5 : 1,
+                cursor: isSubmitting || !esAdmin ? 'not-allowed' : 'pointer',
+                opacity: isSubmitting || !esAdmin ? 0.5 : 1,
               }}
             >
-              {saving ? 'Guardando...' : esAdmin ? 'Guardar Cambios' : 'Solo Administradores'}
+              {isSubmitting ? 'Guardando...' : esAdmin ? 'Guardar Cambios' : 'Solo Administradores'}
             </button>
           </div>
         </form>

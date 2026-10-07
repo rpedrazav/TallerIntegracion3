@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo, useEffect } from 'react';
+﻿import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import BarcodeInput from '../components/pos/BarcodeInput';
@@ -143,14 +143,14 @@ export default function Pos() {
 
   const handleCancelSale = () => {
     if (cartItems.length === 0) return;
-    if (window.confirm('Â¿EstÃ¡s seguro de que deseas cancelar la venta actual? Se vaciarÃ¡ el carrito.')) {
+    if (window.confirm('¿Estás seguro de que deseas cancelar la venta actual? Se vaciará el carrito.')) {
       setCartItems([]);
     }
   };
 
   const handleCheckout = () => {
     console.log('Iniciando proceso de cobro...');
-    alert('Funcionalidad de cobro se implementarÃ¡ en el futuro.');
+    alert('Funcionalidad de cobro se implementará en el futuro.');
   };
 
   const { subtotal, totalItems } = useMemo(() => {
@@ -187,7 +187,7 @@ export default function Pos() {
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 600, fontSize: '0.925rem' }}>
-            <span>âœ…</span>
+            <span>✅</span>
             <span>{mensajeConfirmacion}</span>
           </div>
           <button
@@ -204,13 +204,13 @@ export default function Pos() {
             }}
             title="Cerrar mensaje"
           >
-            âœ•
+            ✕
           </button>
         </div>
       )}
 
       <div style={{ display: 'flex', flex: 1, gap: '1rem', minHeight: 0 }}>
-        {/* Columna Izquierda: BÃºsqueda y Escaneo */}
+        {/* Columna Izquierda: Búsqueda y Escaneo */}
         <div style={{ flex: '0 0 320px', display: 'flex', flexDirection: 'column', background: 'var(--color-surface)', padding: '1rem', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
                 <h3 style={{ marginTop: 0, color: 'var(--color-primary)', fontSize: '1.25rem' }}>Buscar Producto</h3>
         <BarcodeInput onSearch={handleSearch} onTyping={handleTypingSearch} />
@@ -272,7 +272,7 @@ export default function Pos() {
                 <circle cx="20" cy="21" r="1"></circle>
                 <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
               </svg>
-              <p style={{ fontSize: '1.25rem', margin: '0 0 0.5rem 0', color: 'var(--color-ink-soft)', fontWeight: 500 }}>Carrito vacÃ­o</p>
+              <p style={{ fontSize: '1.25rem', margin: '0 0 0.5rem 0', color: 'var(--color-ink-soft)', fontWeight: 500 }}>Carrito vacío</p>
               <p style={{ fontSize: '0.875rem', margin: 0 }}>Escanea o busca un producto para comenzar</p>
             </div>
           ) : (
@@ -392,7 +392,7 @@ export default function Pos() {
               gap: '0.5rem'
             }}
           >
-            <span>ðŸ§¾</span>
+            <span>💼</span>
             <span>Cerrar Turno / Cuadre de Caja</span>
           </button>
         </div>
