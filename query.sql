@@ -1,0 +1,1 @@
+SELECT * FROM "Tenants" LIMIT 1;
