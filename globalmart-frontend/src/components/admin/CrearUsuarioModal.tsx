@@ -46,6 +46,14 @@ export function validarUsuario(f: FormState): Errors {
   if (!f.password) e.password = 'La contraseña es obligatoria.';
   else if (f.password.length < PASSWORD_MIN)
     e.password = `La contraseña debe tener al menos ${PASSWORD_MIN} caracteres.`;
+  else if (!/[A-Z]/.test(f.password))
+    e.password = 'La contraseña debe contener al menos una letra mayúscula.';
+  else if (!/[a-z]/.test(f.password))
+    e.password = 'La contraseña debe contener al menos una letra minúscula.';
+  else if (!/[0-9]/.test(f.password))
+    e.password = 'La contraseña debe contener al menos un dígito.';
+  else if (!/[!@#$%^&*()-_=+[\]{}|;':",./<>?\\]/.test(f.password))
+    e.password = 'La contraseña debe contener al menos un carácter especial (!@#$%...).';
 
   if (!f.confirmarPassword) e.confirmarPassword = 'Confirma la contraseña.';
   else if (f.confirmarPassword !== f.password) e.confirmarPassword = 'Las contraseñas no coinciden.';
@@ -162,6 +170,9 @@ const CrearUsuarioModal: React.FC<Props> = ({ isOpen, onClose, onSubmit }) => {
         {campo('nombre', 'Nombre', 'text', 'name')}
         {campo('email', 'Correo electrónico', 'email', 'email')}
         {campo('password', 'Contraseña', 'password', 'new-password')}
+        <small style={{ color: 'var(--color-ink-soft)', fontSize: '0.75rem', display: 'block', marginTop: '-0.5rem', marginBottom: '0.7rem' }}>
+          Mínimo 8 caracteres, al menos una mayúscula, minúscula, número y símbolo.
+        </small>
         {campo('confirmarPassword', 'Confirmar contraseña', 'password', 'new-password')}
 
         <div style={{ marginBottom: '0.9rem' }}>

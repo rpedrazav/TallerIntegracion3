@@ -18,4 +18,7 @@ public class CrearUsuarioDto
     /// Se almacenará hasheada con BCrypt; nunca se persiste en texto plano.
     /// </summary>
     public string Password { get; set; } = string.Empty;
+
+    /// <summary>Roles iniciales opcionales a asignar al crear el usuario.</summary>
+    public List<string>? Roles { get; set; }
 }

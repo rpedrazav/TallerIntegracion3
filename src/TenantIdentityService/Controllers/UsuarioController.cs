@@ -91,7 +91,34 @@ public class UsuarioController : ControllerBase
         if (!Guid.TryParse(tenantClaim, out var tenantId))
             return Unauthorized(new { message = "El token no contiene un tenant_id válido." });
 
-        // 3. Hashear password con BCrypt y construir entidad asociada al tenant.
+        // 3. Validar roles solicitados antes de crear el usuario
+        List<string>? roleNames = null;
+        if (request.Roles is { Count: > 0 })
+        {
+            roleNames = request.Roles
+                .Select(r => r.Trim())
+                .Where(r => r.Length > 0)
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            if (roleNames.Any(r => string.Equals(r, "SUPER_ADMIN", StringComparison.OrdinalIgnoreCase)))
+            {
+                return StatusCode(StatusCodes.Status403Forbidden,
+                    new { message = "Un administrador de tenant no puede asignar SUPER_ADMIN." });
+            }
+
+            var invalidRoles = await _usuarioRepository.ValidateRoleNamesAsync(roleNames);
+            if (invalidRoles.Count > 0)
+            {
+                return BadRequest(new
+                {
+                    message = "Uno o más roles no existen.",
+                    invalidRoles = invalidRoles
+                });
+            }
+        }
+
+        // 4. Hashear password con BCrypt y construir entidad asociada al tenant.
         var usuario = new Usuario
         {
             TenantId = tenantId,
@@ -102,13 +129,32 @@ public class UsuarioController : ControllerBase
             CreadoEn = DateTime.UtcNow
         };
 
-        // 4. Guardar en BD.
+        // 5. Guardar en BD y asignar roles
         try
         {
             var usuarioCreado = await _usuarioRepository.CreateAsync(usuario);
-            var usuarioDto = MapToDto(usuarioCreado);
 
-            return Created($"/api/v1/users/{usuarioCreado.Id}", usuarioDto);
+            if (roleNames is { Count: > 0 })
+            {
+                var assignResult = await _usuarioRepository.AssignRolesAsync(usuarioCreado.Id, roleNames, tenantId);
+                if (assignResult.InvalidRoles.Count > 0)
+                {
+                    await _usuarioRepository.DeletePermanentlyAsync(usuarioCreado.Id, tenantId);
+                    return BadRequest(new
+                    {
+                        message = "Uno o más roles no existen.",
+                        invalidRoles = assignResult.InvalidRoles
+                    });
+                }
+
+                if (assignResult.Usuario != null)
+                {
+                    return Created($"/users/{usuarioCreado.Id}", MapToDto(assignResult.Usuario));
+                }
+            }
+
+            var usuarioDto = MapToDto(usuarioCreado);
+            return Created($"/users/{usuarioCreado.Id}", usuarioDto);
         }
         catch (DuplicateUserEmailException ex)
         {

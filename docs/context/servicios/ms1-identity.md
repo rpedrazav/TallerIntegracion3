@@ -37,7 +37,7 @@ src/TenantIdentityService/
 |--------|------|------|--------|
 | POST | `/auth/login` | Público (sin JWT) | [IMPLEMENTADO] |
 | GET | `/users` (alias `/api/v1/users`, `/api/users`) | JWT + ADMIN | [IMPLEMENTADO] (cada item incluye `roles: string[]`) |
-| POST | `/users` (alias `/api/v1/users`) | JWT + ADMIN | [IMPLEMENTADO] |
+| POST | `/users` (alias `/api/v1/users`) | JWT + ADMIN | [IMPLEMENTADO] (soporta `roles?: string[]` en el body) |
 | PUT | `/users/{id}` (alias `/api/v1/users/{id}`) | JWT + ADMIN | [IMPLEMENTADO] |
 | DELETE | `/users/{id}` (alias `/api/v1/users/{id}`) | JWT + ADMIN | [IMPLEMENTADO] |
 | POST | `/users/{id}/roles` (alias `/api/v1/users/{id}/roles`) | JWT + ADMIN | [IMPLEMENTADO] |

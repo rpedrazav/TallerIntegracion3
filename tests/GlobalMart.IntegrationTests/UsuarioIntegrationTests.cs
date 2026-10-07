@@ -3,6 +3,7 @@ extern alias TenantIdentityServiceAlias;
 using System.IdentityModel.Tokens.Jwt;
 using System.Net;
 using System.Net.Http.Headers;
+using System.Net.Http.Json;
 using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
@@ -92,6 +93,104 @@ public class UsuarioIntegrationTests : IClassFixture<Ms1WebApplicationFactory>
 
         Assert.True(json.RootElement.TryGetProperty("items", out var itemsElement));
         Assert.Equal(0, itemsElement.GetArrayLength());
+    }
+
+    [Fact]
+    public async Task CreateUser_SinJwt_Retorna401Unauthorized()
+    {
+        var body = new
+        {
+            nombre = "Nuevo Cajero",
+            email = "nuevo.cajero@demo.cl",
+            password = "Password123!"
+        };
+
+        var response = await _client.PostAsJsonAsync("/users", body);
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task CreateUser_ConRolCajero_Retorna403Forbidden()
+    {
+        var token = CreateToken(TenantDemoId, Guid.NewGuid(), "CAJERO");
+        var request = new HttpRequestMessage(HttpMethod.Post, "/users")
+        {
+            Content = JsonContent.Create(new
+            {
+                nombre = "Nuevo Cajero",
+                email = "cajero2@demo.cl",
+                password = "Password123!"
+            })
+        };
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        var response = await _client.SendAsync(request);
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task CreateUser_ConRolAdmin_ValidacionFallaSiPasswordDebil_Retorna400BadRequest()
+    {
+        var token = CreateToken(TenantDemoId, Guid.NewGuid(), "ADMIN");
+        var request = new HttpRequestMessage(HttpMethod.Post, "/users")
+        {
+            Content = JsonContent.Create(new
+            {
+                nombre = "Usuario Invalido",
+                email = "invalido@demo.cl",
+                password = "debil"
+            })
+        };
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        var response = await _client.SendAsync(request);
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task CreateUser_ConRolAdmin_SuperAdminProhibido_Retorna403Forbidden()
+    {
+        var token = CreateToken(TenantDemoId, Guid.NewGuid(), "ADMIN");
+        var request = new HttpRequestMessage(HttpMethod.Post, "/users")
+        {
+            Content = JsonContent.Create(new
+            {
+                nombre = "Intento SuperAdmin",
+                email = "super@demo.cl",
+                password = "Password123!",
+                roles = new[] { "SUPER_ADMIN" }
+            })
+        };
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        var response = await _client.SendAsync(request);
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task CreateUser_ConRolAdmin_RolInexistente_Retorna400BadRequestYNoCreaUsuario()
+    {
+        var token = CreateToken(TenantDemoId, Guid.NewGuid(), "ADMIN");
+        var email = $"fallido.{Guid.NewGuid():N}@demo.cl";
+        var request = new HttpRequestMessage(HttpMethod.Post, "/users")
+        {
+            Content = JsonContent.Create(new
+            {
+                nombre = "Usuario Rol Invalido",
+                email = email,
+                password = "Password123!",
+                roles = new[] { "ROL_INEXISTENTE_XYZ" }
+            })
+        };
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        var response = await _client.SendAsync(request);
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+
+        var content = await response.Content.ReadAsStringAsync();
+        using var json = JsonDocument.Parse(content);
+        Assert.True(json.RootElement.TryGetProperty("invalidRoles", out var invalidRolesElement));
+        Assert.True(invalidRolesElement.GetArrayLength() > 0);
     }
 
     private string CreateToken(Guid tenantId, Guid userId, string role)

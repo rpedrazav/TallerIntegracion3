@@ -181,4 +181,35 @@ public class UsuarioRepository : IUsuarioRepository
             Usuario = usuario
         };
     }
+
+    public async Task<IReadOnlyList<string>> ValidateRoleNamesAsync(IEnumerable<string> roleNames)
+    {
+        var normalizedRoleNames = roleNames
+            .Select(roleName => roleName.Trim().ToUpperInvariant())
+            .Distinct()
+            .ToArray();
+
+        var existingRoles = await _db.Roles
+            .Where(role => normalizedRoleNames.Contains(role.Nombre.ToUpper()))
+            .Select(role => role.Nombre.ToUpperInvariant())
+            .ToListAsync();
+
+        return normalizedRoleNames
+            .Where(roleName => !existingRoles.Contains(roleName))
+            .ToArray();
+    }
+
+    public async Task<bool> DeletePermanentlyAsync(Guid id, Guid tenantId)
+    {
+        var usuario = await _db.Usuarios
+            .IgnoreQueryFilters()
+            .FirstOrDefaultAsync(u => u.Id == id && u.TenantId == tenantId);
+
+        if (usuario is null)
+            return false;
+
+        _db.Usuarios.Remove(usuario);
+        await _db.SaveChangesAsync();
+        return true;
+    }
 }

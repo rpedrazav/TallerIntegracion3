@@ -21,4 +21,8 @@ public interface IUsuarioRepository
         Guid userId,
         IEnumerable<string> roleNames,
         Guid tenantId);
+
+    Task<IReadOnlyList<string>> ValidateRoleNamesAsync(IEnumerable<string> roleNames);
+
+    Task<bool> DeletePermanentlyAsync(Guid id, Guid tenantId);
 }

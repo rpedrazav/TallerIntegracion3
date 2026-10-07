@@ -55,12 +55,30 @@ export default function Admin() {
     try {
       const res = await axios.post(
         `${IDENTITY_URL}/users`,
-        { nombre: v.nombre, email: v.email, password: v.password },
+        {
+          nombre: v.nombre,
+          email: v.email,
+          password: v.password,
+          roles: [v.rol],
+        },
         { headers },
       );
-      await axios.post(`${IDENTITY_URL}/users/${res.data.id}/roles`, { roles: [v.rol] }, { headers });
+      if (!res.data?.roles || res.data.roles.length === 0) {
+        await axios.post(`${IDENTITY_URL}/users/${res.data.id}/roles`, { roles: [v.rol] }, { headers });
+      }
     } catch (err) {
-      const msg = isAxiosError(err) ? err.response?.data?.message : undefined;
+      let msg: string | undefined;
+      if (isAxiosError(err)) {
+        const data = err.response?.data;
+        if (data?.message) {
+          msg = data.message;
+        } else if (data?.errors && typeof data.errors === 'object') {
+          const list = Object.values(data.errors).flat();
+          if (list.length > 0) msg = String(list[0]);
+        } else if (data?.title) {
+          msg = data.title;
+        }
+      }
       throw new Error(msg ?? 'No se pudo crear el usuario.');
     }
     recargar();
