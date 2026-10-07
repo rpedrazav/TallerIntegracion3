@@ -28,7 +28,7 @@ src/TenantIdentityService/
 ├── Repositories/  IUsuarioRepository · UsuarioRepository · ITenantRepository · TenantRepository
 ├── Services/  IAuthService · AuthService · IJwtService · JwtService
 ├── Middleware/  TenantMiddleware.cs
-└── Validators/  LoginRequestValidator.cs
+└── Validators/  LoginRequestValidator.cs · CrearSucursalRequestValidator.cs · CrearUsuarioDtoValidator.cs
 ```
 
 ## Endpoints reales
@@ -233,8 +233,8 @@ GET/POST/PUT/DELETE /api/tenants
 ## Tests
 
 - **Seed de desarrollo:** crea tenant y cajero demo al iniciar [IMPLEMENTADO]
-- **Tests unitarios:** NO encontrados
-- **Tests de integración:** NO encontrados
+- **Tests unitarios:** `CrearUsuarioDtoValidatorTests` (16 casos cubriendo nombre, email y contraseña fuerte) [IMPLEMENTADO]
+- **Tests de integración:** `AuthIntegrationTests` (login y emisión de JWT), `UserIntegrationTests` (POST /users, hasheo BCrypt, asignación tenant_id, validación y control de duplicados) [IMPLEMENTADO]
 - **Tests manuales:** vía Swagger UI en `/swagger`
 
 ## Brechas respecto al diseño

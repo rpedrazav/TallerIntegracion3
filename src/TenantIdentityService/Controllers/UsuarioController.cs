@@ -1,8 +1,10 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TenantIdentityService.DTOs;
+using TenantIdentityService.Exceptions;
 using TenantIdentityService.Models;
 using TenantIdentityService.Repositories;
 
@@ -16,10 +18,14 @@ namespace TenantIdentityService.Controllers;
 public class UsuarioController : ControllerBase
 {
     private readonly IUsuarioRepository _usuarioRepository;
+    private readonly IValidator<CrearUsuarioDto> _crearUsuarioValidator;
 
-    public UsuarioController(IUsuarioRepository usuarioRepository)
+    public UsuarioController(
+        IUsuarioRepository usuarioRepository,
+        IValidator<CrearUsuarioDto> crearUsuarioValidator)
     {
         _usuarioRepository = usuarioRepository;
+        _crearUsuarioValidator = crearUsuarioValidator;
     }
 
     /// <summary>
@@ -43,7 +49,7 @@ public class UsuarioController : ControllerBase
 
         var tenantClaim = User.FindFirst("tenant_id")?.Value;
         if (!Guid.TryParse(tenantClaim, out var tenantId))
-            return Unauthorized(new { message = "El token no contiene un tenant_id vÃ¡lido." });
+            return Unauthorized(new { message = "El token no contiene un tenant_id válido." });
 
         var result = await _usuarioRepository.GetActivePagedAsync(tenantId, page, pageSize);
 
@@ -66,31 +72,48 @@ public class UsuarioController : ControllerBase
     /// <response code="400">Datos inválidos.</response>
     /// <response code="401">No autorizado.</response>
     /// <response code="403">No tienes permisos.</response>
+    /// <response code="409">Email ya registrado en el tenant.</response>
     [HttpPost]
     [ProducesResponseType(typeof(UsuarioDto), StatusCodes.Status201Created)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<ActionResult<UsuarioDto>> CreateUser([FromBody] CrearUsuarioDto request)
     {
+        // 1. Validación con FluentValidation antes de tocar el JWT o la base de datos.
+        var validacion = await _crearUsuarioValidator.ValidateAsync(request);
+        if (!validacion.IsValid)
+            return ValidationProblem(new ValidationProblemDetails(validacion.ToDictionary()));
+
+        // 2. Extraer tenant_id desde los claims del JWT (Aislamiento Multi-Tenant RN-01).
         var tenantClaim = User.FindFirst("tenant_id")?.Value;
         if (!Guid.TryParse(tenantClaim, out var tenantId))
             return Unauthorized(new { message = "El token no contiene un tenant_id válido." });
 
+        // 3. Hashear password con BCrypt y construir entidad asociada al tenant.
         var usuario = new Usuario
         {
             TenantId = tenantId,
-            Nombre = request.Nombre,
-            Email = request.Email,
+            Nombre = request.Nombre.Trim(),
+            Email = request.Email.Trim().ToLowerInvariant(),
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
             Activo = true,
             CreadoEn = DateTime.UtcNow
         };
 
-        var usuarioCreado = await _usuarioRepository.CreateAsync(usuario);
-        var usuarioDto = MapToDto(usuarioCreado);
+        // 4. Guardar en BD.
+        try
+        {
+            var usuarioCreado = await _usuarioRepository.CreateAsync(usuario);
+            var usuarioDto = MapToDto(usuarioCreado);
 
-        return Created($"/users/{usuarioCreado.Id}", usuarioDto);
+            return Created($"/api/v1/users/{usuarioCreado.Id}", usuarioDto);
+        }
+        catch (DuplicateUserEmailException ex)
+        {
+            return Conflict(new { message = ex.Message });
+        }
     }
 
     /// <summary>
@@ -170,7 +193,7 @@ public class UsuarioController : ControllerBase
     /// Asigna roles a un usuario.
     /// </summary>
     /// <param name="id">ID del usuario.</param>
-    /// <param name="request">Lista de roles.</param>
+    /// <param name="request">Lista de nombres de roles.</param>
     /// <returns>El usuario actualizado.</returns>
     /// <response code="200">Roles asignados.</response>
     /// <response code="400">Datos inválidos.</response>
@@ -197,7 +220,7 @@ public class UsuarioController : ControllerBase
             .ToList();
 
         if (requestedRoles.Count == 0)
-            return BadRequest(new { message = "Debe enviar al menos un rol vÃ¡lido." });
+            return BadRequest(new { message = "Debe enviar al menos un rol válido." });
 
         if (requestedRoles.Any(role =>
                 string.Equals(role, "SUPER_ADMIN", StringComparison.OrdinalIgnoreCase)))
@@ -208,7 +231,7 @@ public class UsuarioController : ControllerBase
 
         var tenantClaim = User.FindFirst("tenant_id")?.Value;
         if (!Guid.TryParse(tenantClaim, out var tenantId))
-            return Unauthorized(new { message = "El token no contiene un tenant_id vÃ¡lido." });
+            return Unauthorized(new { message = "El token no contiene un tenant_id válido." });
 
         var usuario = await _usuarioRepository.GetByIdAsync(id, tenantId);
         if (usuario is null)
@@ -219,7 +242,7 @@ public class UsuarioController : ControllerBase
         {
             return BadRequest(new
             {
-                message = "Uno o mÃ¡s roles no existen.",
+                message = "Uno o más roles no existen.",
                 invalidRoles = result.InvalidRoles
             });
         }

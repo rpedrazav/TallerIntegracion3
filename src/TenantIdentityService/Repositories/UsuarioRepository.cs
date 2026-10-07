@@ -1,12 +1,15 @@
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 using TenantIdentityService.Data;
 using TenantIdentityService.DTOs;
+using TenantIdentityService.Exceptions;
 using TenantIdentityService.Models;
 
 namespace TenantIdentityService.Repositories;
 
 public class UsuarioRepository : IUsuarioRepository
 {
+    private const string UniqueViolationSqlState = "23505";
     private readonly TenantDbContext _db;
 
     public UsuarioRepository(TenantDbContext db)
@@ -59,10 +62,32 @@ public class UsuarioRepository : IUsuarioRepository
 
     public async Task<Usuario> CreateAsync(Usuario usuario)
     {
+        var email = usuario.Email.Trim().ToLowerInvariant();
+        usuario.Email = email;
+
+        var yaExiste = await _db.Usuarios
+            .IgnoreQueryFilters()
+            .AnyAsync(u => u.TenantId == usuario.TenantId && u.Email.ToLower() == email);
+
+        if (yaExiste)
+            throw new DuplicateUserEmailException(email);
+
         _db.Usuarios.Add(usuario);
-        await _db.SaveChangesAsync();
+
+        try
+        {
+            await _db.SaveChangesAsync();
+        }
+        catch (DbUpdateException ex) when (EsViolacionDeUnicidad(ex))
+        {
+            throw new DuplicateUserEmailException(email);
+        }
+
         return usuario;
     }
+
+    private static bool EsViolacionDeUnicidad(DbUpdateException ex)
+        => ex.InnerException is PostgresException { SqlState: UniqueViolationSqlState };
 
     public async Task<Usuario> UpdateAsync(Usuario usuario)
     {
