@@ -38,8 +38,9 @@ public class ActualizarUsuarioIntegrationTests : IClassFixture<Ms1WebApplication
 
     public async Task InitializeAsync()
     {
-        var connection = Environment.GetEnvironmentVariable("TI3454_TEST_CONNECTION")
-            ?? throw new InvalidOperationException("Configure TI3454_TEST_CONNECTION con una base PostgreSQL de pruebas.");
+        var configuration = _factory.Services.GetRequiredService<IConfiguration>();
+        var connection = configuration.GetConnectionString("DefaultConnection")
+            ?? throw new InvalidOperationException("Falta ConnectionStrings:DefaultConnection en la configuración de MS-1.");
         var settings = new NpgsqlConnectionStringBuilder(connection) { SearchPath = _schema };
         _connectionString = settings.ConnectionString;
         await using var db = new NpgsqlConnection(_connectionString);
