@@ -205,11 +205,12 @@ public class UsuarioController : ControllerBase
     }
 
     /// <summary>
-    /// Elimina (lógicamente) un usuario.
+    /// Desactiva un usuario del tenant sin eliminar su fila en users.
     /// </summary>
     /// <param name="id">ID del usuario.</param>
     /// <returns>No content.</returns>
-    /// <response code="204">Usuario eliminado.</response>
+    /// <response code="204">Usuario desactivado, incluso si ya estaba inactivo.</response>
+    /// <response code="400">El administrador intenta desactivarse a sí mismo.</response>
     /// <response code="401">No autorizado.</response>
     /// <response code="403">No tienes permisos.</response>
     /// <response code="404">Usuario no encontrado.</response>

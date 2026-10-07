@@ -43,6 +43,7 @@ reglas: []
 **Implementado:**
 - `POST /auth/login` — genera JWT con tenant_id, roles, active_role (expiración: 8 horas por defecto en appsettings.json) [IMPLEMENTADO]
 - `GET/POST/PUT/DELETE /users` (alias `/api/v1/users`, `/api/users`) — CRUD usuarios con RBAC [IMPLEMENTADO]
+- `DELETE /api/v1/users/{id}` (mismos alias) actualiza solo `users.is_active=false`, filtrando ID y tenant del JWT; retorna 204 también si ya estaba inactivo, 400 ante autodesactivación y 404 para ID inexistente/ajeno. Siete casos DELETE y tres de regresión PUT aprobados con PostgreSQL aislado en Release el 2026-10-06 [IMPLEMENTADO]. PUT/DELETE usan `users`; creación, listado y login aún usan `Usuarios`. Ver [MS-1](servicios/ms1-identity.md).
 - `POST /users/{id}/roles` (alias `/api/v1/users/{id}/roles`) — asignar roles (sin SUPER_ADMIN) [IMPLEMENTADO]
 - `GET/PUT /tenants/{id}/config` — config de tenant (país, moneda, IVA) [IMPLEMENTADO]
 - `GET /sucursales` — lista sucursales del tenant del JWT, con zona horaria efectiva [IMPLEMENTADO]

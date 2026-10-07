@@ -126,16 +126,11 @@ public class UsuarioRepository : IUsuarioRepository
 
     public async Task<bool> DeactivateAsync(Guid id, Guid tenantId)
     {
-        var usuario = await _db.Usuarios
-            .IgnoreQueryFilters()
-            .FirstOrDefaultAsync(existing => existing.Id == id && existing.TenantId == tenantId);
+        var updated = await _db.CuentasUsuarios
+            .Where(usuario => usuario.Id == id && usuario.TenantId == tenantId)
+            .ExecuteUpdateAsync(setters => setters.SetProperty(usuario => usuario.Activo, false));
 
-        if (usuario is null)
-            return false;
-
-        usuario.Activo = false;
-        await _db.SaveChangesAsync();
-        return true;
+        return updated > 0;
     }
 
     public async Task<AssignRolesResult> AssignRolesAsync(

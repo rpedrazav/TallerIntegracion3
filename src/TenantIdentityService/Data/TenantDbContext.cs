@@ -34,7 +34,7 @@ public class TenantDbContext : DbContext
         base.OnModelCreating(modelBuilder);
 
         // users es un esquema existente externo a las migraciones legacy de Usuarios.
-        // Mapear solo las columnas usadas por PUT evita modificar credenciales y roles.
+        // Proyección usada por PUT y soft delete, sin credenciales ni roles.
         modelBuilder.Entity<UsuarioCuenta>(e =>
         {
             e.ToTable("users", table => table.ExcludeFromMigrations());
@@ -43,6 +43,7 @@ public class TenantDbContext : DbContext
             e.Property(u => u.TenantId).HasColumnName("tenant_id");
             e.Property(u => u.SucursalId).HasColumnName("sucursal_id");
             e.Property(u => u.Email).HasColumnName("email").IsRequired().HasMaxLength(200);
+            e.Property(u => u.Activo).HasColumnName("is_active");
             e.HasIndex(u => new { u.TenantId, u.Email }).IsUnique()
                 .HasDatabaseName("uq_users_tenant_email");
             e.HasQueryFilter(u => u.TenantId == CurrentTenantId);

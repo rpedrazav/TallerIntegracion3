@@ -46,16 +46,25 @@ src/TenantIdentityService/
 | GET | `/sucursales` | JWT | [IMPLEMENTADO] |
 | GET | `/health` | Público | [IMPLEMENTADO] |
 
-### PUT /api/v1/users/{id} — TI3-454
+### PUT /api/v1/users/{id}
 
 - JWT y rol `ADMIN`; tenant obtenido exclusivamente del claim `tenant_id`.
 - Request `ActualizarUsuarioDto`: `Email` obligatorio, formato email y máximo 200 caracteres; `SucursalId` nullable. Omitirlo o enviar `null` borra la asignación. No acepta `Nombre` como campo editable.
 - `200`: devuelve `id`, `tenantId`, `email`, `sucursalId` tras persistir. `404`: ID inexistente o de otro tenant. `409`: violación PostgreSQL `23505` del índice/restricción `uq_users_tenant_email`. Otros errores de base no se convierten en duplicados.
 - `UsuarioRepository.UpdateBasicAsync` filtra lectura y UPDATE por ID y tenant. La restricción de base garantiza unicidad incluso bajo concurrencia; conservar el email propio está permitido.
-- El PUT usa `UsuarioCuenta`, una proyección EF de `users` con `id`, `tenant_id`, `email`, `sucursal_id`, excluida de migraciones. Solo actualiza email y sucursal; no toca contraseña, rol, estado ni fechas.
-- **Discrepancia de esquemas:** el resto del CRUD y autenticación conserva el modelo anterior `Usuario` / `Usuarios` con `Nombre` y relaciones de roles/sucursales. No se migró ese modelo como parte de TI3-454. `users` y `uq_users_tenant_email` deben existir en la base de destino; las migraciones actuales no los crean. El esquema fue proporcionado por el usuario y reproducido en PostgreSQL aislado; su presencia y FKs en `postgres-tenant` siguen [NO VERIFICADO]. La pertenencia de `SucursalId` a un tenant no se valida en este cambio.
+- El PUT usa `UsuarioCuenta`, una proyección EF de `users` con `id`, `tenant_id`, `email`, `sucursal_id` e `is_active`, excluida de migraciones. Solo actualiza email y sucursal; no toca contraseña, rol, estado ni fechas.
+- **Discrepancia de esquemas:** PUT y DELETE usan `users`; creación, listado y autenticación conservan el modelo anterior `Usuario` / `Usuarios` con `Nombre` y relaciones de roles/sucursales. `users` y `uq_users_tenant_email` deben existir en la base de destino; las migraciones actuales no los crean. El esquema fue proporcionado por el usuario y reproducido en PostgreSQL aislado; su presencia y FKs en `postgres-tenant` siguen [NO VERIFICADO]. La pertenencia de `SucursalId` a un tenant no se valida en este cambio.
 - [ActualizarUsuarioIntegrationTests](../../../tests/GlobalMart.IntegrationTests/ActualizarUsuarioIntegrationTests.cs): exactamente tres tests con `Ms1WebApplicationFactory`, JWT real y PostgreSQL: 200 con persistencia, 409 duplicado sin cambios, 404 otro tenant sin cambios. Los tres pasaron el 2026-10-06. El caso 200 cubre email repetido entre tenants, conservación del email propio y sucursal nullable.
-- Ejecución: definir `TI3454_TEST_CONNECTION` con una base PostgreSQL de pruebas y ejecutar `dotnet test tests/GlobalMart.IntegrationTests/GlobalMart.IntegrationTests.csproj --filter FullyQualifiedName~ActualizarUsuarioIntegrationTests`. Cada prueba crea y elimina su propio esquema; usa entorno `Testing` para evitar migraciones/seed de desarrollo.
+- Ejecución: usa `DefaultConnection` desde `Ms1WebApplicationFactory`, sin variables específicas del test. Cada prueba crea y elimina su propio esquema; el host derivado usa entorno `Testing` para evitar migraciones/seed sobre ese esquema.
+
+### DELETE /api/v1/users/{id}
+
+- Alias existentes: `/users/{id}` y `/api/users/{id}`. Requiere JWT válido y rol `ADMIN`.
+- `tenant_id` y la identidad (`NameIdentifier`/`sub`) proceden del JWT. Si el ID coincide con el administrador autenticado devuelve `400` antes de escribir; claims ausentes o inválidos devuelven `401`.
+- `UsuarioRepository.DeactivateAsync` ejecuta un UPDATE de `users.is_active = false` filtrado por `tenant_id` e `id`, manteniendo el filtro global. No elimina filas ni altera otros campos.
+- `204` para usuario existente, incluso ya inactivo; `404` para ID inexistente o de otro tenant; `401` sin JWT y `403` sin rol ADMIN.
+- [DesactivarUsuarioIntegrationTests](../../../tests/GlobalMart.IntegrationTests/DesactivarUsuarioIntegrationTests.cs): seis métodos, siete casos (la teoría 404 distingue otro tenant e ID inexistente). Verifican fila conservada, otros campos intactos, autodesactivación rechazada, idempotencia y autorización. Conexión estándar de la factoría y esquema PostgreSQL aislado por caso.
+- Verificado el 2026-10-06 en .NET 8 / Release: siete casos DELETE y tres de regresión PUT aprobados. No implica que login/listado legacy consulten `users.is_active`.
 
 ### GET /sucursales
 

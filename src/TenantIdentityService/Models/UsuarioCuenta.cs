@@ -7,4 +7,5 @@ public class UsuarioCuenta
     public Guid TenantId { get; set; }
     public Guid? SucursalId { get; set; }
     public string Email { get; set; } = string.Empty;
+    public bool Activo { get; set; }
 }
