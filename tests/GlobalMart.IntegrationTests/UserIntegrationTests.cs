@@ -14,6 +14,8 @@ using Microsoft.IdentityModel.Tokens;
 using Xunit;
 using TenantDbContext = TenantIdentityServiceAlias::TenantIdentityService.Data.TenantDbContext;
 using Tenant = TenantIdentityServiceAlias::TenantIdentityService.Models.Tenant;
+using Usuario = TenantIdentityServiceAlias::TenantIdentityService.Models.Usuario;
+using UsuarioRol = TenantIdentityServiceAlias::TenantIdentityService.Models.UsuarioRol;
 
 namespace GlobalMart.IntegrationTests;
 
@@ -185,6 +187,175 @@ public class UserIntegrationTests : IClassFixture<Ms1WebApplicationFactory>
 
         var response = await _client.PostAsJsonAsync("/api/v1/users", request);
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetUsers_Paginado_RetornaUsuariosDelTenantConRolesYPaginacion()
+    {
+        // 1. Preparar Tenant y varios usuarios en BD
+        var tenantId = Guid.NewGuid();
+        var adminId = Guid.NewGuid();
+        var rolCajeroId = Guid.Parse("11111111-0000-0000-0000-000000000001");
+
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<TenantDbContext>();
+            db.Database.Migrate();
+
+            var tenant = new Tenant
+            {
+                Id = tenantId,
+                Nombre = $"Tenant Paged {tenantId:N}",
+                Pais = "CL",
+                Moneda = "CLP",
+                Idioma = "es",
+                ZonaHoraria = "America/Santiago",
+                PorcentajeIva = 19
+            };
+            db.Tenants.Add(tenant);
+
+            for (int i = 1; i <= 5; i++)
+            {
+                var usuario = new Usuario
+                {
+                    Id = Guid.NewGuid(),
+                    TenantId = tenantId,
+                    Nombre = $"Usuario Paged {i:D2}",
+                    Email = $"user_paged_{i}_{Guid.NewGuid():N}@test.cl",
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword("Demo1234!"),
+                    Activo = true,
+                    CreadoEn = DateTime.UtcNow
+                };
+                db.Usuarios.Add(usuario);
+
+                db.UsuarioRoles.Add(new UsuarioRol
+                {
+                    UsuarioId = usuario.Id,
+                    RolId = rolCajeroId
+                });
+            }
+
+            await db.SaveChangesAsync();
+        }
+
+        // 2. JWT de Admin
+        var configuration = _factory.Services.GetRequiredService<IConfiguration>();
+        var token = CreateAdminToken(configuration, tenantId, adminId);
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        // 3. Consultar página 1 con pageSize = 2
+        var response = await _client.GetAsync("/api/v1/users?page=1&pageSize=2");
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        var content = await response.Content.ReadAsStringAsync();
+        using var doc = JsonDocument.Parse(content);
+        var root = doc.RootElement;
+
+        Assert.Equal(1, root.GetProperty("page").GetInt32());
+        Assert.Equal(2, root.GetProperty("pageSize").GetInt32());
+        Assert.Equal(5, root.GetProperty("totalItems").GetInt32());
+        Assert.Equal(3, root.GetProperty("totalPages").GetInt32());
+
+        var items = root.GetProperty("items").EnumerateArray().ToList();
+        Assert.Equal(2, items.Count);
+
+        // Verificar que incluye los roles
+        var primerUsuario = items.First();
+        Assert.Equal(tenantId, primerUsuario.GetProperty("tenantId").GetGuid());
+        var roles = primerUsuario.GetProperty("roles").EnumerateArray().Select(r => r.GetString()).ToList();
+        Assert.Contains("CAJERO", roles);
+    }
+
+    [Theory]
+    [InlineData(0, 10)]
+    [InlineData(1, 0)]
+    [InlineData(1, 101)]
+    [InlineData(-1, 20)]
+    public async Task GetUsers_ParametrosPaginacionInvalidos_Retorna400BadRequest(int page, int pageSize)
+    {
+        var tenantId = Guid.NewGuid();
+        var adminId = Guid.NewGuid();
+
+        var configuration = _factory.Services.GetRequiredService<IConfiguration>();
+        var token = CreateAdminToken(configuration, tenantId, adminId);
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        var response = await _client.GetAsync($"/api/v1/users?page={page}&pageSize={pageSize}");
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetUsers_AislamientoMultiTenant_NoRetornaUsuariosDeOtroTenant()
+    {
+        var tenantA = Guid.NewGuid();
+        var tenantB = Guid.NewGuid();
+        var adminA = Guid.NewGuid();
+
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<TenantDbContext>();
+            db.Database.Migrate();
+
+            db.Tenants.Add(new Tenant
+            {
+                Id = tenantA,
+                Nombre = $"Tenant A {tenantA:N}",
+                Pais = "CL",
+                Moneda = "CLP",
+                Idioma = "es",
+                ZonaHoraria = "America/Santiago",
+                PorcentajeIva = 19
+            });
+
+            db.Tenants.Add(new Tenant
+            {
+                Id = tenantB,
+                Nombre = $"Tenant B {tenantB:N}",
+                Pais = "CL",
+                Moneda = "CLP",
+                Idioma = "es",
+                ZonaHoraria = "America/Santiago",
+                PorcentajeIva = 19
+            });
+
+            db.Usuarios.Add(new Usuario
+            {
+                Id = Guid.NewGuid(),
+                TenantId = tenantA,
+                Nombre = "Usuario Tenant A",
+                Email = $"user_a_{Guid.NewGuid():N}@test.cl",
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword("Demo1234!"),
+                Activo = true,
+                CreadoEn = DateTime.UtcNow
+            });
+
+            db.Usuarios.Add(new Usuario
+            {
+                Id = Guid.NewGuid(),
+                TenantId = tenantB,
+                Nombre = "Usuario Tenant B",
+                Email = $"user_b_{Guid.NewGuid():N}@test.cl",
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword("Demo1234!"),
+                Activo = true,
+                CreadoEn = DateTime.UtcNow
+            });
+
+            await db.SaveChangesAsync();
+        }
+
+        var configuration = _factory.Services.GetRequiredService<IConfiguration>();
+        var tokenA = CreateAdminToken(configuration, tenantA, adminA);
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", tokenA);
+
+        var response = await _client.GetAsync("/api/v1/users?page=1&pageSize=50");
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        var content = await response.Content.ReadAsStringAsync();
+        using var doc = JsonDocument.Parse(content);
+        var items = doc.RootElement.GetProperty("items").EnumerateArray().ToList();
+
+        // Debe retornar únicamente usuarios de Tenant A
+        Assert.All(items, item => Assert.Equal(tenantA, item.GetProperty("tenantId").GetGuid()));
     }
 
     private static string CreateAdminToken(IConfiguration configuration, Guid tenantId, Guid adminId)

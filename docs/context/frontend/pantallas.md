@@ -87,7 +87,10 @@ NO abre turno antes de vender
 
 ## Admin.tsx [PARCIAL]
 
-Ruta `/admin`. Lista usuarios (`GET /api/v1/users` en MS-1) mediante el componente `UsuariosList` (`components/admin/UsuariosList.tsx`, mostrando nombre, correo, roles con badges/chips y estado activo/inactivo) y abre `components/admin/CrearUsuarioModal.tsx` (nombre, correo, contraseña ≥ 8 con confirmación, rol CAJERO/REPONEDOR/ADMIN; validación en frontend alineada a `CrearUsuarioDto`). Al enviar llama `POST /api/v1/users` y luego `POST /api/v1/users/{id}/roles`. Usa los tokens de color de la [[guia-estilo]] definidos en `index.css`. [NO VERIFICADO] contra el backend en ejecución. No hay edición ni desactivación de usuarios en UI.
+Ruta `/admin`. Panel de administración con pestañas ("Usuarios" y "Configuración del Tenant"):
+- **Usuarios:** Lista usuarios (`GET /api/v1/users` en MS-1) mediante el componente `UsuariosList` (`components/admin/UsuariosList.tsx`, mostrando nombre, correo, roles con badges/chips y estado activo/inactivo) y abre `components/admin/CrearUsuarioModal.tsx` (nombre, correo, contraseña ≥ 8 con confirmación, rol CAJERO/REPONEDOR/ADMIN; validación en frontend alineada a `CrearUsuarioDto`). Al enviar llama `POST /api/v1/users` y luego `POST /api/v1/users/{id}/roles`.
+- **Configuración del Tenant:** Componente `TenantConfig` (`components/admin/TenantConfig.tsx`) que conecta con `GET /tenants/{id}/config` y `PUT /tenants/{id}/config` en MS-1. Permite ver y actualizar parámetros regionales y fiscales: país, moneda, idioma, zona horaria IANA y porcentaje de IVA. Maneja validaciones frontend, feedback de carga, éxito (`var(--color-success)`) y errores.
+Usa los tokens de color de la [[guia-estilo]] definidos en `index.css`. No hay edición ni desactivación individual de usuarios en UI todavía.
 
 ## BarcodeInput.tsx [IMPLEMENTADO]
 
@@ -121,7 +124,6 @@ Pantallas no implementadas:
 - Dashboard de ventas
 - Gestión de inventario
 - Programa de lealtad
-- Configuración de tenant
 
 ## Conexiones
 - Estructura: [[estructura]]
