@@ -72,7 +72,7 @@ globalmart-frontend/
 |---------|-----------------|--------|
 | Login | POST http://127.0.0.1:5124/auth/login (directo) | [IMPLEMENTADO] |
 | Pos | Datos hardcodeados, sin API real | [PARCIAL] |
-| Admin | NO verificado | [NO VERIFICADO] |
+| Admin | `GET /users` de MS-1 + creación/asignación de roles | [PARCIAL] |
 
 ## Hallazgos importantes
 

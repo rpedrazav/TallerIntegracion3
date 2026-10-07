@@ -1,4 +1,4 @@
-﻿---
+---
 id: estado-actual
 tipo: indice
 titulo: Estado Real de Implementación — GlobalMart OS
@@ -42,9 +42,8 @@ reglas: []
 ### MS-1 · Tenant & Identity Service [PARCIAL]
 **Implementado:**
 - `POST /auth/login` — genera JWT con tenant_id, roles, active_role (expiración: 8 horas por defecto en appsettings.json) [IMPLEMENTADO]
-- `GET/POST/PUT/DELETE /api/v1/users` — CRUD usuarios con RBAC [IMPLEMENTADO]
-- TI3-454: `PUT /api/v1/users/{id}` edita solo `Email` obligatorio y `SucursalId` nullable en la tabla `users`; exige ADMIN, filtra por tenant del JWT y devuelve 409 para `uq_users_tenant_email` o 404 para ID ajeno/inexistente. Tres tests con `Ms1WebApplicationFactory` y PostgreSQL aislado pasaron el 2026-10-06 [IMPLEMENTADO]. El resto del CRUD/login conserva el modelo legacy `Usuarios`; la existencia del esquema `users` en la base de destino y sus FKs están [NO VERIFICADO]. Ver [contrato y discrepancia de esquemas](servicios/ms1-identity.md#put-apiv1usersid--ti3-454).
-- `POST /api/v1/users/{id}/roles` — asignar roles (sin SUPER_ADMIN) [IMPLEMENTADO]
+- `GET/POST/PUT/DELETE /users` (alias `/api/v1/users`, `/api/users`) — CRUD usuarios con RBAC [IMPLEMENTADO]
+- `POST /users/{id}/roles` (alias `/api/v1/users/{id}/roles`) — asignar roles (sin SUPER_ADMIN) [IMPLEMENTADO]
 - `GET/PUT /tenants/{id}/config` — config de tenant (país, moneda, IVA) [IMPLEMENTADO]
 - `GET /sucursales` — lista sucursales del tenant del JWT, con zona horaria efectiva [IMPLEMENTADO]
 - `POST /sucursales` — crea sucursal (solo ADMIN), zona horaria IANA opcional y validada, nombre único por tenant sin distinguir mayúsculas (409) [IMPLEMENTADO]
@@ -184,7 +183,7 @@ reglas: []
 
 ### Guía visual aprobada
 
-El archivo `docs/GlobalMart OS — Guía de estilo.html` fue aprobado como referencia visual del frontend el 2026-10-06. Define tokens CSS, tipografías `Inter`/`IBM Plex Mono`, paleta de ceniza/malva (primario sombra malva), estados verde bosque/ámbar/ladrillo/azul acero, modo oscuro, reglas de contraste y composición de referencia para el POS. La guía es normativa para nuevas implementaciones, pero no cambia el estado funcional de las pantallas: POS sigue [PARCIAL] y Admin sigue [PLACEHOLDER].
+El archivo `docs/GlobalMart OS — Guía de estilo.html` fue aprobado como referencia visual del frontend el 2026-10-06. Define tokens CSS, tipografías `Inter`/`IBM Plex Mono`, paleta de ceniza/malva (primario sombra malva), estados verde bosque/ámbar/ladrillo/azul acero, modo oscuro, reglas de contraste y composición de referencia para el POS. La guía es normativa para nuevas implementaciones, pero no cambia el estado funcional de las pantallas: POS sigue [PARCIAL] y Admin sigue [PARCIAL].
 
 Ver el nodo [[guia-estilo]] para el resumen y las reglas aplicables.
 
@@ -195,7 +194,7 @@ Ver el nodo [[guia-estilo]] para el resumen y las reglas aplicables.
 | Cerrar Turno (`CerrarTurnoPage`) | [IMPLEMENTADO] | Tabla de denominaciones (billetes/monedas) con conteo y subtotales automáticos. Llama a MS-5 `POST /api/turnos/cuadre` para obtener efectivo esperado. Muestra resultado: efectivo esperado vs declarado, diferencia en **verde** si es $0, en **rojo** si hay discrepancia (sobrante o faltante). Botón `POST /api/turnos/cerrar` con confirmación. |
 | Productos Admin (`ProductosPage`) | [IMPLEMENTADO] | `GET /products?page=1&pageSize=500` + `GET /categories` en MS-3 (puerto 5203). Tabla con nombre, código de barras, categoría, precio base, tipo (peso variable/unidad) y estado. Filtro instantáneo en frontend por texto (nombre, código, descripción, categoría), filtro por categoría dropdown y toggle "solo activos". Accesible desde `/admin/productos`. |
 | POS/Carrito | [PARCIAL] | UI con banner de confirmación de apertura de turno y datos mockeados; pendiente llamada a APIs de ventas |
-| Admin | [PARCIAL] | Lista usuarios (`GET /api/v1/users`) y `CrearUsuarioModal` (`POST /api/v1/users` + `POST /api/v1/users/{id}/roles`) con validación frontend; usa tokens de la guía de estilo. Sin edición/desactivación. |
+| Admin | [PARCIAL] | Lista usuarios con `UsuariosList` conectado a `GET /users` de MS-1 (nombre, correo, roles con chips y badge de estado activo/inactivo), botón de refresco y `CrearUsuarioModal` (`POST /users` + `POST /users/{id}/roles`) con validación frontend; usa tokens de la guía de estilo. Sin edición/desactivación. |
 
 **Nota de integración Electron:** `preload.ts` expone únicamente funciones de autenticación y sesión (`ping`, `getToken`, `setToken`, `logout`). No expone hardware serial ni actualización automática por ahora.
 

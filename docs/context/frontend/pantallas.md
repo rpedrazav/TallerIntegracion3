@@ -87,7 +87,7 @@ NO abre turno antes de vender
 
 ## Admin.tsx [PARCIAL]
 
-Ruta `/admin`. Lista usuarios (`GET /api/v1/users` en MS-1) y abre `components/admin/CrearUsuarioModal.tsx` (nombre, correo, contraseña ≥ 8 con confirmación, rol CAJERO/REPONEDOR/ADMIN; validación en frontend alineada a `CrearUsuarioDto`). Al enviar llama `POST /api/v1/users` y luego `POST /api/v1/users/{id}/roles`. Usa los tokens de color de la [[guia-estilo]] definidos en `index.css`. [NO VERIFICADO] contra el backend en ejecución. No hay edición ni desactivación de usuarios en UI.
+Ruta `/admin`. Lista usuarios (`GET /users` en MS-1, con alias `/api/v1/users` y `/api/users`) mediante el componente `UsuariosList` (`components/admin/UsuariosList.tsx`, mostrando nombre, correo, roles con badges/chips y estado activo/inactivo), botón de refresco y abre `components/admin/CrearUsuarioModal.tsx` (nombre, correo, contraseña ≥ 8 con confirmación, rol CAJERO/REPONEDOR/ADMIN; validación en frontend alineada a `CrearUsuarioDto`). Al enviar llama `POST /users` y luego `POST /users/{id}/roles`. Usa los tokens de color de la [[guia-estilo]] definidos en `index.css`. No hay edición ni desactivación de usuarios en UI.
 
 ## BarcodeInput.tsx [IMPLEMENTADO]
 

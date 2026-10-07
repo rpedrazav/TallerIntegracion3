@@ -28,7 +28,7 @@ src/TenantIdentityService/
 ├── Repositories/  IUsuarioRepository · UsuarioRepository · ITenantRepository · TenantRepository
 ├── Services/  IAuthService · AuthService · IJwtService · JwtService
 ├── Middleware/  TenantMiddleware.cs
-└── Validators/  LoginRequestValidator.cs
+└── Validators/  LoginRequestValidator.cs · CrearSucursalRequestValidator.cs · CrearUsuarioDtoValidator.cs
 ```
 
 ## Endpoints reales
@@ -36,11 +36,11 @@ src/TenantIdentityService/
 | Método | Ruta | Auth | Estado |
 |--------|------|------|--------|
 | POST | `/auth/login` | Público (sin JWT) | [IMPLEMENTADO] |
-| GET | `/api/v1/users?page=&pageSize=` | JWT + ADMIN | [IMPLEMENTADO] |
-| POST | `/api/v1/users` | JWT + ADMIN | [IMPLEMENTADO] |
-| PUT | `/api/v1/users/{id}` | JWT + ADMIN | [IMPLEMENTADO] |
-| DELETE | `/api/v1/users/{id}` | JWT + ADMIN | [IMPLEMENTADO] |
-| POST | `/api/v1/users/{id}/roles` | JWT + ADMIN | [IMPLEMENTADO] |
+| GET | `/users` (alias `/api/v1/users`, `/api/users`) | JWT + ADMIN | [IMPLEMENTADO] (cada item incluye `roles: string[]`) |
+| POST | `/users` (alias `/api/v1/users`) | JWT + ADMIN | [IMPLEMENTADO] |
+| PUT | `/users/{id}` (alias `/api/v1/users/{id}`) | JWT + ADMIN | [IMPLEMENTADO] |
+| DELETE | `/users/{id}` (alias `/api/v1/users/{id}`) | JWT + ADMIN | [IMPLEMENTADO] |
+| POST | `/users/{id}/roles` (alias `/api/v1/users/{id}/roles`) | JWT + ADMIN | [IMPLEMENTADO] |
 | GET | `/tenants/{id}/config` | JWT | [IMPLEMENTADO] |
 | PUT | `/tenants/{id}/config` | JWT + ADMIN | [IMPLEMENTADO] |
 | GET | `/sucursales` | JWT | [IMPLEMENTADO] |
@@ -244,8 +244,8 @@ GET/POST/PUT/DELETE /api/tenants
 ## Tests
 
 - **Seed de desarrollo:** crea tenant y cajero demo al iniciar [IMPLEMENTADO]
-- **Tests unitarios:** NO encontrados
-- **Tests de integración de edición de usuario:** `ActualizarUsuarioIntegrationTests`, tres escenarios verificados para TI3-454; ver contrato del PUT arriba.
+- **Tests unitarios:** `CrearUsuarioDtoValidatorTests` (16 casos cubriendo nombre, email y contraseña fuerte) [IMPLEMENTADO]
+- **Tests de integración:** `AuthIntegrationTests` (login y emisión de JWT), `UserIntegrationTests` (POST /users, hasheo BCrypt, asignación tenant_id, validación y control de duplicados) [IMPLEMENTADO]
 - **Tests manuales:** vía Swagger UI en `/swagger`
 
 ## Brechas respecto al diseño
