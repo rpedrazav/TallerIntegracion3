@@ -262,20 +262,19 @@ public class UsuarioController : ControllerBase
         Guid id,
         [FromBody] AsignarRolesDto request)
     {
-        if (request.Roles is null || request.Roles.Count == 0)
+        if (request.RoleIds is null || request.RoleIds.Count == 0)
             return BadRequest(new { message = "Debe enviar al menos un rol." });
 
-        var requestedRoles = request.Roles
-            .Select(role => role.Trim())
-            .Where(role => role.Length > 0)
-            .Distinct(StringComparer.OrdinalIgnoreCase)
+        var requestedRoles = request.RoleIds
+            .Where(r => r != Guid.Empty)
+            .Distinct()
             .ToList();
 
         if (requestedRoles.Count == 0)
             return BadRequest(new { message = "Debe enviar al menos un rol válido." });
 
-        if (requestedRoles.Any(role =>
-                string.Equals(role, "SUPER_ADMIN", StringComparison.OrdinalIgnoreCase)))
+        var superAdminId = Guid.Parse("11111111-0000-0000-0000-000000000004");
+        if (requestedRoles.Contains(superAdminId))
         {
             return StatusCode(StatusCodes.Status403Forbidden,
                 new { message = "Un administrador de tenant no puede asignar SUPER_ADMIN." });
@@ -289,7 +288,7 @@ public class UsuarioController : ControllerBase
         if (usuario is null)
             return NotFound(new { message = "Usuario no encontrado." });
 
-        var result = await _usuarioRepository.AssignRolesAsync(id, requestedRoles, tenantId);
+        var result = await _usuarioRepository.AssignRolesAsync(id, tenantId, requestedRoles);
         if (result.InvalidRoles.Count > 0)
         {
             return BadRequest(new

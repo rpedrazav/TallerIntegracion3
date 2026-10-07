@@ -2,5 +2,5 @@ namespace TenantIdentityService.DTOs;
 
 public class AsignarRolesDto
 {
-    public List<string> Roles { get; set; } = [];
+    public List<Guid> RoleIds { get; set; } = new();
 }

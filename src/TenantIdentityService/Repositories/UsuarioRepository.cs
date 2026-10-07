@@ -133,39 +133,25 @@ public class UsuarioRepository : IUsuarioRepository
         return updated > 0;
     }
 
-    public async Task<AssignRolesResult> AssignRolesAsync(
-        Guid userId,
-        IEnumerable<string> roleNames,
-        Guid tenantId)
+    public async Task<AssignRolesResult> AssignRolesAsync(Guid userId, Guid tenantId, IEnumerable<Guid> roleIds)
     {
         var usuario = await _db.Usuarios
             .IgnoreQueryFilters()
+            .Include(u => u.UsuarioRoles)
             .FirstOrDefaultAsync(existing => existing.Id == userId
                                           && existing.TenantId == tenantId);
 
         if (usuario is null)
-        {
-            return new AssignRolesResult
-            {
-                UserFound = false
-            };
-        }
+            return new AssignRolesResult { UserFound = false };
 
-        var normalizedRoleNames = roleNames
-            .Select(roleName => roleName.Trim().ToUpperInvariant())
-            .Distinct()
-            .ToArray();
-
+        var distinctRoleIds = roleIds.Distinct().ToArray();
+        
         var roles = await _db.Roles
-            .Where(role => normalizedRoleNames.Contains(role.Nombre.ToUpper()))
+            .Where(role => distinctRoleIds.Contains(role.Id))
             .ToListAsync();
 
-        var validRoleNames = roles
-            .Select(role => role.Nombre.ToUpperInvariant())
-            .ToHashSet();
-        var invalidRoles = normalizedRoleNames
-            .Where(roleName => !validRoleNames.Contains(roleName))
-            .ToArray();
+        var validRoleIds = roles.Select(role => role.Id).ToHashSet();
+        var invalidRoles = distinctRoleIds.Except(validRoleIds).ToArray();
 
         if (invalidRoles.Length > 0)
         {
@@ -177,16 +163,15 @@ public class UsuarioRepository : IUsuarioRepository
             };
         }
 
-        var currentAssignments = await _db.UsuarioRoles
-            .Where(usuarioRol => usuarioRol.UsuarioId == userId)
-            .ToListAsync();
-
-        _db.UsuarioRoles.RemoveRange(currentAssignments);
-        _db.UsuarioRoles.AddRange(roles.Select(role => new UsuarioRol
+        usuario.UsuarioRoles.Clear();
+        foreach (var role in roles)
         {
-            UsuarioId = userId,
-            RolId = role.Id
-        }));
+            usuario.UsuarioRoles.Add(new UsuarioRol
+            {
+                UsuarioId = userId,
+                RolId = role.Id
+            });
+        }
 
         await _db.SaveChangesAsync();
 
@@ -196,6 +181,14 @@ public class UsuarioRepository : IUsuarioRepository
             Usuario = usuario
         };
     }
+
+    public async Task<AssignRolesResult> AssignRolesAsync(Guid userId, IEnumerable<string> roleNames, Guid tenantId)
+    {
+        var normalizedRoleNames = roleNames.Select(r => r.Trim().ToUpperInvariant()).Distinct().ToArray();
+        var roles = await _db.Roles.Where(r => normalizedRoleNames.Contains(r.Nombre.ToUpper())).ToListAsync();
+        return await AssignRolesAsync(userId, tenantId, roles.Select(r => r.Id));
+    }
+
 
     public async Task<IReadOnlyList<string>> ValidateRoleNamesAsync(IEnumerable<string> roleNames)
     {

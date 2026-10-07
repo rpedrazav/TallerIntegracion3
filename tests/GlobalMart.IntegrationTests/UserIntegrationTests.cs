@@ -358,6 +358,118 @@ public class UserIntegrationTests : IClassFixture<Ms1WebApplicationFactory>
         Assert.All(items, item => Assert.Equal(tenantA, item.GetProperty("tenantId").GetGuid()));
     }
 
+
+
+    [Fact]
+    public async Task PostUserRoles_RoleIdsValidos_ActualizaAtomicamenteYRetorna200OK()
+    {
+        var tenantId = Guid.NewGuid();
+        var adminId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        Guid rolCajeroId;
+        Guid rolReponedorId;
+
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<TenantDbContext>();
+            db.Database.Migrate();
+
+            // Setup Tenant & User
+            db.Tenants.Add(new Tenant { Id = tenantId, Nombre = $"Tenant GuidRoles {tenantId:N}", Pais = "CL", Moneda = "CLP" });
+            var usuario = new Usuario { Id = userId, TenantId = tenantId, Nombre = "User Guids", Email = $"g_{Guid.NewGuid():N}@t.cl", PasswordHash = "h", Activo = true };
+            db.Usuarios.Add(usuario);
+
+            // Obtener Guids reales de roles desde la base efímera
+            rolCajeroId = await db.Roles.Where(r => r.Nombre == "CAJERO").Select(r => r.Id).SingleAsync();
+            rolReponedorId = await db.Roles.Where(r => r.Nombre == "REPONEDOR").Select(r => r.Id).SingleAsync();
+
+            // Asignar CAJERO
+            db.UsuarioRoles.Add(new UsuarioRol { UsuarioId = userId, RolId = rolCajeroId });
+            await db.SaveChangesAsync();
+        }
+
+        var configuration = _factory.Services.GetRequiredService<IConfiguration>();
+        var token = CreateAdminToken(configuration, tenantId, adminId);
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        // Act: Enviar ID de REPONEDOR
+        var payload = new { RoleIds = new[] { rolReponedorId } };
+        var response = await _client.PostAsJsonAsync($"/api/v1/users/{userId}/roles", payload);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<TenantDbContext>();
+            var rolesEnDb = await db.UsuarioRoles.Where(ur => ur.UsuarioId == userId).ToListAsync();
+            
+            Assert.Single(rolesEnDb);
+            Assert.Equal(rolReponedorId, rolesEnDb.First().RolId);
+        }
+    }
+
+    [Fact]
+    public async Task PostUserRoles_GuidFalso_Retorna400BadRequest()
+    {
+        var tenantId = Guid.NewGuid();
+        var adminId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<TenantDbContext>();
+            db.Database.Migrate();
+
+            db.Tenants.Add(new Tenant { Id = tenantId, Nombre = $"Tenant BadGuid {tenantId:N}", Pais = "CL", Moneda = "CLP" });
+            db.Usuarios.Add(new Usuario { Id = userId, TenantId = tenantId, Nombre = "User Bad", Email = $"b_{Guid.NewGuid():N}@t.cl", PasswordHash = "h", Activo = true });
+            await db.SaveChangesAsync();
+        }
+
+        var configuration = _factory.Services.GetRequiredService<IConfiguration>();
+        var token = CreateAdminToken(configuration, tenantId, adminId);
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        // Act: Enviar Guid aleatorio inexistente
+        var invalidGuid = Guid.NewGuid();
+        var payload = new { RoleIds = new[] { invalidGuid } };
+        var response = await _client.PostAsJsonAsync($"/api/v1/users/{userId}/roles", payload);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task PostUserRoles_UsuarioOtroTenant_Retorna404NotFound()
+    {
+        var tenantA = Guid.NewGuid();
+        var tenantB = Guid.NewGuid();
+        var adminA = Guid.NewGuid();
+        var userIdEnB = Guid.NewGuid();
+        Guid rolCajeroId;
+
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<TenantDbContext>();
+            db.Database.Migrate();
+
+            db.Tenants.Add(new Tenant { Id = tenantA, Nombre = $"Tenant A {tenantA:N}", Pais = "CL", Moneda = "CLP" });
+            db.Tenants.Add(new Tenant { Id = tenantB, Nombre = $"Tenant B {tenantB:N}", Pais = "CL", Moneda = "CLP" });
+            
+            db.Usuarios.Add(new Usuario { Id = userIdEnB, TenantId = tenantB, Nombre = "User B", Email = $"b_{Guid.NewGuid():N}@t.cl", PasswordHash = "h", Activo = true });
+            
+            rolCajeroId = await db.Roles.Where(r => r.Nombre == "CAJERO").Select(r => r.Id).SingleAsync();
+            await db.SaveChangesAsync();
+        }
+
+        var configuration = _factory.Services.GetRequiredService<IConfiguration>();
+        var tokenA = CreateAdminToken(configuration, tenantA, adminA);
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", tokenA);
+
+        var payload = new { RoleIds = new[] { rolCajeroId } };
+        var response = await _client.PostAsJsonAsync($"/api/v1/users/{userIdEnB}/roles", payload);
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
     private static string CreateAdminToken(IConfiguration configuration, Guid tenantId, Guid adminId)
     {
         var key = configuration["Jwt:Key"]
