@@ -77,6 +77,26 @@ public class UsuarioRepository : IUsuarioRepository
         return usuarioExistente;
     }
 
+    public async Task<UsuarioActualizadoDto?> UpdateBasicAsync(
+        Guid id, Guid tenantId, ActualizarUsuarioDto request)
+    {
+        var usuario = await _db.CuentasUsuarios
+            .SingleOrDefaultAsync(u => u.Id == id && u.TenantId == tenantId);
+        if (usuario is null)
+            return null;
+
+        // El UPDATE también filtra por tenant. El índice real arbitra duplicados,
+        // incluso si dos solicitudes intentan guardar el mismo email simultáneamente.
+        var updated = await _db.CuentasUsuarios
+            .Where(u => u.Id == id && u.TenantId == tenantId)
+            .ExecuteUpdateAsync(setters => setters
+                .SetProperty(u => u.Email, request.Email)
+                .SetProperty(u => u.SucursalId, request.SucursalId));
+
+        return updated == 0 ? null
+            : new UsuarioActualizadoDto(id, tenantId, request.Email, request.SucursalId);
+    }
+
     public async Task<bool> DeactivateAsync(Guid id, Guid tenantId)
     {
         var usuario = await _db.Usuarios

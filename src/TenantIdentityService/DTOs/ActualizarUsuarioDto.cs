@@ -5,9 +5,9 @@ namespace TenantIdentityService.DTOs;
 public class ActualizarUsuarioDto
 {
     [Required]
-    public string Nombre { get; set; } = string.Empty;
-
-    [Required]
     [EmailAddress]
+    [MaxLength(200)]
     public string Email { get; set; } = string.Empty;
+
+    public Guid? SucursalId { get; set; }
 }

@@ -43,6 +43,7 @@ reglas: []
 **Implementado:**
 - `POST /auth/login` — genera JWT con tenant_id, roles, active_role (expiración: 8 horas por defecto en appsettings.json) [IMPLEMENTADO]
 - `GET/POST/PUT/DELETE /api/v1/users` — CRUD usuarios con RBAC [IMPLEMENTADO]
+- TI3-454: `PUT /api/v1/users/{id}` edita solo `Email` obligatorio y `SucursalId` nullable en la tabla `users`; exige ADMIN, filtra por tenant del JWT y devuelve 409 para `uq_users_tenant_email` o 404 para ID ajeno/inexistente. Tres tests con `Ms1WebApplicationFactory` y PostgreSQL aislado pasaron el 2026-10-06 [IMPLEMENTADO]. El resto del CRUD/login conserva el modelo legacy `Usuarios`; la existencia del esquema `users` en la base de destino y sus FKs están [NO VERIFICADO]. Ver [contrato y discrepancia de esquemas](servicios/ms1-identity.md#put-apiv1usersid--ti3-454).
 - `POST /api/v1/users/{id}/roles` — asignar roles (sin SUPER_ADMIN) [IMPLEMENTADO]
 - `GET/PUT /tenants/{id}/config` — config de tenant (país, moneda, IVA) [IMPLEMENTADO]
 - `GET /sucursales` — lista sucursales del tenant del JWT, con zona horaria efectiva [IMPLEMENTADO]
