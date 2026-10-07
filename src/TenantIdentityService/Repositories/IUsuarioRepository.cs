@@ -15,6 +15,8 @@ public interface IUsuarioRepository
 
     Task<Usuario> UpdateAsync(Usuario usuario);
 
+    Task<UsuarioActualizadoDto?> UpdateBasicAsync(Guid id, Guid tenantId, ActualizarUsuarioDto request);
+
     Task<bool> DeactivateAsync(Guid id, Guid tenantId);
 
     Task<AssignRolesResult> AssignRolesAsync(

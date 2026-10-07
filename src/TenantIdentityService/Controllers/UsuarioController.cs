@@ -3,6 +3,7 @@ using System.Security.Claims;
 using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Npgsql;
 using TenantIdentityService.DTOs;
 using TenantIdentityService.Exceptions;
 using TenantIdentityService.Models;
@@ -174,12 +175,13 @@ public class UsuarioController : ControllerBase
     /// <response code="403">No tienes permisos.</response>
     /// <response code="404">Usuario no encontrado.</response>
     [HttpPut("{id:guid}")]
-    [ProducesResponseType(typeof(UsuarioDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(UsuarioActualizadoDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<UsuarioDto>> UpdateUser(
+    public async Task<ActionResult<UsuarioActualizadoDto>> UpdateUser(
         Guid id,
         [FromBody] ActualizarUsuarioDto request)
     {
@@ -187,16 +189,19 @@ public class UsuarioController : ControllerBase
         if (!Guid.TryParse(tenantClaim, out var tenantId))
             return Unauthorized(new { message = "El token no contiene un tenant_id válido." });
 
-        var usuario = await _usuarioRepository.GetByIdAsync(id, tenantId);
-        if (usuario is null)
-            return NotFound(new { message = "Usuario no encontrado." });
-
-        usuario.Nombre = request.Nombre;
-        usuario.Email = request.Email;
-
-        var usuarioActualizado = await _usuarioRepository.UpdateAsync(usuario);
-
-        return Ok(MapToDto(usuarioActualizado));
+        try
+        {
+            var usuario = await _usuarioRepository.UpdateBasicAsync(id, tenantId, request);
+            return usuario is null
+                ? NotFound(new { message = "Usuario no encontrado." })
+                : Ok(usuario);
+        }
+        catch (PostgresException ex) when (
+            ex.SqlState == PostgresErrorCodes.UniqueViolation &&
+            ex.ConstraintName == "uq_users_tenant_email")
+        {
+            return Conflict(new { message = "El email ya pertenece a otro usuario del tenant." });
+        }
     }
 
     /// <summary>
