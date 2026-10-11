@@ -1,0 +1,160 @@
+Summary,Description,Assignee,Priority,Sprints,Semana,AreaTrabajo,Tags,Estimation
+"Crear `CreateUsuarioDto` y validadores (nombre, email, password fuerte).",Microservicio/Subsistema: MS-1 CRUD Usuarios y Roles (Deuda S1),msanhueza2024,Facil,Sprint 2,Semana 5,Backend,Semana 5,40m
+"Implementar `POST /users`: Hashear password con BCrypt, asignar `tenant_id` del JWT, guardar en BD.",Microservicio/Subsistema: MS-1 CRUD Usuarios y Roles (Deuda S1),msanhueza2024,Medio,Sprint 2,Semana 5,Backend,Semana 5,50m
+Implementar `GET /users`: Listar usuarios del tenant (paginado).,Microservicio/Subsistema: MS-1 CRUD Usuarios y Roles (Deuda S1),msanhueza2024,Facil,Sprint 2,Semana 5,Backend,Semana 5,40m
+Implementar `PUT /users/{id}`: Editar datos básicos de usuario.,Microservicio/Subsistema: MS-1 CRUD Usuarios y Roles (Deuda S1),msanhueza2024,Facil,Sprint 2,Semana 5,Backend,Semana 5,40m
+Implementar `DELETE /users/{id}`: Soft delete (Activo = false).,Microservicio/Subsistema: MS-1 CRUD Usuarios y Roles (Deuda S1),msanhueza2024,Facil,Sprint 2,Semana 5,Backend,Semana 5,30m
+"Implementar `POST /users/{id}/roles`: Recibir array de IDs de roles, limpiar roles actuales y asignar nuevos.",Microservicio/Subsistema: MS-1 CRUD Usuarios y Roles (Deuda S1),msanhueza2024,Medio,Sprint 2,Semana 5,Backend,Semana 5,50m
+Pruebas manuales Postman: flujo completo de creación de usuario y asignación de rol.,Microservicio/Subsistema: MS-1 CRUD Usuarios y Roles (Deuda S1),msanhueza2024,Facil,Sprint 2,Semana 5,Backend,Semana 5,50m
+MS-1: Implementar `PUT /tenants/{id}/config`: Validar que usuario es Admin y del mismo tenant.,Microservicio/Subsistema: Configuración Tenant y Middleware (Deuda S1),nmartinez2024,Medio,Sprint 2,Semana 5,Backend,Semana 5,50m
+"MS-1: Actualizar campos Moneda, Idioma, ZonaHoraria, PorcentajeIva.",Microservicio/Subsistema: Configuración Tenant y Middleware (Deuda S1),nmartinez2024,Facil,Sprint 2,Semana 5,Backend,Semana 5,40m
+MS-2: Crear `TenantMiddleware` copiándolo de MS-1 para extraer `tenant_id` del JWT.,Microservicio/Subsistema: Configuración Tenant y Middleware (Deuda S1),nmartinez2024,Medio,Sprint 2,Semana 5,Backend,Semana 5,50m
+MS-2: Registrar `TenantMiddleware` en `Program.cs` para habilitar query filters de EF Core.,Microservicio/Subsistema: Configuración Tenant y Middleware (Deuda S1),nmartinez2024,Facil,Sprint 2,Semana 5,Backend,Semana 5,30m
+MS-2: Refactorizar `TaxController` para remover validación manual de tenant usando el middleware.,Microservicio/Subsistema: Configuración Tenant y Middleware (Deuda S1),nmartinez2024,Medio,Sprint 2,Semana 5,Backend,Semana 5,40m
+Pruebas Postman: Actualizar config en MS-1 y verificar que `/tax/calculate` en MS-2 usa el nuevo IVA.,Microservicio/Subsistema: Configuración Tenant y Middleware (Deuda S1),nmartinez2024,Medio,Sprint 2,Semana 5,Backend,Semana 5,50m
+Revisión seguridad: Verificar expiración de JWT en ambos servicios.,Microservicio/Subsistema: Configuración Tenant y Middleware (Deuda S1),nmartinez2024,Facil,Sprint 2,Semana 5,Backend,Semana 5,40m
+Definir interfaz `IPaymentGatewayClient` y DTOs para envío/respuesta de pagos.,Microservicio/Subsistema: MS-5 Cobro Tarjeta,admin,Facil,Sprint 2,Semana 5,Backend,Semana 5,40m
+Implementar `PaymentGatewayClient` usando `HttpClient` (mock hacia pasarela externa).,Microservicio/Subsistema: MS-5 Cobro Tarjeta,admin,Medio,Sprint 2,Semana 5,Backend,Semana 5,50m
+Configurar políticas Polly (retries/timeout) en `PaymentGatewayClient` en `Program.cs`.,Microservicio/Subsistema: MS-5 Cobro Tarjeta,admin,Medio,Sprint 2,Semana 5,Backend,Semana 5,40m
+Implementar `POST /ventas/{id}/cobrar-tarjeta`: Validar estado de la venta.,Microservicio/Subsistema: MS-5 Cobro Tarjeta,admin,Facil,Sprint 2,Semana 5,Backend,Semana 5,40m
+"Lógica de cobro: Llamar a pasarela, manejar fallos de conexión.",Microservicio/Subsistema: MS-5 Cobro Tarjeta,admin,Medio,Sprint 2,Semana 5,Backend,Semana 5,40m
+"Lógica de cobro: Si aprueba -> COMPLETADA, generar evento Kafka `sale.completed`.",Microservicio/Subsistema: MS-5 Cobro Tarjeta,admin,Alta,Sprint 2,Semana 5,Backend,Semana 5,50m
+"Lógica de cobro: Si rechaza -> Retornar error al frontend, mantener estado PENDIENTE.",Microservicio/Subsistema: MS-5 Cobro Tarjeta,admin,Medio,Sprint 2,Semana 5,Backend,Semana 5,40m
+"Crear vista `UsuariosList`: Tabla con lista de usuarios (nombre, email, roles).",Microservicio/Subsistema: Pantallas Admin Usuarios (Deuda S1),dprado2024,Medio,Sprint 2,Semana 5,Frontend,Semana 5,50m
+Conectar tabla con `GET /users` de MS-1.,Microservicio/Subsistema: Pantallas Admin Usuarios (Deuda S1),dprado2024,Medio,Sprint 2,Semana 5,Frontend,Semana 5,40m
+Crear modal `CrearUsuarioModal`: Inputs y validación frontend.,Microservicio/Subsistema: Pantallas Admin Usuarios (Deuda S1),dprado2024,Medio,Sprint 2,Semana 5,Frontend,Semana 5,45m
+Conectar formulario con `POST /users` de MS-1.,Microservicio/Subsistema: Pantallas Admin Usuarios (Deuda S1),dprado2024,Medio,Sprint 2,Semana 5,Frontend,Semana 5,45m
+"Crear vista `TenantConfig`: Formulario para IVA, Moneda, Zona Horaria.",Microservicio/Subsistema: Pantallas Admin Usuarios (Deuda S1),dprado2024,Medio,Sprint 2,Semana 5,Frontend,Semana 5,50m
+Conectar `TenantConfig` con `PUT /tenants/{id}/config`.,Microservicio/Subsistema: Pantallas Admin Usuarios (Deuda S1),dprado2024,Medio,Sprint 2,Semana 5,Frontend,Semana 5,40m
+Manejo de errores y spinners de carga en ambas vistas.,Microservicio/Subsistema: Pantallas Admin Usuarios (Deuda S1),dprado2024,Facil,Sprint 2,Semana 5,Frontend,Semana 5,30m
+"Crear modelo `Lote`: id, producto_id, cantidad, fecha_vencimiento, tenant_id.",Microservicio/Subsistema: MS-4 FEFO Básico,dleiva2024,Facil,Sprint 2,Semana 5,Backend,Semana 5,40m
+Migración EF Core: Crear tabla `Lotes` y aplicar a PostgreSQL.,Microservicio/Subsistema: MS-4 FEFO Básico,dleiva2024,Medio,Sprint 2,Semana 5,Backend,Semana 5,40m
+Actualizar `POST /seed`: Generar lotes con fechas de vencimiento variables.,Microservicio/Subsistema: MS-4 FEFO Básico,dleiva2024,Medio,Sprint 2,Semana 5,Backend,Semana 5,50m
+Refactorizar `StockRepository.Descontar`: Buscar lotes del producto ordenados por `fecha_vencimiento` ASC.,Microservicio/Subsistema: MS-4 FEFO Básico,dleiva2024,Alta,Sprint 2,Semana 5,Backend,Semana 5,50m
+Lógica FEFO: Descontar cantidad iterando sobre lotes (pasar al siguiente si uno se vacía) hasta cubrir la venta.,Microservicio/Subsistema: MS-4 FEFO Básico,dleiva2024,Alta,Sprint 2,Semana 5,Backend,Semana 5,60m
+Actualizar consumidor Kafka `sale.completed`: Llamar al nuevo método FEFO.,Microservicio/Subsistema: MS-4 FEFO Básico,dleiva2024,Medio,Sprint 2,Semana 5,Backend,Semana 5,30m
+Pruebas unitarias de la matemática de descuento entre múltiples lotes.,Microservicio/Subsistema: MS-4 FEFO Básico,dleiva2024,Medio,Sprint 2,Semana 5,Backend,Semana 5,30m
+Crear modal `CobroTarjetaModal` en la vista del POS.,Microservicio/Subsistema: Pantalla Cobro Tarjeta,spereda2024,Medio,Sprint 2,Semana 5,Frontend,Semana 5,40m
+"UI de estados: Diseñar vistas de ""Procesando..."", ""Aprobado"" (verde) y ""Rechazado"" (rojo).",Microservicio/Subsistema: Pantalla Cobro Tarjeta,spereda2024,Medio,Sprint 2,Semana 5,Frontend,Semana 5,50m
+Integrar API: Llamar a `POST /ventas/{id}/cobrar-tarjeta` al confirmar pago.,Microservicio/Subsistema: Pantalla Cobro Tarjeta,spereda2024,Medio,Sprint 2,Semana 5,Frontend,Semana 5,40m
+"Manejo de éxito: Limpiar carrito, mostrar mensaje, cerrar modal.",Microservicio/Subsistema: Pantalla Cobro Tarjeta,spereda2024,Medio,Sprint 2,Semana 5,Frontend,Semana 5,50m
+"Manejo de error: Mostrar rechazo, botón ""Reintentar"" o ""Cambiar método"".",Microservicio/Subsistema: Pantalla Cobro Tarjeta,spereda2024,Medio,Sprint 2,Semana 5,Frontend,Semana 5,50m
+"Actualizar botón ""Cobrar"" principal para ofrecer opciones emergentes (Efectivo/Tarjeta).",Microservicio/Subsistema: Pantalla Cobro Tarjeta,spereda2024,Medio,Sprint 2,Semana 5,Frontend,Semana 5,40m
+Pruebas manuales UI: Simular rechazos y demoras.,Microservicio/Subsistema: Pantalla Cobro Tarjeta,spereda2024,Facil,Sprint 2,Semana 5,Frontend,Semana 5,30m
+Completar modelo `DocumentoTributario` (Comprobante) con campos relacionales.,Microservicio/Subsistema: MS-2 Comprobantes (Deuda S1),msanhueza2024,Facil,Sprint 2,Semana 6,Backend,Semana 6,40m
+Crear migración y usar SQL Raw para crear un `SEQUENCE` por tenant para generación de folios.,Microservicio/Subsistema: MS-2 Comprobantes (Deuda S1),msanhueza2024,Alta,Sprint 2,Semana 6,Backend,Semana 6,60m
+Implementar repositorio para obtener y guardar `DocumentoTributario`.,Microservicio/Subsistema: MS-2 Comprobantes (Deuda S1),msanhueza2024,Medio,Sprint 2,Semana 6,Backend,Semana 6,40m
+Implementar `POST /comprobantes`: Obtener NextVal del SEQUENCE atómico y guardar en BD.,Microservicio/Subsistema: MS-2 Comprobantes (Deuda S1),msanhueza2024,Alta,Sprint 2,Semana 6,Backend,Semana 6,60m
+Implementar `GET /comprobantes/{id}`: Retornar detalle completo.,Microservicio/Subsistema: MS-2 Comprobantes (Deuda S1),msanhueza2024,Facil,Sprint 2,Semana 6,Backend,Semana 6,40m
+Pruebas Postman: Enviar 10 requests concurrentes para validar que el SEQUENCE no da duplicados.,Microservicio/Subsistema: MS-2 Comprobantes (Deuda S1),msanhueza2024,Alta,Sprint 2,Semana 6,Backend,Semana 6,60m
+Crear `DteXmlGeneratorService`: Construir string XML base según norma fiscal.,Microservicio/Subsistema: MS-2 Emisión DTE,nmartinez2024,Alta,Sprint 2,Semana 6,Backend,Semana 6,60m
+Crear stub `SIIClient`: Mock HTTP hacia SII/AFIP para solicitar validación de folio.,Microservicio/Subsistema: MS-2 Emisión DTE,nmartinez2024,Medio,Sprint 2,Semana 6,Backend,Semana 6,40m
+"Implementar `POST /dte/emitir`: Recibir datos, generar XML, llamar a SIIClient.",Microservicio/Subsistema: MS-2 Emisión DTE,nmartinez2024,Medio,Sprint 2,Semana 6,Backend,Semana 6,50m
+Manejo de estados: PENDIENTE -> EMITIDO (con timbre) o RECHAZADO.,Microservicio/Subsistema: MS-2 Emisión DTE,nmartinez2024,Medio,Sprint 2,Semana 6,Backend,Semana 6,40m
+Actualizar BD guardando el Código de Autorización Fiscal retornado.,Microservicio/Subsistema: MS-2 Emisión DTE,nmartinez2024,Medio,Sprint 2,Semana 6,Backend,Semana 6,40m
+Configurar Polly para reintentos automáticos en caso de timeout del SIIClient.,Microservicio/Subsistema: MS-2 Emisión DTE,nmartinez2024,Medio,Sprint 2,Semana 6,Backend,Semana 6,40m
+Pruebas unitarias de generación del string XML.,Microservicio/Subsistema: MS-2 Emisión DTE,nmartinez2024,Facil,Sprint 2,Semana 6,Backend,Semana 6,30m
+"Crear DTO `CobroMixtoRequest`: Lista de métodos y montos (Tarjeta $5000, Efectivo $2000).",Microservicio/Subsistema: MS-5 Pagos Mixtos,admin,Facil,Sprint 2,Semana 6,Backend,Semana 6,40m
+Implementar `POST /ventas/{id}/cobrar-mixto`: Validar que la suma cubra el total exacto.,Microservicio/Subsistema: MS-5 Pagos Mixtos,admin,Medio,Sprint 2,Semana 6,Backend,Semana 6,40m
+Lógica mixta: Cobrar primero el componente de Tarjeta usando pasarela.,Microservicio/Subsistema: MS-5 Pagos Mixtos,admin,Alta,Sprint 2,Semana 6,Backend,Semana 6,50m
+"Lógica mixta: Si tarjeta falla, abortar cobro efectivo. Si aprueba, calcular vuelto de la fracción en efectivo.",Microservicio/Subsistema: MS-5 Pagos Mixtos,admin,Alta,Sprint 2,Semana 6,Backend,Semana 6,60m
+Modificar evento Kafka `sale.completed` para detallar distribución de métodos de pago.,Microservicio/Subsistema: MS-5 Pagos Mixtos,admin,Medio,Sprint 2,Semana 6,Backend,Semana 6,40m
+Pruebas Postman: Escenarios de fallo parcial (ej. tarjeta rechazada).,Microservicio/Subsistema: MS-5 Pagos Mixtos,admin,Alta,Sprint 2,Semana 6,Backend,Semana 6,70m
+Crear modal `ReciboVenta` que aparece tras un cobro exitoso.,Microservicio/Subsistema: Pantallas Comprobantes y Pago Mixto,dprado2024,Medio,Sprint 2,Semana 6,Frontend,Semana 6,50m
+Conectar `ReciboVenta` con `GET /comprobantes/{id}`.,Microservicio/Subsistema: Pantallas Comprobantes y Pago Mixto,dprado2024,Medio,Sprint 2,Semana 6,Frontend,Semana 6,40m
+"Botón ""Imprimir"" que invoca ventana de impresión de Electron.",Microservicio/Subsistema: Pantallas Comprobantes y Pago Mixto,dprado2024,Medio,Sprint 2,Semana 6,Frontend,Semana 6,40m
+"Modificar modal de cobro para opción ""Pago Mixto"" (inputs separados de efectivo/tarjeta).",Microservicio/Subsistema: Pantallas Comprobantes y Pago Mixto,dprado2024,Alta,Sprint 2,Semana 6,Frontend,Semana 6,50m
+Validación en vivo: Restar monto tarjeta del total para sugerir monto en efectivo necesario.,Microservicio/Subsistema: Pantallas Comprobantes y Pago Mixto,dprado2024,Medio,Sprint 2,Semana 6,Frontend,Semana 6,40m
+Integrar frontend con API `POST /ventas/{id}/cobrar-mixto`.,Microservicio/Subsistema: Pantallas Comprobantes y Pago Mixto,dprado2024,Medio,Sprint 2,Semana 6,Frontend,Semana 6,50m
+Manejo de errores específicos para pagos mixtos en la UI.,Microservicio/Subsistema: Pantallas Comprobantes y Pago Mixto,dprado2024,Facil,Sprint 2,Semana 6,Frontend,Semana 6,30m
+"Crear modelos MS-6: `Proveedor`, `OrdenCompra`, `ItemOrdenCompra`.",Microservicio/Subsistema: MS-6 Supply Chain Base,dleiva2024,Medio,Sprint 2,Semana 6,Backend,Semana 6,50m
+Crear migraciones y `AppDbContext` para MS-6 con filtro de tenant.,Microservicio/Subsistema: MS-6 Supply Chain Base,dleiva2024,Medio,Sprint 2,Semana 6,Backend,Semana 6,40m
+"Implementar CRUD Proveedores (`GET`, `POST`, `PUT`).",Microservicio/Subsistema: MS-6 Supply Chain Base,dleiva2024,Medio,Sprint 2,Semana 6,Backend,Semana 6,50m
+Implementar `POST /ordenes-compra`: Crear cabecera OC en estado BORRADOR.,Microservicio/Subsistema: MS-6 Supply Chain Base,dleiva2024,Medio,Sprint 2,Semana 6,Backend,Semana 6,50m
+Implementar listado (`GET`) y detalle (`GET /id`) de Órdenes de Compra.,Microservicio/Subsistema: MS-6 Supply Chain Base,dleiva2024,Medio,Sprint 2,Semana 6,Backend,Semana 6,50m
+Configurar Swagger y autenticación JWT en MS-6.,Microservicio/Subsistema: MS-6 Supply Chain Base,dleiva2024,Medio,Sprint 2,Semana 6,Backend,Semana 6,60m
+Crear vista `ProveedoresList`: Tabla de proveedores del tenant.,Microservicio/Subsistema: Pantalla Supply Chain Base,spereda2024,Facil,Sprint 2,Semana 6,Frontend,Semana 6,40m
+Formulario `ProveedorModal` conectado a la API.,Microservicio/Subsistema: Pantalla Supply Chain Base,spereda2024,Medio,Sprint 2,Semana 6,Frontend,Semana 6,50m
+Crear vista `OrdenesCompraList`: Tabla de órdenes con badges de estado.,Microservicio/Subsistema: Pantalla Supply Chain Base,spereda2024,Facil,Sprint 2,Semana 6,Frontend,Semana 6,40m
+Crear vista `OrdenCompraDetail`: Formulario para cabecera de la OC.,Microservicio/Subsistema: Pantalla Supply Chain Base,spereda2024,Medio,Sprint 2,Semana 6,Frontend,Semana 6,40m
+UI para buscar productos (MS-3) y agregarlos como Items a la OC.,Microservicio/Subsistema: Pantalla Supply Chain Base,spereda2024,Alta,Sprint 2,Semana 6,Frontend,Semana 6,60m
+"Botón ""Guardar Borrador"" que envía el JSON al MS-6.",Microservicio/Subsistema: Pantalla Supply Chain Base,spereda2024,Medio,Sprint 2,Semana 6,Frontend,Semana 6,40m
+Pruebas de integración visuales.,Microservicio/Subsistema: Pantalla Supply Chain Base,spereda2024,Facil,Sprint 2,Semana 6,Frontend,Semana 6,30m
+"Crear modelos `Devolucion`, `ItemDevolucion` atados a una Venta.",Microservicio/Subsistema: MS-5 Devoluciones,msanhueza2024,Facil,Sprint 2,Semana 7,Backend,Semana 7,40m
+Implementar `POST /ventas/{id}/devolucion-total`: Validar que venta está COMPLETADA.,Microservicio/Subsistema: MS-5 Devoluciones,msanhueza2024,Medio,Sprint 2,Semana 7,Backend,Semana 7,40m
+Lógica: Llamar a pasarela para reembolso si hubo cobro con tarjeta.,Microservicio/Subsistema: MS-5 Devoluciones,msanhueza2024,Medio,Sprint 2,Semana 7,Backend,Semana 7,50m
+Lógica: Generar evento Kafka `sale.reversed` para reingresar stock en MS-4.,Microservicio/Subsistema: MS-5 Devoluciones,msanhueza2024,Alta,Sprint 2,Semana 7,Backend,Semana 7,60m
+Implementar `POST /ventas/{id}/devolucion-parcial`: Recibir array de items específicos.,Microservicio/Subsistema: MS-5 Devoluciones,msanhueza2024,Alta,Sprint 2,Semana 7,Backend,Semana 7,60m
+Recalcular subtotal e IVA proporcional a devolver en devolución parcial.,Microservicio/Subsistema: MS-5 Devoluciones,msanhueza2024,Alta,Sprint 2,Semana 7,Backend,Semana 7,50m
+"Modificar `OrdenCompra` para incluir: Flete, Seguro, Aranceles aduaneros.",Microservicio/Subsistema: MS-6 Costo Landed,nmartinez2024,Facil,Sprint 2,Semana 7,Backend,Semana 7,30m
+Implementar `PUT /ordenes-compra/{id}/costos-adicionales`.,Microservicio/Subsistema: MS-6 Costo Landed,nmartinez2024,Medio,Sprint 2,Semana 7,Backend,Semana 7,40m
+Crear `LandedCostCalculatorService`: Lógica de prorrateo proporcional al precio de items.,Microservicio/Subsistema: MS-6 Costo Landed,nmartinez2024,Alta,Sprint 2,Semana 7,Backend,Semana 7,60m
+Implementar `POST /ordenes-compra/{id}/landed-cost` que ejecute el cálculo.,Microservicio/Subsistema: MS-6 Costo Landed,nmartinez2024,Medio,Sprint 2,Semana 7,Backend,Semana 7,50m
+"Actualizar `ItemOrdenCompra` con el nuevo ""costo unitario real"" ajustado.",Microservicio/Subsistema: MS-6 Costo Landed,nmartinez2024,Medio,Sprint 2,Semana 7,Backend,Semana 7,40m
+Crear endpoint `PUT /ordenes-compra/{id}/aprobar` para congelar costos.,Microservicio/Subsistema: MS-6 Costo Landed,nmartinez2024,Medio,Sprint 2,Semana 7,Backend,Semana 7,40m
+Pruebas Postman: Validar que la suma del prorrateo coincida con los costos base.,Microservicio/Subsistema: MS-6 Costo Landed,nmartinez2024,Medio,Sprint 2,Semana 7,Backend,Semana 7,40m
+Crear vista `Devoluciones` accesible desde el navbar.,Microservicio/Subsistema: Pantalla Devoluciones,admin,Facil,Sprint 2,Semana 7,Frontend,Semana 7,40m
+Input buscador de ventas por ID de ticket o folio.,Microservicio/Subsistema: Pantalla Devoluciones,admin,Medio,Sprint 2,Semana 7,Frontend,Semana 7,40m
+Vista detalle: Mostrar items originales de la venta y montos.,Microservicio/Subsistema: Pantalla Devoluciones,admin,Medio,Sprint 2,Semana 7,Frontend,Semana 7,40m
+"Botón ""Devolución Total"" con alerta de confirmación.",Microservicio/Subsistema: Pantalla Devoluciones,admin,Facil,Sprint 2,Semana 7,Frontend,Semana 7,30m
+"UI ""Devolución Parcial"": Checkboxes/Inputs de cantidad por fila de producto.",Microservicio/Subsistema: Pantalla Devoluciones,admin,Alta,Sprint 2,Semana 7,Frontend,Semana 7,60m
+Integrar UI con APIs respectivas de MS-5.,Microservicio/Subsistema: Pantalla Devoluciones,admin,Medio,Sprint 2,Semana 7,Frontend,Semana 7,50m
+Feedback visual: Mostrar estado del reembolso bancario.,Microservicio/Subsistema: Pantalla Devoluciones,admin,Medio,Sprint 2,Semana 7,Frontend,Semana 7,40m
+"Agregar sección ""Costos Adicionales de Importación"" en la vista detalle OC.",Microservicio/Subsistema: Pantalla Landed Cost,dprado2024,Medio,Sprint 2,Semana 7,Frontend,Semana 7,40m
+"Formulario para ingresar Flete, Seguro, Aduana y llamar al `PUT`.",Microservicio/Subsistema: Pantalla Landed Cost,dprado2024,Medio,Sprint 2,Semana 7,Frontend,Semana 7,40m
+"Botón ""Calcular Costo Landed"" que invoca cálculo en backend.",Microservicio/Subsistema: Pantalla Landed Cost,dprado2024,Medio,Sprint 2,Semana 7,Frontend,Semana 7,30m
+"Agregar columna ""Costo Unitario Real"" en la tabla de la OC.",Microservicio/Subsistema: Pantalla Landed Cost,dprado2024,Medio,Sprint 2,Semana 7,Frontend,Semana 7,50m
+"Botón ""Aprobar OC"" para transicionar de BORRADOR a APROBADA.",Microservicio/Subsistema: Pantalla Landed Cost,dprado2024,Medio,Sprint 2,Semana 7,Frontend,Semana 7,40m
+"Crear modal de ""Recepción de Mercadería"" para OCs aprobadas.",Microservicio/Subsistema: Pantalla Landed Cost,dprado2024,Alta,Sprint 2,Semana 7,Frontend,Semana 7,50m
+Conectar modal con backend para cambiar estado a RECIBIDA.,Microservicio/Subsistema: Pantalla Landed Cost,dprado2024,Medio,Sprint 2,Semana 7,Frontend,Semana 7,50m
+Crear `BackgroundService` en MS-4 que ejecute un barrido periódico (ej. cada hora).,Microservicio/Subsistema: MS-4 Alertas Stock (Kafka),dleiva2024,Alta,Sprint 2,Semana 7,Backend,Semana 7,60m
+Query EF: Detectar productos donde cantidad en lotes <= stock mínimo.,Microservicio/Subsistema: MS-4 Alertas Stock (Kafka),dleiva2024,Medio,Sprint 2,Semana 7,Backend,Semana 7,40m
+Query EF: Detectar lotes con fecha vencimiento en < 7 días.,Microservicio/Subsistema: MS-4 Alertas Stock (Kafka),dleiva2024,Medio,Sprint 2,Semana 7,Backend,Semana 7,40m
+Integrar Productor Kafka dentro del HostedService.,Microservicio/Subsistema: MS-4 Alertas Stock (Kafka),dleiva2024,Medio,Sprint 2,Semana 7,Backend,Semana 7,30m
+Publicar eventos `stock.alert` y `expiry.alert`.,Microservicio/Subsistema: MS-4 Alertas Stock (Kafka),dleiva2024,Medio,Sprint 2,Semana 7,Backend,Semana 7,50m
+Crear tabla interna para evitar emitir la misma alerta 2 veces el mismo día.,Microservicio/Subsistema: MS-4 Alertas Stock (Kafka),dleiva2024,Alta,Sprint 2,Semana 7,Backend,Semana 7,60m
+Pruebas de ejecución en entorno local.,Microservicio/Subsistema: MS-4 Alertas Stock (Kafka),dleiva2024,Facil,Sprint 2,Semana 7,Backend,Semana 7,20m
+Configurar BD para MS-7 con tabla `Alertas`.,Microservicio/Subsistema: MS-7 Alertas y Tablas Base,spereda2024,Facil,Sprint 2,Semana 7,Backend,Semana 7,40m
+Crear Consumer Kafka en MS-7 para suscribirse a alertas de MS-4.,Microservicio/Subsistema: MS-7 Alertas y Tablas Base,spereda2024,Alta,Sprint 2,Semana 7,Backend,Semana 7,60m
+Lógica Consumer: Insertar alertas en BD (nivel severidad dinámico).,Microservicio/Subsistema: MS-7 Alertas y Tablas Base,spereda2024,Medio,Sprint 2,Semana 7,Backend,Semana 7,40m
+Implementar `GET /alertas`: Listado paginado de alertas activas del tenant.,Microservicio/Subsistema: MS-7 Alertas y Tablas Base,spereda2024,Medio,Sprint 2,Semana 7,Backend,Semana 7,40m
+Implementar `PUT /alertas/{id}/resolver`: Marcar alerta como gestionada.,Microservicio/Subsistema: MS-7 Alertas y Tablas Base,spereda2024,Medio,Sprint 2,Semana 7,Backend,Semana 7,40m
+Crear tabla `KPIVenta` para preparación de dashboards de la próxima semana.,Microservicio/Subsistema: MS-7 Alertas y Tablas Base,spereda2024,Medio,Sprint 2,Semana 7,Backend,Semana 7,40m
+Pruebas manuales: Forzar vencimiento en MS-4 y ver si llega a MS-7.,Microservicio/Subsistema: MS-7 Alertas y Tablas Base,spereda2024,Medio,Sprint 2,Semana 7,Backend,Semana 7,40m
+Crear Kafka Consumer en MS-7 escuchando `sale.completed` y `sale.reversed`.,Microservicio/Subsistema: MS-7 Dashboards en Tiempo Real,msanhueza2024,Alta,Sprint 2,Semana 8,Backend,Semana 8,60m
+"Lógica: Actualizar registros diarios en tabla `KPIVenta` (sumar ventas, recalcular ticket promedio).",Microservicio/Subsistema: MS-7 Dashboards en Tiempo Real,msanhueza2024,Alta,Sprint 2,Semana 8,Backend,Semana 8,60m
+Implementar `GET /dashboards/ventas`: Retornar resumen (ej: Hoy vs Ayer).,Microservicio/Subsistema: MS-7 Dashboards en Tiempo Real,msanhueza2024,Medio,Sprint 2,Semana 8,Backend,Semana 8,50m
+Implementar `GET /dashboards/top-productos`: Extraer lista agregada desde los items del evento Kafka.,Microservicio/Subsistema: MS-7 Dashboards en Tiempo Real,msanhueza2024,Medio,Sprint 2,Semana 8,Backend,Semana 8,50m
+Implementar `GET /dashboards/metodos-pago`: Métricas de Efectivo vs Tarjeta.,Microservicio/Subsistema: MS-7 Dashboards en Tiempo Real,msanhueza2024,Medio,Sprint 2,Semana 8,Backend,Semana 8,40m
+Pruebas: Disparar script simulador de ventas y ver reflejo en KPIs.,Microservicio/Subsistema: MS-7 Dashboards en Tiempo Real,msanhueza2024,Medio,Sprint 2,Semana 8,Backend,Semana 8,40m
+Crear página `DashboardAdmin` con sistema de grilla (CSS Grid/Tailwind).,Microservicio/Subsistema: Dashboard Admin UI,nmartinez2024,Medio,Sprint 2,Semana 8,Frontend,Semana 8,50m
+"Widgets superiores: Tarjetas de ""Ventas Totales"" y ""Ticket Promedio"" conectados a MS-7.",Microservicio/Subsistema: Dashboard Admin UI,nmartinez2024,Medio,Sprint 2,Semana 8,Frontend,Semana 8,40m
+Gráfico de barras simple (HTML/CSS o librería ligera) para Top Productos.,Microservicio/Subsistema: Dashboard Admin UI,nmartinez2024,Alta,Sprint 2,Semana 8,Frontend,Semana 8,60m
+"Panel lateral de ""Alertas Críticas"" conectado a `GET /alertas`.",Microservicio/Subsistema: Dashboard Admin UI,nmartinez2024,Medio,Sprint 2,Semana 8,Frontend,Semana 8,50m
+UI: Diferenciar visualmente alertas de Stock (Amarillo) y Vencimiento (Rojo).,Microservicio/Subsistema: Dashboard Admin UI,nmartinez2024,Facil,Sprint 2,Semana 8,Frontend,Semana 8,40m
+Botón en widget para resolver alertas.,Microservicio/Subsistema: Dashboard Admin UI,nmartinez2024,Medio,Sprint 2,Semana 8,Frontend,Semana 8,40m
+"Sistema de ""Refresco automático"" (polling ligero cada 60s) en Dashboard.",Microservicio/Subsistema: Dashboard Admin UI,nmartinez2024,Facil,Sprint 2,Semana 8,Frontend,Semana 8,20m
+MS-2: Crear Consumer Kafka escuchando el evento `sale.completed` de MS-5.,Microservicio/Subsistema: Integración DTE Asíncrona (MS-2/MS-5),admin,Alta,Sprint 2,Semana 8,Backend,Semana 8,50m
+"MS-2: Dentro del consumer, extraer payload, llamar internamente a `DteXmlGeneratorService`.",Microservicio/Subsistema: Integración DTE Asíncrona (MS-2/MS-5),admin,Alta,Sprint 2,Semana 8,Backend,Semana 8,60m
+MS-2: Emitir al SIIClient automáticamente tras procesar el XML en background.,Microservicio/Subsistema: Integración DTE Asíncrona (MS-2/MS-5),admin,Alta,Sprint 2,Semana 8,Backend,Semana 8,60m
+MS-2: Vincular el `DocumentoTributario` creado con el `venta_id` del evento.,Microservicio/Subsistema: Integración DTE Asíncrona (MS-2/MS-5),admin,Medio,Sprint 2,Semana 8,Backend,Semana 8,40m
+MS-5: Modificar `GET /ventas/{id}` para consultar a MS-2 y anexar el folio del DTE al ticket.,Microservicio/Subsistema: Integración DTE Asíncrona (MS-2/MS-5),admin,Medio,Sprint 2,Semana 8,Backend,Semana 8,50m
+Pruebas de integración entre MS-5 y MS-2 vía Kafka.,Microservicio/Subsistema: Integración DTE Asíncrona (MS-2/MS-5),admin,Medio,Sprint 2,Semana 8,Backend,Semana 8,40m
+Restricción Navbar: Ocultar acceso a Administración si `active_role` del JWT es `CAJERO`.,Microservicio/Subsistema: Refinamiento y Restricción de Roles,dprado2024,Medio,Sprint 2,Semana 8,Frontend,Semana 8,50m
+Implementar sistema de Notificaciones globales (Toasts) para feedback de UX (ej. Venta Exitosa).,Microservicio/Subsistema: Refinamiento y Restricción de Roles,dprado2024,Alta,Sprint 2,Semana 8,Frontend,Semana 8,60m
+Mejorar spinners en modales pesados (pasarela tarjeta).,Microservicio/Subsistema: Refinamiento y Restricción de Roles,dprado2024,Facil,Sprint 2,Semana 8,Frontend,Semana 8,40m
+"Refinar diseño UI: Estandarizar bordes, sombras y el fondo Dark Theme Premium.",Microservicio/Subsistema: Refinamiento y Restricción de Roles,dprado2024,Medio,Sprint 2,Semana 8,Frontend,Semana 8,50m
+Estandarizar formateo de montos (`Intl.NumberFormat`) en todas las tablas.,Microservicio/Subsistema: Refinamiento y Restricción de Roles,dprado2024,Facil,Sprint 2,Semana 8,Frontend,Semana 8,40m
+Revisión general de consola del navegador y limpiar warnings de React.,Microservicio/Subsistema: Refinamiento y Restricción de Roles,dprado2024,Medio,Sprint 2,Semana 8,Frontend,Semana 8,60m
+"MS-6: Al marcar OC como RECIBIDA, publicar evento Kafka `purchase.received` con items y Landed Cost.",Microservicio/Subsistema: MS-4 Recepción OC (Cierre Ciclo),dleiva2024,Medio,Sprint 2,Semana 8,Backend,Semana 8,40m
+MS-4: Crear Consumer Kafka para `purchase.received`.,Microservicio/Subsistema: MS-4 Recepción OC (Cierre Ciclo),dleiva2024,Medio,Sprint 2,Semana 8,Backend,Semana 8,50m
+"Lógica MS-4: Por cada item recibido, crear un nuevo `Lote` con el stock físico.",Microservicio/Subsistema: MS-4 Recepción OC (Cierre Ciclo),dleiva2024,Alta,Sprint 2,Semana 8,Backend,Semana 8,60m
+Calcular `fecha_vencimiento` por default según reglas o fecha actual + X días si no se provee.,Microservicio/Subsistema: MS-4 Recepción OC (Cierre Ciclo),dleiva2024,Medio,Sprint 2,Semana 8,Backend,Semana 8,40m
+Registrar evento histórico en tabla de trazabilidad de inventario (ingreso por proveedor).,Microservicio/Subsistema: MS-4 Recepción OC (Cierre Ciclo),dleiva2024,Medio,Sprint 2,Semana 8,Backend,Semana 8,50m
+Pruebas E2E Backend: Confirmar que recepcionar una OC aumenta el stock físico.,Microservicio/Subsistema: MS-4 Recepción OC (Cierre Ciclo),dleiva2024,Alta,Sprint 2,Semana 8,Backend,Semana 8,60m
+"Configurar suite de pruebas Playwright/Integration para abarcar MS-4, 5, 6 y 7.",,spereda2024,Medio,Sprint 2,Semana 8,Testing,Semana 8,50m
+Test: Flujo reposición (Crear OC -> Landed Cost -> Recibir -> Verificar Lote en MS-4).,,spereda2024,Alta,Sprint 2,Semana 8,Testing,Semana 8,60m
+Test: Flujo POS (Abrir turno -> Venta mixta -> Verificar DTE asíncrono emitido).,,spereda2024,Alta,Sprint 2,Semana 8,Testing,Semana 8,60m
+Test: Verificar que el FEFO descuenta del lote correcto y agota el más antiguo.,,spereda2024,Medio,Sprint 2,Semana 8,Testing,Semana 8,40m
+Test: Forzar error en pasarela y validar que la venta no se completa ni descuenta stock.,,spereda2024,Medio,Sprint 2,Semana 8,Testing,Semana 8,50m
+Generar reporte formal de cobertura y cumplimiento del Goal del Sprint 2.,,spereda2024,Facil,Sprint 2,Semana 8,Testing,Semana 8,40m
