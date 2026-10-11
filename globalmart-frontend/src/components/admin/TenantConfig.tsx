@@ -18,7 +18,7 @@ const configSchema = z.object({
     .min(2, 'Mínimo 2 letras')
     .max(5, 'Máximo 5 letras')
     .toLowerCase(),
-  porcentajeIva: z.coerce.number({ invalid_type_error: 'Debe ser un número' })
+  porcentajeIva: z.number({ error: 'Debe ser un número' })
     .min(0, 'El IVA no puede ser negativo')
     .max(100, 'El IVA máximo es 100'),
   zonaHoraria: z.string()
@@ -346,7 +346,7 @@ export default function TenantConfig({ token: tokenProp }: TenantConfigProps) {
                   cursor: esAdmin ? 'text' : 'not-allowed',
                   borderColor: errors.porcentajeIva ? 'var(--color-danger)' : 'var(--color-line)',
                 }}
-                {...register('porcentajeIva')}
+                {...register('porcentajeIva', { valueAsNumber: true })}
               />
               {errors.porcentajeIva && <span style={errorStyle}>{errors.porcentajeIva.message}</span>}
               {!errors.porcentajeIva && <small style={{ color: 'var(--color-ink-soft)', fontSize: '0.75rem' }}>Ej: 19 para 19%</small>}
