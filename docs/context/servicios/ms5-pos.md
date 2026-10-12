@@ -5,7 +5,7 @@ titulo: MS-5 · POS & Cart Service
 estado: parcial
 fuentes: [src/POSCartService/]
 verificado_contra_codigo: true
-ultima_revision: 2026-10-02
+ultima_revision: 2026-10-12
 depende_de: [ms1-identity, ms2-tax, ms3-catalog]
 publica: [sale.completed]
 consume: []
@@ -258,3 +258,7 @@ if (_kafkaProducer is not null)
 - `tests/GlobalMart.IntegrationTests/TurnoIntegrationTests.cs`
 - `tests/GlobalMart.IntegrationTests/VentaIntegrationTests.cs`
 - `tests/GlobalMart.IntegrationTests/KafkaPublishIntegrationTests.cs`
+
+## S2-022 — Fixtures de dos tenants y turnos
+
+[IMPLEMENTADO] Utilidad reutilizable en [Fixtures/README.md](../../../tests/GlobalMart.IntegrationTests/Fixtures/README.md) con esquemas PostgreSQL exclusivos por ejecución, usuarios CAJERO, sucursales, productos, turnos abiertos/cerrados, ventas pendientes/completadas e ítems/pagos efectivos para dos tenants. Limpieza idempotente por tenant y disposición de los esquemas propios. Compilación Release aprobada; 2/2 pruebas aprobadas el 2026-10-12, incluida la de integración contra PostgreSQL 16 desechable en Docker (filtrado por tenant, limpieza idempotente que conserva al otro tenant y eliminación de esquemas verificada). Corregido el seed del rol CAJERO, que ya existe tras crear las tablas. No cambia endpoints ni acredita E2E de frontend.

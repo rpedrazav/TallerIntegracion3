@@ -5,7 +5,7 @@ titulo: Estado Real de Implementación — GlobalMart OS
 estado: vigente
 fuentes: [docs/context/_reports/inventario.md, src/, git log, docs/context/_reports/preguntas-abiertas.md]
 verificado_contra_codigo: true
-ultima_revision: 2026-10-06
+ultima_revision: 2026-10-12
 depende_de: []
 publica: []
 consume: []
@@ -213,3 +213,7 @@ Ver el nodo [[guia-estilo]] para el resumen y las reglas aplicables.
 - `src/POSCartService/Services/VentaService.cs`
 - `src/WarehouseInventoryService/Messaging/KafkaConsumerService.cs`
 - `src/TenantIdentityService/appsettings.json`
+
+## S2-022 — Fixtures de dos tenants y turnos
+
+[IMPLEMENTADO] Utilidad reutilizable en [Fixtures/README.md](../../tests/GlobalMart.IntegrationTests/Fixtures/README.md) con esquemas PostgreSQL exclusivos por ejecución, usuarios CAJERO, sucursales, productos, turnos abiertos/cerrados, ventas pendientes/completadas e ítems/pagos efectivos para dos tenants. Limpieza idempotente por tenant y disposición de los esquemas propios. Compilación Release aprobada; 2/2 pruebas aprobadas el 2026-10-12, incluida la de integración contra PostgreSQL 16 desechable en Docker (filtrado por tenant, limpieza idempotente que conserva al otro tenant y eliminación de esquemas verificada). Corregido el seed del rol CAJERO, que ya existe tras crear las tablas. No cambia endpoints ni acredita E2E de frontend.
