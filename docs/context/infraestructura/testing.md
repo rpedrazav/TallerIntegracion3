@@ -31,7 +31,7 @@ Los smoke tests existentes son console apps que hacen requests HTTP y muestran r
 
 - ≥ 80% de cobertura en lógica crítica de MS-1, MS-2, MS-5 → **NO CUMPLIDO**
 - Tests de integración: apertura de turno y flujo turno → venta → ítems → IVA → **PARCIALMENTE IMPLEMENTADO**
-- Tests E2E Playwright: **SIN IMPLEMENTAR**
+- Tests Playwright de renderer: **PARCIAL**, S2-025 ejecutada con 1 aprobado y 2 fallidos; integración completa de venta pendiente.
 
 ## Stack de testing configurado
 
@@ -63,7 +63,7 @@ El pipeline en GitHub Actions ejecuta `dotnet test GlobalMartOS.sln --configurat
 |--------|---------|
 | Sin tests unitarios xUnit | RNF-07 no cumplido |
 | Sin tests de integración | Regresiones no detectadas |
-| Sin tests Playwright E2E | Frontend sin verificación automatizada |
+| Regresión Playwright S2-025 fallida | POS sin respuesta MS-5 y carrito compartido entre sesiones |
 | Sin coverage report en CI | No se puede medir cobertura |
 
 ## Recomendaciones para agregar tests
@@ -88,3 +88,7 @@ dotnet sln GlobalMartOS.sln add src/POSCartService/tests/POSCartService.Tests/PO
 ## S2-022 — Fixtures de dos tenants y turnos
 
 [IMPLEMENTADO] Utilidad reutilizable en [Fixtures/README.md](../../../tests/GlobalMart.IntegrationTests/Fixtures/README.md) con esquemas PostgreSQL exclusivos por ejecución, usuarios CAJERO, sucursales, productos, turnos abiertos/cerrados, ventas pendientes/completadas e ítems/pagos efectivos para dos tenants. Limpieza idempotente por tenant y disposición de los esquemas propios. Compilación Release aprobada; 2/2 pruebas aprobadas el 2026-10-12, incluida la de integración contra PostgreSQL 16 desechable en Docker (filtrado por tenant, limpieza idempotente que conserva al otro tenant y eliminación de esquemas verificada). Corregido el seed del rol CAJERO, que ya existe tras crear las tablas. No cambia endpoints ni acredita E2E de frontend.
+
+## S2-025 — Regresión de carrito
+
+[PARCIAL] Suite Playwright sobre el renderer real de POS, con catálogo y puente de sesión controlados. Ejecución 2026-10-12: 1 aprobado (agregar, cantidad, eliminar y recargar), 2 fallidos (sin respuesta de ventas MS-5 y persistencia del carrito al cambiar sesión de tenant). Pos usa `pos_cart` sin partición por tenant y calcula IVA local al 19%. Igualdad con totales de MS-5 y aislamiento HTTP de backend [NO VERIFICADO]. No acredita E2E completo ni venta funcional. Reporte y capturas: [S2-025](../../qa/S2-025/reporte.md).

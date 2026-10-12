@@ -150,6 +150,9 @@ jobs:
       # 7. Tests unitarios e integración
       # ------------------------------------------------------------------
       - name: Run tests
+        env:
+          # Fixture S2-022: crea y elimina esquemas propios (s2022_*) en el postgres-pos efimero de CI
+          GLOBALMART_TEST_POSTGRES: "Host=localhost;Port=5436;Database=pos_db;Username=${{ env.DB_USER }};Password=${{ env.DB_PASSWORD }}"
         run: dotnet test GlobalMartOS.sln --no-build --configuration Release --verbosity normal
 
       # ------------------------------------------------------------------

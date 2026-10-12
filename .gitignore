@@ -13,6 +13,8 @@ out/
 
 # Logs
 *.log
+globalmart-frontend/playwright-report/
+globalmart-frontend/test-results/
 npm-debug.log*
 
 # OS

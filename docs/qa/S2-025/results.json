@@ -1,0 +1,308 @@
+{
+  "config": {
+    "argv": [
+      "C:\\Program Files\\nodejs\\node.exe",
+      "C:\\Users\\dp877\\Desktop\\Universidad\\Semestre 6\\TallerIntegra3\\TallerIntegracion3\\globalmart-frontend\\node_modules\\@playwright\\test\\cli.js",
+      "test"
+    ],
+    "configFile": "C:\\Users\\dp877\\Desktop\\Universidad\\Semestre 6\\TallerIntegra3\\TallerIntegracion3\\globalmart-frontend\\playwright.config.ts",
+    "rootDir": "C:/Users/dp877/Desktop/Universidad/Semestre 6/TallerIntegra3/TallerIntegracion3/globalmart-frontend/e2e",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "C:/Users/dp877/Desktop/Universidad/Semestre 6/TallerIntegra3/TallerIntegracion3/globalmart-frontend/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "C:/Users/dp877/Desktop/Universidad/Semestre 6/TallerIntegra3/TallerIntegracion3/globalmart-frontend/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 20000
+      }
+    ],
+    "filteredProjects": [
+      {
+        "grep": {},
+        "grepInvert": null,
+        "outputDir": "C:\\Users\\dp877\\Desktop\\Universidad\\Semestre 6\\TallerIntegra3\\TallerIntegracion3\\globalmart-frontend\\test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "name": "",
+        "testDir": "C:\\Users\\dp877\\Desktop\\Universidad\\Semestre 6\\TallerIntegra3\\TallerIntegracion3\\globalmart-frontend\\e2e",
+        "snapshotDir": "C:\\Users\\dp877\\Desktop\\Universidad\\Semestre 6\\TallerIntegra3\\TallerIntegracion3\\globalmart-frontend\\e2e",
+        "testIgnore": [],
+        "testMatch": "**/*.@(spec|test).?(c|m)[jt]s?(x)",
+        "timeout": 20000,
+        "use": {
+          "baseURL": "http://127.0.0.1:4175",
+          "channel": "chrome",
+          "viewport": {
+            "width": 1440,
+            "height": 900
+          },
+          "screenshot": "only-on-failure",
+          "trace": "retain-on-failure"
+        },
+        "dependencies": [],
+        "ignoreSnapshots": false,
+        "__projectId": ""
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "html",
+        {
+          "open": "never"
+        }
+      ],
+      [
+        "json",
+        {
+          "outputFile": "test-results/results.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "default",
+    "updateSourceMethod": "patch",
+    "version": "1.64.0",
+    "workers": 1,
+    "webServer": {
+      "command": "node e2e/serve.cjs",
+      "url": "http://127.0.0.1:4175",
+      "reuseExistingServer": false
+    }
+  },
+  "suites": [
+    {
+      "title": "cart.spec.ts",
+      "file": "cart.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "agregar, cambiar cantidad, eliminar y recargar conservan el carrito",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 20000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2024,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-12T18:34:55.811Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "1981448f0b79506fb670-3927a506b3c0f1b82937",
+          "file": "cart.spec.ts",
+          "line": 23,
+          "column": 5
+        },
+        {
+          "title": "el flujo obtiene IVA y totales de una respuesta real de MS-5",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 20000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 4777,
+                  "error": {
+                    "message": "Error: El carrito debe recibir totales desde MS-5\n\nEl carrito debe recibir totales desde MS-5\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeGreaterThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: > \u001b[32m0\u001b[39m\nReceived:   \u001b[31m0\u001b[39m\n\nCall Log:\n- Timeout 3000ms exceeded while waiting on the predicate",
+                    "stack": "Error: El carrito debe recibir totales desde MS-5\n\nEl carrito debe recibir totales desde MS-5\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeGreaterThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: > \u001b[32m0\u001b[39m\nReceived:   \u001b[31m0\u001b[39m\n\nCall Log:\n- Timeout 3000ms exceeded while waiting on the predicate\n    at C:\\Users\\dp877\\Desktop\\Universidad\\Semestre 6\\TallerIntegra3\\TallerIntegracion3\\globalmart-frontend\\e2e\\cart.spec.ts:52:119",
+                    "location": {
+                      "file": "C:\\Users\\dp877\\Desktop\\Universidad\\Semestre 6\\TallerIntegra3\\TallerIntegracion3\\globalmart-frontend\\e2e\\cart.spec.ts",
+                      "column": 119,
+                      "line": 52
+                    },
+                    "snippet": "  50 |   await expect(page.locator('tbody tr')).toHaveCount(1);\n  51 |   // No sustituir MS-5 por un mock: la ausencia de respuesta incumple aceptación.\n> 52 |   await expect.poll(() => responses.length, { timeout: 3000, message: 'El carrito debe recibir totales desde MS-5' }).toBeGreaterThan(0);\n     |                                                                                                                       ^\n  53 |   const sale = responses.at(-1);\n  54 |   for (const [label, value] of [['Subtotal:', sale.subtotal], [/^IVA/, sale.impuestos ?? sale.iva], ['TOTAL:', sale.total]] as const) {\n  55 |     expect(typeof value).toBe('number');"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "C:\\Users\\dp877\\Desktop\\Universidad\\Semestre 6\\TallerIntegra3\\TallerIntegracion3\\globalmart-frontend\\e2e\\cart.spec.ts",
+                        "column": 119,
+                        "line": 52
+                      },
+                      "message": "Error: El carrito debe recibir totales desde MS-5\n\nEl carrito debe recibir totales desde MS-5\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeGreaterThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: > \u001b[32m0\u001b[39m\nReceived:   \u001b[31m0\u001b[39m\n\nCall Log:\n- Timeout 3000ms exceeded while waiting on the predicate\n\n  50 |   await expect(page.locator('tbody tr')).toHaveCount(1);\n  51 |   // No sustituir MS-5 por un mock: la ausencia de respuesta incumple aceptación.\n> 52 |   await expect.poll(() => responses.length, { timeout: 3000, message: 'El carrito debe recibir totales desde MS-5' }).toBeGreaterThan(0);\n     |                                                                                                                       ^\n  53 |   const sale = responses.at(-1);\n  54 |   for (const [label, value] of [['Subtotal:', sale.subtotal], [/^IVA/, sale.impuestos ?? sale.iva], ['TOTAL:', sale.total]] as const) {\n  55 |     expect(typeof value).toBe('number');\n    at C:\\Users\\dp877\\Desktop\\Universidad\\Semestre 6\\TallerIntegra3\\TallerIntegracion3\\globalmart-frontend\\e2e\\cart.spec.ts:52:119"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-12T18:34:58.220Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "C:\\Users\\dp877\\Desktop\\Universidad\\Semestre 6\\TallerIntegra3\\TallerIntegracion3\\globalmart-frontend\\test-results\\cart-el-flujo-obtiene-IVA--210e3--una-respuesta-real-de-MS-5\\test-failed-1.png"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "C:\\Users\\dp877\\Desktop\\Universidad\\Semestre 6\\TallerIntegra3\\TallerIntegracion3\\globalmart-frontend\\test-results\\cart-el-flujo-obtiene-IVA--210e3--una-respuesta-real-de-MS-5\\error-context.md"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "C:\\Users\\dp877\\Desktop\\Universidad\\Semestre 6\\TallerIntegra3\\TallerIntegracion3\\globalmart-frontend\\test-results\\cart-el-flujo-obtiene-IVA--210e3--una-respuesta-real-de-MS-5\\trace.zip"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "C:\\Users\\dp877\\Desktop\\Universidad\\Semestre 6\\TallerIntegra3\\TallerIntegracion3\\globalmart-frontend\\e2e\\cart.spec.ts",
+                    "column": 119,
+                    "line": 52
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "1981448f0b79506fb670-b170a17ed12a2366715b",
+          "file": "cart.spec.ts",
+          "line": 37,
+          "column": 5
+        },
+        {
+          "title": "cambiar de tenant en el mismo navegador no recupera el carrito ajeno",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 20000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 7007,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByText('Carrito vacío', { exact: true })\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" getByText('Carrito vacío', { exact: true }) with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByText('Carrito vacío', { exact: true })\u001b[22m\n",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByText('Carrito vacío', { exact: true })\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" getByText('Carrito vacío', { exact: true }) with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByText('Carrito vacío', { exact: true })\u001b[22m\n\n    at C:\\Users\\dp877\\Desktop\\Universidad\\Semestre 6\\TallerIntegra3\\TallerIntegracion3\\globalmart-frontend\\e2e\\cart.spec.ts:66:66",
+                    "location": {
+                      "file": "C:\\Users\\dp877\\Desktop\\Universidad\\Semestre 6\\TallerIntegra3\\TallerIntegracion3\\globalmart-frontend\\e2e\\cart.spec.ts",
+                      "column": 66,
+                      "line": 66
+                    },
+                    "snippet": "  64 |   await page.evaluate(() => sessionStorage.setItem('tenant', 'tenant-b'));\n  65 |   await page.reload();\n> 66 |   await expect(page.getByText('Carrito vacío', { exact: true })).toBeVisible();\n     |                                                                  ^\n  67 |   await expect(page.locator('tbody tr')).toHaveCount(0);\n  68 | });\n  69 |"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "C:\\Users\\dp877\\Desktop\\Universidad\\Semestre 6\\TallerIntegra3\\TallerIntegracion3\\globalmart-frontend\\e2e\\cart.spec.ts",
+                        "column": 66,
+                        "line": 66
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByText('Carrito vacío', { exact: true })\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" getByText('Carrito vacío', { exact: true }) with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByText('Carrito vacío', { exact: true })\u001b[22m\n\n\n  64 |   await page.evaluate(() => sessionStorage.setItem('tenant', 'tenant-b'));\n  65 |   await page.reload();\n> 66 |   await expect(page.getByText('Carrito vacío', { exact: true })).toBeVisible();\n     |                                                                  ^\n  67 |   await expect(page.locator('tbody tr')).toHaveCount(0);\n  68 | });\n  69 |\n    at C:\\Users\\dp877\\Desktop\\Universidad\\Semestre 6\\TallerIntegra3\\TallerIntegracion3\\globalmart-frontend\\e2e\\cart.spec.ts:66:66"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-12T18:35:03.963Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "C:\\Users\\dp877\\Desktop\\Universidad\\Semestre 6\\TallerIntegra3\\TallerIntegracion3\\globalmart-frontend\\test-results\\cart-cambiar-de-tenant-en--99075-o-recupera-el-carrito-ajeno\\test-failed-1.png"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "C:\\Users\\dp877\\Desktop\\Universidad\\Semestre 6\\TallerIntegra3\\TallerIntegracion3\\globalmart-frontend\\test-results\\cart-cambiar-de-tenant-en--99075-o-recupera-el-carrito-ajeno\\error-context.md"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "C:\\Users\\dp877\\Desktop\\Universidad\\Semestre 6\\TallerIntegra3\\TallerIntegracion3\\globalmart-frontend\\test-results\\cart-cambiar-de-tenant-en--99075-o-recupera-el-carrito-ajeno\\trace.zip"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "C:\\Users\\dp877\\Desktop\\Universidad\\Semestre 6\\TallerIntegra3\\TallerIntegracion3\\globalmart-frontend\\e2e\\cart.spec.ts",
+                    "column": 66,
+                    "line": 66
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "1981448f0b79506fb670-eb0985f32a7d1b7cba46",
+          "file": "cart.spec.ts",
+          "line": 61,
+          "column": 5
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-12T18:34:52.177Z",
+    "duration": 19812.527,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 2,
+    "flaky": 0
+  }
+}

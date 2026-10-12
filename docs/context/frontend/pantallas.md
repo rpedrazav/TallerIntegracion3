@@ -5,7 +5,7 @@ titulo: Pantallas del Frontend — GlobalMart OS
 estado: parcial
 fuentes: [globalmart-frontend/src/pages/, globalmart-frontend/src/components/]
 verificado_contra_codigo: true
-ultima_revision: 2026-10-11
+ultima_revision: 2026-10-12
 depende_de: [estructura, ms1-identity, ms5-pos, guia-estilo]
 publica: []
 consume: []
@@ -139,3 +139,7 @@ Pantallas no implementadas:
 - `globalmart-frontend/src/pages/CerrarTurnoPage.tsx`
 - `globalmart-frontend/src/components/pos/BarcodeInput.tsx`
 - `globalmart-frontend/src/components/pos/CartItem.tsx`
+
+## S2-025 — Regresión de carrito
+
+[PARCIAL] Suite Playwright sobre el renderer real de POS, con catálogo y puente de sesión controlados. Ejecución 2026-10-12: 1 aprobado (agregar, cantidad, eliminar y recargar), 2 fallidos (sin respuesta de ventas MS-5 y persistencia del carrito al cambiar sesión de tenant). Pos usa `pos_cart` sin partición por tenant y calcula IVA local al 19%. Igualdad con totales de MS-5 y aislamiento HTTP de backend [NO VERIFICADO]. No acredita E2E completo ni venta funcional. Reporte y capturas: [S2-025](../../qa/S2-025/reporte.md).
