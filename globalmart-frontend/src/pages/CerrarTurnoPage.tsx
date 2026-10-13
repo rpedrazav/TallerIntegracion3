@@ -1,11 +1,8 @@
-﻿import React, { useState, useEffect, useCallback, useMemo } from 'react';
+﻿import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios, { AxiosError } from 'axios';
 import { useAuth } from '../hooks/useAuth';
-
-// URLs del microservicio MS-5 POS & Cart
-const KONG_GATEWAY_URL = 'https://pos-rpedraza.dev.censei.cl';
-const POS_DIRECT_URL = 'https://pos-rpedraza.dev.censei.cl';
+import { posApi, TurnoActivo, CuadreResult } from '../api/client';
 
 interface JwtPayload {
   sub?: string;
@@ -14,23 +11,6 @@ interface JwtPayload {
   email?: string;
   active_role?: string;
   sucursal_id?: string;
-}
-
-interface TurnoActivoData {
-  id: string;
-  tenantId: string;
-  cajeroId: string;
-  sucursalId: string;
-  montoApertura: number;
-  estado: number;
-  abiertoAt: string;
-}
-
-interface CuadreResult {
-  turno_id: string;
-  efectivo_esperado: number;
-  monto_declarado: number;
-  diferencia: number;
 }
 
 interface DenominacionConfig {
@@ -84,7 +64,7 @@ export default function CerrarTurnoPage() {
     return initial;
   });
 
-  const [turnoActivo, setTurnoActivo] = useState<TurnoActivoData | null>(null);
+  const [turnoActivo, setTurnoActivo] = useState<TurnoActivo | null>(null);
   const [checkingTurno, setCheckingTurno] = useState<boolean>(true);
   const [noTurnoOpen, setNoTurnoOpen] = useState<boolean>(false);
 
@@ -99,42 +79,6 @@ export default function CerrarTurnoPage() {
   const [errorMsg, setErrorMsg] = useState<string>('');
   const [successMsg, setSuccessMsg] = useState<string>('');
 
-  // Helper para realizar peticiones hacia MS-5 POS (directo en puerto 5000 o vía Kong)
-  const callPosApi = useCallback(
-    async (path: string, method: 'GET' | 'POST', data?: unknown) => {
-      const headers = { Authorization: `Bearer ${token}` };
-      const normalizedPath = path.startsWith('/') ? path : `/${path}`;
-      const apiPath = normalizedPath.startsWith('/api') ? normalizedPath : `/api${normalizedPath}`;
-      const directPath = normalizedPath.startsWith('/api') ? normalizedPath.replace(/^\/api/, '') : normalizedPath;
-
-      try {
-        const directUrl = `${POS_DIRECT_URL}${apiPath}`;
-        return await axios({ method, url: directUrl, data, headers });
-      } catch (err) {
-        const axiosErr = err as AxiosError;
-        if ((axiosErr.request && !axiosErr.response) || axiosErr.response?.status === 404) {
-          try {
-            const fallbackDirect = `${POS_DIRECT_URL}${directPath}`;
-            return await axios({ method, url: fallbackDirect, data, headers });
-          } catch (innerErr) {
-            const innerAxios = innerErr as AxiosError;
-            if (innerAxios.request && !innerAxios.response) {
-              try {
-                const kongUrl = `${KONG_GATEWAY_URL}${apiPath}`;
-                return await axios({ method, url: kongUrl, data, headers });
-              } catch {
-                throw innerAxios.response ? innerAxios : axiosErr;
-              }
-            }
-            throw innerAxios;
-          }
-        }
-        throw axiosErr;
-      }
-    },
-    [token]
-  );
-
   // Verificar turno activo al cargar la pantalla y obtener efectivo esperado inicial
   useEffect(() => {
     let isMounted = true;
@@ -146,22 +90,18 @@ export default function CerrarTurnoPage() {
       }
 
       try {
-        const res = await callPosApi('/api/turnos/activo', 'GET');
+        const res = await posApi.activeShift();
         if (isMounted) {
-          if (res?.data) {
-            const activeTurno = res.data as TurnoActivoData;
-            setTurnoActivo(activeTurno);
+          if (res) {
+            setTurnoActivo(res);
             setNoTurnoOpen(false);
 
             // Llamar a POST /api/turnos/cuadre para obtener el efectivo esperado de ventas del turno
             try {
-              const cuadreRes = await callPosApi('/api/turnos/cuadre', 'POST', {
-                monto_declarado: 0,
-              });
-              if (isMounted && cuadreRes?.data) {
-                const data = cuadreRes.data as CuadreResult;
-                setEfectivoEsperado(data.efectivo_esperado);
-                setCuadreResult(data);
+              const cuadreRes = await posApi.balanceShift(0);
+              if (isMounted && cuadreRes) {
+                setEfectivoEsperado(cuadreRes.efectivo_esperado);
+                setCuadreResult(cuadreRes);
                 setCuadreSynced(true);
               }
             } catch (cuadreErr) {
@@ -193,7 +133,7 @@ export default function CerrarTurnoPage() {
     return () => {
       isMounted = false;
     };
-  }, [token, callPosApi]);
+  }, [token]);
 
   // Manejo de cambio en el input de cantidad
   const handleCantidadChange = (id: string, valueStr: string) => {
@@ -264,14 +204,12 @@ export default function CerrarTurnoPage() {
     setIsCalculatingCuadre(true);
 
     try {
-      const res = await callPosApi('/api/turnos/cuadre', 'POST', {
-        monto_declarado: totalDeclarado,
-      });
+      if (!token) return;
+      const res = await posApi.balanceShift(totalDeclarado);
 
-      if (res?.data) {
-        const data = res.data as CuadreResult;
-        setCuadreResult(data);
-        setEfectivoEsperado(data.efectivo_esperado);
+      if (res) {
+        setCuadreResult(res);
+        setEfectivoEsperado(res.efectivo_esperado);
         setCuadreSynced(true);
       }
     } catch (err) {
@@ -300,7 +238,8 @@ export default function CerrarTurnoPage() {
     setErrorMsg('');
 
     try {
-      await callPosApi('/api/turnos/cerrar', 'POST');
+      if (!token) return;
+      await posApi.closeShift();
       setTurnoClosedSuccess(true);
       setSuccessMsg('¡Turno cerrado exitosamente!');
     } catch (err) {

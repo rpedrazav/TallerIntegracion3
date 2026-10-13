@@ -3,9 +3,9 @@ id: pantallas
 tipo: frontend
 titulo: Pantallas del Frontend — GlobalMart OS
 estado: parcial
-fuentes: [globalmart-frontend/src/pages/, globalmart-frontend/src/components/]
+fuentes: [globalmart-frontend/src/pages/, globalmart-frontend/src/components/, globalmart-frontend/src/api/client.ts]
 verificado_contra_codigo: true
-ultima_revision: 2026-10-12
+ultima_revision: 2026-10-13
 depende_de: [estructura, ms1-identity, ms5-pos, guia-estilo]
 publica: []
 consume: []
@@ -14,6 +14,8 @@ reglas: []
 # Pantallas del Frontend — GlobalMart OS
 
 > Estado real de las pantallas implementadas en el frontend Electron + React.
+
+Los clientes tipados en `src/api/client.ts` cubren login (MS-1), catálogo del POS (MS-3) y turnos (MS-5). Centralizan las URL, el JWT y el timeout de 15 s. En peticiones protegidas, un 401 cierra la sesión y redirige al login [IMPLEMENTADO].
 
 ## Login.tsx [IMPLEMENTADO]
 
@@ -24,8 +26,8 @@ Pantalla de inicio de sesión con 3 campos:
   - Contraseña
 
 Al enviar:
-  → POST http://127.0.0.1:5124/auth/login (directo a MS-1, sin Kong)
-  → Si exitoso: await login(token) → navigate('/pos')
+  → POST /auth/login mediante identityApi.login
+  → Si exitoso: await window.api.setToken(token) → navigate('/pos')
   → Si error: muestra mensaje de error
 
 Valores pre-llenados para desarrollo:
@@ -34,7 +36,7 @@ Valores pre-llenados para desarrollo:
   - Tenant ID: aaaaaaaa-0000-0000-0000-000000000001
 ```
 
-**Problema:** URL hardcodeada a puerto de desarrollo. En producción debería apuntar a Kong `:8000`.
+La URL base de MS-1 está en `src/api/client.ts`.
 
 ## Pos.tsx [PARCIAL]
 
@@ -46,9 +48,7 @@ Carrito de compras con:
   - Botón "Cobrar" (muestra alert de "no implementado")
   - Botón "Cancelar Venta" (limpia el carrito con confirm)
 
-Datos hardcodeados al iniciar:
-  - Coca Cola 2L: $2.500 × 2
-  - Pan de Molde Castaño: $1.800 × 1
+Productos obtenidos de MS-3 mediante `catalogApi`; carrito guardado en `localStorage`
 
 IVA calculado localmente (tasaIva = 0.19 fijo, sin llamar MS-2)
 NO integra la API de ventas de MS-5
@@ -65,8 +65,8 @@ NO abre turno antes de vender
 //   - Accesos directos para montos frecuentes ($0, $20.000, $50.000, $100.000)
 //   - Botón "Abrir Turno" con estado de carga y validaciones
 // Integración API:
-//   - GET /api/turnos/activo: detecta si el cajero ya tiene un turno abierto
-//   - POST /api/turnos/abrir: registra apertura con sucursal_id y monto_fondo_inicial
+//   - posApi.activeShift: GET /api/turnos/activo
+//   - posApi.openShift: POST /api/turnos/abrir con sucursal_id y monto_fondo_inicial
 //   - Error 409 Conflict: muestra "Ya tienes un turno abierto"
 //   - Redirección automática a /pos con mensaje de confirmación en location.state
 ```
@@ -81,8 +81,8 @@ NO abre turno antes de vender
 //   - Input numérico de cantidad por fila con stepper (+ / -) y subtotal calculado en tiempo real
 //   - Subtotales por categoría (Billetes / Monedas) y Total Declarado en gaveta
 //   - Botón "Limpiar Conteo"
-//   - Arqueo y Cuadre: POST /api/turnos/cuadre con monto_declarado (compara efectivo esperado vs declarado y calcula diferencia)
-//   - Cierre de turno: POST /api/turnos/cerrar con confirmación y opciones de navegación
+//   - Arqueo y Cuadre: posApi.balanceShift llama POST /api/turnos/cuadre
+//   - Cierre de turno: posApi.closeShift llama POST /api/turnos/cerrar
 ```
 
 ## Admin.tsx [PARCIAL]

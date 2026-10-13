@@ -3,7 +3,7 @@ id: estado-actual
 tipo: indice
 titulo: Estado Real de Implementación — GlobalMart OS
 estado: vigente
-fuentes: [docs/context/_reports/inventario.md, src/, git log, docs/context/_reports/preguntas-abiertas.md]
+fuentes: [docs/context/_reports/inventario.md, src/, globalmart-frontend/src/api/client.ts, git log, docs/context/_reports/preguntas-abiertas.md]
 verificado_contra_codigo: true
 ultima_revision: 2026-10-13
 depende_de: []
@@ -182,6 +182,8 @@ reglas: []
 ---
 
 ## Estado del Frontend
+
+El frontend usa `src/api/client.ts` para Login (MS-1), catálogo del POS (MS-3) y páginas de turnos (MS-5): URL por servicio, métodos tipados, JWT y timeout de 15 s centralizados, con cierre de sesión ante 401 en llamadas protegidas [IMPLEMENTADO]. El carrito sigue local y no usa la API de ventas MS-5 [PARCIAL].
 
 ### Guía visual aprobada
 

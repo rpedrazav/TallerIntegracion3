@@ -1,11 +1,8 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios, { AxiosError } from 'axios';
 import { useAuth } from '../hooks/useAuth';
-
-// URLs del microservicio MS-5 POS & Cart
-const KONG_GATEWAY_URL = 'https://pos-rpedraza.dev.censei.cl';
-const POS_DIRECT_URL = 'https://pos-rpedraza.dev.censei.cl';
+import { posApi, TurnoActivo } from '../api/client';
 
 interface JwtPayload {
   sub?: string;
@@ -14,16 +11,6 @@ interface JwtPayload {
   email?: string;
   active_role?: string;
   sucursal_id?: string;
-}
-
-interface TurnoActivoData {
-  id: string;
-  tenantId: string;
-  cajeroId: string;
-  sucursalId: string;
-  montoApertura: number;
-  estado: number;
-  abiertoAt: string;
 }
 
 function parseJwt(token: string | null): JwtPayload | null {
@@ -52,47 +39,9 @@ export default function AbrirTurnoPage() {
   const [error, setError] = useState<string>('');
   const [successMsg, setSuccessMsg] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [turnoActivo, setTurnoActivo] = useState<TurnoActivoData | null>(null);
+  const [turnoActivo, setTurnoActivo] = useState<TurnoActivo | null>(null);
 
   const userInfo = parseJwt(token);
-
-  // Helper para realizar peticiones hacia MS-5 POS (directo en puerto 5000 o vía gateway)
-  const callPosApi = useCallback(
-    async (path: string, method: 'GET' | 'POST', data?: unknown) => {
-      const headers = { Authorization: `Bearer ${token}` };
-      const normalizedPath = path.startsWith('/') ? path : `/${path}`;
-      const apiPath = normalizedPath.startsWith('/api') ? normalizedPath : `/api${normalizedPath}`;
-      const directPath = normalizedPath.startsWith('/api') ? normalizedPath.replace(/^\/api/, '') : normalizedPath;
-
-      // Intentar primero directo al microservicio MS-5 POS (puerto 5000 en dev local)
-      try {
-        const directUrl = `${POS_DIRECT_URL}${apiPath}`;
-        return await axios({ method, url: directUrl, data, headers });
-      } catch (err) {
-        const axiosErr = err as AxiosError;
-        // Si da 404 o error de conexión, intentar sin prefijo /api o a través de Kong Gateway
-        if ((axiosErr.request && !axiosErr.response) || axiosErr.response?.status === 404) {
-          try {
-            const fallbackDirect = `${POS_DIRECT_URL}${directPath}`;
-            return await axios({ method, url: fallbackDirect, data, headers });
-          } catch (innerErr) {
-            const innerAxios = innerErr as AxiosError;
-            if (innerAxios.request && !innerAxios.response) {
-              try {
-                const kongUrl = `${KONG_GATEWAY_URL}${apiPath}`;
-                return await axios({ method, url: kongUrl, data, headers });
-              } catch {
-                throw innerAxios.response ? innerAxios : axiosErr;
-              }
-            }
-            throw innerAxios;
-          }
-        }
-        throw axiosErr;
-      }
-    },
-    [token]
-  );
 
   // Verificar si ya existe un turno activo para este cajero
   useEffect(() => {
@@ -101,9 +50,9 @@ export default function AbrirTurnoPage() {
     async function checkTurnoActivo() {
       if (!token) return;
       try {
-        const response = await callPosApi('/api/turnos/activo', 'GET');
-        if (isMounted && response?.data) {
-          setTurnoActivo(response.data as TurnoActivoData);
+        const activeShift = await posApi.activeShift();
+        if (isMounted && activeShift) {
+          setTurnoActivo(activeShift);
         }
       } catch {
         // 404 indica que no hay turno abierto, comportamiento esperado.
@@ -115,7 +64,7 @@ export default function AbrirTurnoPage() {
     return () => {
       isMounted = false;
     };
-  }, [token, callPosApi]);
+  }, [token]);
 
   // Validaciones
   const montoNum = parseFloat(montoInicial);
@@ -139,10 +88,8 @@ export default function AbrirTurnoPage() {
           ? userInfo.sucursal_id
           : '00000000-0000-0000-0000-000000000001';
 
-      await callPosApi('/api/turnos/abrir', 'POST', {
-        sucursal_id: sucursalId,
-        monto_fondo_inicial: montoNum,
-      });
+      if (!token) return;
+      await posApi.openShift(sucursalId, montoNum);
 
       const confirmMsg = '¡Turno de caja abierto exitosamente!';
       setSuccessMsg(`${confirmMsg} Redirigiendo al Punto de Venta...`);

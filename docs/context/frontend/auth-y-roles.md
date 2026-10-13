@@ -3,9 +3,9 @@ id: auth-y-roles
 tipo: frontend
 titulo: Autenticación y Roles en el Frontend
 estado: parcial
-fuentes: [globalmart-frontend/src/hooks/useAuth.ts, globalmart-frontend/src/pages/Login.tsx]
+fuentes: [globalmart-frontend/src/hooks/useAuth.ts, globalmart-frontend/src/pages/Login.tsx, globalmart-frontend/src/api/client.ts]
 verificado_contra_codigo: true
-ultima_revision: 2026-09-28
+ultima_revision: 2026-10-13
 depende_de: [estructura, rbac-multirol, ms1-identity]
 publica: []
 consume: []
@@ -26,21 +26,21 @@ reglas: [RN-07, RN-08]
 //   isAuthenticated: boolean    — !!token
 ```
 
-El JWT se almacena localmente usando `electron-store` (no sessionStorage/localStorage del browser, porque Electron no tiene esos contextos confiables).
+El JWT se guarda mediante `window.api.setToken` en electron-store. Login también lo copia a `localStorage`; los clientes protegidos leen el token desde `window.api.getToken` en cada petición.
 
 ## Flujo de login
 
 ```
 1. Usuario ingresa email + password + tenantId en Login.tsx
-2. POST http://127.0.0.1:5124/auth/login  ← directo a MS-1 (sin Kong)
+2. `identityApi.login` ejecuta POST /auth/login en MS-1 con timeout de 15 s
 3. Respuesta: { token: "eyJ...", expiresAt: "...", usuario: { ... } }
-4. login(token) → guarda en electron-store
+4. `window.api.setToken(token)` guarda el JWT en electron-store
 5. navigate('/pos')
 ```
 
 ## Protección de rutas
 
-Las rutas están protegidas en `App.tsx`. Sin autenticación, el usuario es redirigido a `/`. **Implementación exacta de la protección NO VERIFICADA** en detalle.
+`App.tsx` declara las rutas; las llamadas protegidas de POS y turnos redirigen a `/login` tras un 401. No hay guard de rutas en `App.tsx` [VERIFICADO].
 
 ## JWT decodificado (estructura real)
 
@@ -64,10 +64,10 @@ Las rutas están protegidas en `App.tsx`. Sin autenticación, el usuario es redi
 
 | Brecha | Impacto |
 |--------|---------|
-| URL hardcodeada a port 5124 | No pasa por Kong |
+| URL base de MS-1 | Configurada en `src/api/client.ts`; configuración por entorno [NO VERIFICADO] |
 | Sin refresh token | Al expirar el JWT, hay que hacer login nuevamente |
 | Sin RoleSwitcher | Usuarios multi-rol no pueden cambiar su rol activo |
-| Sin manejo de expiración del token | La app puede seguir intentando llamadas con JWT vencido |
+| Expiración del token | Las llamadas protegidas redirigen al login si reciben 401; no hay renovación de JWT |
 
 ## Conexiones
 - Login backend: [[ms1-identity]]

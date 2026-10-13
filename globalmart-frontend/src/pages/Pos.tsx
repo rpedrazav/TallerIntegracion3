@@ -1,10 +1,9 @@
 ﻿import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { catalogApi, CatalogProduct } from '../api/client';
 import BarcodeInput from '../components/pos/BarcodeInput';
 import CartItem from '../components/pos/CartItem';
-
-const CATALOG_URL = 'https://catalog-rpedraza.dev.censei.cl';
 
 export interface ProductItem {
   id: string;
@@ -44,19 +43,14 @@ export default function Pos() {
     localStorage.setItem('pos_cart', JSON.stringify(cartItems));
   }, [cartItems]);
 
-    const [searchResults, setSearchResults] = useState<any[]>([]);
-  const [todosProductos, setTodosProductos] = useState<any[]>([]);
+    const [searchResults, setSearchResults] = useState<CatalogProduct[]>([]);
+  const [todosProductos, setTodosProductos] = useState<CatalogProduct[]>([]);
 
   useEffect(() => {
     const fetchTodos = async () => {
       try {
-        const token = await window.api?.getToken();
-        if (!token) return;
-        const response = await axios.get(`${CATALOG_URL}/products`, {
-          params: { page: 1, pageSize: 500 },
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        setTodosProductos(response.data?.data ?? response.data ?? []);
+        const response = await catalogApi.listProducts();
+        setTodosProductos(response.data);
       } catch (e) {
         console.error('Error al cargar catalogo POS', e);
       }
@@ -64,7 +58,7 @@ export default function Pos() {
     fetchTodos();
   }, []);
 
-  const addProductToCart = useCallback((product: any) => {
+  const addProductToCart = useCallback((product: CatalogProduct) => {
     setCartItems(prev => {
       const existing = prev.find(item => item.id === product.id);
       if (existing) {
@@ -86,7 +80,7 @@ export default function Pos() {
       return;
     }
     const q = query.trim().toLowerCase();
-    const filtrados = todosProductos.filter((p: any) => 
+    const filtrados = todosProductos.filter((p) =>
       (p.nombre && p.nombre.toLowerCase().includes(q)) || 
       (p.codigoBarras && p.codigoBarras.includes(q))
     ).slice(0, 15);
@@ -116,15 +110,10 @@ export default function Pos() {
       setSearchResults(matches.slice(0, 15));
     } else {
       try {
-        const token = await window.api?.getToken();
-        if (!token) return;
-        const response = await axios.get(`${CATALOG_URL}/products/lookup`, {
-          params: { barcode: query },
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        if (response.data) addProductToCart(response.data);
-      } catch (error: any) {
-        if (error.response?.status === 404) {
+        const product = await catalogApi.lookupProduct(query);
+        if (product) addProductToCart(product);
+      } catch (error: unknown) {
+        if (axios.isAxiosError(error) && error.response?.status === 404) {
           alert(`Producto con el término '${query}' no encontrado.`);
         }
       }

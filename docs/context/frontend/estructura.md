@@ -5,7 +5,7 @@ titulo: Frontend — Estructura del Proyecto Electron + React
 estado: parcial
 fuentes: [globalmart-frontend/src/, globalmart-frontend/package.json, globalmart-frontend/forge.config.ts]
 verificado_contra_codigo: true
-ultima_revision: 2026-10-06
+ultima_revision: 2026-10-13
 depende_de: [stack, ms1-identity, guia-estilo]
 publica: []
 consume: []
@@ -13,7 +13,7 @@ reglas: [RNF-06]
 ---
 # Frontend — Estructura del Proyecto Electron + React
 
-> App de escritorio multiplataforma construida con Electron + React + TypeScript. Actualmente solo tiene 3 páginas y está en etapa inicial de integración con el backend.
+> App de escritorio multiplataforma construida con Electron + React + TypeScript. Tiene páginas de Login, POS, turnos y administración; la integración del carrito con ventas de MS-5 sigue pendiente.
 
 ## Sistema visual
 
@@ -28,10 +28,15 @@ globalmart-frontend/
 │   ├── preload.ts        Preload script (bridge main ↔ renderer)
 │   ├── renderer.tsx      Punto de entrada del renderer (React)
 │   ├── App.tsx           Router principal
+│   ├── api/
+│   │   └── client.ts     Clientes tipados MS-1, MS-3 y MS-5
 │   ├── pages/
 │   │   ├── Login.tsx     Pantalla de login
 │   │   ├── Pos.tsx       Pantalla POS / carrito
-│   │   └── Admin.tsx     Pantalla administración (contenido NO verificado)
+│   │   ├── AbrirTurnoPage.tsx
+│   │   ├── CerrarTurnoPage.tsx
+│   │   ├── ProductosPage.tsx
+│   │   └── Admin.tsx     Pantalla administración
 │   ├── components/
 │   │   ├── AppLayout.tsx Layout general de la app
 │   │   └── pos/
@@ -62,7 +67,7 @@ globalmart-frontend/
 
 - **Electron Forge** para empaquetado y distribución
 - **webpack** para bundle del main y renderer
-- **axios** para llamadas HTTP
+- **axios** para llamadas HTTP; `src/api/client.ts` centraliza URL, JWT, timeout de 15 s y manejo de 401 en MS-1, MS-3 y MS-5.
 - **electron-store** para persistencia local del JWT
 - **React Router** para navegación entre pantallas
 
@@ -70,17 +75,17 @@ globalmart-frontend/
 
 | Pantalla | Integración API | Estado |
 |---------|-----------------|--------|
-| Login | POST http://127.0.0.1:5124/auth/login (directo) | [IMPLEMENTADO] |
-| Pos | Datos hardcodeados, sin API real | [PARCIAL] |
+| Login | POST /auth/login mediante `identityApi` | [IMPLEMENTADO] |
+| Pos | Catálogo MS-3 mediante `catalogApi`; carrito local | [PARCIAL] |
 | Admin | `GET /users` de MS-1 + creación/asignación de roles | [PARCIAL] |
 
 ## Hallazgos importantes
 
-1. **Sin Kong:** El frontend llama directo a `http://127.0.0.1:5124/auth/login` (puerto local de MS-1 en dev), no pasa por Kong en `:8000`.
-2. **Datos hardcodeados en POS:** Pos.tsx inicializa con 2 productos hardcodeados ("Coca Cola 2L", "Pan de Molde").
+1. **URL del login:** `identityApi` usa el host MS-1 configurado en `src/api/client.ts`.
+2. **POS y catálogo:** Pos.tsx obtiene productos de MS-3 y conserva el carrito local.
 3. **Cobro no implementado:** `handleCheckout()` muestra `alert('Funcionalidad de cobro se implementará en el futuro.')`.
 4. **Sin RoleSwitcher:** No hay componente para cambiar el rol activo.
-5. **Sin integración con Turnos:** POS no abre turno antes de vender.
+5. **Turnos:** Las páginas de apertura y cierre usan MS-5; el carrito POS aún no crea ventas.
 6. **Sin hardware:** No hay SerialPort, ni integración con balanza ni impresora.
 
 ## Conexiones

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios, { AxiosError } from 'axios';
+import { AxiosError } from 'axios';
+import { identityApi } from '../api/client';
 
 /**
  * TI3-471: Vista de Login con manejo de errores y spinner de carga.
@@ -22,18 +23,9 @@ export default function Login() {
     setIsLoading(true);
 
     try {
-      const response = await axios.post('https://auth-rpedraza.dev.censei.cl/auth/login', {
-        email,
-        password,
-        tenantId
-      }, {
-        headers: {
-          'x-tenant-id': tenantId
-        },
-        timeout: 15000 // TI3-471: timeout de 15 segundos
-      });
+      const response = await identityApi.login({ email, password, tenantId });
       
-      const { token } = response.data;
+      const { token } = response;
       await window.api.setToken(token);
       localStorage.setItem('token', token);
       localStorage.setItem('tenant', tenantId);
