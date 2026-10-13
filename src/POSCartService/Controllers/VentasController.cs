@@ -98,15 +98,21 @@ public sealed class VentasController : ControllerBase
         }
 
         // 4. Mapear ítems del DTO al modelo de dominio
-        // El subtotal de cada ítem = precio_unitario × cantidad (el servicio no recalcula esto)
-        var itemsDominio = request.Items.Select(i => new ItemVenta
+        // NOTA CONTRATO S2-001: Ningún precio o impuesto aportado por el renderer es autoridad.
+        // La resolución autoritativa de catálogo (MS-3) e IVA real (MS-2) es orquestada en el flujo de venta.
+        var itemsDominio = request.Items.Select(i =>
         {
-            ProductoId     = i.ProductoId,
-            NombreProducto = i.NombreProducto,
-            Cantidad       = i.Cantidad,
-            PesoKg         = i.PesoKg,
-            PrecioUnitario = i.PrecioUnitario,
-            Subtotal       = Math.Round(i.PrecioUnitario * i.Cantidad, 2)
+            var cantidad = (i.PesoKg.HasValue && i.PesoKg.Value > 0) ? i.PesoKg.Value : (i.Cantidad > 0 ? i.Cantidad : 1m);
+            var precio = i.PrecioUnitario;
+            return new ItemVenta
+            {
+                ProductoId     = i.ProductoId,
+                NombreProducto = i.NombreProducto ?? string.Empty,
+                Cantidad       = cantidad,
+                PesoKg         = i.PesoKg,
+                PrecioUnitario = precio,
+                Subtotal       = Math.Round(precio * cantidad, 2)
+            };
         }).ToList();
 
         // 5. Crear la venta a través del servicio de dominio

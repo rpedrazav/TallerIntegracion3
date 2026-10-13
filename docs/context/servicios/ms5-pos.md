@@ -5,39 +5,38 @@ titulo: MS-5 · POS & Cart Service
 estado: parcial
 fuentes: [src/POSCartService/]
 verificado_contra_codigo: true
-ultima_revision: 2026-10-12
+ultima_revision: 2026-10-13
 depende_de: [ms1-identity, ms2-tax, ms3-catalog]
 publica: [sale.completed]
 consume: []
-reglas: [RN-02, RN-03, RN-06, RF-02, RF-03, RF-04, RF-05, RF-06, RF-07]
+reglas: [RN-01, RN-02, RN-03, RN-06, RF-02, RF-03, RF-04, RF-05, RF-06, RF-07]
 ---
 # MS-5 · POS & Cart Service
 
 > Servicio central del punto de venta. Gestiona turnos de caja y el ciclo completo de una venta (carrito, ítems, cobro, anulación). Integrado con MS-2 (IVA) y MS-3 (productos), y publica `sale.completed` a Kafka. **FALTA:** integración con pasarela de pago y hardware.
 
-## Estructura del proyecto
+## Contrato Oficial de Creación de Venta (POST /ventas) — S2-001
 
-```
-src/POSCartService/
-├── Controllers/
-│   ├── TurnosController.cs   POST abrir|activo|cerrar
-│   └── VentasController.cs   CRUD ventas + gestión de ítems (cobro y anulación aún no expuestos)
-├── Data/  PosCartDbContext.cs + Migrations/
-├── Models/  Venta · ItemVenta · Turno · Pago · Anulacion
-├── Repositories/  IVentaRepository · VentaRepository · ITurnoRepository · TurnoRepository · IItemVentaRepository · ItemVentaRepository
-├── Services/
-│   ├── VentaService.cs       ← lógica de negocio central + publicación sale.completed
-│   ├── TurnoService.cs
-│   ├── KafkaProducerService.cs ← publica eventos Kafka
-│   ├── CatalogClient.cs      ← llama MS-3
-│   └── TaxClient.cs          ← llama MS-2
-├── Validators/  (4 validators FluentValidation)
-├── Exceptions/  TurnoYaAbiertoException · ExternalServiceException
-└── tests/
-    ├── POSCartService.AgregarItemTest/
-  ├── POSCartService.CobroCuadreTest/
-    └── POSCartService.ManualTest/
-```
+> **Regla de Aceptación (S2-001):** Ningún precio o impuesto aportado por el renderer (cliente) se considera autoridad.
+
+### Delimitación de Autoridad y Responsabilidades
+| Campo | Origen / Aceptado | Fuente de Verdad / Cálculo |
+|---|---|---|
+| `producto_id` | **Cliente (Request)** | Obligatorio. UUID del producto. Validado contra MS-3 (activo y perteneciente al catálogo). |
+| `cantidad` | **Cliente (Request)** | Obligatorio para venta unitaria ($> 0$, default 1). Si se provee `peso_kg`, MS-5 asigna `cantidad = peso_kg`. |
+| `peso_kg` | **Cliente (Request)** | Opcional. Capturado desde balanza para productos a granel (`EsPesoVariable`). |
+| `precio_unitario` | **MS-5 (Calculado)** | Resuelto autoritativamente desde MS-3 (`precioBase`). Si el cliente lo envía, MS-5 **lo ignora/sobreescribe**. |
+| `nombre_producto` | **MS-5 (Calculado)** | Obtenido autoritativamente desde MS-3 al momento de la venta para snapshot histórico inmutable. |
+| `subtotal` | **MS-5 (Calculado)** | $\text{precio\_unitario} \times \text{cantidad}$ calculado por MS-5. |
+| `impuestos` (IVA) | **MS-5 (Calculado)** | Calculado autoritativamente vía MS-2 (`TaxComplianceService`) según la tasa del tenant (no cero). |
+| `total` | **MS-5 (Calculado)** | $\text{subtotal} + \text{impuestos}$. |
+| `sucursal_id` | **MS-5 (Determinado)** | Resuelto desde el `Turno` ABIERTO del cajero autenticado. El cliente no puede forzar otra sucursal. |
+| `cajero_id` | **MS-5 (Determinado)** | Extraído directamente del JWT (`cajero_id` o `sub`). |
+| `tenant_id` | **MS-5 (Determinado)** | Extraído directamente del claim `tenant_id` del JWT validado. |
+| `metodo_pago` | **Cliente (Request)** | Obligatorio: `EFECTIVO`, `TARJETA` o `MIXTO`. |
+| `estado` | **MS-5 (Determinado)** | Fijado en `PENDIENTE`. |
+
+---
 
 ## Endpoints reales
 
@@ -47,7 +46,7 @@ src/POSCartService/
 | GET | `/turnos/activo` o `/api/turnos/activo` | JWT | [IMPLEMENTADO] |
 | POST | `/turnos/cerrar` o `/api/turnos/cerrar` | JWT | [IMPLEMENTADO] |
 | POST | `/turnos/cuadre` | JWT | [IMPLEMENTADO — suma pagos EFECTIVO/COMPLETADAS; retorna efectivo_esperado, monto_declarado, diferencia] |
-| POST | `/ventas` | JWT | [IMPLEMENTADO] |
+| POST | `/ventas` | JWT | [IMPLEMENTADO — Contrato fijado S2-001] |
 | POST | `/ventas/{id}/items` | JWT | [IMPLEMENTADO] |
 | PUT | `/ventas/{id}/items/{itemId}` | JWT | [IMPLEMENTADO] |
 | DELETE | `/ventas/{id}/items/{itemId}` | JWT | [IMPLEMENTADO] |
@@ -64,9 +63,11 @@ src/POSCartService/
    → Verifica que el cajero no tenga turno activo (TurnoYaAbiertoException → 409)
    → Crea Turno { cajeroId, tenantId, sucursalId, fondoInicial, estado=ABIERTO }
 
-2. POST /ventas  { turnoId, items[], metodoPago }
-   → Verifica turno abierto (RN-06)
-   → Calcula subtotal, IVA via TaxClient→MS-2, total
+2. POST /ventas  { items: [{ producto_id, cantidad?, peso_kg? }], metodo_pago }
+   → Verifica turno abierto del cajero (RN-06)
+   → Resuelve sucursalId desde el turno activo
+   → Valida que ningún precio del request actúe como autoridad
+   → Calcula subtotal, IVA autoritativo y total
    → Estado: PENDIENTE
 
 3. POST /ventas/{id}/items  { productoId, cantidad, pesoKg? }

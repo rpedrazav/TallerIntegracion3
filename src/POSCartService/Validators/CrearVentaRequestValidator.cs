@@ -21,22 +21,23 @@ public sealed class CrearVentaRequestValidator : AbstractValidator<CrearVentaReq
                 .WithMessage("Cada ítem debe tener un producto_id válido.");
 
             item.RuleFor(i => i.NombreProducto)
-                .NotEmpty()
                 .MaximumLength(200)
-                .WithMessage("El nombre del producto es obligatorio y no puede superar 200 caracteres.");
+                .When(i => !string.IsNullOrEmpty(i.NombreProducto))
+                .WithMessage("El nombre del producto no puede superar 200 caracteres si se proporciona.");
 
             item.RuleFor(i => i.Cantidad)
                 .GreaterThan(0)
-                .WithMessage("La cantidad debe ser mayor a 0.");
-
-            item.RuleFor(i => i.PrecioUnitario)
-                .GreaterThan(0)
-                .WithMessage("El precio unitario debe ser mayor a 0.");
+                .When(i => !i.PesoKg.HasValue || i.PesoKg.Value <= 0)
+                .WithMessage("La cantidad debe ser mayor a 0 cuando no se especifica peso_kg.");
 
             item.RuleFor(i => i.PesoKg)
                 .GreaterThan(0)
                 .When(i => i.PesoKg.HasValue)
                 .WithMessage("El peso en kg debe ser mayor a 0 si se especifica.");
+
+            item.RuleFor(i => i.PrecioUnitario)
+                .GreaterThanOrEqualTo(0)
+                .WithMessage("El precio unitario no puede ser negativo.");
         });
 
         RuleFor(r => r.MetodoPago)

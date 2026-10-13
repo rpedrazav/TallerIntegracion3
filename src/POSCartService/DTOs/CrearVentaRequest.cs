@@ -18,17 +18,29 @@ public sealed record CrearVentaRequest
 
 /// <summary>
 /// Ítem de línea dentro del request de creación de venta.
+/// 
+/// CONTRATO S2-001:
+/// - Campos aceptados del cliente: producto_id, cantidad, peso_kg.
+/// - Campos calculados por MS-5: precio_unitario, nombre_producto, subtotal, iva, total.
+/// Ningún precio o impuesto aportado por el renderer se considera autoridad.
 /// </summary>
 public sealed record ItemVentaRequest
 {
     [JsonPropertyName("producto_id")]
     public Guid ProductoId { get; init; }
 
+    /// <summary>
+    /// Informativo / opcional. El nombre oficial es obtenido autoritativamente por MS-5 desde MS-3.
+    /// </summary>
     [JsonPropertyName("nombre_producto")]
     public string NombreProducto { get; init; } = string.Empty;
 
+    /// <summary>
+    /// Cantidad a vender para productos unitarios (por defecto 1).
+    /// Para productos de peso variable, si se envía peso_kg, MS-5 toma peso_kg como cantidad a facturar.
+    /// </summary>
     [JsonPropertyName("cantidad")]
-    public decimal Cantidad { get; init; }
+    public decimal Cantidad { get; init; } = 1;
 
     /// <summary>
     /// Solo para productos de peso variable (balanza). Null para productos por unidad.
@@ -36,6 +48,10 @@ public sealed record ItemVentaRequest
     [JsonPropertyName("peso_kg")]
     public decimal? PesoKg { get; init; }
 
+    /// <summary>
+    /// Informativo / opcional. Ningún precio aportado por el cliente/renderer se considera autoridad.
+    /// El precio real es resuelto autoritativamente por MS-5 desde MS-3 (CatalogPricingService).
+    /// </summary>
     [JsonPropertyName("precio_unitario")]
-    public decimal PrecioUnitario { get; init; }
+    public decimal PrecioUnitario { get; init; } = 0m;
 }

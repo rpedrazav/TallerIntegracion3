@@ -5,7 +5,7 @@ titulo: Estado Real de Implementación — GlobalMart OS
 estado: vigente
 fuentes: [docs/context/_reports/inventario.md, src/, git log, docs/context/_reports/preguntas-abiertas.md]
 verificado_contra_codigo: true
-ultima_revision: 2026-10-12
+ultima_revision: 2026-10-13
 depende_de: []
 publica: []
 consume: []
@@ -123,7 +123,7 @@ reglas: []
 - `POST /turnos/abrir` — abre turno [IMPLEMENTADO]
 - `GET /turnos/activo` — turno activo del cajero [IMPLEMENTADO]
 - `POST /turnos/cerrar` — cierra turno [IMPLEMENTADO]
-- `POST /ventas` — crear venta en estado PENDIENTE [IMPLEMENTADO en controller y service]
+- `POST /ventas` — crear venta en estado PENDIENTE. Contrato fijado (S2-001): el cliente aporta `producto_id`, `cantidad` y `peso_kg`; precio, impuestos (IVA), sucursal, tenant y cajero son determinados/calculados autoritativamente por MS-5 (ningún precio o impuesto del renderer es autoridad) [IMPLEMENTADO]
 - `POST /ventas/{id}/items` — agregar ítem (con tax via MS-2) [IMPLEMENTADO]
 - `PUT /ventas/{id}/items/{itemId}` — modificar cantidad [IMPLEMENTADO]
 - `DELETE /ventas/{id}/items/{itemId}` — eliminar ítem [IMPLEMENTADO]
@@ -134,6 +134,7 @@ reglas: []
 - KafkaProducerService — publica eventos Kafka con key=tenant_id y event_id único [IMPLEMENTADO]
 - test de integración abre turno con JWT de cajero y verifica persistencia en estado `ABIERTO` [IMPLEMENTADO]
 - test de integración crea venta, agrega dos productos y verifica subtotal, IVA y total con handlers simulados para MS-2/MS-3 [IMPLEMENTADO]
+- 7 tests unitarios en `CrearVentaRequestValidatorTests` validan el contrato S2-001 (venta unitaria sin precio, venta a peso con balanza, venta mixta y rechazo de precios/pesos negativos) [IMPLEMENTADO]
 - test de integración cobra una venta en efectivo, calcula vuelto y verifica persistencia de venta completada y pago [IMPLEMENTADO]
 - test de integración consume `sale.completed` desde Kafka y verifica `VentaId`, `TenantId` y `Total` del payload [IMPLEMENTADO]
 - test de integración abre turno, registra venta y pago efectivo, y verifica el cuadre con diferencia calculada [IMPLEMENTADO]
