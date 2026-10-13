@@ -21,14 +21,16 @@ public interface IVentaService
 
     /// <summary>
     /// Crea una nueva venta en estado PENDIENTE con los items dados.
-    /// Calcula subtotal, impuestos y total a partir de la lista de items.
+    /// Recibe subtotal, impuestos y total calculados autoritativamente vía MS-2 (TaxComplianceService).
     /// </summary>
     /// <param name="turnoId">Turno de caja activo al que pertenece la venta.</param>
     /// <param name="cajeroId">Cajero que registra la venta (denormalizado).</param>
     /// <param name="sucursalId">Sucursal (denormalizado desde el Turno).</param>
     /// <param name="tenantId">Tenant actual extraído del JWT.</param>
     /// <param name="items">Lista de items del carrito (al menos 1).</param>
-    /// <param name="impuestoPorcentaje">Porcentaje de IVA (0, 19 o 21).</param>
+    /// <param name="subtotal">Subtotal calculado autoritativamente.</param>
+    /// <param name="impuestos">Impuestos (IVA) calculados autoritativamente por MS-2.</param>
+    /// <param name="total">Total general calculado (subtotal + impuestos).</param>
     /// <param name="metodoPago">Método de pago seleccionado.</param>
     /// <exception cref="ArgumentException">Si la lista de items está vacía.</exception>
     Task<Venta> CrearAsync(
@@ -37,7 +39,9 @@ public interface IVentaService
         Guid sucursalId,
         Guid tenantId,
         IEnumerable<ItemVenta> items,
-        decimal impuestoPorcentaje,
+        decimal subtotal,
+        decimal impuestos,
+        decimal total,
         MetodoPagoVenta metodoPago);
 
     /// <summary>

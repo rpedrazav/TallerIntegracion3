@@ -67,7 +67,9 @@ reglas: [RN-01, RN-02, RN-03, RN-06, RF-02, RF-03, RF-04, RF-05, RF-06, RF-07]
    → Verifica turno abierto del cajero (RN-06)
    → Resuelve sucursalId desde el turno activo
    → Valida que ningún precio del request actúe como autoridad
-   → Calcula subtotal, IVA autoritativo y total
+   → Consulta CatalogClient→MS-3 para cada producto (rechaza 404 si no existe, 400 si está inactivo)
+   → Llama TaxClient→MS-2 para calcular IVA y totales consolidados
+   → Crea Venta con subtotal, impuestos (IVA) y total de MS-2
    → Estado: PENDIENTE
 
 3. POST /ventas/{id}/items  { productoId, cantidad, pesoKg? }

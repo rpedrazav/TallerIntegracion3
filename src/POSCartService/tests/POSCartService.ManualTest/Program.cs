@@ -136,16 +136,17 @@ Console.WriteLine();
 // ══════════════════════════════════════════════════════════════════════
 Console.WriteLine("── D. POST /ventas — Flujo completo (IVA 0%) ─────────────────");
 
-var venta = await ventaSvc.CrearAsync(
-    turnoId:            turno.Id,
-    cajeroId:           cajeroId,
-    sucursalId:         turno.SucursalId,
-    tenantId:           tenantId,
-    items:              itemsDominio,
-    impuestoPorcentaje: 0m,
-    metodoPago:         MetodoPagoVenta.TARJETA);
-
 decimal expectedSubtotal = 850_000m + 30_000m + 15_000m; // 895.000
+var venta = await ventaSvc.CrearAsync(
+    turnoId:    turno.Id,
+    cajeroId:   cajeroId,
+    sucursalId: turno.SucursalId,
+    tenantId:   tenantId,
+    items:      itemsDominio,
+    subtotal:   expectedSubtotal,
+    impuestos:  0m,
+    total:      expectedSubtotal,
+    metodoPago: MetodoPagoVenta.TARJETA);
 Check($"D1 — Estado inicial PENDIENTE",            venta.Estado == EstadoVenta.PENDIENTE);
 Check($"D2 — Subtotal = 895.000",                  venta.Subtotal == expectedSubtotal);
 Check($"D3 — Impuestos = 0 (IVA 0%)",              venta.Impuestos == 0m);

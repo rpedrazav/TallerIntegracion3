@@ -94,9 +94,7 @@ public class VentaIntegrationTests : IClassFixture<Ms5WebApplicationFactory>
                 new
                 {
                     producto_id = ProductOneId,
-                    nombre_producto = "Producto uno",
-                    cantidad = 2m,
-                    precio_unitario = 100m
+                    cantidad = 2m
                 }
             },
             metodo_pago = "EFECTIVO"
@@ -106,6 +104,25 @@ public class VentaIntegrationTests : IClassFixture<Ms5WebApplicationFactory>
         var ventaId = await ReadGuidPropertyAsync(crearVentaResponse, "id");
         var ventaTurnoId = await ReadGuidPropertyAsync(crearVentaResponse, "turno_id");
         Assert.Equal(turnoId, ventaTurnoId);
+
+        // Verificar que la venta creada ya tiene subtotal, impuestos y total calculados desde MS-3 y MS-2
+        using (var initialScope = configuredFactory.Services.CreateScope())
+        {
+            var initialDb = initialScope.ServiceProvider.GetRequiredService<PosCartDbContext>();
+            var initialVenta = await initialDb.Ventas
+                .IgnoreQueryFilters()
+                .Include(v => v.Items)
+                .SingleOrDefaultAsync(v => v.Id == ventaId);
+
+            Assert.NotNull(initialVenta);
+            Assert.Single(initialVenta.Items);
+            var itemInicial = initialVenta.Items.First();
+            Assert.Equal("Producto uno", itemInicial.NombreProducto);
+            Assert.Equal(100m, itemInicial.PrecioUnitario);
+            Assert.Equal(200m, initialVenta.Subtotal);
+            Assert.Equal(38m, initialVenta.Impuestos);
+            Assert.Equal(238m, initialVenta.Total);
+        }
 
         var agregarItemResponse = await client.PostAsJsonAsync($"/ventas/{ventaId}/items", new
         {
@@ -124,6 +141,142 @@ public class VentaIntegrationTests : IClassFixture<Ms5WebApplicationFactory>
         Assert.Equal(250m, venta.Subtotal);
         Assert.Equal(47.50m, venta.Impuestos);
         Assert.Equal(297.50m, venta.Total);
+    }
+
+    [Fact]
+    public async Task CrearVenta_ProductoInexistente_Retorna404SinPersistir()
+    {
+        var tenantId = Guid.NewGuid();
+        var cajeroId = Guid.NewGuid();
+        var sucursalId = Guid.NewGuid();
+        var productoInexistenteId = Guid.Parse("99999999-9999-9999-9999-999999999999");
+
+        var configuredFactory = _factory.WithWebHostBuilder(builder =>
+        {
+            builder.ConfigureTestServices(services =>
+            {
+                services.AddControllers().AddControllersAsServices();
+                services.AddTransient<VentasController>(serviceProvider =>
+                    new VentasController(
+                        serviceProvider.GetRequiredService<IVentaService>(),
+                        serviceProvider.GetRequiredService<ITurnoService>(),
+                        serviceProvider.GetRequiredService<ICatalogClient>(),
+                        serviceProvider.GetRequiredService<ITaxClient>(),
+                        serviceProvider.GetRequiredService<ILogger<VentasController>>()));
+                services.AddHttpClient(CatalogClient.HttpClientName)
+                    .ConfigurePrimaryHttpMessageHandler(() => new CatalogStubHandler(ProductOneId, ProductTwoId));
+                services.AddHttpClient(TaxClient.HttpClientName)
+                    .ConfigurePrimaryHttpMessageHandler(() => new TaxStubHandler());
+            });
+        });
+
+        var configuration = configuredFactory.Services.GetRequiredService<IConfiguration>();
+        var token = CreateCajeroToken(configuration, tenantId, cajeroId);
+
+        using (var migrationScope = configuredFactory.Services.CreateScope())
+        {
+            var migrationDb = migrationScope.ServiceProvider.GetRequiredService<PosCartDbContext>();
+            await migrationDb.Database.MigrateAsync();
+        }
+
+        using var client = configuredFactory.CreateClient();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        var abrirTurnoResponse = await client.PostAsJsonAsync("/turnos/abrir", new
+        {
+            sucursal_id = sucursalId,
+            monto_fondo_inicial = 50000m
+        });
+        Assert.Equal(HttpStatusCode.OK, abrirTurnoResponse.StatusCode);
+
+        var response = await client.PostAsJsonAsync("/ventas", new
+        {
+            items = new[]
+            {
+                new
+                {
+                    producto_id = productoInexistenteId,
+                    cantidad = 1m
+                }
+            },
+            metodo_pago = "EFECTIVO"
+        });
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+
+        // Verificar que NO se persistió ninguna venta ni ítems
+        using var scope = configuredFactory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<PosCartDbContext>();
+        var totalVentas = await db.Ventas.IgnoreQueryFilters().CountAsync(v => v.TenantId == tenantId);
+        Assert.Equal(0, totalVentas);
+    }
+
+    [Fact]
+    public async Task CrearVenta_ProductoInactivo_Retorna400SinPersistir()
+    {
+        var tenantId = Guid.NewGuid();
+        var cajeroId = Guid.NewGuid();
+        var sucursalId = Guid.NewGuid();
+        var productoInactivoId = Guid.Parse("33333333-3333-3333-3333-333333333333");
+
+        var configuredFactory = _factory.WithWebHostBuilder(builder =>
+        {
+            builder.ConfigureTestServices(services =>
+            {
+                services.AddControllers().AddControllersAsServices();
+                services.AddTransient<VentasController>(serviceProvider =>
+                    new VentasController(
+                        serviceProvider.GetRequiredService<IVentaService>(),
+                        serviceProvider.GetRequiredService<ITurnoService>(),
+                        serviceProvider.GetRequiredService<ICatalogClient>(),
+                        serviceProvider.GetRequiredService<ITaxClient>(),
+                        serviceProvider.GetRequiredService<ILogger<VentasController>>()));
+                services.AddHttpClient(CatalogClient.HttpClientName)
+                    .ConfigurePrimaryHttpMessageHandler(() => new CatalogStubHandler(ProductOneId, ProductTwoId, productoInactivoId));
+                services.AddHttpClient(TaxClient.HttpClientName)
+                    .ConfigurePrimaryHttpMessageHandler(() => new TaxStubHandler());
+            });
+        });
+
+        var configuration = configuredFactory.Services.GetRequiredService<IConfiguration>();
+        var token = CreateCajeroToken(configuration, tenantId, cajeroId);
+
+        using (var migrationScope = configuredFactory.Services.CreateScope())
+        {
+            var migrationDb = migrationScope.ServiceProvider.GetRequiredService<PosCartDbContext>();
+            await migrationDb.Database.MigrateAsync();
+        }
+
+        using var client = configuredFactory.CreateClient();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        var abrirTurnoResponse = await client.PostAsJsonAsync("/turnos/abrir", new
+        {
+            sucursal_id = sucursalId,
+            monto_fondo_inicial = 50000m
+        });
+        Assert.Equal(HttpStatusCode.OK, abrirTurnoResponse.StatusCode);
+
+        var response = await client.PostAsJsonAsync("/ventas", new
+        {
+            items = new[]
+            {
+                new
+                {
+                    producto_id = productoInactivoId,
+                    cantidad = 1m
+                }
+            },
+            metodo_pago = "EFECTIVO"
+        });
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+
+        // Verificar que NO se persistió ninguna venta ni ítems
+        using var scope = configuredFactory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<PosCartDbContext>();
+        var totalVentas = await db.Ventas.IgnoreQueryFilters().CountAsync(v => v.TenantId == tenantId);
+        Assert.Equal(0, totalVentas);
     }
 
     private static async Task<Guid> ReadGuidPropertyAsync(HttpResponseMessage response, string propertyName)
@@ -167,11 +320,13 @@ public class VentaIntegrationTests : IClassFixture<Ms5WebApplicationFactory>
     {
         private readonly Guid _productOneId;
         private readonly Guid _productTwoId;
+        private readonly Guid? _productInactiveId;
 
-        public CatalogStubHandler(Guid productOneId, Guid productTwoId)
+        public CatalogStubHandler(Guid productOneId, Guid productTwoId, Guid? productInactiveId = null)
         {
             _productOneId = productOneId;
             _productTwoId = productTwoId;
+            _productInactiveId = productInactiveId;
         }
 
         protected override Task<HttpResponseMessage> SendAsync(
@@ -183,7 +338,9 @@ public class VentaIntegrationTests : IClassFixture<Ms5WebApplicationFactory>
                 ? new { id = _productOneId, nombre = "Producto uno", precioBase = 100m, esPesoVariable = false, isActive = true }
                 : productId == _productTwoId
                     ? new { id = _productTwoId, nombre = "Producto dos", precioBase = 50m, esPesoVariable = false, isActive = true }
-                    : null;
+                    : (_productInactiveId.HasValue && productId == _productInactiveId.Value)
+                        ? new { id = _productInactiveId.Value, nombre = "Producto inactivo", precioBase = 20m, esPesoVariable = false, isActive = false }
+                        : null;
 
             if (response is null)
             {
@@ -196,24 +353,52 @@ public class VentaIntegrationTests : IClassFixture<Ms5WebApplicationFactory>
 
     private sealed class TaxStubHandler : HttpMessageHandler
     {
-        protected override Task<HttpResponseMessage> SendAsync(
+        protected override async Task<HttpResponseMessage> SendAsync(
             HttpRequestMessage request,
             CancellationToken cancellationToken)
         {
+            using var doc = JsonDocument.Parse(await request.Content!.ReadAsStringAsync(cancellationToken));
+            var itemsElement = doc.RootElement.GetProperty("items");
+
+            decimal subtotal = 0m;
+            var breakdown = new List<object>();
+
+            foreach (var item in itemsElement.EnumerateArray())
+            {
+                var nombre = item.GetProperty("nombre").GetString();
+                var precio = item.GetProperty("precio").GetDecimal();
+                var cantidad = item.GetProperty("cantidad").GetDecimal();
+                var itemSubtotal = Math.Round(precio * cantidad, 2);
+                var itemIva = Math.Round(itemSubtotal * 0.19m, 2);
+                var itemTotal = itemSubtotal + itemIva;
+
+                subtotal += itemSubtotal;
+                breakdown.Add(new
+                {
+                    nombre,
+                    precio,
+                    cantidad,
+                    subtotal = itemSubtotal,
+                    porcentajeIva = 19m,
+                    iva = itemIva,
+                    total = itemTotal,
+                    exento = false
+                });
+            }
+
+            var totalIva = Math.Round(subtotal * 0.19m, 2);
+            var total = subtotal + totalIva;
+
             var response = new
             {
-                subtotal = 250m,
+                subtotal,
                 porcentajeIva = 19m,
-                iva = 47.50m,
-                total = 297.50m,
-                items = new[]
-                {
-                    new { nombre = "Producto uno", precio = 100m, cantidad = 2m, subtotal = 200m, porcentajeIva = 19m, iva = 38m, total = 238m, exento = false },
-                    new { nombre = "Producto dos", precio = 50m, cantidad = 1m, subtotal = 50m, porcentajeIva = 19m, iva = 9.50m, total = 59.50m, exento = false }
-                }
+                iva = totalIva,
+                total,
+                items = breakdown
             };
 
-            return Task.FromResult(JsonResponse(HttpStatusCode.OK, response));
+            return JsonResponse(HttpStatusCode.OK, response);
         }
     }
 

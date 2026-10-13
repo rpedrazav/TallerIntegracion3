@@ -37,10 +37,6 @@ public sealed class VentasController : ControllerBase
         _logger        = logger;
     }
 
-    public VentasController(IVentaService ventaService, ITurnoService turnoService)
-        : this(ventaService, turnoService, null!, null!, null)
-    {
-    }
 
 
     // ── Helpers ────────────────────────────────────────────────────────────────
@@ -73,8 +69,13 @@ public sealed class VentasController : ControllerBase
     [ProducesResponseType(typeof(VentaResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
-    public async Task<IActionResult> Crear([FromBody] CrearVentaRequest request)
+    [ProducesResponseType(StatusCodes.Status502BadGateway)]
+    [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
+    public async Task<IActionResult> Crear(
+        [FromBody] CrearVentaRequest request,
+        CancellationToken cancellationToken)
     {
         // 1. Extraer claims del JWT
         if (!TryGetClaims(out var cajeroId, out var tenantId))
@@ -97,40 +98,117 @@ public sealed class VentasController : ControllerBase
             return BadRequest(new { error = $"metodo_pago '{request.MetodoPago}' no reconocido. Use EFECTIVO, TARJETA o MIXTO." });
         }
 
-        // 4. Mapear ítems del DTO al modelo de dominio
-        // NOTA CONTRATO S2-001: Ningún precio o impuesto aportado por el renderer es autoridad.
-        // La resolución autoritativa de catálogo (MS-3) e IVA real (MS-2) es orquestada en el flujo de venta.
-        var itemsDominio = request.Items.Select(i =>
+        // 4. Token Bearer para propagación a microservicios MS-3 y MS-2
+        var authHeader = Request.Headers.Authorization.ToString();
+
+        // 5. Validar y resolver cada producto consultando MS-3 (CatalogPricingService)
+        // NOTA CONTRATO S2-001 / S2-002: Ningún precio o impuesto aportado por el renderer es autoridad.
+        // Se resuelven autoritativamente desde MS-3 y MS-2.
+        var itemsDominio = new List<ItemVenta>();
+        var itemsParaCalculoTax = new List<TaxItemDto>();
+
+        foreach (var itemRequest in request.Items)
         {
-            var cantidad = (i.PesoKg.HasValue && i.PesoKg.Value > 0) ? i.PesoKg.Value : (i.Cantidad > 0 ? i.Cantidad : 1m);
-            var precio = i.PrecioUnitario;
-            return new ItemVenta
+            ProductoCatalogDto? producto;
+            try
             {
-                ProductoId     = i.ProductoId,
-                NombreProducto = i.NombreProducto ?? string.Empty,
+                producto = await _catalogClient.GetProductAsync(itemRequest.ProductoId, authHeader, cancellationToken);
+            }
+            catch (ExternalServiceException ex)
+            {
+                _logger?.LogError(ex, "Error llamando a MS-3 CatalogPricingService para producto {ProductoId}", itemRequest.ProductoId);
+                return StatusCode(StatusCodes.Status502BadGateway, new { error = ex.Message });
+            }
+
+            if (producto is null)
+            {
+                return NotFound(new
+                {
+                    message = $"Producto {itemRequest.ProductoId} no encontrado",
+                    error = $"Producto {itemRequest.ProductoId} no encontrado en el catálogo."
+                });
+            }
+
+            if (!producto.IsActive)
+            {
+                return BadRequest(new
+                {
+                    error = $"El producto '{producto.Nombre}' está inactivo y no se puede vender."
+                });
+            }
+
+            // Determinar cantidad y peso
+            decimal cantidad = itemRequest.Cantidad;
+            decimal? pesoKg = itemRequest.PesoKg;
+
+            if (producto.EsPesoVariable && pesoKg.HasValue && pesoKg.Value > 0)
+            {
+                cantidad = pesoKg.Value;
+            }
+            else if (cantidad <= 0)
+            {
+                cantidad = 1;
+            }
+
+            decimal precioUnitario = producto.PrecioBase;
+            decimal subtotalItem = Math.Round(precioUnitario * cantidad, 2);
+
+            itemsDominio.Add(new ItemVenta
+            {
+                ProductoId     = producto.Id,
+                NombreProducto = producto.Nombre,
                 Cantidad       = cantidad,
-                PesoKg         = i.PesoKg,
-                PrecioUnitario = precio,
-                Subtotal       = Math.Round(precio * cantidad, 2)
-            };
-        }).ToList();
+                PesoKg         = pesoKg,
+                PrecioUnitario = precioUnitario,
+                Subtotal       = subtotalItem
+            });
 
-        // 5. Crear la venta a través del servicio de dominio
-        // IVA: el porcentaje se obtiene del tenant (por ahora 0 — será extendido cuando
-        // se integre con MS-2 TaxComplianceService; el endpoint queda preparado para ello).
-        // TODO: llamar a TaxComplianceService para obtener el IVA real del tenant.
-        const decimal impuestoPorcentaje = 0m;
+            itemsParaCalculoTax.Add(new TaxItemDto
+            {
+                Nombre   = producto.Nombre,
+                Precio   = precioUnitario,
+                Cantidad = cantidad
+            });
+        }
 
+        // 6. Consultar MS-2 POST /api/tax/calculate para calcular IVA y totales consolidados
+        TaxCalculationResult? taxResult;
+        try
+        {
+            taxResult = await _taxClient.CalculateTaxAsync(itemsParaCalculoTax, null, authHeader, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger?.LogError(ex, "MS-2 TaxComplianceService no responde al crear venta");
+            return StatusCode(StatusCodes.Status503ServiceUnavailable, new
+            {
+                message = "MS-2 no responde",
+                error   = "El servicio de cálculo de impuestos (MS-2) no responde o no está disponible."
+            });
+        }
+
+        if (taxResult is null)
+        {
+            return StatusCode(StatusCodes.Status503ServiceUnavailable, new
+            {
+                message = "MS-2 no responde",
+                error   = "MS-2 no respondió o no retornó resultados de cálculo fiscal."
+            });
+        }
+
+        // 7. Crear la venta a través del servicio de dominio con totales autoritativos de MS-2
         var venta = await _ventaService.CrearAsync(
-            turnoId:             turno.Id,
-            cajeroId:            cajeroId,
-            sucursalId:          turno.SucursalId,
-            tenantId:            tenantId,
-            items:               itemsDominio,
-            impuestoPorcentaje:  impuestoPorcentaje,
-            metodoPago:          metodoPago);
+            turnoId:    turno.Id,
+            cajeroId:   cajeroId,
+            sucursalId: turno.SucursalId,
+            tenantId:   tenantId,
+            items:      itemsDominio,
+            subtotal:   taxResult.Subtotal,
+            impuestos:  taxResult.Iva,
+            total:      taxResult.Total,
+            metodoPago: metodoPago);
 
-        // 6. Retornar 201 Created con la URI del recurso creado
+        // 8. Retornar 201 Created con la URI del recurso creado
         return CreatedAtAction(
             nameof(GetById),
             new { id = venta.Id },

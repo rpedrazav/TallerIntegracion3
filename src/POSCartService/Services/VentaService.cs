@@ -36,23 +36,15 @@ public class VentaService : IVentaService
         Guid sucursalId,
         Guid tenantId,
         IEnumerable<ItemVenta> items,
-        decimal impuestoPorcentaje,
+        decimal subtotal,
+        decimal impuestos,
+        decimal total,
         MetodoPagoVenta metodoPago)
     {
         var listaItems = items.ToList();
 
         if (listaItems.Count == 0)
             throw new ArgumentException("La venta debe tener al menos un ítem.", nameof(items));
-
-        if (impuestoPorcentaje < 0)
-            throw new ArgumentOutOfRangeException(nameof(impuestoPorcentaje), "El porcentaje de impuesto no puede ser negativo.");
-
-        // RN-01: subtotal = suma de (precio unitario * cantidad)
-        var subtotal = listaItems.Sum(i => i.Subtotal);
-
-        // RN-01: impuestos y total
-        var impuestos = Math.Round(subtotal * impuestoPorcentaje / 100m, 2);
-        var total     = subtotal + impuestos;
 
         var venta = new Venta
         {
