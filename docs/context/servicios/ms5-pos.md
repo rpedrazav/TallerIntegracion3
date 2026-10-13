@@ -15,9 +15,9 @@ reglas: [RN-01, RN-02, RN-03, RN-06, RF-02, RF-03, RF-04, RF-05, RF-06, RF-07]
 
 > Servicio central del punto de venta. Gestiona turnos de caja y el ciclo completo de una venta (carrito, ítems, cobro, anulación). Integrado con MS-2 (IVA) y MS-3 (productos), y publica `sale.completed` a Kafka. **FALTA:** integración con pasarela de pago y hardware.
 
-## Contrato Oficial de Creación de Venta (POST /ventas) — S2-001
+## Contrato Oficial de Creación de Venta (POST /ventas) — S2-001 / S2-002 / S2-003
 
-> **Regla de Aceptación (S2-001):** Ningún precio o impuesto aportado por el renderer (cliente) se considera autoridad.
+> **Regla de Aceptación (S2-001 / S2-003):** Ningún precio o impuesto aportado por el renderer (cliente) se considera autoridad. Los precios se resuelven en MS-3 y los impuestos se calculan autoritativamente con MS-2 desde la creación inicial.
 
 ### Delimitación de Autoridad y Responsabilidades
 | Campo | Origen / Aceptado | Fuente de Verdad / Cálculo |
