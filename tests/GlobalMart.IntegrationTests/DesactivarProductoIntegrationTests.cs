@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.IdentityModel.Tokens;
@@ -38,24 +39,25 @@ public class DesactivarProductoIntegrationTests : IAsyncLifetime
 
     public async Task InitializeAsync()
     {
-        var connection = Environment.GetEnvironmentVariable("GLOBALMART_TEST_POSTGRES")
-            ?? throw new InvalidOperationException("Configure GLOBALMART_TEST_POSTGRES con una base PostgreSQL de pruebas.");
-        _connection = new NpgsqlConnectionStringBuilder(connection)
-            { SearchPath = _schema, Pooling = false }.ConnectionString;
-        await using var db = new NpgsqlConnection(_connection);
-        await db.OpenAsync();
-        await using var create = new NpgsqlCommand($"CREATE SCHEMA \"{_schema}\"", db);
-        await create.ExecuteNonQueryAsync();
-
         // Configurar antes de CreateClient: Program migra únicamente nuestro esquema vacío.
         _host = _factory.WithWebHostBuilder(builder =>
         {
             builder.UseEnvironment("Testing");
-            builder.ConfigureTestServices(services =>
+            builder.ConfigureServices((context, services) =>
             {
+                // IConfiguration del host: mismos appsettings y overrides que MS-3.
+                // No arrancar primero la factory base: migraría el esquema compartido.
+                var connection = context.Configuration.GetConnectionString("DefaultConnection")
+                    ?? throw new InvalidOperationException("Falta ConnectionStrings:DefaultConnection en la configuración de MS-3.");
+                _connection = new NpgsqlConnectionStringBuilder(connection)
+                    { SearchPath = _schema, Pooling = false }.ConnectionString;
+                using var db = new NpgsqlConnection(_connection);
+                db.Open();
+                using var create = new NpgsqlCommand($"CREATE SCHEMA \"{_schema}\"", db);
+                create.ExecuteNonQuery();
                 services.RemoveAll<DbContextOptions<CatalogDbContext>>();
                 services.AddSingleton(new DbContextOptionsBuilder<CatalogDbContext>()
-                    .UseNpgsql(_connection).Options);
+                    .UseNpgsql(_connection, options => options.MigrationsHistoryTable("__EFMigrationsHistory", _schema)).Options);
                 services.PostConfigure<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme, options =>
                 {
                     options.TokenValidationParameters.ValidIssuer = "TI3642Tests";
@@ -209,7 +211,7 @@ public class DesactivarProductoIntegrationTests : IAsyncLifetime
                 {
                     services.RemoveAll<DbContextOptions<Pos.Data.PosCartDbContext>>();
                     services.AddSingleton(new DbContextOptionsBuilder<Pos.Data.PosCartDbContext>()
-                        .UseNpgsql(posConnection).Options);
+                        .UseNpgsql(posConnection, options => options.MigrationsHistoryTable("__EFMigrationsHistory", posSchema)).Options);
                     services.PostConfigure<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme, options =>
                     {
                         options.TokenValidationParameters.ValidIssuer = "TI3642Tests";
