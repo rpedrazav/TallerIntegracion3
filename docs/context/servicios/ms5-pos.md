@@ -79,6 +79,7 @@ reglas: [RN-01, RN-02, RN-03, RN-06, RF-02, RF-03, RF-04, RF-05, RF-06, RF-07]
 
 4. POST /ventas/{id}/cobrar  { monto_recibido }
    → Verifica JWT y venta PENDIENTE
+   → Valida que MetodoPago == EFECTIVO (S2-004: rechaza 400 Bad Request si es TARJETA o MIXTO)
    → Valida monto_recibido ≥ venta.Total (→ 400 "Monto insuficiente" si no alcanza)
    → Calcula vuelto = monto_recibido − total
    → VentaService.CompletarAsync: estado → COMPLETADA + crea Pago { Metodo=EFECTIVO, Monto=monto_recibido, Vuelto=vuelto }

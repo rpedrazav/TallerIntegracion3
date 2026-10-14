@@ -688,7 +688,17 @@ public sealed class VentasController : ControllerBase
             });
         }
 
-        // 4. Validar monto recibido ≥ total de la venta (regla de negocio del enunciado)
+        // 4. S2-004: Restringir endpoint de cobro a ventas con método de pago EFECTIVO
+        if (venta.MetodoPago != MetodoPagoVenta.EFECTIVO)
+        {
+            return BadRequest(new
+            {
+                error = $"El método de pago de esta venta es '{venta.MetodoPago}'. Este endpoint solo procesa cobros en EFECTIVO.",
+                metodo_pago = venta.MetodoPago.ToString()
+            });
+        }
+
+        // 5. Validar monto recibido ≥ total de la venta (regla de negocio del enunciado)
         if (request.MontoRecibido < venta.Total)
         {
             return BadRequest(new

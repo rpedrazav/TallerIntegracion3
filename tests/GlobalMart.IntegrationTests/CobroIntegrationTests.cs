@@ -144,6 +144,182 @@ public class CobroIntegrationTests : IClassFixture<Ms5WebApplicationFactory>
         Assert.Equal(vueltoEsperado, pago.Vuelto);
     }
 
+    [Fact]
+    public async Task CobrarEfectivo_VentaTarjeta_Retorna400BadRequestSinRegistrarPago()
+    {
+        CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;
+        CultureInfo.CurrentUICulture = CultureInfo.InvariantCulture;
+
+        var tenantId = Guid.NewGuid();
+        var cajeroId = Guid.NewGuid();
+        var sucursalId = Guid.NewGuid();
+
+        var configuredFactory = _factory.WithWebHostBuilder(builder =>
+        {
+            builder.ConfigureTestServices(services =>
+            {
+                services.AddControllers().AddControllersAsServices();
+                services.Configure<MvcOptions>(options => options.ModelValidatorProviders.Clear());
+                services.AddSingleton<IKafkaProducerService, NoOpKafkaProducerService>();
+                services.AddTransient<VentasController>(serviceProvider =>
+                    new VentasController(
+                        serviceProvider.GetRequiredService<IVentaService>(),
+                        serviceProvider.GetRequiredService<ITurnoService>(),
+                        serviceProvider.GetRequiredService<ICatalogClient>(),
+                        serviceProvider.GetRequiredService<ITaxClient>(),
+                        serviceProvider.GetRequiredService<ILogger<VentasController>>()));
+                services.AddHttpClient(CatalogClient.HttpClientName)
+                    .ConfigurePrimaryHttpMessageHandler(() => new CatalogStubHandler());
+                services.AddHttpClient(TaxClient.HttpClientName)
+                    .ConfigurePrimaryHttpMessageHandler(() => new TaxStubHandler());
+            });
+        });
+
+        var configuration = configuredFactory.Services.GetRequiredService<IConfiguration>();
+        var token = CreateCajeroToken(configuration, tenantId, cajeroId);
+
+        using (var migrationScope = configuredFactory.Services.CreateScope())
+        {
+            var migrationDb = migrationScope.ServiceProvider.GetRequiredService<PosCartDbContext>();
+            await migrationDb.Database.MigrateAsync();
+        }
+
+        using var client = configuredFactory.CreateClient();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        var abrirTurnoResponse = await client.PostAsJsonAsync("/turnos/abrir", new
+        {
+            sucursal_id = sucursalId,
+            monto_fondo_inicial = 50000m
+        });
+        Assert.Equal(HttpStatusCode.OK, abrirTurnoResponse.StatusCode);
+
+        // Crear venta con método de pago TARJETA
+        var crearVentaResponse = await client.PostAsJsonAsync("/ventas", new
+        {
+            items = new[]
+            {
+                new
+                {
+                    producto_id = ProductOneId,
+                    cantidad = 1m
+                }
+            },
+            metodo_pago = "TARJETA"
+        });
+        Assert.Equal(HttpStatusCode.Created, crearVentaResponse.StatusCode);
+
+        var ventaId = await ReadGuidPropertyAsync(crearVentaResponse, "id");
+
+        // Intentar cobrar en efectivo a través de POST /ventas/{id}/cobrar
+        var cobrarResponse = await client.PostAsJsonAsync($"/ventas/{ventaId}/cobrar", new
+        {
+            monto_recibido = 1000m
+        });
+
+        Assert.Equal(HttpStatusCode.BadRequest, cobrarResponse.StatusCode);
+
+        // Verificar que la venta sigue PENDIENTE y que no se registró ningún pago
+        using var scope = configuredFactory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<PosCartDbContext>();
+        var venta = await db.Ventas
+            .Include(v => v.Pagos)
+            .IgnoreQueryFilters()
+            .SingleOrDefaultAsync(v => v.Id == ventaId);
+
+        Assert.NotNull(venta);
+        Assert.Equal(EstadoVenta.PENDIENTE, venta!.Estado);
+        Assert.Empty(venta.Pagos);
+    }
+
+    [Fact]
+    public async Task CobrarEfectivo_VentaMixto_Retorna400BadRequestSinRegistrarPago()
+    {
+        CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;
+        CultureInfo.CurrentUICulture = CultureInfo.InvariantCulture;
+
+        var tenantId = Guid.NewGuid();
+        var cajeroId = Guid.NewGuid();
+        var sucursalId = Guid.NewGuid();
+
+        var configuredFactory = _factory.WithWebHostBuilder(builder =>
+        {
+            builder.ConfigureTestServices(services =>
+            {
+                services.AddControllers().AddControllersAsServices();
+                services.Configure<MvcOptions>(options => options.ModelValidatorProviders.Clear());
+                services.AddSingleton<IKafkaProducerService, NoOpKafkaProducerService>();
+                services.AddTransient<VentasController>(serviceProvider =>
+                    new VentasController(
+                        serviceProvider.GetRequiredService<IVentaService>(),
+                        serviceProvider.GetRequiredService<ITurnoService>(),
+                        serviceProvider.GetRequiredService<ICatalogClient>(),
+                        serviceProvider.GetRequiredService<ITaxClient>(),
+                        serviceProvider.GetRequiredService<ILogger<VentasController>>()));
+                services.AddHttpClient(CatalogClient.HttpClientName)
+                    .ConfigurePrimaryHttpMessageHandler(() => new CatalogStubHandler());
+                services.AddHttpClient(TaxClient.HttpClientName)
+                    .ConfigurePrimaryHttpMessageHandler(() => new TaxStubHandler());
+            });
+        });
+
+        var configuration = configuredFactory.Services.GetRequiredService<IConfiguration>();
+        var token = CreateCajeroToken(configuration, tenantId, cajeroId);
+
+        using (var migrationScope = configuredFactory.Services.CreateScope())
+        {
+            var migrationDb = migrationScope.ServiceProvider.GetRequiredService<PosCartDbContext>();
+            await migrationDb.Database.MigrateAsync();
+        }
+
+        using var client = configuredFactory.CreateClient();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        var abrirTurnoResponse = await client.PostAsJsonAsync("/turnos/abrir", new
+        {
+            sucursal_id = sucursalId,
+            monto_fondo_inicial = 50000m
+        });
+        Assert.Equal(HttpStatusCode.OK, abrirTurnoResponse.StatusCode);
+
+        // Crear venta con método de pago MIXTO
+        var crearVentaResponse = await client.PostAsJsonAsync("/ventas", new
+        {
+            items = new[]
+            {
+                new
+                {
+                    producto_id = ProductOneId,
+                    cantidad = 1m
+                }
+            },
+            metodo_pago = "MIXTO"
+        });
+        Assert.Equal(HttpStatusCode.Created, crearVentaResponse.StatusCode);
+
+        var ventaId = await ReadGuidPropertyAsync(crearVentaResponse, "id");
+
+        // Intentar cobrar en efectivo
+        var cobrarResponse = await client.PostAsJsonAsync($"/ventas/{ventaId}/cobrar", new
+        {
+            monto_recibido = 1000m
+        });
+
+        Assert.Equal(HttpStatusCode.BadRequest, cobrarResponse.StatusCode);
+
+        // Verificar que la venta sigue PENDIENTE y que no se registró ningún pago
+        using var scope = configuredFactory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<PosCartDbContext>();
+        var venta = await db.Ventas
+            .Include(v => v.Pagos)
+            .IgnoreQueryFilters()
+            .SingleOrDefaultAsync(v => v.Id == ventaId);
+
+        Assert.NotNull(venta);
+        Assert.Equal(EstadoVenta.PENDIENTE, venta!.Estado);
+        Assert.Empty(venta.Pagos);
+    }
+
     private static async Task<Guid> ReadGuidPropertyAsync(HttpResponseMessage response, string propertyName)
     {
         using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync());

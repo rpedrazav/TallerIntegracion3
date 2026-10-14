@@ -73,6 +73,10 @@ public class VentaService : IVentaService
             throw new InvalidOperationException(
                 $"Solo se puede completar una venta PENDIENTE. Estado actual: {venta.Estado}.");
 
+        if (venta.MetodoPago != MetodoPagoVenta.EFECTIVO)
+            throw new InvalidOperationException(
+                $"No se puede registrar pago en efectivo para una venta con método de pago {venta.MetodoPago}.");
+
         venta.Estado = EstadoVenta.COMPLETADA;
 
         // Registrar el pago en efectivo (Pago.Metodo=EFECTIVO, con monto y vuelto)
