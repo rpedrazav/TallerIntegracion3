@@ -44,15 +44,17 @@ La URL base de MS-1 está en `src/api/client.ts`.
 Carrito de compras con:
   - BarcodeInput (búsqueda con debounce)
   - Lista de CartItem (ítems del carrito)
-  - Total con IVA (calculado localmente al 19% fijo)
-  - Botón "Cobrar" (muestra alert de "no implementado")
-  - Botón "Cancelar Venta" (limpia el carrito con confirm)
+  - Totales locales antes de iniciar venta; luego subtotal, impuestos y total devueltos por MS-5
+  - Botón "Iniciar venta" que envía producto_id y cantidad; después muestra "Cobrar" (cobro aún no implementado)
+  - Botón "Cancelar borrador" antes de crear venta; venta pendiente en modo lectura
 
 Productos obtenidos de MS-3 mediante `catalogApi`; carrito guardado en `localStorage`
 Al entrar a /pos, consulta `posApi.activeShift`. Mientras espera muestra carga; ante 404 redirige a /abrir-turno. Si falla la conexión, bloquea el POS y ofrece reintentar. El catálogo se consulta solo después de confirmar el turno activo [IMPLEMENTADO].
 
-IVA calculado localmente (tasaIva = 0.19 fijo, sin llamar MS-2)
-NO integra la API de ventas de MS-5
+POST /ventas envía items [{producto_id, cantidad}] y metodo_pago EFECTIVO; no envía precio ni impuesto.
+GET /ventas/turno/{turnoId} recupera la última venta PENDIENTE del turno activo al abrir POS y antes de crear otra.
+El ID, los ítems y los totales de la venta pendiente vienen de MS-5; el borrador local deja de ser autoridad.
+Errores de inicio visibles; ante respuesta perdida, vuelve a consultar el turno antes de permitir otro intento [IMPLEMENTADO].
 NO abre turno desde esta pantalla; dirige a /abrir-turno cuando falta
 ```
 

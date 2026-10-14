@@ -1,7 +1,7 @@
 ﻿import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { catalogApi, CatalogProduct, posApi } from '../api/client';
+import { catalogApi, CatalogProduct, posApi, VentaPendiente } from '../api/client';
 import BarcodeInput from '../components/pos/BarcodeInput';
 import CartItem from '../components/pos/CartItem';
 
@@ -26,14 +26,27 @@ export default function Pos() {
   );
   const [turnoStatus, setTurnoStatus] = useState<'checking' | 'ready' | 'error'>('checking');
   const [turnoRetry, setTurnoRetry] = useState(0);
+  const [turnoId, setTurnoId] = useState<string | null>(null);
+  const [venta, setVenta] = useState<VentaPendiente | null>(null);
+  const [ventaError, setVentaError] = useState('');
+  const [isStartingSale, setIsStartingSale] = useState(false);
 
   useEffect(() => {
     let active = true;
     setTurnoStatus('checking');
 
     posApi.activeShift()
-      .then(() => {
-        if (active) setTurnoStatus('ready');
+      .then(async (turno) => {
+        const ventas = await posApi.salesByShift(turno.id);
+        if (!active) return;
+        const pendiente = ventas.filter((item) => item.estado === 'PENDIENTE').pop() ?? null;
+        setTurnoId(turno.id);
+        setVenta(pendiente);
+        if (pendiente) {
+          setDraftItems([]);
+          setSearchResults([]);
+        }
+        setTurnoStatus('ready');
       })
       .catch((error: unknown) => {
         if (!active) return;
@@ -48,7 +61,7 @@ export default function Pos() {
   }, [navigate, turnoRetry]);
 
   // Inicializar leyendo de localStorage
-  const [cartItems, setCartItems] = useState<ProductItem[]>(() => {
+  const [draftItems, setDraftItems] = useState<ProductItem[]>(() => {
     const saved = localStorage.getItem('pos_cart');
     if (saved) {
       try {
@@ -62,8 +75,17 @@ export default function Pos() {
 
   // Guardar en localStorage cada vez que cambie
   useEffect(() => {
-    localStorage.setItem('pos_cart', JSON.stringify(cartItems));
-  }, [cartItems]);
+    localStorage.setItem('pos_cart', JSON.stringify(draftItems));
+  }, [draftItems]);
+
+  const cartItems: ProductItem[] = venta
+    ? venta.items.map((item) => ({
+        id: item.producto_id,
+        name: item.nombre_producto,
+        price: item.precio_unitario,
+        quantity: item.cantidad,
+      }))
+    : draftItems;
 
     const [searchResults, setSearchResults] = useState<CatalogProduct[]>([]);
   const [todosProductos, setTodosProductos] = useState<CatalogProduct[]>([]);
@@ -82,7 +104,8 @@ export default function Pos() {
   }, [turnoStatus]);
 
   const addProductToCart = useCallback((product: CatalogProduct) => {
-    setCartItems(prev => {
+    if (venta || isStartingSale) return;
+    setDraftItems(prev => {
       const existing = prev.find(item => item.id === product.id);
       if (existing) {
         return prev.map(item => item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item);
@@ -95,7 +118,7 @@ export default function Pos() {
       }];
     });
     setSearchResults([]);
-  }, []);
+  }, [venta, isStartingSale]);
 
   const handleTypingSearch = useCallback((query: string) => {
     if (!query || query.trim() === '') {
@@ -144,28 +167,78 @@ export default function Pos() {
   }, [todosProductos, addProductToCart]);
 
   const handleQuantityChange = useCallback((id: string, newQuantity: number) => {
-    setCartItems(prev => prev.map(item => 
+    if (venta || isStartingSale) return;
+    setDraftItems(prev => prev.map(item =>
       item.id === id ? { ...item, quantity: newQuantity } : item
     ));
-  }, []);
+  }, [venta, isStartingSale]);
 
   const handleRemoveItem = useCallback((id: string) => {
-    setCartItems(prev => prev.filter(item => item.id !== id));
-  }, []);
+    if (venta || isStartingSale) return;
+    setDraftItems(prev => prev.filter(item => item.id !== id));
+  }, [venta, isStartingSale]);
 
   const handleCancelSale = () => {
-    if (cartItems.length === 0) return;
+    if (venta || isStartingSale || draftItems.length === 0) return;
     if (window.confirm('¿Estás seguro de que deseas cancelar la venta actual? Se vaciará el carrito.')) {
-      setCartItems([]);
+      setDraftItems([]);
     }
   };
 
-  const handleCheckout = () => {
-    console.log('Iniciando proceso de cobro...');
-    alert('Funcionalidad de cobro se implementará en el futuro.');
+  const handleCheckout = async () => {
+    if (venta) {
+      alert('Funcionalidad de cobro se implementará en el futuro.');
+      return;
+    }
+    if (draftItems.length === 0 || isStartingSale || turnoStatus !== 'ready' || !turnoId) return;
+
+    setVentaError('');
+    setIsStartingSale(true);
+    setSearchResults([]);
+    try {
+      const ventas = await posApi.salesByShift(turnoId);
+      const pendiente = ventas.filter((item) => item.estado === 'PENDIENTE').pop();
+      if (pendiente) {
+        setVenta(pendiente);
+        setDraftItems([]);
+        return;
+      }
+
+      const creada = await posApi.createSale(draftItems.map((item) => ({
+        producto_id: item.id,
+        cantidad: item.quantity,
+      })));
+      setVenta(creada);
+      setDraftItems([]);
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error) && !error.response) {
+        try {
+          const ventas = await posApi.salesByShift(turnoId);
+          const pendiente = ventas.filter((item) => item.estado === 'PENDIENTE').pop();
+          if (pendiente) {
+            setVenta(pendiente);
+            setDraftItems([]);
+            return;
+          }
+        } catch {
+          // La consulta de recuperación también falló: conservar el borrador y mostrar el error.
+        }
+      }
+      if (axios.isAxiosError(error)) {
+        const data = error.response?.data as { error?: string; message?: string } | undefined;
+        setVentaError(data?.error || data?.message || (error.code === 'ECONNABORTED'
+          ? 'La solicitud tardó demasiado. Consulta la venta pendiente antes de reintentar.'
+          : 'No se pudo iniciar la venta. Intenta nuevamente.'));
+        if (error.response?.status === 409) navigate('/abrir-turno', { replace: true });
+      } else {
+        setVentaError('No se pudo iniciar la venta. Intenta nuevamente.');
+      }
+    } finally {
+      setIsStartingSale(false);
+    }
   };
 
-  const { subtotal, totalItems } = useMemo(() => {
+  const { subtotal: draftSubtotal, totalItems } = useMemo(() => {
     return cartItems.reduce(
       (acc, item) => {
         acc.subtotal += item.price * item.quantity;
@@ -176,9 +249,10 @@ export default function Pos() {
     );
   }, [cartItems]);
 
+  const subtotal = venta ? venta.subtotal : draftSubtotal;
   const tasaIva = 0.19; 
-  const iva = Math.round(subtotal * tasaIva);
-  const total = subtotal + iva;
+  const iva = venta ? venta.impuestos : Math.round(subtotal * tasaIva);
+  const total = venta ? venta.total : subtotal + iva;
   
   const isCartEmpty = cartItems.length === 0;
 
@@ -204,6 +278,16 @@ export default function Pos() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 100px)', gap: '1rem' }}>
+      {ventaError && (
+        <div role="alert" style={{ padding: '0.75rem 1rem', border: '1px solid var(--color-danger)', background: 'var(--color-danger-bg)', color: 'var(--color-danger)', borderRadius: '8px' }}>
+          {ventaError}
+        </div>
+      )}
+      {venta && (
+        <div role="status" style={{ padding: '0.75rem 1rem', border: '1px solid var(--color-success)', background: 'var(--color-success-bg)', color: 'var(--color-success)', borderRadius: '8px' }}>
+          Venta pendiente #{venta.id.slice(0, 8)}. Los ítems y totales provienen de MS-5.
+        </div>
+      )}
       {mensajeConfirmacion && (
         <div
           style={{
@@ -245,7 +329,11 @@ export default function Pos() {
         {/* Columna Izquierda: Búsqueda y Escaneo */}
         <div style={{ flex: '0 0 320px', display: 'flex', flexDirection: 'column', background: 'var(--color-surface)', padding: '1rem', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
                 <h3 style={{ marginTop: 0, color: 'var(--color-primary)', fontSize: '1.25rem' }}>Buscar Producto</h3>
-        <BarcodeInput onSearch={handleSearch} onTyping={handleTypingSearch} />
+        {venta || isStartingSale ? (
+          <p style={{ color: 'var(--color-ink-soft)' }}>La venta pendiente se muestra con los datos de MS-5. No se puede modificar desde esta pantalla.</p>
+        ) : (
+          <BarcodeInput onSearch={handleSearch} onTyping={handleTypingSearch} />
+        )}
         <div style={{ flex: 1, border: searchResults.length === 0 ? '2px dashed var(--color-line)' : 'none', borderRadius: '8px', overflow: 'auto', backgroundColor: searchResults.length === 0 ? 'var(--color-bg)' : 'transparent', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
           {searchResults.length === 0 ? (
             <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-muted)', textAlign: 'center', padding: '1rem' }}>
@@ -326,6 +414,7 @@ export default function Pos() {
                     name={item.name} 
                     price={item.price} 
                     quantity={item.quantity} 
+                    readOnly={!!venta || isStartingSale}
                     onQuantityChange={handleQuantityChange}
                     onRemove={handleRemoveItem}
                   />
@@ -342,6 +431,9 @@ export default function Pos() {
         <h3 style={{ marginTop: 0, color: 'var(--color-primary)', fontSize: '1.25rem', borderBottom: '2px solid var(--color-line)', paddingBottom: '0.5rem', marginBottom: '1.5rem' }}>
           Resumen de Venta
         </h3>
+        <p style={{ marginTop: 0, color: 'var(--color-ink-soft)', fontSize: '0.85rem' }}>
+          Método de pago: {venta?.metodo_pago ?? 'EFECTIVO'}
+        </p>
         
         <div style={{ flex: 1 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem', color: 'var(--color-ink-soft)' }}>
@@ -350,7 +442,7 @@ export default function Pos() {
           </div>
           
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem', color: 'var(--color-ink-soft)' }}>
-            <span>IVA (19%):</span>
+            <span>{venta ? 'Impuestos:' : 'IVA (19%):'}</span>
             <span>$ {iva.toLocaleString('es-CL')}</span>
           </div>
 
@@ -367,41 +459,41 @@ export default function Pos() {
         <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
           <button 
             onClick={handleCheckout}
-            disabled={isCartEmpty}
+            disabled={isCartEmpty || isStartingSale}
             style={{ 
               width: '100%', 
               padding: '1rem', 
               fontSize: '1.125rem', 
               fontWeight: 'bold', 
               color: 'var(--color-surface)', 
-              backgroundColor: isCartEmpty ? 'var(--color-muted)' : 'var(--color-primary)', 
+              backgroundColor: isCartEmpty || isStartingSale ? 'var(--color-muted)' : 'var(--color-primary)',
               border: 'none', 
               borderRadius: '8px', 
-              cursor: isCartEmpty ? 'not-allowed' : 'pointer',
+              cursor: isCartEmpty || isStartingSale ? 'not-allowed' : 'pointer',
               transition: 'background-color 0.2s',
-              boxShadow: isCartEmpty ? 'none' : '0 4px 6px color-mix(in srgb, var(--color-primary) 25%, transparent)'
+              boxShadow: isCartEmpty || isStartingSale ? 'none' : '0 4px 6px color-mix(in srgb, var(--color-primary) 25%, transparent)'
             }}
           >
-            COBRAR
+            {isStartingSale ? 'INICIANDO VENTA...' : venta ? 'COBRAR' : 'INICIAR VENTA'}
           </button>
           
           <button 
             onClick={handleCancelSale}
-            disabled={isCartEmpty}
+            disabled={isCartEmpty || !!venta || isStartingSale}
             style={{ 
               width: '100%', 
               padding: '0.75rem', 
               fontSize: '1rem', 
               fontWeight: 600, 
-              color: isCartEmpty ? 'var(--color-line)' : 'var(--color-ink-soft)', 
-              backgroundColor: isCartEmpty ? 'var(--color-bg)' : 'var(--color-line)', 
+              color: isCartEmpty || venta || isStartingSale ? 'var(--color-line)' : 'var(--color-ink-soft)',
+              backgroundColor: isCartEmpty || venta || isStartingSale ? 'var(--color-bg)' : 'var(--color-line)',
               border: 'none', 
               borderRadius: '8px', 
-              cursor: isCartEmpty ? 'not-allowed' : 'pointer',
+              cursor: isCartEmpty || venta || isStartingSale ? 'not-allowed' : 'pointer',
               transition: 'background-color 0.2s'
             }}
           >
-            Cancelar Venta
+            {venta ? 'Venta pendiente' : 'Cancelar borrador'}
           </button>
 
           <button 

@@ -95,6 +95,30 @@ export interface CuadreResult {
   diferencia: number;
 }
 
+export interface VentaPendiente {
+  id: string;
+  turno_id: string;
+  subtotal: number;
+  impuestos: number;
+  total: number;
+  metodo_pago: string;
+  estado: string;
+  created_at: string;
+  items: Array<{
+    id: string;
+    producto_id: string;
+    nombre_producto: string;
+    cantidad: number;
+    precio_unitario: number;
+    subtotal: number;
+  }>;
+}
+
+export interface CrearVentaItem {
+  producto_id: string;
+  cantidad: number;
+}
+
 export const posApi = {
   activeShift: async (): Promise<TurnoActivo> => {
     const response = await pos.get<TurnoActivo>('/api/turnos/activo');
@@ -114,6 +138,17 @@ export const posApi = {
   },
   closeShift: async (): Promise<TurnoActivo> => {
     const response = await pos.post<TurnoActivo>('/api/turnos/cerrar');
+    return response.data;
+  },
+  salesByShift: async (shiftId: string): Promise<VentaPendiente[]> => {
+    const response = await pos.get<VentaPendiente[]>(`/ventas/turno/${shiftId}`);
+    return response.data;
+  },
+  createSale: async (items: CrearVentaItem[]): Promise<VentaPendiente> => {
+    const response = await pos.post<VentaPendiente>('/ventas', {
+      items,
+      metodo_pago: 'EFECTIVO',
+    });
     return response.data;
   },
 };

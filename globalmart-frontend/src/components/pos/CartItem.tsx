@@ -5,11 +5,12 @@ export interface CartItemProps {
   name: string;
   price: number;
   quantity: number;
+  readOnly?: boolean;
   onQuantityChange: (id: string, quantity: number) => void;
   onRemove: (id: string) => void;
 }
 
-export default function CartItem({ id, name, price, quantity, onQuantityChange, onRemove }: CartItemProps) {
+export default function CartItem({ id, name, price, quantity, readOnly = false, onQuantityChange, onRemove }: CartItemProps) {
   const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = parseInt(e.target.value, 10);
     // Validar nmero positivo
@@ -43,6 +44,7 @@ export default function CartItem({ id, name, price, quantity, onQuantityChange, 
           type="number"
           min="1"
           value={quantity}
+          disabled={readOnly}
           onChange={handleQuantityChange}
           style={{
             width: '60px',
@@ -63,7 +65,7 @@ export default function CartItem({ id, name, price, quantity, onQuantityChange, 
         $ {subtotal.toLocaleString('es-CL')}
       </td>
       <td style={{ padding: '1rem 0.5rem', textAlign: 'center' }}>
-        <button
+        {!readOnly && <button
           onClick={() => onRemove(id)}
           style={{
             background: 'none',
@@ -85,7 +87,7 @@ export default function CartItem({ id, name, price, quantity, onQuantityChange, 
             <line x1="10" y1="11" x2="10" y2="17"></line>
             <line x1="14" y1="11" x2="14" y2="17"></line>
           </svg>
-        </button>
+        </button>}
       </td>
     </tr>
   );
