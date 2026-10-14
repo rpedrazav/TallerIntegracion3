@@ -64,9 +64,20 @@ namespace CatalogPricingService.Data
             return producto;
         }
 
-        public async Task UpdateAsync(Producto producto)
+        public async Task<bool> DeactivateAsync(Guid id, Guid tenantId)
+        {
+            var query = _context.Productos.Where(p => p.Id == id && p.TenantId == tenantId);
+            var updated = await query.Where(p => p.IsActive)
+                .ExecuteUpdateAsync(setters => setters.SetProperty(p => p.IsActive, false));
+            return updated > 0 || await query.AnyAsync();
+        }
+
+        public async Task UpdateAsync(Producto producto, bool actualizarEstado = true)
         {
             _context.Productos.Update(producto);
+            // Un PUT no administrativo nunca debe sobrescribir una baja concurrente.
+            if (!actualizarEstado)
+                _context.Entry(producto).Property(p => p.IsActive).IsModified = false;
             await _context.SaveChangesAsync();
         }
         public async Task DeleteAsync(Producto producto)

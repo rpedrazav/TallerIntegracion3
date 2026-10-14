@@ -442,7 +442,7 @@ export default function ProductosPage() {
   };
 
   const handleEliminar = async (id: string, nombre: string) => {
-    if (!window.confirm(`¿Estás seguro de que deseas eliminar permanentemente el producto '${nombre}'?`)) return;
+    if (!window.confirm(`El producto '${nombre}' será DESACTIVADO y se conservará en el catálogo. ¿Deseas continuar?`)) return;
     try {
       const token = await window.api?.getToken();
       if (!token) return;
@@ -451,8 +451,8 @@ export default function ProductosPage() {
       });
       fetchDatos();
     } catch (error) {
-      console.error('Error al eliminar producto', error);
-      alert('Error al eliminar producto.');
+      console.error('Error al desactivar producto', error);
+      alert('Error al desactivar producto.');
     }
   };
 
@@ -1002,9 +1002,9 @@ export default function ProductosPage() {
                                 e.currentTarget.style.background = 'var(--color-danger-bg)';
                                 e.currentTarget.style.color = 'var(--color-danger)';
                               }}
-                              title={`Eliminar ${prod.nombre}`}
+                              title={`Desactivar ${prod.nombre}`}
                             >
-                              🗑️ Eliminar
+                              🗑️ Desactivar
                             </button>
                           </div>
                       </td>

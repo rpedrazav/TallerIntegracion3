@@ -27,12 +27,18 @@ namespace CatalogPricingService.Services
             return await _repository.CreateAsync(producto);
         }
 
-        public async Task<Producto> UpdateProductoAsync(Guid id, Producto productoActualizado, Guid userTenantId)
+        public Task<bool> DesactivarProductoAsync(Guid id, Guid tenantId)
+            => _repository.DeactivateAsync(id, tenantId);
+
+        public async Task<Producto> UpdateProductoAsync(Guid id, Producto productoActualizado, Guid userTenantId, bool puedeCambiarEstado = false)
         {
             var productoExistente = await _repository.GetByIdAsync(id, userTenantId);
             
             if (productoExistente == null)
                 throw new UnauthorizedAccessException("Acceso denegado: El producto no existe o pertenece a otro Minimarket.");
+
+            if (productoExistente.IsActive != productoActualizado.IsActive && !puedeCambiarEstado)
+                throw new UnauthorizedAccessException("Solo ADMIN puede cambiar el estado del producto.");
 
             productoExistente.Nombre = productoActualizado.Nombre;
             productoExistente.Descripcion = productoActualizado.Descripcion;
@@ -42,7 +48,7 @@ namespace CatalogPricingService.Services
             productoExistente.IsActive = productoActualizado.IsActive;
             productoExistente.EsPesoVariable = productoActualizado.EsPesoVariable;
 
-            await _repository.UpdateAsync(productoExistente);
+            await _repository.UpdateAsync(productoExistente, puedeCambiarEstado);
             return productoExistente;
         }
 

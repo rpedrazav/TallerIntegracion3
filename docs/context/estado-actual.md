@@ -5,7 +5,7 @@ titulo: Estado Real de Implementación — GlobalMart OS
 estado: vigente
 fuentes: [docs/context/_reports/inventario.md, src/, globalmart-frontend/src/api/client.ts, git log, docs/context/_reports/preguntas-abiertas.md]
 verificado_contra_codigo: true
-ultima_revision: 2026-10-13
+ultima_revision: 2026-10-14
 depende_de: []
 publica: []
 consume: []
@@ -28,7 +28,7 @@ reglas: []
 |---------------|-------------|-------|-------|----------------|
 | MS-1 Identity | ✅ 3 controllers | ❌ No Kafka | ❌ Solo seed | **PARCIAL** |
 | MS-2 Tax | ✅ 1 controller | ❌ No Kafka | ✅ ManualTest | **PARCIAL** |
-| MS-3 Catalog | ✅ 2 controllers | ❌ No Kafka | ✅ Manual .http | **PARCIAL** |
+| MS-3 Catalog | ✅ 2 controllers | ❌ No Kafka | ✅ Manual .http + 11 casos de baja/PUT TI3-642 | **PARCIAL** |
 | MS-4 Warehouse | ✅ 1 controller | ✅ Consumer sale.completed | ❌ No tests | **PARCIAL** |
 | MS-5 POS | ✅ 2 controllers | ✅ Producer sale.completed | ✅ AgregarItemTest + CobroCuadreTest | **PARCIAL** |
 | MS-6 SupplyChain | ❌ Sin controllers | ❌ Sin Kafka | ❌ Sin tests | **PLANIFICADO** |
@@ -86,6 +86,8 @@ reglas: []
 
 ### MS-3 · Catalog & Pricing Service [PARCIAL]
 **Implementado:**
+- TI3-642 / S2-011: `DELETE /products/{id}` exige ADMIN y tenant del JWT; actualiza únicamente `IsActive=false` con filtro explícito por ID y tenant, preservando físicamente el producto. Retorna 204 sin body, también si ya estaba inactivo (sin nueva escritura), y el mismo 404 para inexistente/otro tenant; sin JWT 401 y sin ADMIN 403. PUT exige ADMIN solo si cambia `IsActive`, manteniendo permitidas las demás ediciones autenticadas. `DesactivarProductoIntegrationTests`: 11/11 casos aprobados con PostgreSQL 16 aislado el 2026-10-14; build de MS-3 aprobado [IMPLEMENTADO].
+- `ProductosPage` confirma DESACTIVACIÓN, mantiene `axios.delete` y recarga con `fetchDatos()` tras 204; el producto permanece como Inactivo salvo que el filtro solo activos lo oculte. Typecheck aprobado el 2026-10-14 [IMPLEMENTADO].
 - `GET/POST/PUT /products` — CRUD productos [IMPLEMENTADO]
 - `GET /products/search?q=` — búsqueda full-text con índice trigram `pg_trgm` [IMPLEMENTADO]
 - `GET /products/lookup?barcode=` — lookup por código de barras [IMPLEMENTADO]

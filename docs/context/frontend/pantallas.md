@@ -5,7 +5,7 @@ titulo: Pantallas del Frontend — GlobalMart OS
 estado: parcial
 fuentes: [globalmart-frontend/src/pages/, globalmart-frontend/src/components/, globalmart-frontend/src/api/client.ts]
 verificado_contra_codigo: true
-ultima_revision: 2026-10-13
+ultima_revision: 2026-10-14
 depende_de: [estructura, ms1-identity, ms5-pos, guia-estilo]
 publica: []
 consume: []
@@ -93,6 +93,16 @@ Ruta `/admin`. Panel de administración con pestañas ("Usuarios" y "Configuraci
 
 Usa los tokens de color de la [[guia-estilo]] definidos en `index.css`. No hay edición ni desactivación individual de usuarios en UI todavía.
 
+## ProductosPage.tsx — baja lógica TI3-642 / S2-011 [IMPLEMENTADO]
+
+Ruta `/admin/productos`. La pantalla usa Axios directamente contra MS-3 y muestra productos activos e inactivos. La acción visible **Desactivar** confirma que el producto será **DESACTIVADO** y se conservará en el catálogo; ya no anuncia eliminación permanente.
+
+Mantiene `axios.delete` a `DELETE /products/{id}` con Bearer y `fetchDatos()` para recargar tras una respuesta exitosa, incluido 204 sin body. El producto permanece con el indicador **Inactivo**, salvo que el toggle **solo activos** lo oculte. Los errores visibles hablan de desactivación.
+
+El backend exige ADMIN, conserva físicamente la fila mediante `IsActive=false`, retorna 204 idempotente y el mismo 404 para inexistente/otro tenant. La pantalla no agrega una guarda de rol; la autorización se aplica en MS-3. PUT requiere ADMIN para cambiar el estado. `TenantConfig.tsx` no fue modificado.
+
+Validación 2026-10-14: TypeScript `--noEmit --incremental false --pretty false` aprobado. Contrato backend validado con 11 casos de [DesactivarProductoIntegrationTests.cs](../../../tests/GlobalMart.IntegrationTests/DesactivarProductoIntegrationTests.cs). Validación visual/E2E específica de la acción: [NO VERIFICADO].
+
 ## BarcodeInput.tsx [IMPLEMENTADO]
 
 ```typescript
@@ -121,7 +131,6 @@ Según diagramas `diagramas/rodrigo/`:
 
 Pantallas no implementadas:
 - Cierre de Turno y Cuadre de Caja (PC-04)
-- Gestión de Productos (CRUD admin)
 - Dashboard de ventas
 - Gestión de inventario
 - Programa de lealtad

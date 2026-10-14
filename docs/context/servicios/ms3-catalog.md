@@ -5,7 +5,7 @@ titulo: MS-3 · Catalog & Pricing Service
 estado: parcial
 fuentes: [src/CatalogPricingService/]
 verificado_contra_codigo: true
-ultima_revision: 2026-09-28
+ultima_revision: 2026-10-14
 depende_de: [ms1-identity]
 publica: []
 consume: []
@@ -24,7 +24,8 @@ reglas: [RN-11, RF-04, RF-11, CP-01, CP-04, CP-05]
 | GET | `/products/lookup?barcode=` | JWT | [IMPLEMENTADO] |
 | GET | `/products/{id}` | JWT | [IMPLEMENTADO] |
 | POST | `/products` | JWT | [IMPLEMENTADO] |
-| PUT | `/products/{id}` | JWT | [IMPLEMENTADO] |
+| PUT | `/products/{id}` | JWT; ADMIN si cambia IsActive | [IMPLEMENTADO] |
+| DELETE | `/products/{id}` | JWT + ADMIN | [IMPLEMENTADO — baja lógica] |
 | GET | `/categories` | JWT | [IMPLEMENTADO] |
 | POST | `/categories` | JWT | [IMPLEMENTADO] |
 | GET | `/health` | Público | [IMPLEMENTADO] |
@@ -33,7 +34,22 @@ reglas: [RN-11, RF-04, RF-11, CP-01, CP-04, CP-05]
 - `GET/POST /prices` — precios por sucursal [PLANIFICADO]
 - `GET/POST /promotions` — promociones con fechas [PLANIFICADO]
 - `POST /uom/convert` — conversión de unidades [PLANIFICADO]
-- `DELETE /products/{id}` — desactivar producto [PLANIFICADO — solo Update]
+
+### Baja lógica de productos — TI3-642 / S2-011
+
+`ProductoController.Delete` exige `[Authorize(Roles = "ADMIN")]` y un `tenant_id` válido en el JWT. `ProductoService.DesactivarProductoAsync` delega en `ProductoRepository.DeactivateAsync`: la escritura filtra por ID, tenant e `IsActive=true` y actualiza exclusivamente `IsActive=false`, sin borrar la fila ni requerir migraciones.
+
+- Producto propio activo: 204 sin body.
+- Producto propio ya inactivo: 204 sin body y sin modificar nuevamente la fila.
+- Inexistente o perteneciente a otro tenant: idéntico 404 con `{ "message": "Producto no encontrado." }`.
+- Sin JWT: 401. Autenticado sin ADMIN: 403.
+- PUT compara el estado solicitado con el persistido y rechaza con 403 cambios de `IsActive` de usuarios no ADMIN. Conserva las ediciones de otros campos; un PUT no administrativo excluye `IsActive` de su escritura para no sobrescribir una baja concurrente.
+
+La baja conserva el producto y sus referencias lógicas. MS-5 conserva nombre y precio en `ItemVenta`, e impuestos/totales en `Venta`; consultar ventas históricas no requiere consultar catálogo. MS-5 no fue modificado. Listado, consulta por ID, search y lookup siguen incluyendo inactivos; no se agregó un filtro global por estado.
+
+Pruebas: [DesactivarProductoIntegrationTests.cs](../../../tests/GlobalMart.IntegrationTests/DesactivarProductoIntegrationTests.cs), 11/11 aprobadas el 2026-10-14 con PostgreSQL 16 y esquemas aislados. Cubren fila y datos conservados, segunda baja, 404 indistinguible, tenant ajeno intacto, 401/403, bloqueo de activación/desactivación por PUT sin ADMIN y regresión de ediciones permitidas. Build de MS-3 aprobado.
+
+Cierre TI3-642: test adicional `Delete_ProductoVendido_ConservaVentaHistoricaConsultableYDatosIntactos`, ejecutado individualmente el 2026-10-14: 1/1 aprobado. Prepara una venta COMPLETADA con un ItemVenta referido al producto y consulta `GET /ventas/{id}` en MS-5 antes y después del DELETE ADMIN en MS-3 (204). Verifica que venta e ítem siguen consultables, conservando sus IDs, ProductoId, NombreProducto, PrecioUnitario, Cantidad, Subtotal e impuestos/total de venta. Confirma además la fila de catálogo con IsActive=false y sus demás datos intactos. Usa esquemas PostgreSQL aislados y no modifica código productivo.
 
 ## Modelo de datos
 
@@ -107,7 +123,6 @@ Precio
 |--------|---------|
 | Sin precios por sucursal | RN-11 no cumplida |
 | Sin promociones activas | RF-21 parcial |
-| DELETE no implementado | Solo desactivar via PUT |
 | Sin Kafka (catalog.updated) | MS-7 no recibe cambios de catálogo |
 
 ## Conexiones

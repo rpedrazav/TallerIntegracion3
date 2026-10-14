@@ -9,7 +9,8 @@ namespace CatalogPricingService.Data
         Task<Producto?> GetByIdAsync(Guid id, Guid tenantId);
         Task<Producto?> GetByBarcodeAsync(string barcode, Guid tenantId);
         Task<Producto> CreateAsync(Producto producto);
-        Task UpdateAsync(Producto producto);
+        Task UpdateAsync(Producto producto, bool actualizarEstado = true);
+        Task<bool> DeactivateAsync(Guid id, Guid tenantId);
         Task DeleteAsync(Producto producto);
     }
 }

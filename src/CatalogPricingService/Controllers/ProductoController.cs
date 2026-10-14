@@ -34,6 +34,22 @@ namespace CatalogPricingService.Controllers
             _environment = environment;
         }
 
+        [HttpDelete("{id:guid}")]
+        [Authorize(Roles = "ADMIN")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> Delete(Guid id)
+        {
+            if (!Guid.TryParse(User.FindFirst("tenant_id")?.Value, out var tenantId))
+                return Unauthorized(new { message = "El token no contiene un tenant_id válido." });
+
+            return await _service.DesactivarProductoAsync(id, tenantId)
+                ? NoContent()
+                : NotFound(new { message = "Producto no encontrado." });
+        }
+
         private Guid? GetTenantIdFromToken()
         {
             var claim = User.Claims.FirstOrDefault(c => c.Type == "tenant_id")?.Value;
@@ -268,7 +284,7 @@ namespace CatalogPricingService.Controllers
 
             try
             {
-                var updatedProducto = await _service.UpdateProductoAsync(id, productoActualizado, tenantId.Value);
+                var updatedProducto = await _service.UpdateProductoAsync(id, productoActualizado, tenantId.Value, User.IsInRole("ADMIN"));
                 return Ok(updatedProducto);
             }
             catch (UnauthorizedAccessException ex)
