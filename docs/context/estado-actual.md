@@ -141,6 +141,7 @@ reglas: []
 - tests de integración en `CobroIntegrationTests` cobran venta en efectivo, calculan vuelto, verifican persistencia y rechazan cobro en efectivo ante ventas con TARJETA y MIXTO sin registrar pagos (S2-004) [IMPLEMENTADO]
 - test de integración consume `sale.completed` desde Kafka y verifica `VentaId`, `TenantId` y `Total` del payload [IMPLEMENTADO]
 - test de integración abre turno, registra venta y pago efectivo, y verifica el cuadre con diferencia calculada [IMPLEMENTADO]
+- tests de integración S2-005 en `VentaIntegrationTests` cubren los 4 escenarios de creación segura: precio falsificado ignorado (precio persistido viene de MS-3, no del request), IVA por tenant desde MS-2, producto inactivo (400 sin persistir) y ausencia de turno abierto (409 sin persistir venta) [IMPLEMENTADO]
 
 **No implementado / CRÍTICO:**
 - Endpoint HTTP `POST /ventas/{id}/anular` aún no está expuesto en `VentasController.cs`

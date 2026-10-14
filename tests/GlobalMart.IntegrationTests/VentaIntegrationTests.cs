@@ -279,6 +279,165 @@ public class VentaIntegrationTests : IClassFixture<Ms5WebApplicationFactory>
         Assert.Equal(0, totalVentas);
     }
 
+    // ── S2-005: Turno ausente ─────────────────────────────────────────────────
+
+    /// <summary>
+    /// S2-005 — Caso: cajero sin turno ABIERTO intenta crear venta.
+    /// Esperado: 409 Conflict, sin persistir ninguna venta.
+    /// </summary>
+    [Fact]
+    public async Task CrearVenta_SinTurnoAbierto_Retorna409SinPersistir()
+    {
+        var tenantId   = Guid.NewGuid();
+        var cajeroId   = Guid.NewGuid();
+
+        var configuredFactory = _factory.WithWebHostBuilder(builder =>
+        {
+            builder.ConfigureTestServices(services =>
+            {
+                services.AddControllers().AddControllersAsServices();
+                services.AddTransient<VentasController>(serviceProvider =>
+                    new VentasController(
+                        serviceProvider.GetRequiredService<IVentaService>(),
+                        serviceProvider.GetRequiredService<ITurnoService>(),
+                        serviceProvider.GetRequiredService<ICatalogClient>(),
+                        serviceProvider.GetRequiredService<ITaxClient>(),
+                        serviceProvider.GetRequiredService<ILogger<VentasController>>()));
+                services.AddHttpClient(CatalogClient.HttpClientName)
+                    .ConfigurePrimaryHttpMessageHandler(() => new CatalogStubHandler(ProductOneId, ProductTwoId));
+                services.AddHttpClient(TaxClient.HttpClientName)
+                    .ConfigurePrimaryHttpMessageHandler(() => new TaxStubHandler());
+            });
+        });
+
+        var configuration = configuredFactory.Services.GetRequiredService<IConfiguration>();
+        var token = CreateCajeroToken(configuration, tenantId, cajeroId);
+
+        using (var migrationScope = configuredFactory.Services.CreateScope())
+        {
+            var migrationDb = migrationScope.ServiceProvider.GetRequiredService<PosCartDbContext>();
+            await migrationDb.Database.MigrateAsync();
+        }
+
+        using var client = configuredFactory.CreateClient();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        // No se abre turno — el cajero no tiene turno ABIERTO
+
+        var response = await client.PostAsJsonAsync("/ventas", new
+        {
+            items = new[]
+            {
+                new
+                {
+                    producto_id = ProductOneId,
+                    cantidad    = 1m
+                }
+            },
+            metodo_pago = "EFECTIVO"
+        });
+
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+
+        // Verificar que NO se persistió ninguna venta
+        using var scope = configuredFactory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<PosCartDbContext>();
+        var totalVentas = await db.Ventas.IgnoreQueryFilters().CountAsync(v => v.TenantId == tenantId);
+        Assert.Equal(0, totalVentas);
+    }
+
+    // ── S2-005: Precio falsificado ignorado ────────────────────────────────────
+
+    /// <summary>
+    /// S2-005 — Caso: el renderer envía precio_unitario falso (99999) en el request.
+    /// Esperado: 201 Created, precio persistido proviene de MS-3 (100m), no del request.
+    /// </summary>
+    [Fact]
+    public async Task CrearVenta_PrecioFalsificadoEsIgnorado_UsaPrecioDeMS3()
+    {
+        var tenantId   = Guid.NewGuid();
+        var cajeroId   = Guid.NewGuid();
+        var sucursalId = Guid.NewGuid();
+
+        var configuredFactory = _factory.WithWebHostBuilder(builder =>
+        {
+            builder.ConfigureTestServices(services =>
+            {
+                services.AddControllers().AddControllersAsServices();
+                services.AddTransient<VentasController>(serviceProvider =>
+                    new VentasController(
+                        serviceProvider.GetRequiredService<IVentaService>(),
+                        serviceProvider.GetRequiredService<ITurnoService>(),
+                        serviceProvider.GetRequiredService<ICatalogClient>(),
+                        serviceProvider.GetRequiredService<ITaxClient>(),
+                        serviceProvider.GetRequiredService<ILogger<VentasController>>()));
+                services.AddHttpClient(CatalogClient.HttpClientName)
+                    .ConfigurePrimaryHttpMessageHandler(() => new CatalogStubHandler(ProductOneId, ProductTwoId));
+                services.AddHttpClient(TaxClient.HttpClientName)
+                    .ConfigurePrimaryHttpMessageHandler(() => new TaxStubHandler());
+            });
+        });
+
+        var configuration = configuredFactory.Services.GetRequiredService<IConfiguration>();
+        var token = CreateCajeroToken(configuration, tenantId, cajeroId);
+
+        using (var migrationScope = configuredFactory.Services.CreateScope())
+        {
+            var migrationDb = migrationScope.ServiceProvider.GetRequiredService<PosCartDbContext>();
+            await migrationDb.Database.MigrateAsync();
+        }
+
+        using var client = configuredFactory.CreateClient();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        var abrirTurnoResponse = await client.PostAsJsonAsync("/turnos/abrir", new
+        {
+            sucursal_id         = sucursalId,
+            monto_fondo_inicial = 50000m
+        });
+        Assert.Equal(HttpStatusCode.OK, abrirTurnoResponse.StatusCode);
+
+        // El request incluye precio_unitario falsificado (99999).
+        // El servidor DEBE ignorarlo y usar el precio de MS-3 (100m para ProductOneId).
+        var crearVentaResponse = await client.PostAsJsonAsync("/ventas", new
+        {
+            items = new[]
+            {
+                new
+                {
+                    producto_id     = ProductOneId,
+                    cantidad        = 1m,
+                    precio_unitario = 99999m   // precio falsificado — debe ser ignorado
+                }
+            },
+            metodo_pago = "EFECTIVO"
+        });
+
+        Assert.Equal(HttpStatusCode.Created, crearVentaResponse.StatusCode);
+        var ventaId = await ReadGuidPropertyAsync(crearVentaResponse, "id");
+
+        // Verificar que el precio persistido viene de MS-3 (100m), no del request (99999)
+        using var scope = configuredFactory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<PosCartDbContext>();
+        var venta = await db.Ventas
+            .IgnoreQueryFilters()
+            .Include(v => v.Items)
+            .SingleOrDefaultAsync(v => v.Id == ventaId);
+
+        Assert.NotNull(venta);
+        Assert.Single(venta.Items);
+        var item = venta.Items.First();
+
+        // El precio unitario debe ser 100m (de MS-3), no 99999m (del request)
+        Assert.Equal(100m, item.PrecioUnitario);
+
+        // El subtotal, IVA y total deben ser coherentes con precio de 100m.
+        // TaxStubHandler calcula 19% → subtotal=100, iva=19, total=119
+        Assert.Equal(100m, venta.Subtotal);
+        Assert.Equal(19m,  venta.Impuestos);
+        Assert.Equal(119m, venta.Total);
+    }
+
     private static async Task<Guid> ReadGuidPropertyAsync(HttpResponseMessage response, string propertyName)
     {
         using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync());

@@ -200,11 +200,12 @@ if (_kafkaProducer is not null)
 ## Tests de integración
 
 - `TurnoIntegrationTests`: abre un turno con JWT de cajero y verifica que se persiste en estado `ABIERTO`.
-- `VentaIntegrationTests`: crea una venta con el primer producto, agrega el segundo y verifica subtotal, IVA y total.
+- `VentaIntegrationTests`: cubre creación de venta con resolución autoritativa en MS-3 e IVA real en MS-2, agregado de ítems, rechazo de productos inexistentes (404) e inactivos (400). Incluye los escenarios S2-005: (1) `CrearVenta_SinTurnoAbierto_Retorna409SinPersistir` — sin turno ABIERTO la venta no se crea; (2) `CrearVenta_PrecioFalsificadoEsIgnorado_UsaPrecioDeMS3` — el `precio_unitario` del request es ignorado y el precio persistido viene de MS-3.
 - `CobroIntegrationTests`: cobra una venta en efectivo con un monto superior al total y verifica el vuelto, el pago y el estado `COMPLETADA`.
 - `KafkaPublishIntegrationTests`: consume desde `sale.completed` y verifica el payload publicado por el productor real de MS-5.
 - `CierreTurnoIntegrationTests`: prepara una venta completada en efectivo y verifica el cuadre, el efectivo esperado, el monto declarado y la diferencia.
 - Los flujos de venta y cobro usan handlers HTTP en memoria para devolver respuestas deterministas de `CatalogClient` (MS-3) y `TaxClient` (MS-2), sin levantar esos microservicios.
+
 
 ## Casos de uso cubiertos
 
