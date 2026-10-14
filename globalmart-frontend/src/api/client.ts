@@ -144,6 +144,16 @@ export const posApi = {
     const response = await pos.get<VentaPendiente[]>(`/ventas/turno/${shiftId}`);
     return response.data;
   },
+  getSale: async (saleId: string): Promise<VentaPendiente> => {
+    const response = await pos.get<VentaPendiente>(`/ventas/${saleId}`);
+    return response.data;
+  },
+  addSaleItem: async (saleId: string, productId: string, quantity: number): Promise<void> => {
+    await pos.post(`/ventas/${saleId}/items`, { producto_id: productId, cantidad: quantity });
+  },
+  updateSaleItem: async (saleId: string, itemId: string, quantity: number): Promise<void> => {
+    await pos.put(`/ventas/${saleId}/items/${itemId}`, { cantidad: quantity });
+  },
   createSale: async (items: CrearVentaItem[]): Promise<VentaPendiente> => {
     const response = await pos.post<VentaPendiente>('/ventas', {
       items,

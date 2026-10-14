@@ -1,35 +1,33 @@
-﻿import React from 'react';
+﻿import React, { useEffect, useState } from 'react';
 
 export interface CartItemProps {
   id: string;
   name: string;
   price: number;
   quantity: number;
+  subtotal?: number;
   readOnly?: boolean;
+  canRemove?: boolean;
   onQuantityChange: (id: string, quantity: number) => void;
   onRemove: (id: string) => void;
 }
 
-export default function CartItem({ id, name, price, quantity, readOnly = false, onQuantityChange, onRemove }: CartItemProps) {
-  const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = parseInt(e.target.value, 10);
-    // Validar nmero positivo
-    if (!isNaN(value) && value > 0) {
+export default function CartItem({ id, name, price, quantity, subtotal, readOnly = false, canRemove = true, onQuantityChange, onRemove }: CartItemProps) {
+  const [draftQuantity, setDraftQuantity] = useState(String(quantity));
+
+  useEffect(() => {
+    setDraftQuantity(String(quantity));
+  }, [quantity]);
+
+  const commitQuantity = () => {
+    const value = Number(draftQuantity);
+    if (Number.isInteger(value) && value > 0 && value !== quantity) {
+      setDraftQuantity(String(quantity));
       onQuantityChange(id, value);
-    } else if (e.target.value === '') {
-      // Permitir borrar el nmero temporalmente sin que se ponga en 0 o NaN
-      // Se podra manejar con estado local, pero para simplificar obligamos a > 0
+    } else {
+      setDraftQuantity(String(quantity));
     }
   };
-
-  const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
-    const value = parseInt(e.target.value, 10);
-    if (isNaN(value) || value <= 0) {
-      onQuantityChange(id, 1); // Si lo dejan vaco o en 0, restaurar a 1
-    }
-  };
-
-  const subtotal = price * quantity;
 
   return (
     <tr style={{ borderBottom: '1px solid var(--color-line)', transition: 'background-color 0.2s' }}>
@@ -43,9 +41,10 @@ export default function CartItem({ id, name, price, quantity, readOnly = false, 
         <input
           type="number"
           min="1"
-          value={quantity}
+          value={draftQuantity}
           disabled={readOnly}
-          onChange={handleQuantityChange}
+          onChange={(event) => setDraftQuantity(event.target.value)}
+          onKeyDown={(event) => { if (event.key === 'Enter') event.currentTarget.blur(); }}
           style={{
             width: '60px',
             padding: '0.5rem',
@@ -57,16 +56,17 @@ export default function CartItem({ id, name, price, quantity, readOnly = false, 
           onFocus={(e) => e.target.style.borderColor = 'var(--color-primary)'}
           onBlur={(e) => {
             e.target.style.borderColor = 'var(--color-line)';
-            handleBlur(e);
+            commitQuantity();
           }}
         />
       </td>
       <td style={{ padding: '1rem 0.5rem', fontWeight: 600, color: 'var(--color-ink)' }}>
-        $ {subtotal.toLocaleString('es-CL')}
+        $ {(subtotal ?? price * quantity).toLocaleString('es-CL')}
       </td>
       <td style={{ padding: '1rem 0.5rem', textAlign: 'center' }}>
-        {!readOnly && <button
+        {canRemove && <button
           onClick={() => onRemove(id)}
+          disabled={readOnly}
           style={{
             background: 'none',
             border: 'none',

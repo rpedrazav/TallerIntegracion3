@@ -1,4 +1,4 @@
-﻿import React, { useState, useCallback, useMemo, useEffect } from 'react';
+﻿import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { catalogApi, CatalogProduct, posApi, VentaPendiente } from '../api/client';
@@ -10,11 +10,23 @@ export interface ProductItem {
   name: string;
   price: number;
   quantity: number;
+  subtotal?: number;
+  itemId?: string;
 }
 
 interface PosLocationState {
   mensajeConfirmacion?: string;
   message?: string;
+}
+
+function saleErrorMessage(error: unknown): string {
+  if (axios.isAxiosError(error)) {
+    const data = error.response?.data as { error?: string; message?: string } | undefined;
+    return data?.error || data?.message || (error.code === 'ECONNABORTED'
+      ? 'La solicitud tardó demasiado. Se debe actualizar la venta desde MS-5.'
+      : 'No se pudo sincronizar el ítem con MS-5.');
+  }
+  return 'No se pudo sincronizar el ítem con MS-5.';
 }
 
 export default function Pos() {
@@ -30,6 +42,11 @@ export default function Pos() {
   const [venta, setVenta] = useState<VentaPendiente | null>(null);
   const [ventaError, setVentaError] = useState('');
   const [isStartingSale, setIsStartingSale] = useState(false);
+  const [pendingMutations, setPendingMutations] = useState(0);
+  const [saleNeedsRefresh, setSaleNeedsRefresh] = useState(false);
+  const saleRef = useRef<VentaPendiente | null>(null);
+  const saleNeedsRefreshRef = useRef(false);
+  const mutationQueue = useRef<Promise<void>>(Promise.resolve());
 
   useEffect(() => {
     let active = true;
@@ -41,6 +58,7 @@ export default function Pos() {
         if (!active) return;
         const pendiente = ventas.filter((item) => item.estado === 'PENDIENTE').pop() ?? null;
         setTurnoId(turno.id);
+        saleRef.current = pendiente;
         setVenta(pendiente);
         if (pendiente) {
           setDraftItems([]);
@@ -81,9 +99,11 @@ export default function Pos() {
   const cartItems: ProductItem[] = venta
     ? venta.items.map((item) => ({
         id: item.producto_id,
+        itemId: item.id,
         name: item.nombre_producto,
         price: item.precio_unitario,
         quantity: item.cantidad,
+        subtotal: item.subtotal,
       }))
     : draftItems;
 
@@ -103,8 +123,80 @@ export default function Pos() {
     fetchTodos();
   }, [turnoStatus]);
 
+  const refreshSale = useCallback(async (saleId: string) => {
+    const updated = await posApi.getSale(saleId);
+    saleRef.current = updated;
+    setVenta(updated);
+    saleNeedsRefreshRef.current = false;
+    setSaleNeedsRefresh(false);
+  }, []);
+
+  const queueSaleMutation = useCallback((operation: (current: VentaPendiente) => Promise<void>) => {
+    setPendingMutations((count) => count + 1);
+    const task = mutationQueue.current.then(async () => {
+      if (saleNeedsRefreshRef.current) {
+        setVentaError('Actualiza la venta desde MS-5 antes de continuar.');
+        return;
+      }
+      const current = saleRef.current;
+      if (!current || current.estado !== 'PENDIENTE') {
+        setVentaError('La venta ya no está pendiente. Actualiza la pantalla.');
+        return;
+      }
+
+      setVentaError('');
+      try {
+        await operation(current);
+      } catch (error: unknown) {
+        try {
+          await refreshSale(current.id);
+        } catch {
+          saleNeedsRefreshRef.current = true;
+          setSaleNeedsRefresh(true);
+        }
+        setVentaError(saleErrorMessage(error));
+        return;
+      }
+
+      try {
+        await refreshSale(current.id);
+      } catch {
+        saleNeedsRefreshRef.current = true;
+        setSaleNeedsRefresh(true);
+        setVentaError('El ítem se envió, pero no se pudo actualizar la venta. Reintenta la consulta.');
+      }
+    }).finally(() => setPendingMutations((count) => count - 1));
+    mutationQueue.current = task.catch(() => undefined);
+    return task;
+  }, [refreshSale]);
+
+  const retrySaleRefresh = async () => {
+    if (!saleRef.current || pendingMutations > 0) return;
+    setPendingMutations(1);
+    try {
+      await refreshSale(saleRef.current.id);
+      setVentaError('');
+    } catch (error: unknown) {
+      setVentaError(saleErrorMessage(error));
+    } finally {
+      setPendingMutations(0);
+    }
+  };
+
   const addProductToCart = useCallback((product: CatalogProduct) => {
-    if (venta || isStartingSale) return;
+    if (isStartingSale || saleNeedsRefresh) return;
+    if (venta) {
+      void queueSaleMutation(async (current) => {
+        const existing = current.items.find((item) => item.producto_id === product.id);
+        if (existing) {
+          await posApi.updateSaleItem(current.id, existing.id, existing.cantidad + 1);
+        } else {
+          await posApi.addSaleItem(current.id, product.id, 1);
+        }
+      });
+      setSearchResults([]);
+      return;
+    }
     setDraftItems(prev => {
       const existing = prev.find(item => item.id === product.id);
       if (existing) {
@@ -118,7 +210,7 @@ export default function Pos() {
       }];
     });
     setSearchResults([]);
-  }, [venta, isStartingSale]);
+  }, [venta, isStartingSale, saleNeedsRefresh, queueSaleMutation]);
 
   const handleTypingSearch = useCallback((query: string) => {
     if (!query || query.trim() === '') {
@@ -167,11 +259,19 @@ export default function Pos() {
   }, [todosProductos, addProductToCart]);
 
   const handleQuantityChange = useCallback((id: string, newQuantity: number) => {
-    if (venta || isStartingSale) return;
+    if (isStartingSale || saleNeedsRefresh) return;
+    if (venta) {
+      void queueSaleMutation(async (current) => {
+        const item = current.items.find((entry) => entry.id === id);
+        if (!item) return;
+        await posApi.updateSaleItem(current.id, item.id, newQuantity);
+      });
+      return;
+    }
     setDraftItems(prev => prev.map(item =>
       item.id === id ? { ...item, quantity: newQuantity } : item
     ));
-  }, [venta, isStartingSale]);
+  }, [venta, isStartingSale, saleNeedsRefresh, queueSaleMutation]);
 
   const handleRemoveItem = useCallback((id: string) => {
     if (venta || isStartingSale) return;
@@ -187,6 +287,7 @@ export default function Pos() {
 
   const handleCheckout = async () => {
     if (venta) {
+      if (pendingMutations > 0 || saleNeedsRefresh) return;
       alert('Funcionalidad de cobro se implementará en el futuro.');
       return;
     }
@@ -199,6 +300,7 @@ export default function Pos() {
       const ventas = await posApi.salesByShift(turnoId);
       const pendiente = ventas.filter((item) => item.estado === 'PENDIENTE').pop();
       if (pendiente) {
+        saleRef.current = pendiente;
         setVenta(pendiente);
         setDraftItems([]);
         return;
@@ -208,6 +310,7 @@ export default function Pos() {
         producto_id: item.id,
         cantidad: item.quantity,
       })));
+      saleRef.current = creada;
       setVenta(creada);
       setDraftItems([]);
     } catch (error: unknown) {
@@ -216,6 +319,7 @@ export default function Pos() {
           const ventas = await posApi.salesByShift(turnoId);
           const pendiente = ventas.filter((item) => item.estado === 'PENDIENTE').pop();
           if (pendiente) {
+            saleRef.current = pendiente;
             setVenta(pendiente);
             setDraftItems([]);
             return;
@@ -280,9 +384,10 @@ export default function Pos() {
     <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 100px)', gap: '1rem' }}>
       {ventaError && (
         <div role="alert" style={{ padding: '0.75rem 1rem', border: '1px solid var(--color-danger)', background: 'var(--color-danger-bg)', color: 'var(--color-danger)', borderRadius: '8px' }}>
-          {ventaError}
+          {ventaError} {saleNeedsRefresh && <button type="button" onClick={retrySaleRefresh} disabled={pendingMutations > 0}>Actualizar venta</button>}
         </div>
       )}
+      {pendingMutations > 0 && <div role="status">Sincronizando ítems con MS-5...</div>}
       {venta && (
         <div role="status" style={{ padding: '0.75rem 1rem', border: '1px solid var(--color-success)', background: 'var(--color-success-bg)', color: 'var(--color-success)', borderRadius: '8px' }}>
           Venta pendiente #{venta.id.slice(0, 8)}. Los ítems y totales provienen de MS-5.
@@ -329,8 +434,8 @@ export default function Pos() {
         {/* Columna Izquierda: Búsqueda y Escaneo */}
         <div style={{ flex: '0 0 320px', display: 'flex', flexDirection: 'column', background: 'var(--color-surface)', padding: '1rem', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
                 <h3 style={{ marginTop: 0, color: 'var(--color-primary)', fontSize: '1.25rem' }}>Buscar Producto</h3>
-        {venta || isStartingSale ? (
-          <p style={{ color: 'var(--color-ink-soft)' }}>La venta pendiente se muestra con los datos de MS-5. No se puede modificar desde esta pantalla.</p>
+        {isStartingSale || saleNeedsRefresh || (venta && venta.estado !== 'PENDIENTE') ? (
+          <p style={{ color: 'var(--color-ink-soft)' }}>{isStartingSale ? 'Iniciando venta...' : 'Actualiza la venta para seguir agregando productos.'}</p>
         ) : (
           <BarcodeInput onSearch={handleSearch} onTyping={handleTypingSearch} />
         )}
@@ -409,12 +514,14 @@ export default function Pos() {
               <tbody>
                 {cartItems.map(item => (
                   <CartItem 
-                    key={item.id}
-                    id={item.id} 
+                    key={item.itemId ?? item.id}
+                    id={item.itemId ?? item.id}
                     name={item.name} 
                     price={item.price} 
                     quantity={item.quantity} 
-                    readOnly={!!venta || isStartingSale}
+                    subtotal={item.subtotal}
+                    readOnly={isStartingSale || pendingMutations > 0 || saleNeedsRefresh || !!(venta && venta.estado !== 'PENDIENTE')}
+                    canRemove={!venta}
                     onQuantityChange={handleQuantityChange}
                     onRemove={handleRemoveItem}
                   />
@@ -459,19 +566,19 @@ export default function Pos() {
         <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
           <button 
             onClick={handleCheckout}
-            disabled={isCartEmpty || isStartingSale}
+            disabled={isCartEmpty || isStartingSale || pendingMutations > 0 || saleNeedsRefresh}
             style={{ 
               width: '100%', 
               padding: '1rem', 
               fontSize: '1.125rem', 
               fontWeight: 'bold', 
               color: 'var(--color-surface)', 
-              backgroundColor: isCartEmpty || isStartingSale ? 'var(--color-muted)' : 'var(--color-primary)',
+              backgroundColor: isCartEmpty || isStartingSale || pendingMutations > 0 || saleNeedsRefresh ? 'var(--color-muted)' : 'var(--color-primary)',
               border: 'none', 
               borderRadius: '8px', 
-              cursor: isCartEmpty || isStartingSale ? 'not-allowed' : 'pointer',
+              cursor: isCartEmpty || isStartingSale || pendingMutations > 0 || saleNeedsRefresh ? 'not-allowed' : 'pointer',
               transition: 'background-color 0.2s',
-              boxShadow: isCartEmpty || isStartingSale ? 'none' : '0 4px 6px color-mix(in srgb, var(--color-primary) 25%, transparent)'
+              boxShadow: isCartEmpty || isStartingSale || pendingMutations > 0 || saleNeedsRefresh ? 'none' : '0 4px 6px color-mix(in srgb, var(--color-primary) 25%, transparent)'
             }}
           >
             {isStartingSale ? 'INICIANDO VENTA...' : venta ? 'COBRAR' : 'INICIAR VENTA'}
