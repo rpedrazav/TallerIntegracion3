@@ -154,6 +154,9 @@ export const posApi = {
   updateSaleItem: async (saleId: string, itemId: string, quantity: number): Promise<void> => {
     await pos.put(`/ventas/${saleId}/items/${itemId}`, { cantidad: quantity });
   },
+  deleteSaleItem: async (saleId: string, itemId: string): Promise<void> => {
+    await pos.delete(`/ventas/${saleId}/items/${itemId}`);
+  },
   createSale: async (items: CrearVentaItem[]): Promise<VentaPendiente> => {
     const response = await pos.post<VentaPendiente>('/ventas', {
       items,

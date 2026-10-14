@@ -46,15 +46,16 @@ Carrito de compras con:
   - Lista de CartItem (ítems del carrito)
   - Totales locales antes de iniciar venta; luego subtotal, impuestos y total devueltos por MS-5
   - Botón "Iniciar venta" que envía producto_id y cantidad; después muestra "Cobrar" (cobro aún no implementado)
-  - Botón "Cancelar borrador" antes de crear venta; en venta pendiente permite agregar y cambiar cantidad de ítems
+  - Botón "Cancelar borrador" antes de crear venta; en venta pendiente permite agregar, cambiar cantidad y eliminar ítems
 
-Productos obtenidos de MS-3 mediante `catalogApi`; carrito guardado en `localStorage`
+Productos obtenidos de MS-3 mediante `catalogApi`; solo el borrador anterior a la venta se guarda en `localStorage`
 Al entrar a /pos, consulta `posApi.activeShift`. Mientras espera muestra carga; ante 404 redirige a /abrir-turno. Si falla la conexión, bloquea el POS y ofrece reintentar. El catálogo se consulta solo después de confirmar el turno activo [IMPLEMENTADO].
 
 POST /ventas envía items [{producto_id, cantidad}] y metodo_pago EFECTIVO; no envía precio ni impuesto.
-GET /ventas/turno/{turnoId} recupera la última venta PENDIENTE del turno activo al abrir POS y antes de crear otra.
+GET /ventas/turno/{turnoId} identifica la última venta PENDIENTE del turno activo al abrir POS y antes de crear otra; GET /ventas/{id} recupera su estado completo antes de mostrar el carrito. Si falla la recuperación, POS muestra un error y ofrece reintentar sin usar el borrador local como autoridad.
 El ID, los ítems y los totales de la venta pendiente vienen de MS-5; el borrador local deja de ser autoridad.
 En venta pendiente, búsqueda y escaneo agregan ítems con `POST /ventas/{id}/items` o aumentan cantidad con `PUT /ventas/{id}/items/{itemId}`. Editar la cantidad de una fila usa el ID del ítem de MS-5. Tras cada operación consulta `GET /ventas/{id}` para renovar carrito, subtotal, impuestos y total; si no puede confirmar el estado, bloquea nuevas ediciones hasta reintentar la consulta [IMPLEMENTADO].
+Eliminar una fila de la venta pendiente llama `DELETE /ventas/{id}/items/{itemId}` y vuelve a consultar `GET /ventas/{id}`. El ítem eliminado no se repone desde `localStorage` [IMPLEMENTADO].
 Errores de inicio visibles; ante respuesta perdida, vuelve a consultar el turno antes de permitir otro intento [IMPLEMENTADO].
 NO abre turno desde esta pantalla; dirige a /abrir-turno cuando falta
 ```

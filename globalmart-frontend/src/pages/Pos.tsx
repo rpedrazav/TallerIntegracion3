@@ -37,6 +37,7 @@ export default function Pos() {
     locationState?.mensajeConfirmacion || locationState?.message || null
   );
   const [turnoStatus, setTurnoStatus] = useState<'checking' | 'ready' | 'error'>('checking');
+  const [turnoError, setTurnoError] = useState('No se pudo verificar el turno de caja. Intenta nuevamente antes de iniciar una venta.');
   const [turnoRetry, setTurnoRetry] = useState(0);
   const [turnoId, setTurnoId] = useState<string | null>(null);
   const [venta, setVenta] = useState<VentaPendiente | null>(null);
@@ -50,17 +51,23 @@ export default function Pos() {
 
   useEffect(() => {
     let active = true;
+    let shiftConfirmed = false;
     setTurnoStatus('checking');
+    setTurnoError('No se pudo verificar el turno de caja. Intenta nuevamente antes de iniciar una venta.');
 
     posApi.activeShift()
       .then(async (turno) => {
+        shiftConfirmed = true;
         const ventas = await posApi.salesByShift(turno.id);
         if (!active) return;
-        const pendiente = ventas.filter((item) => item.estado === 'PENDIENTE').pop() ?? null;
+        const pendingId = ventas.filter((item) => item.estado === 'PENDIENTE').pop()?.id;
+        const recovered = pendingId ? await posApi.getSale(pendingId) : null;
+        const pendiente = recovered?.estado === 'PENDIENTE' ? recovered : null;
+        if (!active) return;
         setTurnoId(turno.id);
         saleRef.current = pendiente;
         setVenta(pendiente);
-        if (pendiente) {
+        if (pendingId) {
           setDraftItems([]);
           setSearchResults([]);
         }
@@ -68,9 +75,12 @@ export default function Pos() {
       })
       .catch((error: unknown) => {
         if (!active) return;
-        if (axios.isAxiosError(error) && error.response?.status === 404) {
+        if (!shiftConfirmed && axios.isAxiosError(error) && error.response?.status === 404) {
           navigate('/abrir-turno', { replace: true });
         } else if (!(axios.isAxiosError(error) && error.response?.status === 401)) {
+          setTurnoError(shiftConfirmed
+            ? 'No se pudo recuperar la venta pendiente desde MS-5. Reintenta antes de modificar el carrito.'
+            : 'No se pudo verificar el turno de caja. Intenta nuevamente antes de iniciar una venta.');
           setTurnoStatus('error');
         }
       });
@@ -274,9 +284,16 @@ export default function Pos() {
   }, [venta, isStartingSale, saleNeedsRefresh, queueSaleMutation]);
 
   const handleRemoveItem = useCallback((id: string) => {
-    if (venta || isStartingSale) return;
+    if (isStartingSale || saleNeedsRefresh) return;
+    if (venta) {
+      void queueSaleMutation(async (current) => {
+        if (!current.items.some((item) => item.id === id)) return;
+        await posApi.deleteSaleItem(current.id, id);
+      });
+      return;
+    }
     setDraftItems(prev => prev.filter(item => item.id !== id));
-  }, [venta, isStartingSale]);
+  }, [venta, isStartingSale, saleNeedsRefresh, queueSaleMutation]);
 
   const handleCancelSale = () => {
     if (venta || isStartingSale || draftItems.length === 0) return;
@@ -298,12 +315,15 @@ export default function Pos() {
     setSearchResults([]);
     try {
       const ventas = await posApi.salesByShift(turnoId);
-      const pendiente = ventas.filter((item) => item.estado === 'PENDIENTE').pop();
-      if (pendiente) {
-        saleRef.current = pendiente;
-        setVenta(pendiente);
-        setDraftItems([]);
-        return;
+      const pendingId = ventas.filter((item) => item.estado === 'PENDIENTE').pop()?.id;
+      if (pendingId) {
+        const pendiente = await posApi.getSale(pendingId);
+        if (pendiente.estado === 'PENDIENTE') {
+          saleRef.current = pendiente;
+          setVenta(pendiente);
+          setDraftItems([]);
+          return;
+        }
       }
 
       const creada = await posApi.createSale(draftItems.map((item) => ({
@@ -317,12 +337,15 @@ export default function Pos() {
       if (axios.isAxiosError(error) && !error.response) {
         try {
           const ventas = await posApi.salesByShift(turnoId);
-          const pendiente = ventas.filter((item) => item.estado === 'PENDIENTE').pop();
-          if (pendiente) {
-            saleRef.current = pendiente;
-            setVenta(pendiente);
-            setDraftItems([]);
-            return;
+          const pendingId = ventas.filter((item) => item.estado === 'PENDIENTE').pop()?.id;
+          if (pendingId) {
+            const pendiente = await posApi.getSale(pendingId);
+            if (pendiente.estado === 'PENDIENTE') {
+              saleRef.current = pendiente;
+              setVenta(pendiente);
+              setDraftItems([]);
+              return;
+            }
           }
         } catch {
           // La consulta de recuperación también falló: conservar el borrador y mostrar el error.
@@ -372,7 +395,7 @@ export default function Pos() {
   if (turnoStatus === 'error') {
     return (
       <div role="alert" style={{ padding: '2rem', color: 'var(--color-danger)' }}>
-        <p>No se pudo verificar el turno de caja. Intenta nuevamente antes de iniciar una venta.</p>
+        <p>{turnoError}</p>
         <button type="button" onClick={() => setTurnoRetry((retry) => retry + 1)}>
           Reintentar
         </button>
@@ -521,7 +544,7 @@ export default function Pos() {
                     quantity={item.quantity} 
                     subtotal={item.subtotal}
                     readOnly={isStartingSale || pendingMutations > 0 || saleNeedsRefresh || !!(venta && venta.estado !== 'PENDIENTE')}
-                    canRemove={!venta}
+                    canRemove={!venta || venta.estado === 'PENDIENTE'}
                     onQuantityChange={handleQuantityChange}
                     onRemove={handleRemoveItem}
                   />
