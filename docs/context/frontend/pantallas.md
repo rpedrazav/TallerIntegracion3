@@ -49,10 +49,11 @@ Carrito de compras con:
   - Botón "Cancelar Venta" (limpia el carrito con confirm)
 
 Productos obtenidos de MS-3 mediante `catalogApi`; carrito guardado en `localStorage`
+Al entrar a /pos, consulta `posApi.activeShift`. Mientras espera muestra carga; ante 404 redirige a /abrir-turno. Si falla la conexión, bloquea el POS y ofrece reintentar. El catálogo se consulta solo después de confirmar el turno activo [IMPLEMENTADO].
 
 IVA calculado localmente (tasaIva = 0.19 fijo, sin llamar MS-2)
 NO integra la API de ventas de MS-5
-NO abre turno antes de vender
+NO abre turno desde esta pantalla; dirige a /abrir-turno cuando falta
 ```
 
 ## AbrirTurnoPage.tsx [IMPLEMENTADO]

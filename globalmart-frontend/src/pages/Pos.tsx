@@ -1,7 +1,7 @@
 ﻿import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { catalogApi, CatalogProduct } from '../api/client';
+import { catalogApi, CatalogProduct, posApi } from '../api/client';
 import BarcodeInput from '../components/pos/BarcodeInput';
 import CartItem from '../components/pos/CartItem';
 
@@ -24,6 +24,28 @@ export default function Pos() {
   const [mensajeConfirmacion, setMensajeConfirmacion] = useState<string | null>(
     locationState?.mensajeConfirmacion || locationState?.message || null
   );
+  const [turnoStatus, setTurnoStatus] = useState<'checking' | 'ready' | 'error'>('checking');
+  const [turnoRetry, setTurnoRetry] = useState(0);
+
+  useEffect(() => {
+    let active = true;
+    setTurnoStatus('checking');
+
+    posApi.activeShift()
+      .then(() => {
+        if (active) setTurnoStatus('ready');
+      })
+      .catch((error: unknown) => {
+        if (!active) return;
+        if (axios.isAxiosError(error) && error.response?.status === 404) {
+          navigate('/abrir-turno', { replace: true });
+        } else if (!(axios.isAxiosError(error) && error.response?.status === 401)) {
+          setTurnoStatus('error');
+        }
+      });
+
+    return () => { active = false; };
+  }, [navigate, turnoRetry]);
 
   // Inicializar leyendo de localStorage
   const [cartItems, setCartItems] = useState<ProductItem[]>(() => {
@@ -47,6 +69,7 @@ export default function Pos() {
   const [todosProductos, setTodosProductos] = useState<CatalogProduct[]>([]);
 
   useEffect(() => {
+    if (turnoStatus !== 'ready') return;
     const fetchTodos = async () => {
       try {
         const response = await catalogApi.listProducts();
@@ -56,7 +79,7 @@ export default function Pos() {
       }
     };
     fetchTodos();
-  }, []);
+  }, [turnoStatus]);
 
   const addProductToCart = useCallback((product: CatalogProduct) => {
     setCartItems(prev => {
@@ -158,6 +181,26 @@ export default function Pos() {
   const total = subtotal + iva;
   
   const isCartEmpty = cartItems.length === 0;
+
+  if (turnoStatus === 'checking') {
+    return (
+      <div role="status" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '2rem', color: 'var(--color-ink-soft)' }}>
+        <span className="spinner" style={{ borderColor: 'var(--color-line)', borderTopColor: 'var(--color-primary)' }} />
+        Verificando turno de caja...
+      </div>
+    );
+  }
+
+  if (turnoStatus === 'error') {
+    return (
+      <div role="alert" style={{ padding: '2rem', color: 'var(--color-danger)' }}>
+        <p>No se pudo verificar el turno de caja. Intenta nuevamente antes de iniciar una venta.</p>
+        <button type="button" onClick={() => setTurnoRetry((retry) => retry + 1)}>
+          Reintentar
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 100px)', gap: '1rem' }}>

@@ -187,7 +187,7 @@ reglas: []
 
 ## Estado del Frontend
 
-El frontend usa `src/api/client.ts` para Login (MS-1), catálogo del POS (MS-3) y páginas de turnos (MS-5): URL por servicio, métodos tipados, JWT y timeout de 15 s centralizados, con cierre de sesión ante 401 en llamadas protegidas [IMPLEMENTADO]. El carrito sigue local y no usa la API de ventas MS-5 [PARCIAL].
+El frontend usa `src/api/client.ts` para Login (MS-1), catálogo del POS (MS-3) y páginas de turnos (MS-5): URL por servicio, métodos tipados, JWT y timeout de 15 s centralizados, con cierre de sesión ante 401 en llamadas protegidas [IMPLEMENTADO]. POS consulta el turno activo al entrar, muestra carga y solo habilita el carrito tras confirmarlo; ante 404 redirige a apertura y ante otros errores ofrece reintentar [IMPLEMENTADO]. El carrito sigue local y no usa la API de ventas MS-5 [PARCIAL].
 
 ### Guía visual aprobada
 
