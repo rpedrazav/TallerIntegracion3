@@ -5,7 +5,7 @@ titulo: Estrategia de Testing — GlobalMart OS
 estado: parcial
 fuentes: [src/POSCartService/tests/, src/TaxComplianceService/tests/, .github/workflows/ci.yml]
 verificado_contra_codigo: true
-ultima_revision: 2026-10-12
+ultima_revision: 2026-10-14
 depende_de: [stack]
 publica: []
 consume: []
@@ -54,6 +54,10 @@ dotnet run --project src/TaxComplianceService/tests/TaxComplianceService.ManualT
 ```
 
 ## Tests de CI
+
+S2-023 corrige `CopyServiceRuntimeDependencies` de `GlobalMart.IntegrationTests.csproj`: las dependencias de los servicios se copian desde `bin/$(Configuration)/net8.0`, evitando sobrescribir Release con DLL antiguas de Debug. La suite RN-01 (`--filter 'Plan=S2-023'`) requiere `GLOBALMART_TEST_POSTGRES`, usa JWT y PostgreSQL reales en esquemas exclusivos y conecta MS-5 con MS-3 por HTTP en memoria. MS-2 y el envío a Kafka se sustituyen; el migrador de arranque se omite solo en estos hosts porque S2-022 ya crea el modelo EF. Ejecución Release 2026-10-14: **18/18 aprobadas**, sin fallos ni omisiones. [Reporte y reproducción](../../qa/S2-023/reporte.md).
+
+Ampliación posterior del mismo día: **32/32 Release aprobadas**, sin fallos ni omisiones, tras reforzar los repositorios y uniformar PUT ajeno/inexistente a 404. Incluye 19 casos HTTP y 13 directos de repositorios contra PostgreSQL, con ausencia de tenant y entidades rastreadas. [Evidencia ampliada](../../qa/S2-023/S2-023-refuerzo.trx).
 
 El pipeline en GitHub Actions ejecuta `dotnet test GlobalMartOS.sln --configuration Release`. Los console apps de smoke testing compilan y terminan (exit code 0) sin ejecutar casos de prueba reales.
 

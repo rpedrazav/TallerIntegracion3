@@ -59,14 +59,14 @@ public class VentaRepository : IVentaRepository
     /// <inheritdoc/>
     public async Task<Venta> ActualizarAsync(Venta venta)
     {
-        // Usamos IgnoreQueryFilters porque ActualizarAsync ya es llamado desde un
-        // scope autenticado; el filtro multi-tenant no debe bloquear la escritura.
+        // La pertenencia se comprueba en la base, incluso si el llamador omite el servicio.
+        // Nunca se usa el TenantId aportado en venta para autorizar la actualización.
         var tracked = await _context.Ventas
-            .IgnoreQueryFilters()
             .Include(v => v.Items)
             .Include(v => v.Pagos)
             .Include(v => v.Anulacion)
-            .FirstOrDefaultAsync(v => v.Id == venta.Id);
+            .FirstOrDefaultAsync(v => v.Id == venta.Id
+                && _context.CurrentTenantId.HasValue && v.TenantId == _context.CurrentTenantId);
         if (tracked is null)
             throw new KeyNotFoundException($"Venta {venta.Id} no encontrada para actualizar.");
 

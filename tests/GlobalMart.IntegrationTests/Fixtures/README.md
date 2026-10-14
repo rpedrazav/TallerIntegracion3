@@ -36,3 +36,18 @@ transacción distribuida; una falla puede reintentarse.
 Esta fixture prepara escenarios y verifica persistencia/filtros EF; no demuestra
 por sí sola RN-06 por HTTP ni constituye una prueba E2E de Electron. Usa Usuarios
 del modelo de login, no la proyección externa `users` de PUT/DELETE de MS-1.
+
+## Suite RN-01 — S2-023
+
+`ProductoTenantIsolationIntegrationTests` y `VentaTenantIsolationTests` reutilizan
+estos datos para atacar MS-3/MS-5 por HTTP con JWT firmados de A y recursos de B.
+Requieren `GLOBALMART_TEST_POSTGRES` explícita; no usan una base personal por defecto.
+Los hosts usan las tablas del modelo vigente creadas por la fixture y sustituyen
+solo el migrador de arranque. Catálogo y POS ejecutan consultas PostgreSQL reales;
+MS-5 llama a MS-3 mediante su cliente HTTP real. MS-2 y Kafka se sustituyen en tests.
+
+```powershell
+dotnet test tests/GlobalMart.IntegrationTests --configuration Release --filter 'Plan=S2-023'
+```
+
+Alcance, reproducción y resultados: [reporte S2-023](../../../docs/qa/S2-023/reporte.md).

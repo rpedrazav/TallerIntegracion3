@@ -5,7 +5,7 @@ titulo: MS-5 · POS & Cart Service
 estado: parcial
 fuentes: [src/POSCartService/]
 verificado_contra_codigo: true
-ultima_revision: 2026-10-13
+ultima_revision: 2026-10-14
 depende_de: [ms1-identity, ms2-tax, ms3-catalog]
 publica: [sale.completed]
 consume: []
@@ -153,6 +153,8 @@ JWT claims requeridos:
 
 TenantMiddleware inyecta `CurrentTenantId` en `PosCartDbContext`.
 
+`VentaRepository.ActualizarAsync` e `ItemVentaRepository.ActualizarAsync`/`EliminarAsync` conservan los filtros globales y exigen además `CurrentTenantId` presente y coincidencia explícita con el tenant almacenado (para ítems, mediante `Venta.TenantId`). La pertenencia no se obtiene del objeto recibido ni de la identidad ya rastreada. Las actualizaciones de venta/ítem ajeno o sin tenant lanzan `KeyNotFoundException`; eliminar un ítem no visible es una operación sin efecto, sin guardar cambios.
+
 ## Publicación Kafka: sale.completed [IMPLEMENTADO]
 
 Al completar una venta en `VentaService.CompletarAsync`, se publica el evento `sale.completed` mediante `IKafkaProducerService` (Singleton).
@@ -271,3 +273,11 @@ if (_kafkaProducer is not null)
 ## S2-025 — Regresión de carrito
 
 [PARCIAL] Suite Playwright sobre el renderer real de POS, con catálogo y puente de sesión controlados. Ejecución 2026-10-12: 1 aprobado (agregar, cantidad, eliminar y recargar), 2 fallidos (sin respuesta de ventas MS-5 y persistencia del carrito al cambiar sesión de tenant). Pos usa `pos_cart` sin partición por tenant y calcula IVA local al 19%. Igualdad con totales de MS-5 y aislamiento HTTP de backend [NO VERIFICADO]. No acredita E2E completo ni venta funcional. Reporte y capturas: [S2-025](../../qa/S2-025/reporte.md).
+
+## S2-023 — Aislamiento HTTP de venta y producto (RN-01)
+
+Suite [VentaTenantIsolationTests.cs](../../../tests/GlobalMart.IntegrationTests/VentaTenantIsolationTests.cs), filtrable con `Category=RN01` o `Plan=S2-023`. Usa los dos tenants de S2-022 en esquemas PostgreSQL exclusivos, JWT firmados validados por el middleware real y solicitudes HTTP al host MS-5. Verifica lectura por ID y turno ajenos, agregado/modificación/eliminación de ítems y cobro de venta ajena, incluyendo combinación de venta A con ítem B. Compara antes/después las ventas, ítems y pagos persistidos de ambos tenants y exige que no se publique `sale.completed` ante ataques.
+
+Los casos de crear venta y agregar producto B con JWT A recorren `CatalogClient` y el host HTTP real de MS-3 con su base de datos y filtros; no simulan la pertenencia del producto. Un control positivo recorre creación, agregado, cambio de cantidad, eliminación y cobro de A, comprueba pago/evento y conservación de B. Solo MS-2 y el envío al broker Kafka se sustituyen por respuestas deterministas y un registrador de eventos; no acredita E2E de Electron ni entrega real al broker. Las migraciones de arranque se omiten exclusivamente en los hosts de prueba porque la fixture ya crea el modelo EF vigente. Ejecución Release aprobada el 2026-10-14: 10/10 casos MS-5 dentro de la suite conjunta 18/18, sin fallos ni omisiones. Ver [reporte S2-023](../../qa/S2-023/reporte.md) y evidencia TRX.
+
+Defensa adicional en [PosRepositoryTenantIsolationTests.cs](../../../tests/GlobalMart.IntegrationTests/PosRepositoryTenantIsolationTests.cs): 12 ataques directos a repositorios, sin validación previa del servicio, cubren actualización de venta, actualización/eliminación de ítem ajeno y ausencia de tenant, con objetos separados y entidades previamente rastreadas. Comparan persistencia de ventas, ítems y pagos; un control positivo verifica mutaciones propias, no confía en el `TenantId` falsificado del objeto de entrada y conserva los datos de B. Validación Release el 2026-10-14: 13/13 casos directos aprobados (12 ataques y un control propio), junto con los 10/10 HTTP de ventas, dentro de la suite conjunta 32/32. Evidencia: [S2-023-refuerzo.trx](../../qa/S2-023/S2-023-refuerzo.trx).

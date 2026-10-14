@@ -287,6 +287,10 @@ namespace CatalogPricingService.Controllers
                 var updatedProducto = await _service.UpdateProductoAsync(id, productoActualizado, tenantId.Value, User.IsInRole("ADMIN"));
                 return Ok(updatedProducto);
             }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
             catch (UnauthorizedAccessException ex)
             {
                 return StatusCode(403, new { message = ex.Message });

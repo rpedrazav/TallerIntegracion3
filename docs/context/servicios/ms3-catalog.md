@@ -9,7 +9,7 @@ ultima_revision: 2026-10-14
 depende_de: [ms1-identity]
 publica: []
 consume: []
-reglas: [RN-11, RF-04, RF-11, CP-01, CP-04, CP-05]
+reglas: [RN-01, RN-11, RF-04, RF-11, CP-01, CP-04, CP-05]
 ---
 # MS-3 · Catalog & Pricing Service
 
@@ -44,6 +44,7 @@ reglas: [RN-11, RF-04, RF-11, CP-01, CP-04, CP-05]
 - Inexistente o perteneciente a otro tenant: idéntico 404 con `{ "message": "Producto no encontrado." }`.
 - Sin JWT: 401. Autenticado sin ADMIN: 403.
 - PUT compara el estado solicitado con el persistido y rechaza con 403 cambios de `IsActive` de usuarios no ADMIN. Conserva las ediciones de otros campos; un PUT no administrativo excluye `IsActive` de su escritura para no sobrescribir una baja concurrente.
+- PUT devuelve el mismo 404 con `{ "message": "Producto no encontrado." }` ante producto inexistente o de otro tenant. El servicio distingue `KeyNotFoundException` de `UnauthorizedAccessException`, que conserva 403 para cambios de estado sin ADMIN.
 
 La baja conserva el producto y sus referencias lógicas. MS-5 conserva nombre y precio en `ItemVenta`, e impuestos/totales en `Venta`; consultar ventas históricas no requiere consultar catálogo. MS-5 no fue modificado. Listado, search y lookup siguen incluyendo inactivos; no se agregó un filtro global por estado.
 
@@ -98,6 +99,12 @@ Precio
 - Extrae `tenant_id` del JWT claim `tenant_id`
 - Fallback en Development: header `X-Tenant-ID` (para pruebas manuales sin JWT)
 - Todos los queries filtran por `tenant_id` explícitamente en el service
+
+### Suite RN-01 — S2-023
+
+[ProductoTenantIsolationIntegrationTests.cs](../../../tests/GlobalMart.IntegrationTests/ProductoTenantIsolationIntegrationTests.cs) contiene nueve casos HTTP sobre el pipeline real de MS-3, JWT firmados y PostgreSQL con esquemas propios de [TwoTenantFixture](../../../tests/GlobalMart.IntegrationTests/Fixtures/README.md). Verifica GET por ID, listado, búsqueda (nombre compartido y exclusivo de B), lookup (barcode compartido y exclusivo), PUT/DELETE de B con JWT A y POST con `tenantId` B falsificado en el body. Un header `X-Tenant-ID` B acompaña el JWT A y no debe reemplazarlo. Los controles propios y con JWT B evitan que una denegación global produzca falsos positivos. El control de estado exige 403 y snapshot propio intacto al desactivar/reactivar con CAJERO, y 200 con estado persistido al realizar ambas operaciones con ADMIN.
+
+PUT ajeno e inexistente retornan el mismo 404 y body; GET por ID, lookup y DELETE ajenos retornan 404. Las mutaciones comparan snapshots SQL de todas las columnas y filas de productos B antes y después; el alta queda exclusivamente en A. Se conservan autenticación, middleware, validadores, repositorios y consultas reales. Solo se omiten las migraciones de inicio en este host de prueba, porque la fixture ya creó el modelo EF actual; no acredita ejecución de migraciones ni E2E de Electron. Requiere `GLOBALMART_TEST_POSTGRES`; filtro común `Category=RN01&Plan=S2-023`. La corrida inicial Release aprobó 8/8 casos MS-3 dentro de la suite conjunta 18/18 el 2026-10-14. Tras ajustar PUT a 404 y añadir regresión de permisos de estado: 9/9 casos MS-3 aprobados dentro de la suite ampliada 32/32 Release del 2026-10-14. Ver [reporte S2-023](../../qa/S2-023/reporte.md) y evidencia TRX.
 
 ## Casos de uso cubiertos
 

@@ -49,8 +49,8 @@ public class ItemVentaRepository : IItemVentaRepository
     public async Task<ItemVenta> ActualizarAsync(ItemVenta item)
     {
         var tracked = await _context.ItemsVenta
-            .IgnoreQueryFilters()
-            .FirstOrDefaultAsync(i => i.Id == item.Id);
+            .FirstOrDefaultAsync(i => i.Id == item.Id
+                && _context.CurrentTenantId.HasValue && i.Venta.TenantId == _context.CurrentTenantId);
         if (tracked is null)
             throw new KeyNotFoundException($"ItemVenta {item.Id} no encontrado para actualizar.");
 
@@ -68,8 +68,8 @@ public class ItemVentaRepository : IItemVentaRepository
     {
         // Buscar la instancia ya rastreada por EF para evitar conflictos de identity map
         var tracked = await _context.ItemsVenta
-            .IgnoreQueryFilters()
-            .FirstOrDefaultAsync(i => i.Id == item.Id);
+            .FirstOrDefaultAsync(i => i.Id == item.Id
+                && _context.CurrentTenantId.HasValue && i.Venta.TenantId == _context.CurrentTenantId);
 
         if (tracked is not null)
         {

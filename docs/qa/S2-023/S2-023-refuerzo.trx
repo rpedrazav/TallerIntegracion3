@@ -1,0 +1,358 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="a13617bc-d84b-4cb5-82de-7547e1cff705" name="dp877@DANI 2026-10-14 13:17:50" runUser="DANI\dp877" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2026-10-14T13:17:50.4937363-03:00" queuing="2026-10-14T13:17:50.4937368-03:00" start="2026-10-14T13:17:09.2273382-03:00" finish="2026-10-14T13:38:55.3796804-03:00" />
+  <TestSettings name="default" id="bb7cb0db-5273-4fdf-83e4-a3243bdc3d7a">
+    <Deployment runDeploymentRoot="dp877_DANI_2026-10-14_13_17_50" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="03f7ffe1-1225-4774-a03e-4c6a80078e78" testId="0eabff34-f25d-49f8-afaa-a288bf55e5e5" testName="GlobalMart.IntegrationTests.VentaTenantIsolationTests.Mutaciones_VentaOItemAjeno_404SinCambiarPersistenciaNiPublicar(operation: &quot;add&quot;)" computerName="DANI" duration="00:00:16.4558553" startTime="2026-10-14T13:25:10.4741958-03:00" endTime="2026-10-14T13:25:10.4741963-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="03f7ffe1-1225-4774-a03e-4c6a80078e78" />
+    <UnitTestResult executionId="d953b0ea-1730-46e1-a7f4-ad7cfc865c2f" testId="c71ac0ab-dc33-8222-c0ce-5ba0b7aeb9d9" testName="GlobalMart.IntegrationTests.PosRepositoryTenantIsolationTests.MutacionDirecta_AjenaOSinTenant_NoAlteraVentasItemsNiPagos(operation: &quot;delete&quot;, mode: &quot;tracked&quot;)" computerName="DANI" duration="00:00:42.4074206" startTime="2026-10-14T13:30:43.4221550-03:00" endTime="2026-10-14T13:30:43.4221558-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="d953b0ea-1730-46e1-a7f4-ad7cfc865c2f" />
+    <UnitTestResult executionId="6ef3a881-9da1-4ed7-9bfc-2bd457608fda" testId="31cfdfde-65df-fadd-7aa8-f5578ce2f90f" testName="GlobalMart.IntegrationTests.VentaTenantIsolationTests.Mutaciones_VentaOItemAjeno_404SinCambiarPersistenciaNiPublicar(operation: &quot;charge&quot;)" computerName="DANI" duration="00:00:16.3912717" startTime="2026-10-14T13:24:33.1669059-03:00" endTime="2026-10-14T13:24:33.1669063-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="6ef3a881-9da1-4ed7-9bfc-2bd457608fda" />
+    <UnitTestResult executionId="a8b3eaf1-4366-416b-b57a-c5bfe776a1eb" testId="93a5d392-88d8-e5a3-38e7-5d7b9bc747d2" testName="GlobalMart.IntegrationTests.VentaTenantIsolationTests.Mutaciones_VentaOItemAjeno_404SinCambiarPersistenciaNiPublicar(operation: &quot;delete&quot;)" computerName="DANI" duration="00:00:16.4545037" startTime="2026-10-14T13:25:47.8204602-03:00" endTime="2026-10-14T13:25:47.8204607-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="a8b3eaf1-4366-416b-b57a-c5bfe776a1eb" />
+    <UnitTestResult executionId="2daa3e6c-81c1-42c9-b594-58a951bac63b" testId="46715ac2-1cc4-e08c-6aa5-67aad03c6d27" testName="GlobalMart.IntegrationTests.VentaTenantIsolationTests.ProductoAjeno_CrearOAgregar_ConsultaMS3RealYRechazaSinPersistir(add: True)" computerName="DANI" duration="00:00:18.4601401" startTime="2026-10-14T13:27:44.1959575-03:00" endTime="2026-10-14T13:27:44.1959579-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="2daa3e6c-81c1-42c9-b594-58a951bac63b" />
+    <UnitTestResult executionId="b6098235-d087-4cfb-9771-2e39fc86a26c" testId="9d5cd165-4339-9615-4755-fdcd71528994" testName="GlobalMart.IntegrationTests.PosRepositoryTenantIsolationTests.MutacionDirecta_AjenaOSinTenant_NoAlteraVentasItemsNiPagos(operation: &quot;sale&quot;, mode: &quot;missing&quot;)" computerName="DANI" duration="00:00:37.2002811" startTime="2026-10-14T13:36:03.8576057-03:00" endTime="2026-10-14T13:36:03.8576061-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="b6098235-d087-4cfb-9771-2e39fc86a26c" />
+    <UnitTestResult executionId="808cb15a-a722-425f-b46d-b463946d5c58" testId="4ab940a6-e6f2-cbef-6317-19f36b5685f2" testName="GlobalMart.IntegrationTests.ProductoTenantIsolationIntegrationTests.Lookup_MismoBarcodeResuelvePropio_BarcodeExclusivoAjeno404" computerName="DANI" duration="00:00:06.2580194" startTime="2026-10-14T13:18:19.8997565-03:00" endTime="2026-10-14T13:18:19.8997569-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="808cb15a-a722-425f-b46d-b463946d5c58" />
+    <UnitTestResult executionId="d514b7e2-1369-4f26-a003-de82281a6df3" testId="03b6430f-9aeb-2459-760a-108fd0a8f9cb" testName="GlobalMart.IntegrationTests.PosRepositoryTenantIsolationTests.MutacionDirecta_AjenaOSinTenant_NoAlteraVentasItemsNiPagos(operation: &quot;delete&quot;, mode: &quot;foreign&quot;)" computerName="DANI" duration="00:00:37.2380450" startTime="2026-10-14T13:32:51.7265038-03:00" endTime="2026-10-14T13:32:51.7265043-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="d514b7e2-1369-4f26-a003-de82281a6df3" />
+    <UnitTestResult executionId="4abb1b44-b9ef-49f8-8635-8b255f9a48d0" testId="07aabea1-9028-04f2-b444-8631fdbad243" testName="GlobalMart.IntegrationTests.PosRepositoryTenantIsolationTests.MutacionDirecta_AjenaOSinTenant_NoAlteraVentasItemsNiPagos(operation: &quot;item&quot;, mode: &quot;tracked-missing&quot;)" computerName="DANI" duration="00:00:39.2115877" startTime="2026-10-14T13:34:49.3892551-03:00" endTime="2026-10-14T13:34:49.3892556-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="4abb1b44-b9ef-49f8-8635-8b255f9a48d0" />
+    <UnitTestResult executionId="51978b39-0c32-4cb8-b2e1-73d2bf43bfaf" testId="7c3cbe42-2da9-8b6c-37ff-c7d137c5f179" testName="GlobalMart.IntegrationTests.ProductoTenantIsolationIntegrationTests.Put_CambioIsActive_SinAdmin403_ConAdminDesactivaYReactiva200" computerName="DANI" duration="00:00:40.9731496" startTime="2026-10-14T13:20:09.2117603-03:00" endTime="2026-10-14T13:20:09.2117607-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="51978b39-0c32-4cb8-b2e1-73d2bf43bfaf" />
+    <UnitTestResult executionId="47c59097-0728-40ad-b732-3f7062c4629a" testId="6eb01909-55d3-c2d4-46de-c74ba4fc7eab" testName="GlobalMart.IntegrationTests.VentaTenantIsolationTests.Mutaciones_VentaOItemAjeno_404SinCambiarPersistenciaNiPublicar(operation: &quot;own-sale-foreign-item-delete&quot;)" computerName="DANI" duration="00:00:16.7475017" startTime="2026-10-14T13:23:18.6936179-03:00" endTime="2026-10-14T13:23:18.6936183-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="47c59097-0728-40ad-b732-3f7062c4629a" />
+    <UnitTestResult executionId="def1b194-4f8e-4e55-aecc-4a7641d14438" testId="5faff34a-cb64-7316-1f87-ed19ee4307d1" testName="GlobalMart.IntegrationTests.ProductoTenantIsolationIntegrationTests.Put_ProductoBAjenoEInexistente_Mismo404YSnapshotIntacto_Propio200" computerName="DANI" duration="00:00:22.6559474" startTime="2026-10-14T13:19:05.4052342-03:00" endTime="2026-10-14T13:19:05.4052346-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="def1b194-4f8e-4e55-aecc-4a7641d14438" />
+    <UnitTestResult executionId="b448cd8f-c8cf-400b-99b2-bc85d33c645c" testId="59aaf2a7-bbd7-4cdc-cb69-9fdd22f8e64e" testName="GlobalMart.IntegrationTests.PosRepositoryTenantIsolationTests.MutacionDirecta_AjenaOSinTenant_NoAlteraVentasItemsNiPagos(operation: &quot;delete&quot;, mode: &quot;missing&quot;)" computerName="DANI" duration="00:00:51.3829307" startTime="2026-10-14T13:31:34.8066305-03:00" endTime="2026-10-14T13:31:34.8066309-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="b448cd8f-c8cf-400b-99b2-bc85d33c645c" />
+    <UnitTestResult executionId="95287822-ff17-43b8-a1f1-58597e46c7b5" testId="67efa26d-5bf8-6932-c714-8a6fe3047658" testName="GlobalMart.IntegrationTests.ProductoTenantIsolationIntegrationTests.ConsultasPaginadas_SoloDevuelvenProductosDelJwt(route: &quot;/products?page=1&amp;pageSize=100&quot;)" computerName="DANI" duration="00:00:04.1794863" startTime="2026-10-14T13:20:36.3244099-03:00" endTime="2026-10-14T13:20:36.3244103-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="95287822-ff17-43b8-a1f1-58597e46c7b5" />
+    <UnitTestResult executionId="d73f834e-14fe-45b4-bb41-eb3b7b7e2374" testId="45f116ed-5fb0-88d8-7be3-8b75bae34d1f" testName="GlobalMart.IntegrationTests.VentaTenantIsolationTests.Mutaciones_VentaOItemAjeno_404SinCambiarPersistenciaNiPublicar(operation: &quot;own-sale-foreign-item-update&quot;)" computerName="DANI" duration="00:00:16.4328253" startTime="2026-10-14T13:23:55.9587194-03:00" endTime="2026-10-14T13:23:55.9587198-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="d73f834e-14fe-45b4-bb41-eb3b7b7e2374" />
+    <UnitTestResult executionId="22ca01c9-c214-44f3-80a5-81001559b35a" testId="bfda2e02-b092-d586-bcd4-2620aec5ac02" testName="GlobalMart.IntegrationTests.PosRepositoryTenantIsolationTests.MutacionDirecta_AjenaOSinTenant_NoAlteraVentasItemsNiPagos(operation: &quot;sale&quot;, mode: &quot;foreign&quot;)" computerName="DANI" duration="00:00:37.1928224" startTime="2026-10-14T13:37:20.4196527-03:00" endTime="2026-10-14T13:37:20.4196530-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="22ca01c9-c214-44f3-80a5-81001559b35a" />
+    <UnitTestResult executionId="f55ee0b0-c178-46e9-86fc-85782f0fa724" testId="f41c2b1a-fde6-3ad4-8f0b-b0de2f6508aa" testName="GlobalMart.IntegrationTests.VentaTenantIsolationTests.Consultas_VentaYTurnoAjeno_NoExponenDatos" computerName="DANI" duration="00:00:16.4935315" startTime="2026-10-14T13:30:01.0128759-03:00" endTime="2026-10-14T13:30:01.0128764-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="f55ee0b0-c178-46e9-86fc-85782f0fa724" />
+    <UnitTestResult executionId="76233dad-462d-42ac-bff6-de183a2908c2" testId="7ee80a37-5125-3210-6069-67224c6ddedb" testName="GlobalMart.IntegrationTests.VentaTenantIsolationTests.Mutaciones_VentaOItemAjeno_404SinCambiarPersistenciaNiPublicar(operation: &quot;update&quot;)" computerName="DANI" duration="00:00:16.3969850" startTime="2026-10-14T13:26:25.0812365-03:00" endTime="2026-10-14T13:26:25.0812370-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="76233dad-462d-42ac-bff6-de183a2908c2" />
+    <UnitTestResult executionId="b5283f9b-649d-41e7-b24d-4d2a9623d2de" testId="f631aff6-f288-37b5-7c44-614f9088f1d8" testName="GlobalMart.IntegrationTests.PosRepositoryTenantIsolationTests.MutacionDirecta_AjenaOSinTenant_NoAlteraVentasItemsNiPagos(operation: &quot;item&quot;, mode: &quot;tracked&quot;)" computerName="DANI" duration="00:00:39.2229391" startTime="2026-10-14T13:34:10.1761936-03:00" endTime="2026-10-14T13:34:10.1761946-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="b5283f9b-649d-41e7-b24d-4d2a9623d2de" />
+    <UnitTestResult executionId="8f62c518-dd89-4c90-ab21-460720269126" testId="c0440d5e-3f8f-5e75-ae09-fcf4f99f6647" testName="GlobalMart.IntegrationTests.ProductoTenantIsolationIntegrationTests.ConsultasPaginadas_SoloDevuelvenProductosDelJwt(route: &quot;/products/search?q=Producto&amp;page=1&amp;pageSize=100&quot;)" computerName="DANI" duration="00:00:04.1308189" startTime="2026-10-14T13:21:03.5770701-03:00" endTime="2026-10-14T13:21:03.5770705-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="8f62c518-dd89-4c90-ab21-460720269126" />
+    <UnitTestResult executionId="fb12c5e5-7b9e-4b54-887a-7ea466a285ba" testId="c5b73ca8-1c83-a271-8280-e847586ca54a" testName="GlobalMart.IntegrationTests.PosRepositoryTenantIsolationTests.MutacionDirecta_AjenaOSinTenant_NoAlteraVentasItemsNiPagos(operation: &quot;sale&quot;, mode: &quot;tracked-missing&quot;)" computerName="DANI" duration="00:00:39.2240129" startTime="2026-10-14T13:33:30.9520269-03:00" endTime="2026-10-14T13:33:30.9520273-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="fb12c5e5-7b9e-4b54-887a-7ea466a285ba" />
+    <UnitTestResult executionId="86ceae69-df42-492c-863f-7d215fec6ed1" testId="8319361a-329e-983f-4fd9-0813992be5e9" testName="GlobalMart.IntegrationTests.VentaTenantIsolationTests.ProductoAjeno_CrearOAgregar_ConsultaMS3RealYRechazaSinPersistir(add: False)" computerName="DANI" duration="00:00:18.6351741" startTime="2026-10-14T13:27:04.5667576-03:00" endTime="2026-10-14T13:27:04.5667582-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="86ceae69-df42-492c-863f-7d215fec6ed1" />
+    <UnitTestResult executionId="f2fcfc93-3edd-4895-a656-efb109875bfb" testId="d5b04821-30cc-8ce5-4700-a1904ae3197a" testName="GlobalMart.IntegrationTests.PosRepositoryTenantIsolationTests.MutacionesDirectas_Propias_ActualizanYEliminanSinAfectarTenantB" computerName="DANI" duration="00:00:57.7154333" startTime="2026-10-14T13:38:55.2343605-03:00" endTime="2026-10-14T13:38:55.2343610-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="f2fcfc93-3edd-4895-a656-efb109875bfb" />
+    <UnitTestResult executionId="e5c98f05-d0c5-4b20-8db5-3593531e04b8" testId="6759f882-d697-20a8-19c7-4250a5c2b3da" testName="GlobalMart.IntegrationTests.PosRepositoryTenantIsolationTests.MutacionDirecta_AjenaOSinTenant_NoAlteraVentasItemsNiPagos(operation: &quot;item&quot;, mode: &quot;foreign&quot;)" computerName="DANI" duration="00:00:37.0945143" startTime="2026-10-14T13:37:57.5171917-03:00" endTime="2026-10-14T13:37:57.5171927-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="e5c98f05-d0c5-4b20-8db5-3593531e04b8" />
+    <UnitTestResult executionId="18aba465-bcd7-4e73-a6f8-c79693522ca1" testId="a1d4b658-31bd-8be7-bcb1-e4340808311f" testName="GlobalMart.IntegrationTests.ProductoTenantIsolationIntegrationTests.Post_TenantBEnBodyYHeader_PersisteExclusivamenteEnTenantDelJwt" computerName="DANI" duration="00:00:10.7730881" startTime="2026-10-14T13:17:50.4337998-03:00" endTime="2026-10-14T13:17:50.4338384-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="18aba465-bcd7-4e73-a6f8-c79693522ca1" />
+    <UnitTestResult executionId="1cd8fac3-f9c8-44df-bfa8-a40916dc0fb8" testId="9c043c7f-e6ff-8d11-5d56-6f73ce94a2db" testName="GlobalMart.IntegrationTests.VentaTenantIsolationTests.OperacionesPropias_CrearAgregarModificarEliminarYCobrar_FuncionanYConservanTenantB" computerName="DANI" duration="00:01:07.4242685" startTime="2026-10-14T13:29:14.7600288-03:00" endTime="2026-10-14T13:29:14.7600292-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="1cd8fac3-f9c8-44df-bfa8-a40916dc0fb8" />
+    <UnitTestResult executionId="806d8ee8-66a9-4564-bd08-1def96def092" testId="76d441bd-160e-c7c7-9867-1dcae2f5f438" testName="GlobalMart.IntegrationTests.PosRepositoryTenantIsolationTests.MutacionDirecta_AjenaOSinTenant_NoAlteraVentasItemsNiPagos(operation: &quot;sale&quot;, mode: &quot;tracked&quot;)" computerName="DANI" duration="00:00:39.3671228" startTime="2026-10-14T13:36:43.2257904-03:00" endTime="2026-10-14T13:36:43.2257912-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="806d8ee8-66a9-4564-bd08-1def96def092" />
+    <UnitTestResult executionId="e7669e2c-be01-43e2-940c-1d597aef6112" testId="bb8f8320-a0e5-a164-1ecc-8317211edf27" testName="GlobalMart.IntegrationTests.ProductoTenantIsolationIntegrationTests.GetById_TenantBAjeno_404_Propio200" computerName="DANI" duration="00:00:06.1835848" startTime="2026-10-14T13:22:41.0801339-03:00" endTime="2026-10-14T13:22:41.0801342-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="e7669e2c-be01-43e2-940c-1d597aef6112" />
+    <UnitTestResult executionId="d576a372-6098-44ce-960b-8066018a61dc" testId="befcbb99-46f8-0b3b-bbad-3b41f5e72dc6" testName="GlobalMart.IntegrationTests.PosRepositoryTenantIsolationTests.MutacionDirecta_AjenaOSinTenant_NoAlteraVentasItemsNiPagos(operation: &quot;item&quot;, mode: &quot;missing&quot;)" computerName="DANI" duration="00:00:37.2655267" startTime="2026-10-14T13:35:26.6559301-03:00" endTime="2026-10-14T13:35:26.6559308-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="d576a372-6098-44ce-960b-8066018a61dc" />
+    <UnitTestResult executionId="832b4b61-be26-447d-bea3-e16d26ed280a" testId="436cdaf1-ebb9-9d2e-d3ba-e1032f325515" testName="GlobalMart.IntegrationTests.ProductoTenantIsolationIntegrationTests.Search_TerminoExclusivoB_NoFiltraExistenciaNiDatos" computerName="DANI" duration="00:00:08.2596483" startTime="2026-10-14T13:22:12.0190734-03:00" endTime="2026-10-14T13:22:12.0190738-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="832b4b61-be26-447d-bea3-e16d26ed280a" />
+    <UnitTestResult executionId="503d9600-3269-420d-9e04-7224bff77a7b" testId="c9426f55-0262-05b7-8471-7da3092b0f36" testName="GlobalMart.IntegrationTests.PosRepositoryTenantIsolationTests.MutacionDirecta_AjenaOSinTenant_NoAlteraVentasItemsNiPagos(operation: &quot;delete&quot;, mode: &quot;tracked-missing&quot;)" computerName="DANI" duration="00:00:39.6785698" startTime="2026-10-14T13:32:14.4866841-03:00" endTime="2026-10-14T13:32:14.4866845-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="503d9600-3269-420d-9e04-7224bff77a7b" />
+    <UnitTestResult executionId="fc71ba7c-3df0-483b-9eaa-538ed0fb7acf" testId="4e80cce9-cb06-d9ab-58c0-67dae59bd42f" testName="GlobalMart.IntegrationTests.ProductoTenantIsolationIntegrationTests.Delete_ProductoB_404YSnapshotIntacto_Propio204" computerName="DANI" duration="00:00:14.4244807" startTime="2026-10-14T13:21:40.8397698-03:00" endTime="2026-10-14T13:21:40.8397703-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="fc71ba7c-3df0-483b-9eaa-538ed0fb7acf" />
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="GlobalMart.IntegrationTests.PosRepositoryTenantIsolationTests.MutacionDirecta_AjenaOSinTenant_NoAlteraVentasItemsNiPagos(operation: &quot;item&quot;, mode: &quot;foreign&quot;)" storage="c:\users\dp877\desktop\universidad\semestre 6\tallerintegra3\tallerintegracion3\tests\globalmart.integrationtests\bin\release\net8.0\globalmart.integrationtests.dll" id="6759f882-d697-20a8-19c7-4250a5c2b3da">
+      <Execution id="e5c98f05-d0c5-4b20-8db5-3593531e04b8" />
+      <TestMethod codeBase="C:\Users\dp877\Desktop\Universidad\Semestre 6\TallerIntegra3\TallerIntegracion3\tests\GlobalMart.IntegrationTests\bin\Release\net8.0\GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.PosRepositoryTenantIsolationTests" name="MutacionDirecta_AjenaOSinTenant_NoAlteraVentasItemsNiPagos" />
+    </UnitTest>
+    <UnitTest name="GlobalMart.IntegrationTests.VentaTenantIsolationTests.ProductoAjeno_CrearOAgregar_ConsultaMS3RealYRechazaSinPersistir(add: False)" storage="c:\users\dp877\desktop\universidad\semestre 6\tallerintegra3\tallerintegracion3\tests\globalmart.integrationtests\bin\release\net8.0\globalmart.integrationtests.dll" id="8319361a-329e-983f-4fd9-0813992be5e9">
+      <Execution id="86ceae69-df42-492c-863f-7d215fec6ed1" />
+      <TestMethod codeBase="C:\Users\dp877\Desktop\Universidad\Semestre 6\TallerIntegra3\TallerIntegracion3\tests\GlobalMart.IntegrationTests\bin\Release\net8.0\GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.VentaTenantIsolationTests" name="ProductoAjeno_CrearOAgregar_ConsultaMS3RealYRechazaSinPersistir" />
+    </UnitTest>
+    <UnitTest name="GlobalMart.IntegrationTests.ProductoTenantIsolationIntegrationTests.Delete_ProductoB_404YSnapshotIntacto_Propio204" storage="c:\users\dp877\desktop\universidad\semestre 6\tallerintegra3\tallerintegracion3\tests\globalmart.integrationtests\bin\release\net8.0\globalmart.integrationtests.dll" id="4e80cce9-cb06-d9ab-58c0-67dae59bd42f">
+      <Execution id="fc71ba7c-3df0-483b-9eaa-538ed0fb7acf" />
+      <TestMethod codeBase="C:\Users\dp877\Desktop\Universidad\Semestre 6\TallerIntegra3\TallerIntegracion3\tests\GlobalMart.IntegrationTests\bin\Release\net8.0\GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.ProductoTenantIsolationIntegrationTests" name="Delete_ProductoB_404YSnapshotIntacto_Propio204" />
+    </UnitTest>
+    <UnitTest name="GlobalMart.IntegrationTests.VentaTenantIsolationTests.ProductoAjeno_CrearOAgregar_ConsultaMS3RealYRechazaSinPersistir(add: True)" storage="c:\users\dp877\desktop\universidad\semestre 6\tallerintegra3\tallerintegracion3\tests\globalmart.integrationtests\bin\release\net8.0\globalmart.integrationtests.dll" id="46715ac2-1cc4-e08c-6aa5-67aad03c6d27">
+      <Execution id="2daa3e6c-81c1-42c9-b594-58a951bac63b" />
+      <TestMethod codeBase="C:\Users\dp877\Desktop\Universidad\Semestre 6\TallerIntegra3\TallerIntegracion3\tests\GlobalMart.IntegrationTests\bin\Release\net8.0\GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.VentaTenantIsolationTests" name="ProductoAjeno_CrearOAgregar_ConsultaMS3RealYRechazaSinPersistir" />
+    </UnitTest>
+    <UnitTest name="GlobalMart.IntegrationTests.ProductoTenantIsolationIntegrationTests.ConsultasPaginadas_SoloDevuelvenProductosDelJwt(route: &quot;/products?page=1&amp;pageSize=100&quot;)" storage="c:\users\dp877\desktop\universidad\semestre 6\tallerintegra3\tallerintegracion3\tests\globalmart.integrationtests\bin\release\net8.0\globalmart.integrationtests.dll" id="67efa26d-5bf8-6932-c714-8a6fe3047658">
+      <Execution id="95287822-ff17-43b8-a1f1-58597e46c7b5" />
+      <TestMethod codeBase="C:\Users\dp877\Desktop\Universidad\Semestre 6\TallerIntegra3\TallerIntegracion3\tests\GlobalMart.IntegrationTests\bin\Release\net8.0\GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.ProductoTenantIsolationIntegrationTests" name="ConsultasPaginadas_SoloDevuelvenProductosDelJwt" />
+    </UnitTest>
+    <UnitTest name="GlobalMart.IntegrationTests.ProductoTenantIsolationIntegrationTests.Lookup_MismoBarcodeResuelvePropio_BarcodeExclusivoAjeno404" storage="c:\users\dp877\desktop\universidad\semestre 6\tallerintegra3\tallerintegracion3\tests\globalmart.integrationtests\bin\release\net8.0\globalmart.integrationtests.dll" id="4ab940a6-e6f2-cbef-6317-19f36b5685f2">
+      <Execution id="808cb15a-a722-425f-b46d-b463946d5c58" />
+      <TestMethod codeBase="C:\Users\dp877\Desktop\Universidad\Semestre 6\TallerIntegra3\TallerIntegracion3\tests\GlobalMart.IntegrationTests\bin\Release\net8.0\GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.ProductoTenantIsolationIntegrationTests" name="Lookup_MismoBarcodeResuelvePropio_BarcodeExclusivoAjeno404" />
+    </UnitTest>
+    <UnitTest name="GlobalMart.IntegrationTests.PosRepositoryTenantIsolationTests.MutacionDirecta_AjenaOSinTenant_NoAlteraVentasItemsNiPagos(operation: &quot;sale&quot;, mode: &quot;tracked&quot;)" storage="c:\users\dp877\desktop\universidad\semestre 6\tallerintegra3\tallerintegracion3\tests\globalmart.integrationtests\bin\release\net8.0\globalmart.integrationtests.dll" id="76d441bd-160e-c7c7-9867-1dcae2f5f438">
+      <Execution id="806d8ee8-66a9-4564-bd08-1def96def092" />
+      <TestMethod codeBase="C:\Users\dp877\Desktop\Universidad\Semestre 6\TallerIntegra3\TallerIntegracion3\tests\GlobalMart.IntegrationTests\bin\Release\net8.0\GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.PosRepositoryTenantIsolationTests" name="MutacionDirecta_AjenaOSinTenant_NoAlteraVentasItemsNiPagos" />
+    </UnitTest>
+    <UnitTest name="GlobalMart.IntegrationTests.PosRepositoryTenantIsolationTests.MutacionDirecta_AjenaOSinTenant_NoAlteraVentasItemsNiPagos(operation: &quot;sale&quot;, mode: &quot;foreign&quot;)" storage="c:\users\dp877\desktop\universidad\semestre 6\tallerintegra3\tallerintegracion3\tests\globalmart.integrationtests\bin\release\net8.0\globalmart.integrationtests.dll" id="bfda2e02-b092-d586-bcd4-2620aec5ac02">
+      <Execution id="22ca01c9-c214-44f3-80a5-81001559b35a" />
+      <TestMethod codeBase="C:\Users\dp877\Desktop\Universidad\Semestre 6\TallerIntegra3\TallerIntegracion3\tests\GlobalMart.IntegrationTests\bin\Release\net8.0\GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.PosRepositoryTenantIsolationTests" name="MutacionDirecta_AjenaOSinTenant_NoAlteraVentasItemsNiPagos" />
+    </UnitTest>
+    <UnitTest name="GlobalMart.IntegrationTests.PosRepositoryTenantIsolationTests.MutacionDirecta_AjenaOSinTenant_NoAlteraVentasItemsNiPagos(operation: &quot;delete&quot;, mode: &quot;tracked-missing&quot;)" storage="c:\users\dp877\desktop\universidad\semestre 6\tallerintegra3\tallerintegracion3\tests\globalmart.integrationtests\bin\release\net8.0\globalmart.integrationtests.dll" id="c9426f55-0262-05b7-8471-7da3092b0f36">
+      <Execution id="503d9600-3269-420d-9e04-7224bff77a7b" />
+      <TestMethod codeBase="C:\Users\dp877\Desktop\Universidad\Semestre 6\TallerIntegra3\TallerIntegracion3\tests\GlobalMart.IntegrationTests\bin\Release\net8.0\GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.PosRepositoryTenantIsolationTests" name="MutacionDirecta_AjenaOSinTenant_NoAlteraVentasItemsNiPagos" />
+    </UnitTest>
+    <UnitTest name="GlobalMart.IntegrationTests.ProductoTenantIsolationIntegrationTests.ConsultasPaginadas_SoloDevuelvenProductosDelJwt(route: &quot;/products/search?q=Producto&amp;page=1&amp;pageSize=100&quot;)" storage="c:\users\dp877\desktop\universidad\semestre 6\tallerintegra3\tallerintegracion3\tests\globalmart.integrationtests\bin\release\net8.0\globalmart.integrationtests.dll" id="c0440d5e-3f8f-5e75-ae09-fcf4f99f6647">
+      <Execution id="8f62c518-dd89-4c90-ab21-460720269126" />
+      <TestMethod codeBase="C:\Users\dp877\Desktop\Universidad\Semestre 6\TallerIntegra3\TallerIntegracion3\tests\GlobalMart.IntegrationTests\bin\Release\net8.0\GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.ProductoTenantIsolationIntegrationTests" name="ConsultasPaginadas_SoloDevuelvenProductosDelJwt" />
+    </UnitTest>
+    <UnitTest name="GlobalMart.IntegrationTests.PosRepositoryTenantIsolationTests.MutacionDirecta_AjenaOSinTenant_NoAlteraVentasItemsNiPagos(operation: &quot;delete&quot;, mode: &quot;tracked&quot;)" storage="c:\users\dp877\desktop\universidad\semestre 6\tallerintegra3\tallerintegracion3\tests\globalmart.integrationtests\bin\release\net8.0\globalmart.integrationtests.dll" id="c71ac0ab-dc33-8222-c0ce-5ba0b7aeb9d9">
+      <Execution id="d953b0ea-1730-46e1-a7f4-ad7cfc865c2f" />
+      <TestMethod codeBase="C:\Users\dp877\Desktop\Universidad\Semestre 6\TallerIntegra3\TallerIntegracion3\tests\GlobalMart.IntegrationTests\bin\Release\net8.0\GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.PosRepositoryTenantIsolationTests" name="MutacionDirecta_AjenaOSinTenant_NoAlteraVentasItemsNiPagos" />
+    </UnitTest>
+    <UnitTest name="GlobalMart.IntegrationTests.PosRepositoryTenantIsolationTests.MutacionDirecta_AjenaOSinTenant_NoAlteraVentasItemsNiPagos(operation: &quot;item&quot;, mode: &quot;tracked&quot;)" storage="c:\users\dp877\desktop\universidad\semestre 6\tallerintegra3\tallerintegracion3\tests\globalmart.integrationtests\bin\release\net8.0\globalmart.integrationtests.dll" id="f631aff6-f288-37b5-7c44-614f9088f1d8">
+      <Execution id="b5283f9b-649d-41e7-b24d-4d2a9623d2de" />
+      <TestMethod codeBase="C:\Users\dp877\Desktop\Universidad\Semestre 6\TallerIntegra3\TallerIntegracion3\tests\GlobalMart.IntegrationTests\bin\Release\net8.0\GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.PosRepositoryTenantIsolationTests" name="MutacionDirecta_AjenaOSinTenant_NoAlteraVentasItemsNiPagos" />
+    </UnitTest>
+    <UnitTest name="GlobalMart.IntegrationTests.ProductoTenantIsolationIntegrationTests.GetById_TenantBAjeno_404_Propio200" storage="c:\users\dp877\desktop\universidad\semestre 6\tallerintegra3\tallerintegracion3\tests\globalmart.integrationtests\bin\release\net8.0\globalmart.integrationtests.dll" id="bb8f8320-a0e5-a164-1ecc-8317211edf27">
+      <Execution id="e7669e2c-be01-43e2-940c-1d597aef6112" />
+      <TestMethod codeBase="C:\Users\dp877\Desktop\Universidad\Semestre 6\TallerIntegra3\TallerIntegracion3\tests\GlobalMart.IntegrationTests\bin\Release\net8.0\GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.ProductoTenantIsolationIntegrationTests" name="GetById_TenantBAjeno_404_Propio200" />
+    </UnitTest>
+    <UnitTest name="GlobalMart.IntegrationTests.PosRepositoryTenantIsolationTests.MutacionDirecta_AjenaOSinTenant_NoAlteraVentasItemsNiPagos(operation: &quot;item&quot;, mode: &quot;tracked-missing&quot;)" storage="c:\users\dp877\desktop\universidad\semestre 6\tallerintegra3\tallerintegracion3\tests\globalmart.integrationtests\bin\release\net8.0\globalmart.integrationtests.dll" id="07aabea1-9028-04f2-b444-8631fdbad243">
+      <Execution id="4abb1b44-b9ef-49f8-8635-8b255f9a48d0" />
+      <TestMethod codeBase="C:\Users\dp877\Desktop\Universidad\Semestre 6\TallerIntegra3\TallerIntegracion3\tests\GlobalMart.IntegrationTests\bin\Release\net8.0\GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.PosRepositoryTenantIsolationTests" name="MutacionDirecta_AjenaOSinTenant_NoAlteraVentasItemsNiPagos" />
+    </UnitTest>
+    <UnitTest name="GlobalMart.IntegrationTests.VentaTenantIsolationTests.Mutaciones_VentaOItemAjeno_404SinCambiarPersistenciaNiPublicar(operation: &quot;charge&quot;)" storage="c:\users\dp877\desktop\universidad\semestre 6\tallerintegra3\tallerintegracion3\tests\globalmart.integrationtests\bin\release\net8.0\globalmart.integrationtests.dll" id="31cfdfde-65df-fadd-7aa8-f5578ce2f90f">
+      <Execution id="6ef3a881-9da1-4ed7-9bfc-2bd457608fda" />
+      <TestMethod codeBase="C:\Users\dp877\Desktop\Universidad\Semestre 6\TallerIntegra3\TallerIntegracion3\tests\GlobalMart.IntegrationTests\bin\Release\net8.0\GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.VentaTenantIsolationTests" name="Mutaciones_VentaOItemAjeno_404SinCambiarPersistenciaNiPublicar" />
+    </UnitTest>
+    <UnitTest name="GlobalMart.IntegrationTests.VentaTenantIsolationTests.OperacionesPropias_CrearAgregarModificarEliminarYCobrar_FuncionanYConservanTenantB" storage="c:\users\dp877\desktop\universidad\semestre 6\tallerintegra3\tallerintegracion3\tests\globalmart.integrationtests\bin\release\net8.0\globalmart.integrationtests.dll" id="9c043c7f-e6ff-8d11-5d56-6f73ce94a2db">
+      <Execution id="1cd8fac3-f9c8-44df-bfa8-a40916dc0fb8" />
+      <TestMethod codeBase="C:\Users\dp877\Desktop\Universidad\Semestre 6\TallerIntegra3\TallerIntegracion3\tests\GlobalMart.IntegrationTests\bin\Release\net8.0\GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.VentaTenantIsolationTests" name="OperacionesPropias_CrearAgregarModificarEliminarYCobrar_FuncionanYConservanTenantB" />
+    </UnitTest>
+    <UnitTest name="GlobalMart.IntegrationTests.ProductoTenantIsolationIntegrationTests.Post_TenantBEnBodyYHeader_PersisteExclusivamenteEnTenantDelJwt" storage="c:\users\dp877\desktop\universidad\semestre 6\tallerintegra3\tallerintegracion3\tests\globalmart.integrationtests\bin\release\net8.0\globalmart.integrationtests.dll" id="a1d4b658-31bd-8be7-bcb1-e4340808311f">
+      <Execution id="18aba465-bcd7-4e73-a6f8-c79693522ca1" />
+      <TestMethod codeBase="C:\Users\dp877\Desktop\Universidad\Semestre 6\TallerIntegra3\TallerIntegracion3\tests\GlobalMart.IntegrationTests\bin\Release\net8.0\GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.ProductoTenantIsolationIntegrationTests" name="Post_TenantBEnBodyYHeader_PersisteExclusivamenteEnTenantDelJwt" />
+    </UnitTest>
+    <UnitTest name="GlobalMart.IntegrationTests.VentaTenantIsolationTests.Mutaciones_VentaOItemAjeno_404SinCambiarPersistenciaNiPublicar(operation: &quot;delete&quot;)" storage="c:\users\dp877\desktop\universidad\semestre 6\tallerintegra3\tallerintegracion3\tests\globalmart.integrationtests\bin\release\net8.0\globalmart.integrationtests.dll" id="93a5d392-88d8-e5a3-38e7-5d7b9bc747d2">
+      <Execution id="a8b3eaf1-4366-416b-b57a-c5bfe776a1eb" />
+      <TestMethod codeBase="C:\Users\dp877\Desktop\Universidad\Semestre 6\TallerIntegra3\TallerIntegracion3\tests\GlobalMart.IntegrationTests\bin\Release\net8.0\GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.VentaTenantIsolationTests" name="Mutaciones_VentaOItemAjeno_404SinCambiarPersistenciaNiPublicar" />
+    </UnitTest>
+    <UnitTest name="GlobalMart.IntegrationTests.PosRepositoryTenantIsolationTests.MutacionDirecta_AjenaOSinTenant_NoAlteraVentasItemsNiPagos(operation: &quot;item&quot;, mode: &quot;missing&quot;)" storage="c:\users\dp877\desktop\universidad\semestre 6\tallerintegra3\tallerintegracion3\tests\globalmart.integrationtests\bin\release\net8.0\globalmart.integrationtests.dll" id="befcbb99-46f8-0b3b-bbad-3b41f5e72dc6">
+      <Execution id="d576a372-6098-44ce-960b-8066018a61dc" />
+      <TestMethod codeBase="C:\Users\dp877\Desktop\Universidad\Semestre 6\TallerIntegra3\TallerIntegracion3\tests\GlobalMart.IntegrationTests\bin\Release\net8.0\GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.PosRepositoryTenantIsolationTests" name="MutacionDirecta_AjenaOSinTenant_NoAlteraVentasItemsNiPagos" />
+    </UnitTest>
+    <UnitTest name="GlobalMart.IntegrationTests.PosRepositoryTenantIsolationTests.MutacionDirecta_AjenaOSinTenant_NoAlteraVentasItemsNiPagos(operation: &quot;sale&quot;, mode: &quot;missing&quot;)" storage="c:\users\dp877\desktop\universidad\semestre 6\tallerintegra3\tallerintegracion3\tests\globalmart.integrationtests\bin\release\net8.0\globalmart.integrationtests.dll" id="9d5cd165-4339-9615-4755-fdcd71528994">
+      <Execution id="b6098235-d087-4cfb-9771-2e39fc86a26c" />
+      <TestMethod codeBase="C:\Users\dp877\Desktop\Universidad\Semestre 6\TallerIntegra3\TallerIntegracion3\tests\GlobalMart.IntegrationTests\bin\Release\net8.0\GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.PosRepositoryTenantIsolationTests" name="MutacionDirecta_AjenaOSinTenant_NoAlteraVentasItemsNiPagos" />
+    </UnitTest>
+    <UnitTest name="GlobalMart.IntegrationTests.ProductoTenantIsolationIntegrationTests.Put_ProductoBAjenoEInexistente_Mismo404YSnapshotIntacto_Propio200" storage="c:\users\dp877\desktop\universidad\semestre 6\tallerintegra3\tallerintegracion3\tests\globalmart.integrationtests\bin\release\net8.0\globalmart.integrationtests.dll" id="5faff34a-cb64-7316-1f87-ed19ee4307d1">
+      <Execution id="def1b194-4f8e-4e55-aecc-4a7641d14438" />
+      <TestMethod codeBase="C:\Users\dp877\Desktop\Universidad\Semestre 6\TallerIntegra3\TallerIntegracion3\tests\GlobalMart.IntegrationTests\bin\Release\net8.0\GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.ProductoTenantIsolationIntegrationTests" name="Put_ProductoBAjenoEInexistente_Mismo404YSnapshotIntacto_Propio200" />
+    </UnitTest>
+    <UnitTest name="GlobalMart.IntegrationTests.ProductoTenantIsolationIntegrationTests.Search_TerminoExclusivoB_NoFiltraExistenciaNiDatos" storage="c:\users\dp877\desktop\universidad\semestre 6\tallerintegra3\tallerintegracion3\tests\globalmart.integrationtests\bin\release\net8.0\globalmart.integrationtests.dll" id="436cdaf1-ebb9-9d2e-d3ba-e1032f325515">
+      <Execution id="832b4b61-be26-447d-bea3-e16d26ed280a" />
+      <TestMethod codeBase="C:\Users\dp877\Desktop\Universidad\Semestre 6\TallerIntegra3\TallerIntegracion3\tests\GlobalMart.IntegrationTests\bin\Release\net8.0\GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.ProductoTenantIsolationIntegrationTests" name="Search_TerminoExclusivoB_NoFiltraExistenciaNiDatos" />
+    </UnitTest>
+    <UnitTest name="GlobalMart.IntegrationTests.VentaTenantIsolationTests.Consultas_VentaYTurnoAjeno_NoExponenDatos" storage="c:\users\dp877\desktop\universidad\semestre 6\tallerintegra3\tallerintegracion3\tests\globalmart.integrationtests\bin\release\net8.0\globalmart.integrationtests.dll" id="f41c2b1a-fde6-3ad4-8f0b-b0de2f6508aa">
+      <Execution id="f55ee0b0-c178-46e9-86fc-85782f0fa724" />
+      <TestMethod codeBase="C:\Users\dp877\Desktop\Universidad\Semestre 6\TallerIntegra3\TallerIntegracion3\tests\GlobalMart.IntegrationTests\bin\Release\net8.0\GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.VentaTenantIsolationTests" name="Consultas_VentaYTurnoAjeno_NoExponenDatos" />
+    </UnitTest>
+    <UnitTest name="GlobalMart.IntegrationTests.PosRepositoryTenantIsolationTests.MutacionesDirectas_Propias_ActualizanYEliminanSinAfectarTenantB" storage="c:\users\dp877\desktop\universidad\semestre 6\tallerintegra3\tallerintegracion3\tests\globalmart.integrationtests\bin\release\net8.0\globalmart.integrationtests.dll" id="d5b04821-30cc-8ce5-4700-a1904ae3197a">
+      <Execution id="f2fcfc93-3edd-4895-a656-efb109875bfb" />
+      <TestMethod codeBase="C:\Users\dp877\Desktop\Universidad\Semestre 6\TallerIntegra3\TallerIntegracion3\tests\GlobalMart.IntegrationTests\bin\Release\net8.0\GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.PosRepositoryTenantIsolationTests" name="MutacionesDirectas_Propias_ActualizanYEliminanSinAfectarTenantB" />
+    </UnitTest>
+    <UnitTest name="GlobalMart.IntegrationTests.ProductoTenantIsolationIntegrationTests.Put_CambioIsActive_SinAdmin403_ConAdminDesactivaYReactiva200" storage="c:\users\dp877\desktop\universidad\semestre 6\tallerintegra3\tallerintegracion3\tests\globalmart.integrationtests\bin\release\net8.0\globalmart.integrationtests.dll" id="7c3cbe42-2da9-8b6c-37ff-c7d137c5f179">
+      <Execution id="51978b39-0c32-4cb8-b2e1-73d2bf43bfaf" />
+      <TestMethod codeBase="C:\Users\dp877\Desktop\Universidad\Semestre 6\TallerIntegra3\TallerIntegracion3\tests\GlobalMart.IntegrationTests\bin\Release\net8.0\GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.ProductoTenantIsolationIntegrationTests" name="Put_CambioIsActive_SinAdmin403_ConAdminDesactivaYReactiva200" />
+    </UnitTest>
+    <UnitTest name="GlobalMart.IntegrationTests.VentaTenantIsolationTests.Mutaciones_VentaOItemAjeno_404SinCambiarPersistenciaNiPublicar(operation: &quot;update&quot;)" storage="c:\users\dp877\desktop\universidad\semestre 6\tallerintegra3\tallerintegracion3\tests\globalmart.integrationtests\bin\release\net8.0\globalmart.integrationtests.dll" id="7ee80a37-5125-3210-6069-67224c6ddedb">
+      <Execution id="76233dad-462d-42ac-bff6-de183a2908c2" />
+      <TestMethod codeBase="C:\Users\dp877\Desktop\Universidad\Semestre 6\TallerIntegra3\TallerIntegracion3\tests\GlobalMart.IntegrationTests\bin\Release\net8.0\GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.VentaTenantIsolationTests" name="Mutaciones_VentaOItemAjeno_404SinCambiarPersistenciaNiPublicar" />
+    </UnitTest>
+    <UnitTest name="GlobalMart.IntegrationTests.VentaTenantIsolationTests.Mutaciones_VentaOItemAjeno_404SinCambiarPersistenciaNiPublicar(operation: &quot;own-sale-foreign-item-update&quot;)" storage="c:\users\dp877\desktop\universidad\semestre 6\tallerintegra3\tallerintegracion3\tests\globalmart.integrationtests\bin\release\net8.0\globalmart.integrationtests.dll" id="45f116ed-5fb0-88d8-7be3-8b75bae34d1f">
+      <Execution id="d73f834e-14fe-45b4-bb41-eb3b7b7e2374" />
+      <TestMethod codeBase="C:\Users\dp877\Desktop\Universidad\Semestre 6\TallerIntegra3\TallerIntegracion3\tests\GlobalMart.IntegrationTests\bin\Release\net8.0\GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.VentaTenantIsolationTests" name="Mutaciones_VentaOItemAjeno_404SinCambiarPersistenciaNiPublicar" />
+    </UnitTest>
+    <UnitTest name="GlobalMart.IntegrationTests.VentaTenantIsolationTests.Mutaciones_VentaOItemAjeno_404SinCambiarPersistenciaNiPublicar(operation: &quot;own-sale-foreign-item-delete&quot;)" storage="c:\users\dp877\desktop\universidad\semestre 6\tallerintegra3\tallerintegracion3\tests\globalmart.integrationtests\bin\release\net8.0\globalmart.integrationtests.dll" id="6eb01909-55d3-c2d4-46de-c74ba4fc7eab">
+      <Execution id="47c59097-0728-40ad-b732-3f7062c4629a" />
+      <TestMethod codeBase="C:\Users\dp877\Desktop\Universidad\Semestre 6\TallerIntegra3\TallerIntegracion3\tests\GlobalMart.IntegrationTests\bin\Release\net8.0\GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.VentaTenantIsolationTests" name="Mutaciones_VentaOItemAjeno_404SinCambiarPersistenciaNiPublicar" />
+    </UnitTest>
+    <UnitTest name="GlobalMart.IntegrationTests.VentaTenantIsolationTests.Mutaciones_VentaOItemAjeno_404SinCambiarPersistenciaNiPublicar(operation: &quot;add&quot;)" storage="c:\users\dp877\desktop\universidad\semestre 6\tallerintegra3\tallerintegracion3\tests\globalmart.integrationtests\bin\release\net8.0\globalmart.integrationtests.dll" id="0eabff34-f25d-49f8-afaa-a288bf55e5e5">
+      <Execution id="03f7ffe1-1225-4774-a03e-4c6a80078e78" />
+      <TestMethod codeBase="C:\Users\dp877\Desktop\Universidad\Semestre 6\TallerIntegra3\TallerIntegracion3\tests\GlobalMart.IntegrationTests\bin\Release\net8.0\GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.VentaTenantIsolationTests" name="Mutaciones_VentaOItemAjeno_404SinCambiarPersistenciaNiPublicar" />
+    </UnitTest>
+    <UnitTest name="GlobalMart.IntegrationTests.PosRepositoryTenantIsolationTests.MutacionDirecta_AjenaOSinTenant_NoAlteraVentasItemsNiPagos(operation: &quot;delete&quot;, mode: &quot;missing&quot;)" storage="c:\users\dp877\desktop\universidad\semestre 6\tallerintegra3\tallerintegracion3\tests\globalmart.integrationtests\bin\release\net8.0\globalmart.integrationtests.dll" id="59aaf2a7-bbd7-4cdc-cb69-9fdd22f8e64e">
+      <Execution id="b448cd8f-c8cf-400b-99b2-bc85d33c645c" />
+      <TestMethod codeBase="C:\Users\dp877\Desktop\Universidad\Semestre 6\TallerIntegra3\TallerIntegracion3\tests\GlobalMart.IntegrationTests\bin\Release\net8.0\GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.PosRepositoryTenantIsolationTests" name="MutacionDirecta_AjenaOSinTenant_NoAlteraVentasItemsNiPagos" />
+    </UnitTest>
+    <UnitTest name="GlobalMart.IntegrationTests.PosRepositoryTenantIsolationTests.MutacionDirecta_AjenaOSinTenant_NoAlteraVentasItemsNiPagos(operation: &quot;sale&quot;, mode: &quot;tracked-missing&quot;)" storage="c:\users\dp877\desktop\universidad\semestre 6\tallerintegra3\tallerintegracion3\tests\globalmart.integrationtests\bin\release\net8.0\globalmart.integrationtests.dll" id="c5b73ca8-1c83-a271-8280-e847586ca54a">
+      <Execution id="fb12c5e5-7b9e-4b54-887a-7ea466a285ba" />
+      <TestMethod codeBase="C:\Users\dp877\Desktop\Universidad\Semestre 6\TallerIntegra3\TallerIntegracion3\tests\GlobalMart.IntegrationTests\bin\Release\net8.0\GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.PosRepositoryTenantIsolationTests" name="MutacionDirecta_AjenaOSinTenant_NoAlteraVentasItemsNiPagos" />
+    </UnitTest>
+    <UnitTest name="GlobalMart.IntegrationTests.PosRepositoryTenantIsolationTests.MutacionDirecta_AjenaOSinTenant_NoAlteraVentasItemsNiPagos(operation: &quot;delete&quot;, mode: &quot;foreign&quot;)" storage="c:\users\dp877\desktop\universidad\semestre 6\tallerintegra3\tallerintegracion3\tests\globalmart.integrationtests\bin\release\net8.0\globalmart.integrationtests.dll" id="03b6430f-9aeb-2459-760a-108fd0a8f9cb">
+      <Execution id="d514b7e2-1369-4f26-a003-de82281a6df3" />
+      <TestMethod codeBase="C:\Users\dp877\Desktop\Universidad\Semestre 6\TallerIntegra3\TallerIntegracion3\tests\GlobalMart.IntegrationTests\bin\Release\net8.0\GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.PosRepositoryTenantIsolationTests" name="MutacionDirecta_AjenaOSinTenant_NoAlteraVentasItemsNiPagos" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="0eabff34-f25d-49f8-afaa-a288bf55e5e5" executionId="03f7ffe1-1225-4774-a03e-4c6a80078e78" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="c71ac0ab-dc33-8222-c0ce-5ba0b7aeb9d9" executionId="d953b0ea-1730-46e1-a7f4-ad7cfc865c2f" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="31cfdfde-65df-fadd-7aa8-f5578ce2f90f" executionId="6ef3a881-9da1-4ed7-9bfc-2bd457608fda" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="93a5d392-88d8-e5a3-38e7-5d7b9bc747d2" executionId="a8b3eaf1-4366-416b-b57a-c5bfe776a1eb" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="46715ac2-1cc4-e08c-6aa5-67aad03c6d27" executionId="2daa3e6c-81c1-42c9-b594-58a951bac63b" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="9d5cd165-4339-9615-4755-fdcd71528994" executionId="b6098235-d087-4cfb-9771-2e39fc86a26c" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="4ab940a6-e6f2-cbef-6317-19f36b5685f2" executionId="808cb15a-a722-425f-b46d-b463946d5c58" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="03b6430f-9aeb-2459-760a-108fd0a8f9cb" executionId="d514b7e2-1369-4f26-a003-de82281a6df3" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="07aabea1-9028-04f2-b444-8631fdbad243" executionId="4abb1b44-b9ef-49f8-8635-8b255f9a48d0" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="7c3cbe42-2da9-8b6c-37ff-c7d137c5f179" executionId="51978b39-0c32-4cb8-b2e1-73d2bf43bfaf" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="6eb01909-55d3-c2d4-46de-c74ba4fc7eab" executionId="47c59097-0728-40ad-b732-3f7062c4629a" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="5faff34a-cb64-7316-1f87-ed19ee4307d1" executionId="def1b194-4f8e-4e55-aecc-4a7641d14438" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="59aaf2a7-bbd7-4cdc-cb69-9fdd22f8e64e" executionId="b448cd8f-c8cf-400b-99b2-bc85d33c645c" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="67efa26d-5bf8-6932-c714-8a6fe3047658" executionId="95287822-ff17-43b8-a1f1-58597e46c7b5" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="45f116ed-5fb0-88d8-7be3-8b75bae34d1f" executionId="d73f834e-14fe-45b4-bb41-eb3b7b7e2374" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="bfda2e02-b092-d586-bcd4-2620aec5ac02" executionId="22ca01c9-c214-44f3-80a5-81001559b35a" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="f41c2b1a-fde6-3ad4-8f0b-b0de2f6508aa" executionId="f55ee0b0-c178-46e9-86fc-85782f0fa724" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="7ee80a37-5125-3210-6069-67224c6ddedb" executionId="76233dad-462d-42ac-bff6-de183a2908c2" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="f631aff6-f288-37b5-7c44-614f9088f1d8" executionId="b5283f9b-649d-41e7-b24d-4d2a9623d2de" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="c0440d5e-3f8f-5e75-ae09-fcf4f99f6647" executionId="8f62c518-dd89-4c90-ab21-460720269126" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="c5b73ca8-1c83-a271-8280-e847586ca54a" executionId="fb12c5e5-7b9e-4b54-887a-7ea466a285ba" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="8319361a-329e-983f-4fd9-0813992be5e9" executionId="86ceae69-df42-492c-863f-7d215fec6ed1" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="d5b04821-30cc-8ce5-4700-a1904ae3197a" executionId="f2fcfc93-3edd-4895-a656-efb109875bfb" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="6759f882-d697-20a8-19c7-4250a5c2b3da" executionId="e5c98f05-d0c5-4b20-8db5-3593531e04b8" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="a1d4b658-31bd-8be7-bcb1-e4340808311f" executionId="18aba465-bcd7-4e73-a6f8-c79693522ca1" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="9c043c7f-e6ff-8d11-5d56-6f73ce94a2db" executionId="1cd8fac3-f9c8-44df-bfa8-a40916dc0fb8" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="76d441bd-160e-c7c7-9867-1dcae2f5f438" executionId="806d8ee8-66a9-4564-bd08-1def96def092" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="bb8f8320-a0e5-a164-1ecc-8317211edf27" executionId="e7669e2c-be01-43e2-940c-1d597aef6112" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="befcbb99-46f8-0b3b-bbad-3b41f5e72dc6" executionId="d576a372-6098-44ce-960b-8066018a61dc" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="436cdaf1-ebb9-9d2e-d3ba-e1032f325515" executionId="832b4b61-be26-447d-bea3-e16d26ed280a" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="c9426f55-0262-05b7-8471-7da3092b0f36" executionId="503d9600-3269-420d-9e04-7224bff77a7b" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="4e80cce9-cb06-d9ab-58c0-67dae59bd42f" executionId="fc71ba7c-3df0-483b-9eaa-538ed0fb7acf" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="Resultados sin formato de lista" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="Todos los resultados cargados" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Completed">
+    <Counters total="32" executed="32" passed="32" failed="0" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Output>
+      <StdOut>[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v2.8.2+699d445a1a (64-bit .NET 8.0.31)&#xD;
+[xUnit.net 00:00:00.53]   Discovering: GlobalMart.IntegrationTests&#xD;
+[xUnit.net 00:00:00.65]   Discovered:  GlobalMart.IntegrationTests&#xD;
+[xUnit.net 00:00:00.65]   Starting:    GlobalMart.IntegrationTests&#xD;
+warn: Microsoft.AspNetCore.HttpsPolicy.HttpsRedirectionMiddleware[3]&#xD;
+      Failed to determine the https port for redirect.&#xD;
+warn: Microsoft.AspNetCore.HttpsPolicy.HttpsRedirectionMiddleware[3]&#xD;
+      Failed to determine the https port for redirect.&#xD;
+warn: Microsoft.AspNetCore.HttpsPolicy.HttpsRedirectionMiddleware[3]&#xD;
+      Failed to determine the https port for redirect.&#xD;
+warn: Microsoft.AspNetCore.HttpsPolicy.HttpsRedirectionMiddleware[3]&#xD;
+      Failed to determine the https port for redirect.&#xD;
+warn: Microsoft.AspNetCore.HttpsPolicy.HttpsRedirectionMiddleware[3]&#xD;
+      Failed to determine the https port for redirect.&#xD;
+warn: Microsoft.AspNetCore.HttpsPolicy.HttpsRedirectionMiddleware[3]&#xD;
+      Failed to determine the https port for redirect.&#xD;
+warn: Microsoft.AspNetCore.HttpsPolicy.HttpsRedirectionMiddleware[3]&#xD;
+      Failed to determine the https port for redirect.&#xD;
+info: POSCartService.Services.CatalogClient[0]&#xD;
+      [CatalogClient] Consultando producto 2075b344-e2d0-407f-894c-296fb4ab9775 en MS-3 (http://localhost:5203/)&#xD;
+info: System.Net.Http.HttpClient.CatalogPricingService.LogicalHandler[100]&#xD;
+      Start processing HTTP request GET http://localhost:5203/api/products/2075b344-e2d0-407f-894c-296fb4ab9775&#xD;
+info: System.Net.Http.HttpClient.CatalogPricingService.ClientHandler[100]&#xD;
+      Sending HTTP request GET http://localhost:5203/api/products/2075b344-e2d0-407f-894c-296fb4ab9775&#xD;
+info: System.Net.Http.HttpClient.CatalogPricingService.ClientHandler[101]&#xD;
+      Received HTTP response headers after 4.7014ms - 404&#xD;
+info: System.Net.Http.HttpClient.CatalogPricingService.LogicalHandler[101]&#xD;
+      End processing HTTP request after 21.0067ms - 404&#xD;
+info: System.Net.Http.HttpClient.CatalogPricingService.LogicalHandler[100]&#xD;
+      Start processing HTTP request GET http://localhost:5203/products/2075b344-e2d0-407f-894c-296fb4ab9775&#xD;
+info: System.Net.Http.HttpClient.CatalogPricingService.ClientHandler[100]&#xD;
+      Sending HTTP request GET http://localhost:5203/products/2075b344-e2d0-407f-894c-296fb4ab9775&#xD;
+info: System.Net.Http.HttpClient.CatalogPricingService.ClientHandler[101]&#xD;
+      Received HTTP response headers after 2054.7885ms - 404&#xD;
+info: System.Net.Http.HttpClient.CatalogPricingService.LogicalHandler[101]&#xD;
+      End processing HTTP request after 2055ms - 404&#xD;
+warn: POSCartService.Services.CatalogClient[0]&#xD;
+      [CatalogClient] Producto 2075b344-e2d0-407f-894c-296fb4ab9775 no encontrado en MS-3 (404)&#xD;
+warn: Microsoft.AspNetCore.HttpsPolicy.HttpsRedirectionMiddleware[3]&#xD;
+      Failed to determine the https port for redirect.&#xD;
+info: POSCartService.Services.CatalogClient[0]&#xD;
+      [CatalogClient] Consultando producto 4c3be6fa-910c-432d-a3af-d14da67c2c23 en MS-3 (http://localhost:5203/)&#xD;
+info: System.Net.Http.HttpClient.CatalogPricingService.LogicalHandler[100]&#xD;
+      Start processing HTTP request GET http://localhost:5203/api/products/4c3be6fa-910c-432d-a3af-d14da67c2c23&#xD;
+info: System.Net.Http.HttpClient.CatalogPricingService.ClientHandler[100]&#xD;
+      Sending HTTP request GET http://localhost:5203/api/products/4c3be6fa-910c-432d-a3af-d14da67c2c23&#xD;
+info: System.Net.Http.HttpClient.CatalogPricingService.ClientHandler[101]&#xD;
+      Received HTTP response headers after 3.1043ms - 404&#xD;
+info: System.Net.Http.HttpClient.CatalogPricingService.LogicalHandler[101]&#xD;
+      End processing HTTP request after 3.2035ms - 404&#xD;
+info: System.Net.Http.HttpClient.CatalogPricingService.LogicalHandler[100]&#xD;
+      Start processing HTTP request GET http://localhost:5203/products/4c3be6fa-910c-432d-a3af-d14da67c2c23&#xD;
+info: System.Net.Http.HttpClient.CatalogPricingService.ClientHandler[100]&#xD;
+      Sending HTTP request GET http://localhost:5203/products/4c3be6fa-910c-432d-a3af-d14da67c2c23&#xD;
+info: System.Net.Http.HttpClient.CatalogPricingService.ClientHandler[101]&#xD;
+      Received HTTP response headers after 2059.0558ms - 404&#xD;
+info: System.Net.Http.HttpClient.CatalogPricingService.LogicalHandler[101]&#xD;
+      End processing HTTP request after 2059.202ms - 404&#xD;
+warn: POSCartService.Services.CatalogClient[0]&#xD;
+      [CatalogClient] Producto 4c3be6fa-910c-432d-a3af-d14da67c2c23 no encontrado en MS-3 (404)&#xD;
+warn: Microsoft.AspNetCore.HttpsPolicy.HttpsRedirectionMiddleware[3]&#xD;
+      Failed to determine the https port for redirect.&#xD;
+info: POSCartService.Services.CatalogClient[0]&#xD;
+      [CatalogClient] Consultando producto cdb849f3-4738-46f5-8161-54eb30ee8130 en MS-3 (http://localhost:5203/)&#xD;
+info: System.Net.Http.HttpClient.CatalogPricingService.LogicalHandler[100]&#xD;
+      Start processing HTTP request GET http://localhost:5203/api/products/cdb849f3-4738-46f5-8161-54eb30ee8130&#xD;
+info: System.Net.Http.HttpClient.CatalogPricingService.ClientHandler[100]&#xD;
+      Sending HTTP request GET http://localhost:5203/api/products/cdb849f3-4738-46f5-8161-54eb30ee8130&#xD;
+info: System.Net.Http.HttpClient.CatalogPricingService.ClientHandler[101]&#xD;
+      Received HTTP response headers after 1.7419ms - 404&#xD;
+info: System.Net.Http.HttpClient.CatalogPricingService.LogicalHandler[101]&#xD;
+      End processing HTTP request after 1.8678ms - 404&#xD;
+info: System.Net.Http.HttpClient.CatalogPricingService.LogicalHandler[100]&#xD;
+      Start processing HTTP request GET http://localhost:5203/products/cdb849f3-4738-46f5-8161-54eb30ee8130&#xD;
+info: System.Net.Http.HttpClient.CatalogPricingService.ClientHandler[100]&#xD;
+      Sending HTTP request GET http://localhost:5203/products/cdb849f3-4738-46f5-8161-54eb30ee8130&#xD;
+info: System.Net.Http.HttpClient.CatalogPricingService.ClientHandler[101]&#xD;
+      Received HTTP response headers after 2043.8121ms - 200&#xD;
+info: System.Net.Http.HttpClient.CatalogPricingService.LogicalHandler[101]&#xD;
+      End processing HTTP request after 2044.2649ms - 200&#xD;
+info: POSCartService.Services.TaxClient[0]&#xD;
+      [TaxClient] Enviando c�lculo de IVA a MS-2 (http://localhost:5239/)&#xD;
+info: System.Net.Http.HttpClient.TaxComplianceService.LogicalHandler[100]&#xD;
+      Start processing HTTP request POST http://localhost:5239/api/tax/calculate&#xD;
+info: System.Net.Http.HttpClient.TaxComplianceService.ClientHandler[100]&#xD;
+      Sending HTTP request POST http://localhost:5239/api/tax/calculate&#xD;
+info: System.Net.Http.HttpClient.TaxComplianceService.ClientHandler[101]&#xD;
+      Received HTTP response headers after 7.6245ms - 200&#xD;
+info: System.Net.Http.HttpClient.TaxComplianceService.LogicalHandler[101]&#xD;
+      End processing HTTP request after 7.8039ms - 200&#xD;
+info: POSCartService.Services.CatalogClient[0]&#xD;
+      [CatalogClient] Consultando producto cdb849f3-4738-46f5-8161-54eb30ee8130 en MS-3 (http://localhost:5203/)&#xD;
+info: System.Net.Http.HttpClient.CatalogPricingService.LogicalHandler[100]&#xD;
+      Start processing HTTP request GET http://localhost:5203/api/products/cdb849f3-4738-46f5-8161-54eb30ee8130&#xD;
+info: System.Net.Http.HttpClient.CatalogPricingService.ClientHandler[100]&#xD;
+      Sending HTTP request GET http://localhost:5203/api/products/cdb849f3-4738-46f5-8161-54eb30ee8130&#xD;
+info: System.Net.Http.HttpClient.CatalogPricingService.ClientHandler[101]&#xD;
+      Received HTTP response headers after 3.6118ms - 404&#xD;
+info: System.Net.Http.HttpClient.CatalogPricingService.LogicalHandler[101]&#xD;
+      End processing HTTP request after 3.7471ms - 404&#xD;
+info: System.Net.Http.HttpClient.CatalogPricingService.LogicalHandler[100]&#xD;
+      Start processing HTTP request GET http://localhost:5203/products/cdb849f3-4738-46f5-8161-54eb30ee8130&#xD;
+info: System.Net.Http.HttpClient.CatalogPricingService.ClientHandler[100]&#xD;
+      Sending HTTP request GET http://localhost:5203/products/cdb849f3-4738-46f5-8161-54eb30ee8130&#xD;
+info: System.Net.Http.HttpClient.CatalogPricingService.ClientHandler[101]&#xD;
+      Received HTTP response headers after 2054.8436ms - 200&#xD;
+info: System.Net.Http.HttpClient.CatalogPricingService.LogicalHandler[101]&#xD;
+      End processing HTTP request after 2054.9987ms - 200&#xD;
+info: POSCartService.Services.TaxClient[0]&#xD;
+      [TaxClient] Enviando c�lculo de IVA a MS-2 (http://localhost:5239/)&#xD;
+info: System.Net.Http.HttpClient.TaxComplianceService.LogicalHandler[100]&#xD;
+      Start processing HTTP request POST http://localhost:5239/api/tax/calculate&#xD;
+info: System.Net.Http.HttpClient.TaxComplianceService.ClientHandler[100]&#xD;
+      Sending HTTP request POST http://localhost:5239/api/tax/calculate&#xD;
+info: System.Net.Http.HttpClient.TaxComplianceService.ClientHandler[101]&#xD;
+      Received HTTP response headers after 0.1999ms - 200&#xD;
+info: System.Net.Http.HttpClient.TaxComplianceService.LogicalHandler[101]&#xD;
+      End processing HTTP request after 0.4084ms - 200&#xD;
+info: POSCartService.Services.TaxClient[0]&#xD;
+      [TaxClient] Enviando c�lculo de IVA a MS-2 (http://localhost:5239/)&#xD;
+info: System.Net.Http.HttpClient.TaxComplianceService.LogicalHandler[100]&#xD;
+      Start processing HTTP request POST http://localhost:5239/api/tax/calculate&#xD;
+info: System.Net.Http.HttpClient.TaxComplianceService.ClientHandler[100]&#xD;
+      Sending HTTP request POST http://localhost:5239/api/tax/calculate&#xD;
+info: System.Net.Http.HttpClient.TaxComplianceService.ClientHandler[101]&#xD;
+      Received HTTP response headers after 0.3532ms - 200&#xD;
+info: System.Net.Http.HttpClient.TaxComplianceService.LogicalHandler[101]&#xD;
+      End processing HTTP request after 1.5734ms - 200&#xD;
+info: POSCartService.Services.TaxClient[0]&#xD;
+      [TaxClient] Enviando c�lculo de IVA a MS-2 (http://localhost:5239/)&#xD;
+info: System.Net.Http.HttpClient.TaxComplianceService.LogicalHandler[100]&#xD;
+      Start processing HTTP request POST http://localhost:5239/api/tax/calculate&#xD;
+info: System.Net.Http.HttpClient.TaxComplianceService.ClientHandler[100]&#xD;
+      Sending HTTP request POST http://localhost:5239/api/tax/calculate&#xD;
+info: System.Net.Http.HttpClient.TaxComplianceService.ClientHandler[101]&#xD;
+      Received HTTP response headers after 0.1568ms - 200&#xD;
+info: System.Net.Http.HttpClient.TaxComplianceService.LogicalHandler[101]&#xD;
+      End processing HTTP request after 0.2665ms - 200&#xD;
+info: POSCartService.Controllers.VentasController[0]&#xD;
+      Venta 015a72ce-07b0-4cb8-ae58-bc002924fe85 cobrada. Total: 119.00, Recibido: 119, Vuelto: 0.00&#xD;
+warn: Microsoft.AspNetCore.HttpsPolicy.HttpsRedirectionMiddleware[3]&#xD;
+      Failed to determine the https port for redirect.&#xD;
+[xUnit.net 00:21:45.26]   Finished:    GlobalMart.IntegrationTests&#xD;
+</StdOut>
+    </Output>
+  </ResultSummary>
+</TestRun>

@@ -28,9 +28,9 @@ reglas: []
 |---------------|-------------|-------|-------|----------------|
 | MS-1 Identity | ✅ 3 controllers | ❌ No Kafka | ❌ Solo seed | **PARCIAL** |
 | MS-2 Tax | ✅ 1 controller | ❌ No Kafka | ✅ ManualTest | **PARCIAL** |
-| MS-3 Catalog | ✅ 2 controllers | ❌ No Kafka | ✅ Manual .http + 11 casos de baja/PUT TI3-642 | **PARCIAL** |
+| MS-3 Catalog | ✅ 2 controllers | ❌ No Kafka | ✅ Manual .http + baja/PUT TI3-642 + 9 casos RN-01 S2-023 | **PARCIAL** |
 | MS-4 Warehouse | ✅ 1 controller | ✅ Consumer sale.completed | ❌ No tests | **PARCIAL** |
-| MS-5 POS | ✅ 2 controllers | ✅ Producer sale.completed | ✅ AgregarItemTest + CobroCuadreTest | **PARCIAL** |
+| MS-5 POS | ✅ 2 controllers | ✅ Producer sale.completed | ✅ AgregarItemTest + CobroCuadreTest + 10 HTTP y 13 directos RN-01 S2-023 | **PARCIAL** |
 | MS-6 SupplyChain | ❌ Sin controllers | ❌ Sin Kafka | ❌ Sin tests | **PLANIFICADO** |
 | MS-7 Analytics | ❌ Sin controllers | ❌ Sin consumers | ❌ Sin tests | **PLANIFICADO** |
 | MS-8 Loyalty | ❌ Sin controllers | ⚠️ Registrado en DI sin consumer loop | ❌ Sin tests | **PLANIFICADO** |
@@ -228,3 +228,9 @@ Ver el nodo [[guia-estilo]] para el resumen y las reglas aplicables.
 ## S2-025 — Regresión de carrito
 
 [PARCIAL] Suite Playwright sobre el renderer real de POS, con catálogo y puente de sesión controlados. Ejecución 2026-10-12: 1 aprobado (agregar, cantidad, eliminar y recargar), 2 fallidos (sin respuesta de ventas MS-5 y persistencia del carrito al cambiar sesión de tenant). Pos usa `pos_cart` sin partición por tenant y calcula IVA local al 19%. Igualdad con totales de MS-5 y aislamiento HTTP de backend [NO VERIFICADO]. No acredita E2E completo ni venta funcional. Reporte y capturas: [S2-025](../qa/S2-025/reporte.md).
+
+## S2-023 — Aislamiento de venta y producto (RN-01)
+
+[IMPLEMENTADO] Suite RN-01 con JWT firmados, middleware real y PostgreSQL 16 desechable: **32/32 pruebas Release aprobadas el 2026-10-14**, sin fallos ni omisiones (9 HTTP de productos MS-3, 10 HTTP de ventas MS-5 y 13 directas de repositorios). Verifica lecturas y mutaciones ajenas, tenant falsificado, cobro, producto B con JWT A pasando por MS-3 real y defensa directa en repositorios. Snapshots confirman datos ajenos intactos; controles propios aprobados. MS-2 y envío al broker sustituidos; no acredita E2E de Electron ni migraciones. [Reporte y reproducción](../qa/S2-023/reporte.md), [evidencia principal TRX](../qa/S2-023/S2-023.trx).
+
+Refuerzo posterior [IMPLEMENTADO]: `VentaRepository.ActualizarAsync` y `ItemVentaRepository.ActualizarAsync/EliminarAsync` conservan filtros globales y exigen explícitamente el tenant almacenado y un `CurrentTenantId` presente, sin `IgnoreQueryFilters`. PUT de producto ajeno o inexistente devuelve el mismo 404 y cuerpo; se conserva 403 al cambiar estado propio sin ADMIN. Suite ampliada Release del 2026-10-14: **32/32 aprobadas**, sin fallos ni omisiones (9 HTTP MS-3, 10 HTTP MS-5, 13 directas de repositorios), con controles propios y ataques con entidades rastreadas/sin tenant. [Evidencia del refuerzo](../qa/S2-023/S2-023-refuerzo.trx).

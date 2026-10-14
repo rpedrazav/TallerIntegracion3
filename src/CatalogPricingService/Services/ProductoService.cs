@@ -35,7 +35,7 @@ namespace CatalogPricingService.Services
             var productoExistente = await _repository.GetByIdAsync(id, userTenantId);
             
             if (productoExistente == null)
-                throw new UnauthorizedAccessException("Acceso denegado: El producto no existe o pertenece a otro Minimarket.");
+                throw new KeyNotFoundException("Producto no encontrado.");
 
             if (productoExistente.IsActive != productoActualizado.IsActive && !puedeCambiarEstado)
                 throw new UnauthorizedAccessException("Solo ADMIN puede cambiar el estado del producto.");
