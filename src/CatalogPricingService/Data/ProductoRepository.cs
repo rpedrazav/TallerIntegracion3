@@ -49,6 +49,12 @@ namespace CatalogPricingService.Data
                 .FirstOrDefaultAsync(p => p.Id == id && p.TenantId == tenantId);
         }
 
+        public async Task<Producto?> GetActiveByIdAsync(Guid id, Guid tenantId)
+        {
+            return await _context.Productos
+                .FirstOrDefaultAsync(p => p.Id == id && p.TenantId == tenantId && p.IsActive);
+        }
+
         public async Task<Producto?> GetByBarcodeAsync(string barcode, Guid tenantId)
         {
             // BÃºsqueda exacta por Ã­ndice Ãºnico (tenant_id, codigo_barras)

@@ -129,6 +129,23 @@ public class DesactivarProductoIntegrationTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task GetById_ProductoDesactivado_Retorna404YConservaFila()
+    {
+        var before = await Snapshot(_productA);
+
+        using var activeResponse = await _client.GetAsync($"/products/{_productA}");
+        Assert.Equal(HttpStatusCode.OK, activeResponse.StatusCode);
+
+        using var deleteResponse = await _client.DeleteAsync($"/products/{_productA}");
+        Assert.Equal(HttpStatusCode.NoContent, deleteResponse.StatusCode);
+
+        using var inactiveResponse = await _client.GetAsync($"/products/{_productA}");
+        Assert.Equal(HttpStatusCode.NotFound, inactiveResponse.StatusCode);
+        Assert.False(await Active(_productA, _tenantA));
+        Assert.Equal(before, await Snapshot(_productA));
+    }
+
+    [Fact]
     public async Task Delete_InexistenteYOtroTenant_Mismo404SinCambios()
     {
         var before = await Snapshot(_productB);

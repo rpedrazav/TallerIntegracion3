@@ -45,7 +45,9 @@ reglas: [RN-11, RF-04, RF-11, CP-01, CP-04, CP-05]
 - Sin JWT: 401. Autenticado sin ADMIN: 403.
 - PUT compara el estado solicitado con el persistido y rechaza con 403 cambios de `IsActive` de usuarios no ADMIN. Conserva las ediciones de otros campos; un PUT no administrativo excluye `IsActive` de su escritura para no sobrescribir una baja concurrente.
 
-La baja conserva el producto y sus referencias lógicas. MS-5 conserva nombre y precio en `ItemVenta`, e impuestos/totales en `Venta`; consultar ventas históricas no requiere consultar catálogo. MS-5 no fue modificado. Listado, consulta por ID, search y lookup siguen incluyendo inactivos; no se agregó un filtro global por estado.
+La baja conserva el producto y sus referencias lógicas. MS-5 conserva nombre y precio en `ItemVenta`, e impuestos/totales en `Venta`; consultar ventas históricas no requiere consultar catálogo. MS-5 no fue modificado. Listado, search y lookup siguen incluyendo inactivos; no se agregó un filtro global por estado.
+
+TI3-643 / S2-012: `GET /products/{id}`, utilizado por el POS para resolver productos, consulta `GetActiveByIdAsync` y solo devuelve productos del tenant con `IsActive=true`. Un producto desactivado o de otro tenant retorna 404. `GetByIdAsync` permanece sin filtro de estado para que PUT pueda localizar y reactivar productos inactivos mediante ADMIN. El test `GetById_ProductoDesactivado_Retorna404YConservaFila` fue aprobado el 2026-10-14 (1/1): verifica 200 activo, DELETE 204, GET posterior 404 y fila conservada con `IsActive=false`.
 
 Pruebas: [DesactivarProductoIntegrationTests.cs](../../../tests/GlobalMart.IntegrationTests/DesactivarProductoIntegrationTests.cs), 11/11 aprobadas el 2026-10-14 con PostgreSQL 16 y esquemas aislados. Cubren fila y datos conservados, segunda baja, 404 indistinguible, tenant ajeno intacto, 401/403, bloqueo de activación/desactivación por PUT sin ADMIN y regresión de ediciones permitidas. Build de MS-3 aprobado.
 

@@ -14,7 +14,7 @@ namespace CatalogPricingService.Services
 
         public async Task<Producto?> GetProductoByIdAsync(Guid id, Guid tenantId)
         {
-            return await _repository.GetByIdAsync(id, tenantId);
+            return await _repository.GetActiveByIdAsync(id, tenantId);
         }
 
         public async Task<Producto?> GetProductoByBarcodeAsync(string barcode, Guid tenantId)

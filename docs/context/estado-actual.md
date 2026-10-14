@@ -86,6 +86,7 @@ reglas: []
 
 ### MS-3 · Catalog & Pricing Service [PARCIAL]
 **Implementado:**
+- TI3-643 / S2-012: `GET /products/{id}`, consumido por el POS, solo expone productos propios activos mediante `GetActiveByIdAsync`; productos desactivados o de otro tenant retornan 404. PUT conserva `GetByIdAsync` sin filtro de estado para permitir reactivación ADMIN. Test específico aprobado 1/1 y build de MS-3 aprobado el 2026-10-14 [IMPLEMENTADO].
 - TI3-642 / S2-011: `DELETE /products/{id}` exige ADMIN y tenant del JWT; actualiza únicamente `IsActive=false` con filtro explícito por ID y tenant, preservando físicamente el producto. Retorna 204 sin body, también si ya estaba inactivo (sin nueva escritura), y el mismo 404 para inexistente/otro tenant; sin JWT 401 y sin ADMIN 403. PUT exige ADMIN solo si cambia `IsActive`, manteniendo permitidas las demás ediciones autenticadas. `DesactivarProductoIntegrationTests`: 11/11 casos aprobados con PostgreSQL 16 aislado el 2026-10-14; build de MS-3 aprobado [IMPLEMENTADO].
 - `ProductosPage` confirma DESACTIVACIÓN, mantiene `axios.delete` y recarga con `fetchDatos()` tras 204; el producto permanece como Inactivo salvo que el filtro solo activos lo oculte. Typecheck aprobado el 2026-10-14 [IMPLEMENTADO].
 - `GET/POST/PUT /products` — CRUD productos [IMPLEMENTADO]
