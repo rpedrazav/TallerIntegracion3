@@ -7,6 +7,22 @@ import Admin from './pages/Admin';
 import AbrirTurnoPage from './pages/AbrirTurnoPage';
 import CerrarTurnoPage from './pages/CerrarTurnoPage';
 import ProductosPage from './pages/ProductosPage';
+import { useAuth } from './hooks/useAuth';
+import { useTenantStore } from './store/useTenantStore';
+import { canAccessAdmin } from './utils/adminAccess';
+
+function AdminRoute() {
+  const { token, loading } = useAuth();
+  const { token: tenantToken, esAdmin, setToken } = useTenantStore();
+
+  React.useEffect(() => {
+    if (!loading) setToken(token);
+  }, [loading, setToken, token]);
+
+  if (loading || token !== tenantToken) return null;
+
+  return canAccessAdmin(esAdmin) ? <Admin /> : <Navigate to="/pos" replace />;
+}
 
 export default function App() {
   return (
@@ -18,7 +34,7 @@ export default function App() {
           <Route path="/abrir-turno" element={<AbrirTurnoPage />} />
           <Route path="/cerrar-turno" element={<CerrarTurnoPage />} />
           <Route path="/admin/productos" element={<ProductosPage />} />
-          <Route path="/admin/*" element={<Admin />} />
+          <Route path="/admin/*" element={<AdminRoute />} />
         </Route>
         {/* Redirige la raíz al login por defecto */}
         <Route path="*" element={<Navigate to="/login" replace />} />

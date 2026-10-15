@@ -5,7 +5,7 @@ titulo: Estado Real de Implementación — GlobalMart OS
 estado: vigente
 fuentes: [docs/context/_reports/inventario.md, src/, globalmart-frontend/src/api/client.ts, git log, docs/context/_reports/preguntas-abiertas.md]
 verificado_contra_codigo: true
-ultima_revision: 2026-10-14
+ultima_revision: 2026-10-15
 depende_de: []
 publica: []
 consume: []
@@ -201,7 +201,7 @@ Ver el nodo [[guia-estilo]] para el resumen y las reglas aplicables.
 | Abrir Turno (`AbrirTurnoPage`) | [IMPLEMENTADO] | Llama a MS-5 `/api/turnos/activo` y `POST /api/turnos/abrir` (spinner de carga en botón, redirección con confirmación a POS y manejo 409) (TI3-471) |
 | Cerrar Turno (`CerrarTurnoPage`) | [IMPLEMENTADO] | Tabla de denominaciones (billetes/monedas) con conteo y subtotales automáticos. Llama a MS-5 `POST /api/turnos/cuadre` para obtener efectivo esperado. Muestra resultado: efectivo esperado vs declarado, diferencia en **verde** si es $0, en **rojo** si hay discrepancia (sobrante o faltante). Botón `POST /api/turnos/cerrar` con confirmación. |
 | Productos Admin (`ProductosPage`) | [IMPLEMENTADO] | `GET /products?page=1&pageSize=500` + `GET /categories` en MS-3 (puerto 5203). Tabla con nombre, código de barras, categoría, precio base, tipo (peso variable/unidad) y estado. Filtro instantáneo en frontend por texto (nombre, código, descripción, categoría), filtro por categoría dropdown y toggle "solo activos". Accesible desde `/admin/productos`. |
-| Admin | [PARCIAL] | Panel con pestañas: Lista usuarios con `UsuariosList` (`GET /users` con soporte `/api/v1/users` y `/api/users`, nombre, correo, roles y estado), botón de refresco y formulario modal `CrearUsuarioModal` (`POST /users` + `POST /users/{id}/roles`). Pestaña "Configuración del Tenant" con `TenantConfig` (`GET` y `PUT /tenants/{id}/config` para país, moneda, idioma, IVA y zona horaria). Sin edición/desactivación individual de usuarios. |
+| Admin | [PARCIAL] | TI3-672: el enlace **Administración** y `/admin/*` usan `esAdmin`; solo `ADMIN`/`SUPER_ADMIN` acceden y CAJERO es redirigido a `/pos`, mientras MS-1 conserva `403` como defensa. Panel con lista (`GET /users`) y creación (`POST /users` + roles). MS-1 dispone de PUT y DELETE lógico, aún sin acciones de edición/desactivación en UI. Pestaña `TenantConfig` para configuración regional/fiscal. |
 
 **Nota de integración Electron:** `preload.ts` expone únicamente funciones de autenticación y sesión (`ping`, `getToken`, `setToken`, `logout`). No expone hardware serial ni actualización automática por ahora.
 

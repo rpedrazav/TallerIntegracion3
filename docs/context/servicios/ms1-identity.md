@@ -5,7 +5,7 @@ titulo: MS-1 · Tenant & Identity Service
 estado: parcial
 fuentes: [src/TenantIdentityService/, Docker/config/kong.yaml]
 verificado_contra_codigo: true
-ultima_revision: 2026-10-06
+ultima_revision: 2026-10-15
 depende_de: []
 publica: []
 consume: []
@@ -65,6 +65,13 @@ src/TenantIdentityService/
 - `204` para usuario existente, incluso ya inactivo; `404` para ID inexistente o de otro tenant; `401` sin JWT y `403` sin rol ADMIN.
 - [DesactivarUsuarioIntegrationTests](../../../tests/GlobalMart.IntegrationTests/DesactivarUsuarioIntegrationTests.cs): seis métodos, siete casos (la teoría 404 distingue otro tenant e ID inexistente). Verifican fila conservada, otros campos intactos, autodesactivación rechazada, idempotencia y autorización. Conexión estándar de la factoría y esquema PostgreSQL aislado por caso.
 - Verificado el 2026-10-06 en .NET 8 / Release: siete casos DELETE y tres de regresión PUT aprobados. No implica que login/listado legacy consulten `users.is_active`.
+
+### Contrato de Administración TI3-672
+
+- La pantalla `/admin/*` queda disponible solo para claims `ADMIN` o `SUPER_ADMIN`. CAJERO no ve su acceso y es redirigido a `/pos`; la autorización del controlador conserva `403` como defensa independiente del frontend [IMPLEMENTADO].
+- La UI permite listar y crear usuarios. `PUT /users/{id}` y la baja lógica `DELETE /users/{id}` existen en MS-1, pero edición, desactivación y reactivación todavía no se exponen en la pantalla.
+- Errores vigentes: `400` para datos inválidos o autodesactivación según la operación; `401` sin autenticación o claims requeridos; `403` sin rol autorizado; `404` para ID inexistente o perteneciente a otro tenant; `409` para email duplicado al editar.
+- `UserRepository.FindByEmailAsync` exige `Usuario.Activo=true`; un usuario inactivo en el modelo legacy recibe el mismo `401 Credenciales incorrectas` que otras credenciales inválidas. DELETE actualiza `UsuarioCuenta.Activo` en `users.is_active`, mientras login/listado usan `Usuario`/`Usuarios`; la sincronización entre ambos estados permanece [NO VERIFICADO]. No se implementó revocación de JWT emitidos.
 
 ### PUT /tenants/{id}/config — TI3-458 / TI3-459
 

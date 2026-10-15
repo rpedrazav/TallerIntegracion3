@@ -1,10 +1,17 @@
 ﻿import React from 'react';
 import { Outlet, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import { useTenantStore } from '../store/useTenantStore';
+import { canAccessAdmin } from '../utils/adminAccess';
 
 export default function AppLayout() {
-  const { logout } = useAuth();
+  const { logout, token, loading } = useAuth();
+  const { esAdmin, setToken } = useTenantStore();
   const navigate = useNavigate();
+
+  React.useEffect(() => {
+    if (!loading) setToken(token);
+  }, [loading, setToken, token]);
 
   const handleLogout = async () => {
     await logout();
@@ -31,7 +38,9 @@ export default function AppLayout() {
             <Link to="/abrir-turno" style={{ color: 'var(--color-on-primary)', textDecoration: 'none', fontWeight: 500, opacity: 0.9, transition: 'opacity 0.2s' }} onMouseOver={(e) => e.currentTarget.style.opacity = '1'} onMouseOut={(e) => e.currentTarget.style.opacity = '0.9'}>Abrir Turno</Link>
             <Link to="/cerrar-turno" style={{ color: 'var(--color-on-primary)', textDecoration: 'none', fontWeight: 500, opacity: 0.9, transition: 'opacity 0.2s' }} onMouseOver={(e) => e.currentTarget.style.opacity = '1'} onMouseOut={(e) => e.currentTarget.style.opacity = '0.9'}>Cerrar Turno</Link>
             <Link to="/admin/productos" style={{ color: 'var(--color-on-primary)', textDecoration: 'none', fontWeight: 500, opacity: 0.9, transition: 'opacity 0.2s' }} onMouseOver={(e) => e.currentTarget.style.opacity = '1'} onMouseOut={(e) => e.currentTarget.style.opacity = '0.9'}>Productos</Link>
-            <Link to="/admin" style={{ color: 'var(--color-on-primary)', textDecoration: 'none', fontWeight: 500, opacity: 0.9, transition: 'opacity 0.2s' }} onMouseOver={(e) => e.currentTarget.style.opacity = '1'} onMouseOut={(e) => e.currentTarget.style.opacity = '0.9'}>Administración</Link>
+            {canAccessAdmin(esAdmin) && (
+              <Link to="/admin" style={{ color: 'var(--color-on-primary)', textDecoration: 'none', fontWeight: 500, opacity: 0.9, transition: 'opacity 0.2s' }} onMouseOver={(e) => e.currentTarget.style.opacity = '1'} onMouseOut={(e) => e.currentTarget.style.opacity = '0.9'}>Administración</Link>
+            )}
           </div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
