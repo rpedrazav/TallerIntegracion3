@@ -18,14 +18,15 @@ const configSchema = z.object({
     .min(2, 'Mínimo 2 letras')
     .max(5, 'Máximo 5 letras')
     .toLowerCase(),
-  porcentajeIva: z.number({ error: 'Debe ser un número' })
+  porcentajeIva: z.coerce.number({ error: 'Debe ser un número' })
     .min(0, 'El IVA no puede ser negativo')
     .max(100, 'El IVA máximo es 100'),
   zonaHoraria: z.string()
     .regex(/^(?:Africa|America|Antarctica|Arctic|Asia|Atlantic|Australia|Europe|Indian|Pacific|Etc|UTC)(?:\/[A-Za-z_]+)*$/, 'Debe ser un identificador IANA válido (ej. America/Santiago)')
 });
 
-export type TenantConfigFormData = z.infer<typeof configSchema>;
+type TenantConfigFormInput = z.input<typeof configSchema>;
+type TenantConfigFormData = z.output<typeof configSchema>;
 
 interface TenantConfigProps {
   token: string | null;
@@ -78,7 +79,7 @@ export default function TenantConfig({ token: tokenProp }: TenantConfigProps) {
     handleSubmit,
     reset,
     formState: { errors, isSubmitting },
-  } = useForm<TenantConfigFormData>({
+  } = useForm<TenantConfigFormInput, unknown, TenantConfigFormData>({
     resolver: zodResolver(configSchema),
     defaultValues: {
       pais: '',
@@ -346,7 +347,7 @@ export default function TenantConfig({ token: tokenProp }: TenantConfigProps) {
                   cursor: esAdmin ? 'text' : 'not-allowed',
                   borderColor: errors.porcentajeIva ? 'var(--color-danger)' : 'var(--color-line)',
                 }}
-                {...register('porcentajeIva', { valueAsNumber: true })}
+                {...register('porcentajeIva')}
               />
               {errors.porcentajeIva && <span style={errorStyle}>{errors.porcentajeIva.message}</span>}
               {!errors.porcentajeIva && <small style={{ color: 'var(--color-ink-soft)', fontSize: '0.75rem' }}>Ej: 19 para 19%</small>}
