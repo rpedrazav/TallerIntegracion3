@@ -5,7 +5,7 @@ titulo: Kafka Topics — Diseño vs Implementación Real
 estado: parcial
 fuentes: [src/POSCartService/Services/KafkaProducerService.cs, src/POSCartService/Messaging/SaleCompletedEvent.cs, src/WarehouseInventoryService/Messaging/KafkaConsumerService.cs, Docker/docker-compose.yml, Docker/scripts/init-kafka-topics.sh]
 verificado_contra_codigo: true
-ultima_revision: 2026-10-02
+ultima_revision: 2026-10-15
 depende_de: [ms5-pos, ms4-inventory]
 publica: [sale.completed]
 consume: [sale.completed]
@@ -15,7 +15,7 @@ reglas: [RN-04, RF-09]
 ---
 # Kafka Topics — Diseño vs Implementación Real
 
-> Contraste entre los topics diseñados en el ContextMaster y lo que realmente existe en el código. **Estado:** 1 consumer (MS-4) y 1 producer (MS-5) implementados para `sale.completed`.
+> Contraste entre los topics diseñados en el ContextMaster y lo que realmente existe en el código. **Estado:** MS-4 consume `sale.completed`; MS-5 conserva el adaptador productor y persiste eventos pendientes, pero el worker que los publica aún no está implementado.
 
 ## Topics aprovisionados (docker-compose init)
 
@@ -36,7 +36,7 @@ product.expiring_soon   purchase_order.received
 
 | Topic | Productor real | Consumidor real | Estado |
 |-------|---------------|-----------------|--------|
-| `sale.completed` | ✅ MS-5 KafkaProducerService | ✅ MS-4 KafkaConsumerService | [IMPLEMENTADO] |
+| `sale.completed` | ⚠️ MS-5 guarda outbox; worker pendiente | ✅ MS-4 KafkaConsumerService | [PARCIAL] |
 | `stock.alert` | ❌ NINGUNO | ❌ NINGUNO | [PLANIFICADO] |
 | `expiry.alert` | ❌ NINGUNO | ❌ NINGUNO | [PLANIFICADO] |
 | `sale.reversed` | ❌ NINGUNO | ❌ NINGUNO | [PLANIFICADO] |
@@ -53,7 +53,8 @@ product.expiring_soon   purchase_order.received
 // src/POSCartService/Messaging/SaleCompletedEvent.cs  [IMPLEMENTADO]
 public sealed class SaleCompletedEvent
 {
-    public Guid     EventId    { get; init; }  // GUID nuevo por cada publicación
+    public Guid     EventId    { get; init; }  // identidad estable del evento lógico
+    public int      SchemaVersion { get; init; } = 1;
     public Guid     TenantId   { get; init; }
     public Guid     VentaId    { get; init; }  // también clave de idempotencia en MS-4
     public Guid     CajeroId   { get; init; }
@@ -75,7 +76,7 @@ public sealed class SaleCompletedItemEvent
 ```
 
 **Clave Kafka:** `tenant_id` (garantiza orden de eventos por tenant en la misma partición).  
-**Idempotencia MS-4:** el consumer usa `EventId` (GUID único generado por MS-5) con fallback a `VentaId` en `EventosKafkaProcesados`.
+**Idempotencia MS-4:** el consumer usa `EventId` (GUID estable generado y persistido por MS-5) con fallback a `VentaId` en `EventosKafkaProcesados`.
 
 ## Diseño del ContextMaster (9 topics)
 
@@ -100,37 +101,31 @@ MS-1 Identity → fx.rate.updated → MS-3 Catalog, MS-6 Supply, MS-7 Analytics 
 MS-8 Loyalty → points.updated → MS-7 Analytics ❌
 ```
 
-## Publicación implementada en MS-5
+## Persistencia previa a publicación en MS-5
 
-MS-5 publica `sale.completed` mediante `IKafkaProducerService` (Singleton) al completar la venta en `VentaService.CompletarAsync`:
+MS-5 prepara `sale.completed` al completar la venta y conserva el payload para su publicación posterior:
 
 ```csharp
 // MS-5 (VentaService.CompletarAsync):
 var evento = new SaleCompletedEvent
 {
-    EventId    = Guid.NewGuid(), // GUID único para idempotencia
-    TenantId   = ventaCompletada.TenantId,
-    VentaId    = ventaCompletada.Id,
-    CajeroId   = ventaCompletada.CajeroId,
-    SucursalId = ventaCompletada.SucursalId,
-    Subtotal   = ventaCompletada.Subtotal,
-    Iva        = ventaCompletada.Impuestos,
-    Total      = ventaCompletada.Total,
-    MetodoPago = ventaCompletada.MetodoPago.ToString(),
-    Timestamp  = DateTime.UtcNow,
-    Items      = itemsParaEvento.Select(i => new SaleCompletedItemEvent { ... }).ToList()
+    EventId = eventId,
+    SchemaVersion = 1,
+    TenantId = venta.TenantId,
+    VentaId = venta.Id,
+    // snapshot de venta e items
 };
-await _kafkaProducer.PublicarSaleCompletedAsync(evento);
+await _ventaRepository.CompletarConOutboxAsync(venta.Id, pago, outboxMessage);
 ```
 
 ## Cobertura de integración
 
-La publicación de `sale.completed` está cubierta mediante un test de integración que usa el `KafkaProducerService` real de MS-5 y un `ConsumerBuilder<string, string>` conectado al broker local. El payload consumido se deserializa y valida contra la venta cobrada, incluyendo `VentaId`, `TenantId` y `Total`.
+La persistencia de `sale.completed` está cubierta con PostgreSQL real: el cobro deja venta, pago y outbox pendiente en un solo commit, y un fallo al insertar el outbox revierte los tres cambios. La entrega automática al broker queda [PLANIFICADA] hasta incorporar el worker.
 
 El consumo de `sale.completed` por MS-4 también está cubierto mediante un test de integración que publica un evento real, espera el procesamiento asíncrono y verifica el descuento de stock a través de la API de inventario.
 
 ## Conexiones
-- Produce → [[ms5-pos]] [IMPLEMENTADO]
+- Produce → [[ms5-pos]] [PARCIAL — outbox implementado, worker pendiente]
 - Consume → [[ms4-inventory]] [IMPLEMENTADO]
 - Arquitectura: [[arquitectura]]
 - Decisión de Kafka: [[001-kafka-vs-rabbitmq]]

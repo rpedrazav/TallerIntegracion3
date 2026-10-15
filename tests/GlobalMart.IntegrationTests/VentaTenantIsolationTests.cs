@@ -142,9 +142,10 @@ public sealed class VentaTenantIsolationTests : IAsyncLifetime
         Assert.Single(sale.Items);
         Assert.Equal(119m, sale.Total);
         Assert.Equal(119m, Assert.Single(sale.Pagos).Monto);
-        var published = Assert.Single(_pos.Kafka.Events);
-        Assert.Equal(_fixture.TenantA.TenantId, published.TenantId);
-        Assert.Equal(id, published.VentaId);
+        var pending = await db.OutboxMessages.SingleAsync(message =>
+            message.VentaId == id && message.Status == Pos.Models.OutboxStatus.PENDIENTE);
+        Assert.Equal(_fixture.TenantA.TenantId, pending.TenantId);
+        Assert.Empty(_pos.Kafka.Events);
         Assert.Equal(beforeB, await SnapshotAsync(_fixture.TenantB.TenantId));
     }
 

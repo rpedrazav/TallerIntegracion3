@@ -34,4 +34,12 @@ public interface IVentaRepository
     /// Actualiza el estado y los totales de una venta existente.
     /// </summary>
     Task<Venta> ActualizarAsync(Venta venta);
+
+    /// <summary>
+    /// Completa una venta y guarda su pago y evento outbox en una sola transacción.
+    /// </summary>
+    Task<Venta> CompletarConOutboxAsync(
+        Guid ventaId,
+        Pago pago,
+        OutboxMessage outboxMessage);
 }

@@ -1,3 +1,4 @@
+using System.Text.Json;
 using POSCartService.Messaging;
 using POSCartService.Models;
 using POSCartService.Repositories;
@@ -8,7 +9,6 @@ public class VentaService : IVentaService
 {
     private readonly IVentaRepository _ventaRepository;
     private readonly IItemVentaRepository? _itemVentaRepository;
-    private readonly IKafkaProducerService? _kafkaProducer;
 
     public VentaService(
         IVentaRepository ventaRepository,
@@ -17,7 +17,9 @@ public class VentaService : IVentaService
     {
         _ventaRepository     = ventaRepository ?? throw new ArgumentNullException(nameof(ventaRepository));
         _itemVentaRepository = itemVentaRepository;
-        _kafkaProducer       = kafkaProducer;
+        // La publicación directa se reemplazó por outbox en S2-008. Se conserva el
+        // parámetro opcional para no romper los ejecutables de prueba existentes.
+        _ = kafkaProducer;
     }
 
 
@@ -77,59 +79,53 @@ public class VentaService : IVentaService
             throw new InvalidOperationException(
                 $"No se puede registrar pago en efectivo para una venta con método de pago {venta.MetodoPago}.");
 
-        venta.Estado = EstadoVenta.COMPLETADA;
-
-        // Registrar el pago en efectivo (Pago.Metodo=EFECTIVO, con monto y vuelto)
-        venta.Pagos.Add(new Pago
+        var pago = new Pago
         {
             Id      = Guid.NewGuid(),
             VentaId = venta.Id,
             Metodo  = MetodoPago.EFECTIVO,
             Monto   = montoRecibido,
             Vuelto  = vuelto
-        });
+        };
 
-        var ventaCompletada = await _ventaRepository.ActualizarAsync(venta);
-
-        // Publicar evento sale.completed a Kafka (fire-and-forget resiliente:
-        // el error de Kafka no revierte la transacción de BD ya persistida).
-        if (_kafkaProducer is not null)
+        var eventId = Guid.NewGuid();
+        var timestamp = DateTime.UtcNow;
+        var evento = new SaleCompletedEvent
         {
-            var itemsParaEvento = (ventaCompletada.Items != null && ventaCompletada.Items.Count > 0)
-                ? ventaCompletada.Items
-                : venta.Items;
-
-            var evento = new SaleCompletedEvent
+            EventId       = eventId,
+            SchemaVersion = 1,
+            TenantId      = venta.TenantId,
+            VentaId       = venta.Id,
+            CajeroId      = venta.CajeroId,
+            SucursalId    = venta.SucursalId,
+            Subtotal      = venta.Subtotal,
+            Iva           = venta.Impuestos,
+            Total         = venta.Total,
+            MetodoPago    = venta.MetodoPago.ToString(),
+            Timestamp     = timestamp,
+            Items         = venta.Items.Select(i => new SaleCompletedItemEvent
             {
-                EventId    = Guid.NewGuid(),
-                TenantId   = ventaCompletada.TenantId,
-                VentaId    = ventaCompletada.Id,
-                CajeroId   = ventaCompletada.CajeroId,
-                SucursalId = ventaCompletada.SucursalId,
-                Subtotal   = ventaCompletada.Subtotal,
-                Iva        = ventaCompletada.Impuestos,
-                Total      = ventaCompletada.Total,
-                MetodoPago = ventaCompletada.MetodoPago.ToString(),
-                Timestamp  = DateTime.UtcNow,
-                Items      = itemsParaEvento.Select(i => new SaleCompletedItemEvent
-                {
-                    ProductoId     = i.ProductoId,
-                    Cantidad       = i.Cantidad,
-                    PrecioUnitario = i.PrecioUnitario
-                }).ToList()
-            };
+                ProductoId     = i.ProductoId,
+                Cantidad       = i.Cantidad,
+                PrecioUnitario = i.PrecioUnitario
+            }).ToList()
+        };
+        var outboxMessage = new OutboxMessage
+        {
+            EventId          = eventId,
+            TenantId         = venta.TenantId,
+            VentaId          = venta.Id,
+            EventType        = "sale.completed",
+            SchemaVersion    = evento.SchemaVersion,
+            Topic            = "sale.completed",
+            MessageKey       = venta.TenantId.ToString(),
+            Payload          = JsonSerializer.Serialize(evento),
+            Status           = OutboxStatus.PENDIENTE,
+            CreatedAt        = timestamp,
+            NextAttemptAt    = timestamp
+        };
 
-            try
-            {
-                await _kafkaProducer.PublicarSaleCompletedAsync(evento);
-            }
-            catch
-            {
-                // Fire-and-forget resiliente: no interrumpir la confirmación de la venta si la mensajería falla.
-            }
-        }
-
-        return ventaCompletada;
+        return await _ventaRepository.CompletarConOutboxAsync(venta.Id, pago, outboxMessage);
     }
 
     /// <inheritdoc/>

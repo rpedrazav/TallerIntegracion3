@@ -5,7 +5,7 @@ titulo: MS-5 · POS & Cart Service
 estado: parcial
 fuentes: [src/POSCartService/]
 verificado_contra_codigo: true
-ultima_revision: 2026-10-14
+ultima_revision: 2026-10-15
 depende_de: [ms1-identity, ms2-tax, ms3-catalog]
 publica: [sale.completed]
 consume: []
@@ -13,7 +13,7 @@ reglas: [RN-01, RN-02, RN-03, RN-06, RF-02, RF-03, RF-04, RF-05, RF-06, RF-07]
 ---
 # MS-5 · POS & Cart Service
 
-> Servicio central del punto de venta. Gestiona turnos de caja y el ciclo completo de una venta (carrito, ítems, cobro, anulación). Integrado con MS-2 (IVA) y MS-3 (productos), y publica `sale.completed` a Kafka. **FALTA:** integración con pasarela de pago y hardware.
+> Servicio central del punto de venta. Gestiona turnos de caja y el ciclo completo de una venta (carrito, ítems, cobro, anulación). Integrado con MS-2 (IVA) y MS-3 (productos). Persiste `sale.completed` en outbox; falta el worker de publicación, la pasarela de pago y el hardware.
 
 ## Contrato Oficial de Creación de Venta (POST /ventas) — S2-001 / S2-002 / S2-003
 
@@ -52,7 +52,7 @@ reglas: [RN-01, RN-02, RN-03, RN-06, RF-02, RF-03, RF-04, RF-05, RF-06, RF-07]
 | DELETE | `/ventas/{id}/items/{itemId}` | JWT | [IMPLEMENTADO] |
 | GET | `/ventas/{id}` | JWT | [IMPLEMENTADO] |
 | GET | `/ventas/turno/{turnoId}` | JWT | [IMPLEMENTADO] |
-| POST | `/ventas/{id}/cobrar` | JWT | [IMPLEMENTADO — valida monto_recibido ≥ total, calcula vuelto, persiste pago EFECTIVO y publica sale.completed] |
+| POST | `/ventas/{id}/cobrar` | JWT | [IMPLEMENTADO — valida monto_recibido ≥ total, calcula vuelto y persiste venta, pago y sale.completed pendiente en una transacción] |
 | POST | `/ventas/{id}/anular` | JWT | [PLANIFICADO en controller — implementado en VentaService.AnularAsync] |
 | GET | `/health` | Público | [IMPLEMENTADO] |
 
@@ -83,9 +83,9 @@ reglas: [RN-01, RN-02, RN-03, RN-06, RF-02, RF-03, RF-04, RF-05, RF-06, RF-07]
    → Valida monto_recibido ≥ venta.Total (→ 400 "Monto insuficiente" si no alcanza)
    → Calcula vuelto = monto_recibido − total
    → VentaService.CompletarAsync: estado → COMPLETADA + crea Pago { Metodo=EFECTIVO, Monto=monto_recibido, Vuelto=vuelto }
-   → VentaRepository.ActualizarAsync persiste estado y Pago en una sola transacción
+   → VentaRepository.CompletarConOutboxAsync persiste estado, Pago y OutboxMessage PENDIENTE en una transacción
    → Retorna venta completada + monto_recibido + vuelto
-   → ✅ Publica sale.completed a Kafka con event_id único (GUID)
+   → ⚠️ El worker que publicará el mismo event_id en Kafka sigue pendiente
    → ❌ NO integra pasarela de pago externa
 
 5. POST /ventas/{id}/anular  { motivo }
@@ -155,56 +155,32 @@ TenantMiddleware inyecta `CurrentTenantId` en `PosCartDbContext`.
 
 `VentaRepository.ActualizarAsync` e `ItemVentaRepository.ActualizarAsync`/`EliminarAsync` conservan los filtros globales y exigen además `CurrentTenantId` presente y coincidencia explícita con el tenant almacenado (para ítems, mediante `Venta.TenantId`). La pertenencia no se obtiene del objeto recibido ni de la identidad ya rastreada. Las actualizaciones de venta/ítem ajeno o sin tenant lanzan `KeyNotFoundException`; eliminar un ítem no visible es una operación sin efecto, sin guardar cambios.
 
-## Publicación Kafka: sale.completed [IMPLEMENTADO]
+## Outbox de sale.completed [PARCIAL]
 
-Al completar una venta en `VentaService.CompletarAsync`, se publica el evento `sale.completed` mediante `IKafkaProducerService` (Singleton).
-El evento incluye `EventId = Guid.NewGuid()` como identificador único para garantizar idempotencia en el consumer (MS-4). La suite `POSCartService.CobroCuadreTest` verifica cobro, cuadre, persistencia y payload sin requerir un broker activo.
+Al completar una venta, `VentaService.CompletarAsync` genera una sola identidad estable, un payload `schema_version = 1` y un registro `PENDIENTE`. `VentaRepository.CompletarConOutboxAsync` vuelve a consultar la venta con el tenant vigente y guarda el cambio a `COMPLETADA`, el pago y el outbox mediante un único `SaveChangesAsync` dentro de una transacción PostgreSQL explícita. Si falla cualquier escritura, se revierte todo.
 
 ```csharp
-// VentaService.CompletarAsync:
-if (_kafkaProducer is not null)
+var eventId = Guid.NewGuid();
+var evento = new SaleCompletedEvent
 {
-    var itemsParaEvento = (ventaCompletada.Items != null && ventaCompletada.Items.Count > 0)
-        ? ventaCompletada.Items
-        : venta.Items;
-
-    var evento = new SaleCompletedEvent
-    {
-        EventId    = Guid.NewGuid(),
-        TenantId   = ventaCompletada.TenantId,
-        VentaId    = ventaCompletada.Id,
-        CajeroId   = ventaCompletada.CajeroId,
-        SucursalId = ventaCompletada.SucursalId,
-        Subtotal   = ventaCompletada.Subtotal,
-        Iva        = ventaCompletada.Impuestos,
-        Total      = ventaCompletada.Total,
-        MetodoPago = ventaCompletada.MetodoPago.ToString(),
-        Timestamp  = DateTime.UtcNow,
-        Items      = itemsParaEvento.Select(i => new SaleCompletedItemEvent
-        {
-            ProductoId     = i.ProductoId,
-            Cantidad       = i.Cantidad,
-            PrecioUnitario = i.PrecioUnitario
-        }).ToList()
-    };
-
-    try
-    {
-        await _kafkaProducer.PublicarSaleCompletedAsync(evento);
-    }
-    catch
-    {
-        // Fire-and-forget resiliente
-    }
-}
+    EventId = eventId,
+    SchemaVersion = 1,
+    TenantId = venta.TenantId,
+    VentaId = venta.Id,
+    // snapshot inmutable de la venta
+};
+await _ventaRepository.CompletarConOutboxAsync(venta.Id, pago, outboxMessage);
 ```
+
+`KafkaProducerService` permanece como adaptador registrado, pero el cobro ya no lo invoca directamente. La reserva, publicación y política de reintentos documentada en [[sale-completed-outbox]] siguen [PLANIFICADAS].
 
 ## Tests de integración
 
 - `TurnoIntegrationTests`: abre un turno con JWT de cajero y verifica que se persiste en estado `ABIERTO`.
 - `VentaIntegrationTests`: cubre creación de venta con resolución autoritativa en MS-3 e IVA real en MS-2, agregado de ítems, rechazo de productos inexistentes (404) e inactivos (400). Incluye los escenarios S2-005: (1) `CrearVenta_SinTurnoAbierto_Retorna409SinPersistir` — sin turno ABIERTO la venta no se crea; (2) `CrearVenta_PrecioFalsificadoEsIgnorado_UsaPrecioDeMS3` — el `precio_unitario` del request es ignorado y el precio persistido viene de MS-3.
-- `CobroIntegrationTests`: cobra una venta en efectivo con un monto superior al total y verifica el vuelto, el pago y el estado `COMPLETADA`.
-- `KafkaPublishIntegrationTests`: consume desde `sale.completed` y verifica el payload publicado por el productor real de MS-5.
+- `CobroIntegrationTests`: cobra una venta en efectivo con un monto superior al total y verifica vuelto, pago, estado `COMPLETADA` y outbox pendiente.
+- `KafkaPublishIntegrationTests`: verifica mediante HTTP que el cobro conserva en outbox el payload `sale.completed` versión 1.
+- `VentaOutboxTransactionTests` (S2-008): verifica el commit conjunto y el rollback cuando falla la inserción del outbox sobre PostgreSQL real.
 - `CierreTurnoIntegrationTests`: prepara una venta completada en efectivo y verifica el cuadre, el efectivo esperado, el monto declarado y la diferencia.
 - Los flujos de venta y cobro usan handlers HTTP en memoria para devolver respuestas deterministas de `CatalogClient` (MS-3) y `TaxClient` (MS-2), sin levantar esos microservicios.
 
@@ -227,7 +203,7 @@ if (_kafkaProducer is not null)
 | PC-12 | Eliminar Ítem del Carrito | [IMPLEMENTADO] |
 | PC-13 | Descuento Manual | [PLANIFICADO] |
 | PC-14 | Calcular Total con Impuestos | [IMPLEMENTADO] |
-| PC-15 | Cobrar en Efectivo | [IMPLEMENTADO — endpoint expuesto, valida monto ≥ total, calcula vuelto y publica sale.completed a Kafka] |
+| PC-15 | Cobrar en Efectivo | [IMPLEMENTADO — endpoint expuesto, valida monto ≥ total, calcula vuelto y persiste sale.completed pendiente] |
 | PC-16 | Calcular Vuelto | [PLANIFICADO] |
 | PC-17 | Cobrar con Tarjeta | [PLANIFICADO] |
 | PC-18 | Pago Mixto (efectivo + tarjeta) | [PLANIFICADO] |
@@ -236,7 +212,7 @@ if (_kafkaProducer is not null)
 | PC-21 | Devolución Parcial | [PLANIFICADO] |
 | PC-22 | Poner Venta en Espera (Hold) | [PLANIFICADO] |
 | PC-23 | Recuperar Venta de Espera | [PLANIFICADO] |
-| PC-24 | Publicar sale.completed | [IMPLEMENTADO] |
+| PC-24 | Publicar sale.completed | [PARCIAL — persistencia outbox implementada; worker pendiente] |
 | PC-25 | Publicar sale.reversed | [PLANIFICADO] |
 | PC-26 | Leer Tarjeta en Terminal (NFC/chip/mag) | [PLANIFICADO] |
 | PC-27 | Enviar Solicitud a Pasarela | [PLANIFICADO] |
@@ -253,7 +229,7 @@ if (_kafkaProducer is not null)
 
 ## Conexiones
 - Depende de: [[ms2-tax]] (TaxClient), [[ms3-catalog]] (CatalogClient), [[ms1-identity]] (JWT)
-- Publica: `sale.completed` → [[ms4-inventory]], [[ms7-analytics]], [[ms8-loyalty]] [IMPLEMENTADO]
+- Publica: `sale.completed` → [[ms4-inventory]], [[ms7-analytics]], [[ms8-loyalty]] [PARCIAL — outbox implementado, worker pendiente]
 - Reglas: [[reglas-negocio]] (RN-02, RN-06), [[multi-tenant]]
 - Kafka: [[kafka-topics]]
 
@@ -276,12 +252,16 @@ if (_kafkaProducer is not null)
 
 ## S2-023 — Aislamiento HTTP de venta y producto (RN-01)
 
-Suite [VentaTenantIsolationTests.cs](../../../tests/GlobalMart.IntegrationTests/VentaTenantIsolationTests.cs), filtrable con `Category=RN01` o `Plan=S2-023`. Usa los dos tenants de S2-022 en esquemas PostgreSQL exclusivos, JWT firmados validados por el middleware real y solicitudes HTTP al host MS-5. Verifica lectura por ID y turno ajenos, agregado/modificación/eliminación de ítems y cobro de venta ajena, incluyendo combinación de venta A con ítem B. Compara antes/después las ventas, ítems y pagos persistidos de ambos tenants y exige que no se publique `sale.completed` ante ataques.
+Suite [VentaTenantIsolationTests.cs](../../../tests/GlobalMart.IntegrationTests/VentaTenantIsolationTests.cs), filtrable con `Category=RN01` o `Plan=S2-023`. Usa los dos tenants de S2-022 en esquemas PostgreSQL exclusivos, JWT firmados validados por el middleware real y solicitudes HTTP al host MS-5. Verifica lectura por ID y turno ajenos, agregado/modificación/eliminación de ítems y cobro de venta ajena, incluyendo combinación de venta A con ítem B. Compara antes/después las ventas, ítems y pagos persistidos de ambos tenants y exige que no se cree un evento ante ataques.
 
-Los casos de crear venta y agregar producto B con JWT A recorren `CatalogClient` y el host HTTP real de MS-3 con su base de datos y filtros; no simulan la pertenencia del producto. Un control positivo recorre creación, agregado, cambio de cantidad, eliminación y cobro de A, comprueba pago/evento y conservación de B. Solo MS-2 y el envío al broker Kafka se sustituyen por respuestas deterministas y un registrador de eventos; no acredita E2E de Electron ni entrega real al broker. Las migraciones de arranque se omiten exclusivamente en los hosts de prueba porque la fixture ya crea el modelo EF vigente. Ejecución Release aprobada el 2026-10-14: 10/10 casos MS-5 dentro de la suite conjunta 18/18, sin fallos ni omisiones. Ver [reporte S2-023](../../qa/S2-023/reporte.md) y evidencia TRX.
+Los casos de crear venta y agregar producto B con JWT A recorren `CatalogClient` y el host HTTP real de MS-3 con su base de datos y filtros; no simulan la pertenencia del producto. Un control positivo recorre creación, agregado, cambio de cantidad, eliminación y cobro de A, comprueba pago/outbox pendiente y conservación de B. Solo MS-2 se sustituye por una respuesta determinista; no acredita E2E de Electron ni entrega real al broker. Las migraciones de arranque se omiten exclusivamente en los hosts de prueba porque la fixture ya crea el modelo EF vigente. Ejecución previa Release aprobada el 2026-10-14: 10/10 casos MS-5 dentro de la suite conjunta 18/18, sin fallos ni omisiones. Ver [reporte S2-023](../../qa/S2-023/reporte.md) y evidencia TRX.
 
 Defensa adicional en [PosRepositoryTenantIsolationTests.cs](../../../tests/GlobalMart.IntegrationTests/PosRepositoryTenantIsolationTests.cs): 12 ataques directos a repositorios, sin validación previa del servicio, cubren actualización de venta, actualización/eliminación de ítem ajeno y ausencia de tenant, con objetos separados y entidades previamente rastreadas. Comparan persistencia de ventas, ítems y pagos; un control positivo verifica mutaciones propias, no confía en el `TenantId` falsificado del objeto de entrada y conserva los datos de B. Validación Release el 2026-10-14: 13/13 casos directos aprobados (12 ataques y un control propio), junto con los 10/10 HTTP de ventas, dentro de la suite conjunta 32/32. Evidencia: [S2-023-refuerzo.trx](../../qa/S2-023/S2-023-refuerzo.trx).
 
 ## S2-007 — Persistencia de outbox
 
-[IMPLEMENTADO] Entidad `OutboxMessage`, `DbSet` y filtro por tenant en `PosCartDbContext`; migración `20261015020010_AddOutboxMessages` generada con EF Core 8.0.11. Crea tabla local a MS-5 con payload textual, estado, versión, contadores y reserva; índice `(TenantId, Status, NextAttemptAt)` y unicidad `(TenantId, VentaId, EventType)`. No modifica tablas de negocio existentes. Build de MS-5 aprobado (advertencia preexistente MSB3539); prueba enfocada **1/1 aprobada** el 2026-10-14 sobre PostgreSQL 16.4 temporal: migraciones reales, consulta por estado, aislamiento, unicidad, reversión y reaplicación. Integración con el cobro y publicación/reintentos siguen [PLANIFICADO]; no se acredita entrega durable todavía. [Diseño, alcance y evidencia S2-007](../eventos/sale-completed-outbox.md).
+[IMPLEMENTADO] Entidad `OutboxMessage`, `DbSet` y filtro por tenant en `PosCartDbContext`; migración `20261015020010_AddOutboxMessages` generada con EF Core 8.0.11. Crea tabla local a MS-5 con payload textual, estado, versión, contadores y reserva; índice `(TenantId, Status, NextAttemptAt)` y unicidad `(TenantId, VentaId, EventType)`. No modifica tablas de negocio existentes. Build de MS-5 aprobado (advertencia preexistente MSB3539); prueba enfocada **1/1 aprobada** el 2026-10-14 sobre PostgreSQL 16.4 temporal: migraciones reales, consulta por estado, aislamiento, unicidad, reversión y reaplicación. [Diseño y evidencia](../eventos/sale-completed-outbox.md).
+
+## S2-008 — Persistencia atómica de venta y evento
+
+[IMPLEMENTADO] `VentaRepository.CompletarConOutboxAsync` confirma estado, pago y outbox en una transacción explícita, con validación del tenant actual y coherencia del evento. `VentaOutboxTransactionTests` aprobó **2/2** casos sobre PostgreSQL 16.4 temporal: persistencia conjunta y rollback completo ante conflicto del outbox. La publicación y los reintentos siguen [PLANIFICADOS].

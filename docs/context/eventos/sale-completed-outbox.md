@@ -4,8 +4,8 @@ tipo: decision
 titulo: "S2-006 — Contrato de sale.completed, outbox y reintentos"
 estado: parcial
 fuentes: [src/POSCartService/Messaging/SaleCompletedEvent.cs, src/POSCartService/Services/VentaService.cs, src/POSCartService/Services/KafkaProducerService.cs, src/POSCartService/Repositories/VentaRepository.cs, src/WarehouseInventoryService/Messaging/KafkaConsumerService.cs, tareas/sprint2_youtrack_resultado.json]
-verificado_contra_codigo: false
-ultima_revision: 2026-10-14
+verificado_contra_codigo: true
+ultima_revision: 2026-10-15
 depende_de: [ms5-pos, kafka-topics]
 publica: []
 consume: []
@@ -16,21 +16,21 @@ reglas: [RN-01, RN-02, RN-06, RN-07]
 **Plan:** S2-006 · **YouTrack:** TI3-637 · **Prioridad:** Must · **Dificultad:** Baja.  
 **Meta:** Carrito y venta funcional.  
 **Decisión:** diseño aprobado por el responsable de la tarea en esta conversación el 2026-10-14.  
-**Entrega S2-006:** diseño de outbox y política de reintentos documentados. **Implementación: [PARCIAL]** — S2-007 incorpora entidad y migración; integración con cobro y publicador pendientes.
+**Entrega S2-006:** diseño de outbox y política de reintentos documentados. **Implementación: [PARCIAL]** — S2-007 incorpora entidad y migración; S2-008 integra el cobro atómico; publicador y reintentos pendientes.
 
-Este documento define el comportamiento objetivo. La sección S2-007 acredita únicamente la persistencia y su prueba de migración; el flujo completo sigue pendiente. `verificado_contra_codigo: false` distingue el diseño completo aprobado de la implementación parcial. La entrega original S2-006 se limitó a documentación nueva.
+Este documento define el comportamiento objetivo y registra la implementación comprobada de S2-007 y S2-008. El flujo completo sigue parcial hasta incorporar el worker de publicación y los reintentos.
 
 ## Evidencia actual y discrepancia resuelta en el diseño
 
-- `VentaService.CompletarAsync` persiste venta y pago mediante `VentaRepository.ActualizarAsync` antes de construir y publicar el evento. Una caída entre ambas operaciones puede dejar una venta sin evento.
-- `SaleCompletedEvent` inicializa `EventId` con `Guid.NewGuid()` y su comentario describe un GUID nuevo por publicación. `VentaService` también asigna explícitamente un GUID al construirlo. Reutilizar el mismo objeto conserva su ID, pero no hay persistencia durable del evento para recuperarlo tras un reinicio.
-- El payload actual no contiene versión. Sus nombres JSON están definidos con `JsonPropertyName` en `snake_case`.
+- `VentaService.CompletarAsync` prepara un único `EventId`, el payload versión 1 y la fila outbox antes de delegar el commit atómico al repositorio.
+- `VentaRepository.CompletarConOutboxAsync` guarda estado `COMPLETADA`, `Pago` y `OutboxMessage` `PENDIENTE` en una transacción PostgreSQL explícita.
+- El JSON persistido usa nombres `snake_case`; `event_id` coincide con la PK del outbox y `schema_version` vale 1.
 - `KafkaProducerService.PublicarAsync` captura `ProduceException` sin relanzarla; su llamador puede registrar publicación aunque haya fallado. Un publicador de outbox necesitará un resultado inequívoco de éxito o error.
 - MS-4 deduplica por `EventId`, con fallback a `VentaId`, pero guarda descuentos antes del marcador y confirma offsets incluso ante errores. No se acredita procesamiento exactamente una vez.
 
-La discrepancia entre «GUID nuevo por publicación» y la aceptación de S2-006 fue presentada y aprobada para resolución documental: **la identidad pertenece al evento lógico, no al intento de transporte**. El código y los documentos anteriores conservan su estado actual hasta una tarea de implementación autorizada.
+La discrepancia entre «GUID nuevo por publicación» y la aceptación de S2-006 fue resuelta: **la identidad pertenece al evento lógico, no al intento de transporte**. S2-008 ya persiste esa identidad; el worker futuro deberá reenviar el mismo payload.
 
-## Contrato de `sale.completed` versión 1 [PLANIFICADO]
+## Contrato de `sale.completed` versión 1 [IMPLEMENTADO EN OUTBOX]
 
 Se conserva el topic `sale.completed`, la clave Kafka `tenant_id` como UUID en texto y los campos existentes. Se agrega únicamente `schema_version` al payload. No se incorporan contadores ni estados de publicación al mensaje de negocio.
 
@@ -56,7 +56,7 @@ La versión 1 conserva nombres y significados existentes. La ausencia de `schema
 
 ## Outbox local a MS-5 [PARCIAL]
 
-La tabla `OutboxMessages` y la entidad `OutboxMessage` están incorporadas en MS-5 mediante S2-007. Residen en su base PostgreSQL. Integrar su escritura en la misma transacción que `Venta` y `Pago` continúa [PLANIFICADO].
+La tabla `OutboxMessages` y la entidad `OutboxMessage` están incorporadas en MS-5 mediante S2-007. Residen en su base PostgreSQL. S2-008 integra su escritura en la misma transacción que `Venta` y `Pago` [IMPLEMENTADO]. La reserva, publicación y transición posterior de estados siguen [PLANIFICADO].
 
 | Dato propuesto | Propósito |
 |---|---|
@@ -164,11 +164,17 @@ dotnet build src/POSCartService/POSCartService.csproj -p:MSBuildProjectExtension
 dotnet test tests/GlobalMart.IntegrationTests/GlobalMart.IntegrationTests.csproj --filter 'Plan=S2-007' -p:MSBuildProjectExtensionsPath=./obj/
 ```
 
-La verificación local utilizó SDK y paquetes temporales en `/tmp`; para el proyecto de pruebas se indicó `-p:NuGetPackageRoot=/tmp/s2007-nuget/`, conservando el separador final requerido por su regla existente de copia de BCrypt. No se modificaron `.csproj` ni configuración compartida. La migración se aplicó solamente a PostgreSQL temporal; su aplicación al entorno del equipo está [NO VERIFICADO]. Persistir el evento al cobrar, publicar desde el outbox y ejecutar reintentos siguen [PLANIFICADO]; esta tarea por sí sola no elimina la ventana actual de pérdida de eventos.
+La verificación local utilizó SDK y paquetes temporales en `/tmp`; para el proyecto de pruebas se indicó `-p:NuGetPackageRoot=/tmp/s2007-nuget/`, conservando el separador final requerido por su regla existente de copia de BCrypt. No se modificaron `.csproj` ni configuración compartida. La migración se aplicó solamente a PostgreSQL temporal; su aplicación al entorno del equipo está [NO VERIFICADO]. Publicar desde el outbox y ejecutar reintentos siguen [PLANIFICADO].
+
+## S2-008 / TI3-639 — Cobro y evento atómicos [IMPLEMENTADO]
+
+`VentaService.CompletarAsync` crea una sola identidad y un solo snapshot versión 1. `VentaRepository.CompletarConOutboxAsync` vuelve a cargar la venta dentro del tenant actual y confirma `Venta.Estado = COMPLETADA`, el `Pago` y el `OutboxMessage` `PENDIENTE` mediante un único `SaveChangesAsync` y una transacción explícita. La respuesta de cobro ocurre después del commit. Ya no se intenta publicar directamente en Kafka durante la solicitud HTTP.
+
+La prueba [VentaOutboxTransactionTests](../../../tests/GlobalMart.IntegrationTests/VentaOutboxTransactionTests.cs) ejecuta migraciones reales en PostgreSQL 16.4 temporal. Verifica **2/2 casos**: persistencia conjunta con igualdad entre `OutboxMessage.EventId` y `payload.event_id`, y rollback de estado y pago cuando la restricción única impide insertar el outbox. [Evidencia TRX](../../qa/S2-008/S2-008.trx). El publicador en segundo plano y los reintentos continúan [PLANIFICADO].
 
 ## Fuentes y conexiones
 
-- [Estado actual](../estado-actual.md), [MS-5 POS](../servicios/ms5-pos.md) y [topics Kafka](kafka-topics.md): contexto previo; este diseño no declara actualizado su comportamiento implementado.
+- [Estado actual](../estado-actual.md), [MS-5 POS](../servicios/ms5-pos.md) y [topics Kafka](kafka-topics.md): estado implementado y dependencias del flujo.
 - [Contrato vigente de MS-5](../../../src/POSCartService/Messaging/SaleCompletedEvent.cs).
 - [Completar venta](../../../src/POSCartService/Services/VentaService.cs) y [persistencia de venta](../../../src/POSCartService/Repositories/VentaRepository.cs).
 - [Publicador Kafka vigente](../../../src/POSCartService/Services/KafkaProducerService.cs).

@@ -9,11 +9,14 @@ namespace POSCartService.Messaging;
 public sealed class SaleCompletedEvent
 {
     /// <summary>
-    /// Identificador único del evento (GUID nuevo por cada publicación).
-    /// Distinto de VentaId: permite republicar un evento sin colisionar con la idempotencia del consumer.
+    /// Identificador único del evento lógico. Se conserva en todos sus intentos de publicación.
     /// </summary>
     [JsonPropertyName("event_id")]
     public Guid EventId { get; init; } = Guid.NewGuid();
+
+    /// <summary>Versión del contrato del payload.</summary>
+    [JsonPropertyName("schema_version")]
+    public int SchemaVersion { get; init; } = 1;
 
     [JsonPropertyName("tenant_id")]
     public Guid TenantId { get; init; }

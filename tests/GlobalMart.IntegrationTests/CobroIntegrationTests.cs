@@ -142,6 +142,13 @@ public class CobroIntegrationTests : IClassFixture<Ms5WebApplicationFactory>
         Assert.Equal(MetodoPago.EFECTIVO, pago.Metodo);
         Assert.Equal(montoRecibido, pago.Monto);
         Assert.Equal(vueltoEsperado, pago.Vuelto);
+
+        var outbox = await db.OutboxMessages
+            .IgnoreQueryFilters()
+            .SingleAsync(message => message.VentaId == ventaId);
+        Assert.Equal(tenantId, outbox.TenantId);
+        Assert.Equal("sale.completed", outbox.EventType);
+        Assert.Equal(POSCartServiceAlias::POSCartService.Models.OutboxStatus.PENDIENTE, outbox.Status);
     }
 
     [Fact]

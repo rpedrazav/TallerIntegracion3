@@ -7,7 +7,6 @@ using System.Net.Http.Json;
 using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
-using Confluent.Kafka;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -15,18 +14,14 @@ using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using CatalogClient = POSCartServiceAlias::POSCartService.Services.CatalogClient;
 using ICatalogClient = POSCartServiceAlias::POSCartService.Services.ICatalogClient;
 using PosCartDbContext = POSCartServiceAlias::POSCartService.Data.PosCartDbContext;
 using EstadoVenta = POSCartServiceAlias::POSCartService.Models.EstadoVenta;
-using IKafkaProducerService = POSCartServiceAlias::POSCartService.Services.IKafkaProducerService;
 using ITaxClient = POSCartServiceAlias::POSCartService.Services.ITaxClient;
 using ITurnoService = POSCartServiceAlias::POSCartService.Services.ITurnoService;
-using KafkaProducerService = POSCartServiceAlias::POSCartService.Services.KafkaProducerService;
-using SaleCompletedEvent = POSCartServiceAlias::POSCartService.Messaging.SaleCompletedEvent;
 using TaxClient = POSCartServiceAlias::POSCartService.Services.TaxClient;
 using IVentaService = POSCartServiceAlias::POSCartService.Services.IVentaService;
 using VentasController = POSCartServiceAlias::POSCartService.Controllers.VentasController;
@@ -36,7 +31,6 @@ namespace GlobalMart.IntegrationTests;
 
 public class KafkaPublishIntegrationTests : IClassFixture<Ms5WebApplicationFactory>
 {
-    private const string Topic = "sale.completed";
     private static readonly Guid ProductOneId = Guid.Parse("11111111-1111-1111-1111-111111111111");
     private static readonly Guid ProductTwoId = Guid.Parse("22222222-2222-2222-2222-222222222222");
 
@@ -48,7 +42,7 @@ public class KafkaPublishIntegrationTests : IClassFixture<Ms5WebApplicationFacto
     }
 
     [Fact]
-    public async Task CobrarVenta_PublicaEventoSaleCompleted_EnKafka()
+    public async Task CobrarVenta_DejaEventoSaleCompletedPendienteEnOutbox()
     {
         var tenantId = Guid.NewGuid();
         var cajeroId = Guid.NewGuid();
@@ -62,8 +56,6 @@ public class KafkaPublishIntegrationTests : IClassFixture<Ms5WebApplicationFacto
             {
                 services.AddControllers().AddControllersAsServices();
                 services.Configure<MvcOptions>(options => options.ModelValidatorProviders.Clear());
-                services.RemoveAll<IKafkaProducerService>();
-                services.AddSingleton<IKafkaProducerService, KafkaProducerService>();
                 services.AddTransient<VentasController>(serviceProvider =>
                     new VentasController(
                         serviceProvider.GetRequiredService<IVentaService>(),
@@ -86,17 +78,6 @@ public class KafkaPublishIntegrationTests : IClassFixture<Ms5WebApplicationFacto
             var migrationDb = migrationScope.ServiceProvider.GetRequiredService<PosCartDbContext>();
             await migrationDb.Database.MigrateAsync();
         }
-
-        var consumerConfig = new ConsumerConfig
-        {
-            BootstrapServers = "localhost:9092",
-            GroupId = $"integration-test-{Guid.NewGuid():N}",
-            AutoOffsetReset = AutoOffsetReset.Earliest,
-            EnableAutoCommit = false
-        };
-
-        using var consumer = new ConsumerBuilder<string, string>(consumerConfig).Build();
-        consumer.Subscribe(Topic);
 
         using var client = configuredFactory.CreateClient();
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
@@ -139,34 +120,6 @@ public class KafkaPublishIntegrationTests : IClassFixture<Ms5WebApplicationFacto
         });
         Assert.Equal(HttpStatusCode.OK, cobrarResponse.StatusCode);
 
-        var deadline = DateTime.UtcNow.AddSeconds(10);
-        ConsumeResult<string, string>? consumeResult = null;
-        SaleCompletedEvent? evento = null;
-        var jsonOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-
-        while (DateTime.UtcNow < deadline)
-        {
-            var remaining = deadline - DateTime.UtcNow;
-            consumeResult = consumer.Consume(remaining);
-            if (consumeResult is null || string.IsNullOrWhiteSpace(consumeResult.Message.Value))
-            {
-                break;
-            }
-
-            evento = JsonSerializer.Deserialize<SaleCompletedEvent>(consumeResult.Message.Value, jsonOptions);
-            if (evento?.VentaId == ventaId)
-            {
-                break;
-            }
-        }
-
-        Assert.NotNull(consumeResult);
-        Assert.False(string.IsNullOrWhiteSpace(consumeResult!.Message.Value));
-        Assert.NotNull(evento);
-        Assert.Equal(ventaId, evento!.VentaId);
-        Assert.Equal(tenantId, evento.TenantId);
-        Assert.Equal(totalEsperado, evento.Total);
-
         using var scope = configuredFactory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<PosCartDbContext>();
         var venta = await db.Ventas
@@ -175,6 +128,21 @@ public class KafkaPublishIntegrationTests : IClassFixture<Ms5WebApplicationFacto
 
         Assert.NotNull(venta);
         Assert.Equal(EstadoVenta.COMPLETADA, venta!.Estado);
+
+        var outbox = await db.OutboxMessages
+            .IgnoreQueryFilters()
+            .SingleAsync(message => message.VentaId == ventaId);
+        Assert.Equal(tenantId, outbox.TenantId);
+        Assert.Equal("sale.completed", outbox.EventType);
+        Assert.Equal(1, outbox.SchemaVersion);
+        Assert.Equal(POSCartServiceAlias::POSCartService.Models.OutboxStatus.PENDIENTE, outbox.Status);
+
+        using var payload = JsonDocument.Parse(outbox.Payload);
+        Assert.Equal(outbox.EventId, payload.RootElement.GetProperty("event_id").GetGuid());
+        Assert.Equal(1, payload.RootElement.GetProperty("schema_version").GetInt32());
+        Assert.Equal(tenantId, payload.RootElement.GetProperty("tenant_id").GetGuid());
+        Assert.Equal(ventaId, payload.RootElement.GetProperty("venta_id").GetGuid());
+        Assert.Equal(totalEsperado, payload.RootElement.GetProperty("total").GetDecimal());
     }
 
     private static async Task<Guid> ReadGuidPropertyAsync(HttpResponseMessage response, string propertyName)

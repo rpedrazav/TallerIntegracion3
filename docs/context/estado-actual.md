@@ -30,7 +30,7 @@ reglas: []
 | MS-2 Tax | ✅ 1 controller | ❌ No Kafka | ✅ ManualTest | **PARCIAL** |
 | MS-3 Catalog | ✅ 2 controllers | ❌ No Kafka | ✅ Manual .http + baja/PUT TI3-642 + 9 casos RN-01 S2-023 | **PARCIAL** |
 | MS-4 Warehouse | ✅ 1 controller | ✅ Consumer sale.completed | ❌ No tests | **PARCIAL** |
-| MS-5 POS | ✅ 2 controllers | ✅ Producer sale.completed | ✅ AgregarItemTest + CobroCuadreTest + 10 HTTP y 13 directos RN-01 S2-023 | **PARCIAL** |
+| MS-5 POS | ✅ 2 controllers | ⚠️ Outbox sale.completed; worker pendiente | ✅ AgregarItemTest + CobroCuadreTest + S2-008 + 10 HTTP y 13 directos RN-01 S2-023 | **PARCIAL** |
 | MS-6 SupplyChain | ❌ Sin controllers | ❌ Sin Kafka | ❌ Sin tests | **PLANIFICADO** |
 | MS-7 Analytics | ❌ Sin controllers | ❌ Sin consumers | ❌ Sin tests | **PLANIFICADO** |
 | MS-8 Loyalty | ❌ Sin controllers | ⚠️ Registrado en DI sin consumer loop | ❌ Sin tests | **PLANIFICADO** |
@@ -132,14 +132,14 @@ reglas: []
 - `DELETE /ventas/{id}/items/{itemId}` — eliminar ítem [IMPLEMENTADO]
 - `GET /ventas/{id}` — obtener venta [IMPLEMENTADO]
 - `GET /ventas/turno/{turnoId}` — ventas por turno [IMPLEMENTADO]
-- `POST /ventas/{id}/cobrar` — valida que la venta tenga método de pago EFECTIVO (rechaza TARJETA o MIXTO con 400 Bad Request según S2-004), valida `monto_recibido` ≥ total, completa la venta, retorna vuelto y publica `sale.completed` a Kafka con `event_id` único [IMPLEMENTADO]
+- `POST /ventas/{id}/cobrar` — valida que la venta tenga método de pago EFECTIVO (rechaza TARJETA o MIXTO con 400 Bad Request según S2-004), valida `monto_recibido` ≥ total, y confirma venta, pago y `sale.completed` pendiente en una transacción [IMPLEMENTADO]
 - VentaService con métodos `CompletarAsync` y `AnularAsync` [IMPLEMENTADO en service]
-- KafkaProducerService — publica eventos Kafka con key=tenant_id y event_id único [IMPLEMENTADO]
+- KafkaProducerService — adaptador disponible; la invocación automática desde outbox sigue [PLANIFICADA]
 - test de integración abre turno con JWT de cajero y verifica persistencia en estado `ABIERTO` [IMPLEMENTADO]
 - tests de integración en `VentaIntegrationTests` validan creación de venta con resolución autoritativa en MS-3 e IVA en MS-2, agregado de ítems, y rechazo de productos inexistentes (404) e inactivos (400) sin persistir venta ni ítems [IMPLEMENTADO]
 - 7 tests unitarios en `CrearVentaRequestValidatorTests` validan el contrato S2-001 (venta unitaria sin precio, venta a peso con balanza, venta mixta y rechazo de precios/pesos negativos) [IMPLEMENTADO]
 - tests de integración en `CobroIntegrationTests` cobran venta en efectivo, calculan vuelto, verifican persistencia y rechazan cobro en efectivo ante ventas con TARJETA y MIXTO sin registrar pagos (S2-004) [IMPLEMENTADO]
-- test de integración consume `sale.completed` desde Kafka y verifica `VentaId`, `TenantId` y `Total` del payload [IMPLEMENTADO]
+- test de integración de cobro verifica el payload versión 1 persistido en outbox, incluido `EventId`, `VentaId`, `TenantId` y `Total` [IMPLEMENTADO]
 - test de integración abre turno, registra venta y pago efectivo, y verifica el cuadre con diferencia calculada [IMPLEMENTADO]
 - tests de integración S2-005 en `VentaIntegrationTests` cubren los 4 escenarios de creación segura: precio falsificado ignorado (precio persistido viene de MS-3, no del request), IVA por tenant desde MS-2, producto inactivo (400 sin persistir) y ausencia de turno abierto (409 sin persistir venta) [IMPLEMENTADO]
 
@@ -237,4 +237,8 @@ Refuerzo posterior [IMPLEMENTADO]: `VentaRepository.ActualizarAsync` y `ItemVent
 
 ## S2-007 — Persistencia de outbox
 
-[IMPLEMENTADO] Entidad `OutboxMessage`, `DbSet` y filtro por tenant en `PosCartDbContext`; migración `20261015020010_AddOutboxMessages` generada con EF Core 8.0.11. Crea tabla local a MS-5 con payload textual, estado, versión, contadores y reserva; índice `(TenantId, Status, NextAttemptAt)` y unicidad `(TenantId, VentaId, EventType)`. No modifica tablas de negocio existentes. Build de MS-5 aprobado (advertencia preexistente MSB3539); prueba enfocada **1/1 aprobada** el 2026-10-14 sobre PostgreSQL 16.4 temporal: migraciones reales, consulta por estado, aislamiento, unicidad, reversión y reaplicación. Integración con el cobro y publicación/reintentos siguen [PLANIFICADO]; no se acredita entrega durable todavía. [Diseño, alcance y evidencia S2-007](eventos/sale-completed-outbox.md).
+[IMPLEMENTADO] Entidad `OutboxMessage`, `DbSet` y filtro por tenant en `PosCartDbContext`; migración `20261015020010_AddOutboxMessages` generada con EF Core 8.0.11. Crea tabla local a MS-5 con payload textual, estado, versión, contadores y reserva; índice `(TenantId, Status, NextAttemptAt)` y unicidad `(TenantId, VentaId, EventType)`. No modifica tablas de negocio existentes. Build de MS-5 aprobado (advertencia preexistente MSB3539); prueba enfocada **1/1 aprobada** el 2026-10-14 sobre PostgreSQL 16.4 temporal: migraciones reales, consulta por estado, aislamiento, unicidad, reversión y reaplicación. [Diseño, alcance y evidencia S2-007](eventos/sale-completed-outbox.md).
+
+## S2-008 — Persistencia atómica de venta y evento
+
+[IMPLEMENTADO] El cobro efectivo genera un `EventId` estable y payload `schema_version = 1`; `VentaRepository.CompletarConOutboxAsync` guarda venta `COMPLETADA`, `Pago` y outbox `PENDIENTE` en una sola transacción PostgreSQL. Prueba enfocada **2/2 aprobada** el 2026-10-15 contra PostgreSQL 16.4 temporal, incluido rollback de estado y pago al fallar el outbox. La publicación y los reintentos quedan [PLANIFICADOS]. [Diseño y evidencia](eventos/sale-completed-outbox.md).

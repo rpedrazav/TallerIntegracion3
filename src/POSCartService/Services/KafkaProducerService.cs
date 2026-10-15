@@ -59,8 +59,8 @@ public sealed class KafkaProducerService : IKafkaProducerService
                 ex,
                 "Kafka: error publicando en topic={Topic} key={Key}: {Reason}",
                 topico, clave, ex.Error.Reason);
-            // No relanzar: el caller decide si el error Kafka debe abortar su flujo.
-            // VentaService lo usa fire-and-forget para no revertir la BD ya persistida.
+            // Se conserva el comportamiento del adaptador existente. El worker de outbox
+            // deberá usar un resultado de publicación inequívoco antes de marcar PUBLICADO.
         }
     }
 
