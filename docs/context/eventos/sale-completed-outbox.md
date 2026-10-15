@@ -2,7 +2,7 @@
 id: sale-completed-outbox
 tipo: decision
 titulo: "S2-006 — Contrato de sale.completed, outbox y reintentos"
-estado: planificado
+estado: parcial
 fuentes: [src/POSCartService/Messaging/SaleCompletedEvent.cs, src/POSCartService/Services/VentaService.cs, src/POSCartService/Services/KafkaProducerService.cs, src/POSCartService/Repositories/VentaRepository.cs, src/WarehouseInventoryService/Messaging/KafkaConsumerService.cs, tareas/sprint2_youtrack_resultado.json]
 verificado_contra_codigo: false
 ultima_revision: 2026-10-14
@@ -16,9 +16,9 @@ reglas: [RN-01, RN-02, RN-06, RN-07]
 **Plan:** S2-006 · **YouTrack:** TI3-637 · **Prioridad:** Must · **Dificultad:** Baja.  
 **Meta:** Carrito y venta funcional.  
 **Decisión:** diseño aprobado por el responsable de la tarea en esta conversación el 2026-10-14.  
-**Entrega:** diseño de outbox y política de reintentos documentados. **Implementación: [PLANIFICADO].**
+**Entrega S2-006:** diseño de outbox y política de reintentos documentados. **Implementación: [PARCIAL]** — S2-007 incorpora entidad y migración; integración con cobro y publicador pendientes.
 
-Este documento define el comportamiento futuro. No acredita una implementación, migración ni prueba ejecutada del outbox. `verificado_contra_codigo: false` distingue el diseño aprobado del comportamiento vigente descrito a continuación. S2-006 se limita a documentación nueva; no modifica código, otros nodos del grafo ni archivos compartidos.
+Este documento define el comportamiento objetivo. La sección S2-007 acredita únicamente la persistencia y su prueba de migración; el flujo completo sigue pendiente. `verificado_contra_codigo: false` distingue el diseño completo aprobado de la implementación parcial. La entrega original S2-006 se limitó a documentación nueva.
 
 ## Evidencia actual y discrepancia resuelta en el diseño
 
@@ -54,9 +54,9 @@ Se conserva el topic `sale.completed`, la clave Kafka `tenant_id` como UUID en t
 
 La versión 1 conserva nombres y significados existentes. La ausencia de `schema_version` identifica un mensaje legacy no versionado, compatible con los campos anteriores; no autoriza a generar una identidad nueva. Cambios incompatibles requieren una versión nueva y coordinación con consumidores. Una versión desconocida no debe procesarse silenciosamente como versión 1. La adaptación y pruebas de consumidores quedan fuera de S2-006; su compatibilidad ejecutada está [NO VERIFICADO].
 
-## Outbox local a MS-5 [PLANIFICADO]
+## Outbox local a MS-5 [PARCIAL]
 
-La tabla propuesta `OutboxMessages` reside en la misma base PostgreSQL y unidad transaccional que `Venta` y `Pago`. El nombre es de diseño, todavía no existe como entidad implementada.
+La tabla `OutboxMessages` y la entidad `OutboxMessage` están incorporadas en MS-5 mediante S2-007. Residen en su base PostgreSQL. Integrar su escritura en la misma transacción que `Venta` y `Pago` continúa [PLANIFICADO].
 
 | Dato propuesto | Propósito |
 |---|---|
@@ -119,7 +119,7 @@ Para que esos duplicados no descuenten stock dos veces, MS-4 necesita deduplicac
 
 ## Escenarios verificables de aceptación
 
-Son criterios para la implementación posterior; **ejecución de estos escenarios: [NO VERIFICADO]**. S2-006 entrega su definición documental.
+Son criterios del flujo completo definido en S2-006. La sección S2-007 acredita únicamente los casos de persistencia indicados allí; **ejecución de escenarios de cobro, publicación, reintentos y consumo: [NO VERIFICADO]**.
 
 | Escenario | Resultado esperado y evidencia requerida |
 |---|---|
@@ -134,6 +134,37 @@ Son criterios para la implementación posterior; **ejecución de estos escenario
 | Reproceso autorizado de un fallido | Mismo ID y payload, nuevo ciclo de intentos, contador total y trazabilidad conservados. |
 | Aislamiento de tenants | Consulta o mutación con contexto A no accede ni modifica filas de B, incluso al reservar, recuperar o reprocesar. |
 | Duplicado recibido en MS-4 — dependencia futura | Un solo descuento por evento; stock y marcador se confirman o revierten juntos. |
+
+## S2-007 / TI3-638 — Entidad y migración [IMPLEMENTADO]
+
+Validado el 2026-10-14: entidad [OutboxMessage](../../../src/POSCartService/Models/OutboxMessage.cs), registro en [PosCartDbContext](../../../src/POSCartService/Data/PosCartDbContext.cs) y migración EF Core 8.0.11 [AddOutboxMessages](../../../src/POSCartService/Data/Migrations/20261015020010_AddOutboxMessages.cs), con Designer y snapshot generados por EF. El prefijo temporal de la migración corresponde a UTC.
+
+- `EventId` es PK con `ValueGeneratedNever`: el llamador debe proporcionar la identidad original. La integración futura deberá validar UUID no vacío y coherencia del payload.
+- `Payload` es `text`, preservando el JSON almacenado. `Status` sigue la convención de enums enteros de MS-5: 0 PENDIENTE, 1 EN_PROCESO, 2 PUBLICADO, 3 FALLIDO. Los valores iniciales se definen en la entidad C#, no mediante defaults SQL.
+- Índice de consulta `(TenantId, Status, NextAttemptAt)` y restricción única `(TenantId, VentaId, EventType)`. `VentaId` se almacena como identificador sin navegación ni FK en esta migración; no se modifica la tabla `Ventas` ni se introducen referencias a bases de otros servicios.
+- Filtro global exige `CurrentTenantId` y coincidencia con `TenantId`; sin tenant las consultas no devuelven filas. Esto no sustituye la validación de pertenencia en las futuras escrituras del servicio/worker.
+- `Up` crea exclusivamente la tabla y sus índices; `Down` elimina exclusivamente esa tabla. Las migraciones anteriores se conservan.
+
+Consulta de pendientes usando un tenant obtenido de un contexto autorizado:
+
+```csharp
+context.CurrentTenantId = tenantId;
+var pendientes = await context.OutboxMessages
+    .Where(m => m.Status == OutboxStatus.PENDIENTE)
+    .OrderBy(m => m.NextAttemptAt)
+    .ToListAsync();
+```
+
+**Validación:** build de MS-5 aprobado con SDK .NET 8.0.426; advertencia preexistente MSB3539 sobre rutas de MSBuild. [OutboxMigrationTests](../../../tests/GlobalMart.IntegrationTests/OutboxMigrationTests.cs): **1/1 aprobado, sin omisiones**, contra PostgreSQL 16.4 temporal. Aplica migraciones reales, comprueba modelo/snapshot sin cambios pendientes, consulta por estado, aislamiento de dos tenants y ausencia de tenant, unicidad, conservación de ID/payload al actualizar estado, reversión y reaplicación. La prueba crea y elimina exclusivamente su esquema `s2007_*`. [Evidencia TRX](../../qa/S2-007/S2-007.trx).
+
+Reproducción: definir `GLOBALMART_TEST_POSTGRES` con una conexión a PostgreSQL de pruebas y permisos para crear esquemas, y ejecutar:
+
+```bash
+dotnet build src/POSCartService/POSCartService.csproj -p:MSBuildProjectExtensionsPath=./obj/
+dotnet test tests/GlobalMart.IntegrationTests/GlobalMart.IntegrationTests.csproj --filter 'Plan=S2-007' -p:MSBuildProjectExtensionsPath=./obj/
+```
+
+La verificación local utilizó SDK y paquetes temporales en `/tmp`; para el proyecto de pruebas se indicó `-p:NuGetPackageRoot=/tmp/s2007-nuget/`, conservando el separador final requerido por su regla existente de copia de BCrypt. No se modificaron `.csproj` ni configuración compartida. La migración se aplicó solamente a PostgreSQL temporal; su aplicación al entorno del equipo está [NO VERIFICADO]. Persistir el evento al cobrar, publicar desde el outbox y ejecutar reintentos siguen [PLANIFICADO]; esta tarea por sí sola no elimina la ventana actual de pérdida de eventos.
 
 ## Fuentes y conexiones
 

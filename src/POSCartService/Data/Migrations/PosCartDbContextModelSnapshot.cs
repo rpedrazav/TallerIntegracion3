@@ -89,6 +89,80 @@ namespace POSCartService.Data.Migrations
                     b.ToTable("ItemsVenta");
                 });
 
+            modelBuilder.Entity("POSCartService.Models.OutboxMessage", b =>
+                {
+                    b.Property<Guid>("EventId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("AttemptCount")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("EventType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTime?>("LastAttemptAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("LastError")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<Guid?>("LeaseToken")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("LockedUntil")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("MessageKey")
+                        .IsRequired()
+                        .HasMaxLength(36)
+                        .HasColumnType("character varying(36)");
+
+                    b.Property<DateTime?>("NextAttemptAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Payload")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("PublishedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("SchemaVersion")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Topic")
+                        .IsRequired()
+                        .HasMaxLength(249)
+                        .HasColumnType("character varying(249)");
+
+                    b.Property<int>("TotalAttemptCount")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("VentaId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("EventId");
+
+                    b.HasIndex("TenantId", "Status", "NextAttemptAt");
+
+                    b.HasIndex("TenantId", "VentaId", "EventType")
+                        .IsUnique();
+
+                    b.ToTable("OutboxMessages");
+                });
+
             modelBuilder.Entity("POSCartService.Models.Pago", b =>
                 {
                     b.Property<Guid>("Id")

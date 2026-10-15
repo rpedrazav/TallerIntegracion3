@@ -27,10 +27,26 @@ public class PosCartDbContext : DbContext
     public DbSet<ItemVenta> ItemsVenta => Set<ItemVenta>();
     public DbSet<Pago> Pagos => Set<Pago>();
     public DbSet<Anulacion> Anulaciones => Set<Anulacion>();
+    public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        // S2-007: almacenamiento local del outbox; no publica ni modifica el cobro.
+        modelBuilder.Entity<OutboxMessage>(e =>
+        {
+            e.HasKey(m => m.EventId);
+            e.Property(m => m.EventId).ValueGeneratedNever();
+            e.Property(m => m.EventType).IsRequired().HasMaxLength(100);
+            e.Property(m => m.Topic).IsRequired().HasMaxLength(249);
+            e.Property(m => m.MessageKey).IsRequired().HasMaxLength(36);
+            e.Property(m => m.Payload).IsRequired().HasColumnType("text");
+            e.Property(m => m.LastError).HasMaxLength(2000);
+            e.HasIndex(m => new { m.TenantId, m.VentaId, m.EventType }).IsUnique();
+            e.HasIndex(m => new { m.TenantId, m.Status, m.NextAttemptAt });
+            e.HasQueryFilter(m => CurrentTenantId.HasValue && m.TenantId == CurrentTenantId);
+        });
 
         // ── Turno ───────────────────────────────────────────────────────────
         modelBuilder.Entity<Turno>(e =>
