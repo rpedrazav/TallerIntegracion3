@@ -181,6 +181,7 @@ public sealed class VentaTenantIsolationTests : IAsyncLifetime
         protected override void ConfigureWebHost(IWebHostBuilder builder)
         {
             builder.UseEnvironment("Testing");
+            builder.UseSetting("OutboxPublisher:Enabled", "false");
             builder.ConfigureTestServices(services =>
             {
                 services.RemoveAll<DbContextOptions<Pos.Data.PosCartDbContext>>();

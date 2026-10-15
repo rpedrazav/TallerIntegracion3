@@ -30,7 +30,7 @@ reglas: []
 | MS-2 Tax | ✅ 1 controller | ❌ No Kafka | ✅ ManualTest | **PARCIAL** |
 | MS-3 Catalog | ✅ 2 controllers | ❌ No Kafka | ✅ Manual .http + baja/PUT TI3-642 + 9 casos RN-01 S2-023 | **PARCIAL** |
 | MS-4 Warehouse | ✅ 1 controller | ✅ Consumer sale.completed | ❌ No tests | **PARCIAL** |
-| MS-5 POS | ✅ 2 controllers | ⚠️ Outbox sale.completed; worker pendiente | ✅ AgregarItemTest + CobroCuadreTest + S2-008 + 10 HTTP y 13 directos RN-01 S2-023 | **PARCIAL** |
+| MS-5 POS | ✅ 2 controllers | ✅ OutboxPublisherWorker sale.completed | ✅ AgregarItemTest + CobroCuadreTest + S2-008/S2-009 + 10 HTTP y 13 directos RN-01 S2-023 | **PARCIAL** |
 | MS-6 SupplyChain | ❌ Sin controllers | ❌ Sin Kafka | ❌ Sin tests | **PLANIFICADO** |
 | MS-7 Analytics | ❌ Sin controllers | ❌ Sin consumers | ❌ Sin tests | **PLANIFICADO** |
 | MS-8 Loyalty | ❌ Sin controllers | ⚠️ Registrado en DI sin consumer loop | ❌ Sin tests | **PLANIFICADO** |
@@ -134,7 +134,7 @@ reglas: []
 - `GET /ventas/turno/{turnoId}` — ventas por turno [IMPLEMENTADO]
 - `POST /ventas/{id}/cobrar` — valida que la venta tenga método de pago EFECTIVO (rechaza TARJETA o MIXTO con 400 Bad Request según S2-004), valida `monto_recibido` ≥ total, y confirma venta, pago y `sale.completed` pendiente en una transacción [IMPLEMENTADO]
 - VentaService con métodos `CompletarAsync` y `AnularAsync` [IMPLEMENTADO en service]
-- KafkaProducerService — adaptador disponible; la invocación automática desde outbox sigue [PLANIFICADA]
+- OutboxPublisherWorker y KafkaProducerService — publicación automática con lease, reintento y cancelación limpia [IMPLEMENTADO]
 - test de integración abre turno con JWT de cajero y verifica persistencia en estado `ABIERTO` [IMPLEMENTADO]
 - tests de integración en `VentaIntegrationTests` validan creación de venta con resolución autoritativa en MS-3 e IVA en MS-2, agregado de ítems, y rechazo de productos inexistentes (404) e inactivos (400) sin persistir venta ni ítems [IMPLEMENTADO]
 - 7 tests unitarios en `CrearVentaRequestValidatorTests` validan el contrato S2-001 (venta unitaria sin precio, venta a peso con balanza, venta mixta y rechazo de precios/pesos negativos) [IMPLEMENTADO]
@@ -241,4 +241,8 @@ Refuerzo posterior [IMPLEMENTADO]: `VentaRepository.ActualizarAsync` y `ItemVent
 
 ## S2-008 — Persistencia atómica de venta y evento
 
-[IMPLEMENTADO] El cobro efectivo genera un `EventId` estable y payload `schema_version = 1`; `VentaRepository.CompletarConOutboxAsync` guarda venta `COMPLETADA`, `Pago` y outbox `PENDIENTE` en una sola transacción PostgreSQL. Prueba enfocada **2/2 aprobada** el 2026-10-15 contra PostgreSQL 16.4 temporal, incluido rollback de estado y pago al fallar el outbox. La publicación y los reintentos quedan [PLANIFICADOS]. [Diseño y evidencia](eventos/sale-completed-outbox.md).
+[IMPLEMENTADO] El cobro efectivo genera un `EventId` estable y payload `schema_version = 1`; `VentaRepository.CompletarConOutboxAsync` guarda venta `COMPLETADA`, `Pago` y outbox `PENDIENTE` en una sola transacción PostgreSQL. Prueba enfocada **2/2 aprobada** el 2026-10-15 contra PostgreSQL 16.4 temporal, incluido rollback de estado y pago al fallar el outbox. La publicación posterior se acredita en S2-009. [Diseño y evidencia](eventos/sale-completed-outbox.md).
+
+## S2-009 — Publicación de pendientes
+
+[IMPLEMENTADO] Worker hospedado con reserva atómica `FOR UPDATE SKIP LOCKED`, lease, logging estructurado, backoff exponencial con jitter, límite de 10 intentos y cancelación limpia. Publica el payload almacenado sin generar otro GUID; un fallo temporal vuelve a `PENDIENTE`. Prueba enfocada **2/2 aprobada** y regresión S2-008/cobro **6/6 aprobada** el 2026-10-15. [Diseño y evidencia](eventos/sale-completed-outbox.md).

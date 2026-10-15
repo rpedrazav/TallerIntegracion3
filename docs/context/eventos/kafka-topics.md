@@ -3,7 +3,7 @@ id: kafka-topics
 tipo: evento
 titulo: Kafka Topics — Diseño vs Implementación Real
 estado: parcial
-fuentes: [src/POSCartService/Services/KafkaProducerService.cs, src/POSCartService/Messaging/SaleCompletedEvent.cs, src/WarehouseInventoryService/Messaging/KafkaConsumerService.cs, Docker/docker-compose.yml, Docker/scripts/init-kafka-topics.sh]
+fuentes: [src/POSCartService/Services/KafkaProducerService.cs, src/POSCartService/Services/OutboxPublisherWorker.cs, src/POSCartService/Messaging/SaleCompletedEvent.cs, src/WarehouseInventoryService/Messaging/KafkaConsumerService.cs, Docker/docker-compose.yml, Docker/scripts/init-kafka-topics.sh]
 verificado_contra_codigo: true
 ultima_revision: 2026-10-15
 depende_de: [ms5-pos, ms4-inventory]
@@ -15,7 +15,7 @@ reglas: [RN-04, RF-09]
 ---
 # Kafka Topics — Diseño vs Implementación Real
 
-> Contraste entre los topics diseñados en el ContextMaster y lo que realmente existe en el código. **Estado:** MS-4 consume `sale.completed`; MS-5 conserva el adaptador productor y persiste eventos pendientes, pero el worker que los publica aún no está implementado.
+> Contraste entre los topics diseñados en el ContextMaster y lo que realmente existe en el código. **Estado:** MS-5 publica `sale.completed` desde outbox y MS-4 lo consume.
 
 ## Topics aprovisionados (docker-compose init)
 
@@ -36,7 +36,7 @@ product.expiring_soon   purchase_order.received
 
 | Topic | Productor real | Consumidor real | Estado |
 |-------|---------------|-----------------|--------|
-| `sale.completed` | ⚠️ MS-5 guarda outbox; worker pendiente | ✅ MS-4 KafkaConsumerService | [PARCIAL] |
+| `sale.completed` | ✅ MS-5 OutboxPublisherWorker | ✅ MS-4 KafkaConsumerService | [IMPLEMENTADO] |
 | `stock.alert` | ❌ NINGUNO | ❌ NINGUNO | [PLANIFICADO] |
 | `expiry.alert` | ❌ NINGUNO | ❌ NINGUNO | [PLANIFICADO] |
 | `sale.reversed` | ❌ NINGUNO | ❌ NINGUNO | [PLANIFICADO] |
@@ -120,12 +120,12 @@ await _ventaRepository.CompletarConOutboxAsync(venta.Id, pago, outboxMessage);
 
 ## Cobertura de integración
 
-La persistencia de `sale.completed` está cubierta con PostgreSQL real: el cobro deja venta, pago y outbox pendiente en un solo commit, y un fallo al insertar el outbox revierte los tres cambios. La entrega automática al broker queda [PLANIFICADA] hasta incorporar el worker.
+La persistencia y publicación de `sale.completed` están cubiertas con PostgreSQL real y un productor controlado: el cobro deja venta, pago y outbox pendiente en un solo commit; el worker conserva identidad y payload entre intentos, reprograma un fallo transitorio y marca `PUBLICADO` tras el éxito.
 
 El consumo de `sale.completed` por MS-4 también está cubierto mediante un test de integración que publica un evento real, espera el procesamiento asíncrono y verifica el descuento de stock a través de la API de inventario.
 
 ## Conexiones
-- Produce → [[ms5-pos]] [PARCIAL — outbox implementado, worker pendiente]
+- Produce → [[ms5-pos]] [IMPLEMENTADO]
 - Consume → [[ms4-inventory]] [IMPLEMENTADO]
 - Arquitectura: [[arquitectura]]
 - Decisión de Kafka: [[001-kafka-vs-rabbitmq]]

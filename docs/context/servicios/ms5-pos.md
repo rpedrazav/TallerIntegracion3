@@ -13,7 +13,7 @@ reglas: [RN-01, RN-02, RN-03, RN-06, RF-02, RF-03, RF-04, RF-05, RF-06, RF-07]
 ---
 # MS-5 · POS & Cart Service
 
-> Servicio central del punto de venta. Gestiona turnos de caja y el ciclo completo de una venta (carrito, ítems, cobro, anulación). Integrado con MS-2 (IVA) y MS-3 (productos). Persiste `sale.completed` en outbox; falta el worker de publicación, la pasarela de pago y el hardware.
+> Servicio central del punto de venta. Gestiona turnos de caja y el ciclo completo de una venta (carrito, ítems, cobro, anulación). Integrado con MS-2 (IVA) y MS-3 (productos). Persiste y publica `sale.completed` mediante outbox; falta la pasarela de pago y el hardware.
 
 ## Contrato Oficial de Creación de Venta (POST /ventas) — S2-001 / S2-002 / S2-003
 
@@ -85,7 +85,7 @@ reglas: [RN-01, RN-02, RN-03, RN-06, RF-02, RF-03, RF-04, RF-05, RF-06, RF-07]
    → VentaService.CompletarAsync: estado → COMPLETADA + crea Pago { Metodo=EFECTIVO, Monto=monto_recibido, Vuelto=vuelto }
    → VentaRepository.CompletarConOutboxAsync persiste estado, Pago y OutboxMessage PENDIENTE en una transacción
    → Retorna venta completada + monto_recibido + vuelto
-   → ⚠️ El worker que publicará el mismo event_id en Kafka sigue pendiente
+   → OutboxPublisherWorker publica el payload persistido y conserva event_id entre reintentos
    → ❌ NO integra pasarela de pago externa
 
 5. POST /ventas/{id}/anular  { motivo }
@@ -155,7 +155,7 @@ TenantMiddleware inyecta `CurrentTenantId` en `PosCartDbContext`.
 
 `VentaRepository.ActualizarAsync` e `ItemVentaRepository.ActualizarAsync`/`EliminarAsync` conservan los filtros globales y exigen además `CurrentTenantId` presente y coincidencia explícita con el tenant almacenado (para ítems, mediante `Venta.TenantId`). La pertenencia no se obtiene del objeto recibido ni de la identidad ya rastreada. Las actualizaciones de venta/ítem ajeno o sin tenant lanzan `KeyNotFoundException`; eliminar un ítem no visible es una operación sin efecto, sin guardar cambios.
 
-## Outbox de sale.completed [PARCIAL]
+## Outbox de sale.completed [IMPLEMENTADO]
 
 Al completar una venta, `VentaService.CompletarAsync` genera una sola identidad estable, un payload `schema_version = 1` y un registro `PENDIENTE`. `VentaRepository.CompletarConOutboxAsync` vuelve a consultar la venta con el tenant vigente y guarda el cambio a `COMPLETADA`, el pago y el outbox mediante un único `SaveChangesAsync` dentro de una transacción PostgreSQL explícita. Si falla cualquier escritura, se revierte todo.
 
@@ -172,7 +172,7 @@ var evento = new SaleCompletedEvent
 await _ventaRepository.CompletarConOutboxAsync(venta.Id, pago, outboxMessage);
 ```
 
-`KafkaProducerService` permanece como adaptador registrado, pero el cobro ya no lo invoca directamente. La reserva, publicación y política de reintentos documentada en [[sale-completed-outbox]] siguen [PLANIFICADAS].
+`KafkaProducerService` permanece como adaptador registrado, pero el cobro no lo invoca directamente. `OutboxPublisherWorker` reserva filas elegibles con lease, publica el JSON persistido y marca `PUBLICADO`; ante un fallo conserva la fila y programa el siguiente intento según [[sale-completed-outbox]].
 
 ## Tests de integración
 
@@ -181,6 +181,7 @@ await _ventaRepository.CompletarConOutboxAsync(venta.Id, pago, outboxMessage);
 - `CobroIntegrationTests`: cobra una venta en efectivo con un monto superior al total y verifica vuelto, pago, estado `COMPLETADA` y outbox pendiente.
 - `KafkaPublishIntegrationTests`: verifica mediante HTTP que el cobro conserva en outbox el payload `sale.completed` versión 1.
 - `VentaOutboxTransactionTests` (S2-008): verifica el commit conjunto y el rollback cuando falla la inserción del outbox sobre PostgreSQL real.
+- `OutboxPublisherWorkerTests` (S2-009): verifica reintento con identidad y payload estables, marcado de publicado y cancelación limpia.
 - `CierreTurnoIntegrationTests`: prepara una venta completada en efectivo y verifica el cuadre, el efectivo esperado, el monto declarado y la diferencia.
 - Los flujos de venta y cobro usan handlers HTTP en memoria para devolver respuestas deterministas de `CatalogClient` (MS-3) y `TaxClient` (MS-2), sin levantar esos microservicios.
 
@@ -212,7 +213,7 @@ await _ventaRepository.CompletarConOutboxAsync(venta.Id, pago, outboxMessage);
 | PC-21 | Devolución Parcial | [PLANIFICADO] |
 | PC-22 | Poner Venta en Espera (Hold) | [PLANIFICADO] |
 | PC-23 | Recuperar Venta de Espera | [PLANIFICADO] |
-| PC-24 | Publicar sale.completed | [PARCIAL — persistencia outbox implementada; worker pendiente] |
+| PC-24 | Publicar sale.completed | [IMPLEMENTADO — outbox, worker y reintentos automáticos] |
 | PC-25 | Publicar sale.reversed | [PLANIFICADO] |
 | PC-26 | Leer Tarjeta en Terminal (NFC/chip/mag) | [PLANIFICADO] |
 | PC-27 | Enviar Solicitud a Pasarela | [PLANIFICADO] |
@@ -229,7 +230,7 @@ await _ventaRepository.CompletarConOutboxAsync(venta.Id, pago, outboxMessage);
 
 ## Conexiones
 - Depende de: [[ms2-tax]] (TaxClient), [[ms3-catalog]] (CatalogClient), [[ms1-identity]] (JWT)
-- Publica: `sale.completed` → [[ms4-inventory]], [[ms7-analytics]], [[ms8-loyalty]] [PARCIAL — outbox implementado, worker pendiente]
+- Publica: `sale.completed` → [[ms4-inventory]], [[ms7-analytics]], [[ms8-loyalty]] [IMPLEMENTADO]
 - Reglas: [[reglas-negocio]] (RN-02, RN-06), [[multi-tenant]]
 - Kafka: [[kafka-topics]]
 
@@ -264,4 +265,8 @@ Defensa adicional en [PosRepositoryTenantIsolationTests.cs](../../../tests/Globa
 
 ## S2-008 — Persistencia atómica de venta y evento
 
-[IMPLEMENTADO] `VentaRepository.CompletarConOutboxAsync` confirma estado, pago y outbox en una transacción explícita, con validación del tenant actual y coherencia del evento. `VentaOutboxTransactionTests` aprobó **2/2** casos sobre PostgreSQL 16.4 temporal: persistencia conjunta y rollback completo ante conflicto del outbox. La publicación y los reintentos siguen [PLANIFICADOS].
+[IMPLEMENTADO] `VentaRepository.CompletarConOutboxAsync` confirma estado, pago y outbox en una transacción explícita, con validación del tenant actual y coherencia del evento. `VentaOutboxTransactionTests` aprobó **2/2** casos sobre PostgreSQL 16.4 temporal: persistencia conjunta y rollback completo ante conflicto del outbox. La publicación posterior se acredita en S2-009.
+
+## S2-009 — Worker de publicación de outbox
+
+[IMPLEMENTADO] `OutboxPublisherWorker` procesa lotes con cancelación del host; `OutboxRepository` usa reservas PostgreSQL `FOR UPDATE SKIP LOCKED`, lease y actualización condicional por tenant/evento/token. Un fallo transitorio vuelve a `PENDIENTE` con backoff exponencial y jitter; el éxito marca `PUBLICADO` sin reconstruir el evento. Pruebas enfocadas **2/2 aprobadas** y regresión de cobro/outbox **6/6 aprobada** el 2026-10-15. [Diseño y evidencia](../eventos/sale-completed-outbox.md).

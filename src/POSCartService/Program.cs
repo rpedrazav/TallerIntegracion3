@@ -20,8 +20,14 @@ builder.Services.AddDbContext<PosCartDbContext>(options =>
 builder.Services.AddScoped<ITurnoRepository, TurnoRepository>();
 builder.Services.AddScoped<IVentaRepository, VentaRepository>();
 builder.Services.AddScoped<IItemVentaRepository, ItemVentaRepository>();
+builder.Services.AddScoped<IOutboxRepository, OutboxRepository>();
 builder.Services.AddScoped<ITurnoService, TurnoService>();
 builder.Services.AddScoped<IVentaService, VentaService>();
+builder.Services.AddScoped<IOutboxPublisherService, OutboxPublisherService>();
+builder.Services.Configure<OutboxPublisherOptions>(
+    builder.Configuration.GetSection("OutboxPublisher"));
+builder.Services.AddSingleton(TimeProvider.System);
+builder.Services.AddHostedService<OutboxPublisherWorker>();
 
 // â”€â”€â”€ Kafka Producer â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // IProducer<string,string> se registra como Singleton para reutilizar la
@@ -35,7 +41,8 @@ builder.Services.AddSingleton<IProducer<string, string>>(sp =>
         BootstrapServers      = config["Kafka:BootstrapServers"] ?? "localhost:9092",
         Acks                  = Acks.Leader,
         MessageSendMaxRetries = 3,
-        RetryBackoffMs        = 500
+        RetryBackoffMs        = 500,
+        MessageTimeoutMs      = config.GetValue<int>("Kafka:MessageTimeoutMs", 30000)
     };
     return new ProducerBuilder<string, string>(producerConfig).Build();
 });

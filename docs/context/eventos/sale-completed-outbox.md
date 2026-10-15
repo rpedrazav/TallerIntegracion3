@@ -3,7 +3,7 @@ id: sale-completed-outbox
 tipo: decision
 titulo: "S2-006 — Contrato de sale.completed, outbox y reintentos"
 estado: parcial
-fuentes: [src/POSCartService/Messaging/SaleCompletedEvent.cs, src/POSCartService/Services/VentaService.cs, src/POSCartService/Services/KafkaProducerService.cs, src/POSCartService/Repositories/VentaRepository.cs, src/WarehouseInventoryService/Messaging/KafkaConsumerService.cs, tareas/sprint2_youtrack_resultado.json]
+fuentes: [src/POSCartService/Messaging/SaleCompletedEvent.cs, src/POSCartService/Services/VentaService.cs, src/POSCartService/Services/OutboxPublisherWorker.cs, src/POSCartService/Repositories/OutboxRepository.cs, src/POSCartService/Services/KafkaProducerService.cs, src/POSCartService/Repositories/VentaRepository.cs, src/WarehouseInventoryService/Messaging/KafkaConsumerService.cs, tareas/sprint2_youtrack_resultado.json]
 verificado_contra_codigo: true
 ultima_revision: 2026-10-15
 depende_de: [ms5-pos, kafka-topics]
@@ -16,19 +16,19 @@ reglas: [RN-01, RN-02, RN-06, RN-07]
 **Plan:** S2-006 · **YouTrack:** TI3-637 · **Prioridad:** Must · **Dificultad:** Baja.  
 **Meta:** Carrito y venta funcional.  
 **Decisión:** diseño aprobado por el responsable de la tarea en esta conversación el 2026-10-14.  
-**Entrega S2-006:** diseño de outbox y política de reintentos documentados. **Implementación: [PARCIAL]** — S2-007 incorpora entidad y migración; S2-008 integra el cobro atómico; publicador y reintentos pendientes.
+**Entrega S2-006:** diseño de outbox y política de reintentos documentados. **Implementación: [PARCIAL]** — S2-007 incorpora entidad y migración; S2-008 integra el cobro atómico; S2-009 implementa publicación y reintentos automáticos. El reproceso operativo manual sigue pendiente.
 
-Este documento define el comportamiento objetivo y registra la implementación comprobada de S2-007 y S2-008. El flujo completo sigue parcial hasta incorporar el worker de publicación y los reintentos.
+Este documento define el comportamiento objetivo y registra la implementación comprobada de S2-007, S2-008 y S2-009.
 
 ## Evidencia actual y discrepancia resuelta en el diseño
 
 - `VentaService.CompletarAsync` prepara un único `EventId`, el payload versión 1 y la fila outbox antes de delegar el commit atómico al repositorio.
 - `VentaRepository.CompletarConOutboxAsync` guarda estado `COMPLETADA`, `Pago` y `OutboxMessage` `PENDIENTE` en una transacción PostgreSQL explícita.
 - El JSON persistido usa nombres `snake_case`; `event_id` coincide con la PK del outbox y `schema_version` vale 1.
-- `KafkaProducerService.PublicarAsync` captura `ProduceException` sin relanzarla; su llamador puede registrar publicación aunque haya fallado. Un publicador de outbox necesitará un resultado inequívoco de éxito o error.
+- `KafkaProducerService.PublicarAsync` registra y relanza `ProduceException`; el worker solo marca `PUBLICADO` cuando la llamada finaliza correctamente.
 - MS-4 deduplica por `EventId`, con fallback a `VentaId`, pero guarda descuentos antes del marcador y confirma offsets incluso ante errores. No se acredita procesamiento exactamente una vez.
 
-La discrepancia entre «GUID nuevo por publicación» y la aceptación de S2-006 fue resuelta: **la identidad pertenece al evento lógico, no al intento de transporte**. S2-008 ya persiste esa identidad; el worker futuro deberá reenviar el mismo payload.
+La discrepancia entre «GUID nuevo por publicación» y la aceptación de S2-006 fue resuelta: **la identidad pertenece al evento lógico, no al intento de transporte**. S2-008 persiste esa identidad y S2-009 reenvía el mismo payload.
 
 ## Contrato de `sale.completed` versión 1 [IMPLEMENTADO EN OUTBOX]
 
@@ -56,7 +56,7 @@ La versión 1 conserva nombres y significados existentes. La ausencia de `schema
 
 ## Outbox local a MS-5 [PARCIAL]
 
-La tabla `OutboxMessages` y la entidad `OutboxMessage` están incorporadas en MS-5 mediante S2-007. Residen en su base PostgreSQL. S2-008 integra su escritura en la misma transacción que `Venta` y `Pago` [IMPLEMENTADO]. La reserva, publicación y transición posterior de estados siguen [PLANIFICADO].
+La tabla `OutboxMessages` y la entidad `OutboxMessage` están incorporadas en MS-5 mediante S2-007. Residen en su base PostgreSQL. S2-008 integra su escritura en la misma transacción que `Venta` y `Pago`; S2-009 implementa reserva, publicación y transición automática de estados [IMPLEMENTADO].
 
 | Dato propuesto | Propósito |
 |---|---|
@@ -80,9 +80,9 @@ Flujo requerido:
 4. Un publicador en segundo plano reserva un registro elegible, confirma la reserva y envía el JSON almacenado. No mantiene abierta la transacción de negocio durante la llamada a Kafka.
 5. Solo tras confirmación satisfactoria del broker marca el registro `PUBLICADO`. Si la publicación falla o su resultado es incierto, aplica la política de reintentos.
 
-**RN-01:** las lecturas y mutaciones de registros se ejecutan con un tenant explícito; las actualizaciones incluyen `TenantId` y `EventId`. El worker debe establecer un contexto de tenant confiable antes de consultar su lote; no usa un tenant recibido de un request arbitrario ni deshabilita filtros globales. El mecanismo de enumeración autorizada de tenants debe concretarse en la tarea del worker. No se autoriza mediante este diseño un endpoint público de reproceso.
+**RN-01:** las lecturas y mutaciones de registros se ejecutan con un tenant explícito; las actualizaciones incluyen `TenantId` y `EventId`. El worker enumera internamente únicamente los IDs con trabajo desde la base local de MS-5 y establece ese `CurrentTenantId` antes de consultar o mutar su lote. No usa un tenant recibido de un request arbitrario ni deshabilita filtros globales para procesar filas. No se autoriza mediante este diseño un endpoint público de reproceso.
 
-## Estados y recuperación [PLANIFICADO]
+## Estados y recuperación [IMPLEMENTADO PARA EL CICLO AUTOMÁTICO]
 
 | Origen | Condición | Destino y acción |
 |---|---|---|
@@ -98,7 +98,7 @@ Flujo requerido:
 
 La reserva debe ser atómica y su duración configurable, superior al timeout de publicación o renovada mientras se publica. Toda finalización compara `TenantId`, `EventId`, estado y `LeaseToken`; un worker con reserva vencida no puede sobrescribir el resultado del nuevo propietario. La recuperación no incrementa contadores por sí sola; el siguiente intento reservado sí los incrementa. Una interrupción después de reservar consume conservadoramente un intento aunque no pueda saberse si llegó a enviarse.
 
-## Política de reintentos aprobada [PLANIFICADO]
+## Política de reintentos aprobada [IMPLEMENTADO PARA EL CICLO AUTOMÁTICO]
 
 - **Límite configurable:** 10 intentos totales por ciclo, incluidos el inicial y hasta 9 reintentos. Un intento de outbox es una llamada de publicación con resultado o timeout; los reintentos internos del cliente Kafka no son nuevas filas ni nuevos eventos.
 - **Primer intento:** inmediato una vez visible el commit y disponible el worker.
@@ -119,7 +119,7 @@ Para que esos duplicados no descuenten stock dos veces, MS-4 necesita deduplicac
 
 ## Escenarios verificables de aceptación
 
-Son criterios del flujo completo definido en S2-006. La sección S2-007 acredita únicamente los casos de persistencia indicados allí; **ejecución de escenarios de cobro, publicación, reintentos y consumo: [NO VERIFICADO]**.
+Son criterios del flujo completo definido en S2-006. S2-008 acredita el commit y rollback del cobro; S2-009 acredita fallo transitorio, identidad estable y cancelación. Los escenarios restantes conservan su estado [NO VERIFICADO].
 
 | Escenario | Resultado esperado y evidencia requerida |
 |---|---|
@@ -164,13 +164,21 @@ dotnet build src/POSCartService/POSCartService.csproj -p:MSBuildProjectExtension
 dotnet test tests/GlobalMart.IntegrationTests/GlobalMart.IntegrationTests.csproj --filter 'Plan=S2-007' -p:MSBuildProjectExtensionsPath=./obj/
 ```
 
-La verificación local utilizó SDK y paquetes temporales en `/tmp`; para el proyecto de pruebas se indicó `-p:NuGetPackageRoot=/tmp/s2007-nuget/`, conservando el separador final requerido por su regla existente de copia de BCrypt. No se modificaron `.csproj` ni configuración compartida. La migración se aplicó solamente a PostgreSQL temporal; su aplicación al entorno del equipo está [NO VERIFICADO]. Publicar desde el outbox y ejecutar reintentos siguen [PLANIFICADO].
+La verificación local utilizó SDK y paquetes temporales en `/tmp`; para el proyecto de pruebas se indicó `-p:NuGetPackageRoot=/tmp/s2007-nuget/`, conservando el separador final requerido por su regla existente de copia de BCrypt. No se modificaron `.csproj` ni configuración compartida. La migración se aplicó solamente a PostgreSQL temporal; su aplicación al entorno del equipo está [NO VERIFICADO]. La publicación posterior fue incorporada en S2-009.
 
 ## S2-008 / TI3-639 — Cobro y evento atómicos [IMPLEMENTADO]
 
 `VentaService.CompletarAsync` crea una sola identidad y un solo snapshot versión 1. `VentaRepository.CompletarConOutboxAsync` vuelve a cargar la venta dentro del tenant actual y confirma `Venta.Estado = COMPLETADA`, el `Pago` y el `OutboxMessage` `PENDIENTE` mediante un único `SaveChangesAsync` y una transacción explícita. La respuesta de cobro ocurre después del commit. Ya no se intenta publicar directamente en Kafka durante la solicitud HTTP.
 
-La prueba [VentaOutboxTransactionTests](../../../tests/GlobalMart.IntegrationTests/VentaOutboxTransactionTests.cs) ejecuta migraciones reales en PostgreSQL 16.4 temporal. Verifica **2/2 casos**: persistencia conjunta con igualdad entre `OutboxMessage.EventId` y `payload.event_id`, y rollback de estado y pago cuando la restricción única impide insertar el outbox. [Evidencia TRX](../../qa/S2-008/S2-008.trx). El publicador en segundo plano y los reintentos continúan [PLANIFICADO].
+La prueba [VentaOutboxTransactionTests](../../../tests/GlobalMart.IntegrationTests/VentaOutboxTransactionTests.cs) ejecuta migraciones reales en PostgreSQL 16.4 temporal. Verifica **2/2 casos**: persistencia conjunta con igualdad entre `OutboxMessage.EventId` y `payload.event_id`, y rollback de estado y pago cuando la restricción única impide insertar el outbox. [Evidencia TRX](../../qa/S2-008/S2-008.trx). El publicador posterior se acredita en S2-009.
+
+## S2-009 / TI3-640 — Publicador de pendientes [IMPLEMENTADO]
+
+`OutboxPublisherWorker` es un `BackgroundService` que crea un scope por ciclo y propaga el token de apagado. `OutboxPublisherService` envía directamente `Topic`, `MessageKey` y `Payload` almacenados; no deserializa el evento ni genera otro GUID. `OutboxRepository` reserva cada fila con `FOR UPDATE SKIP LOCKED`, estado `EN_PROCESO`, `LeaseToken` y vencimiento. La finalización compara tenant, evento, estado y lease para impedir que una reserva obsoleta sobrescriba al propietario vigente.
+
+El worker enumera internamente solo los identificadores de tenant con trabajo en la base local de MS-5. Antes de consultar, reservar o actualizar una fila establece `CurrentTenantId`; esas operaciones conservan el filtro global RN-01. Un fallo vuelve la fila a `PENDIENTE`, conserva identidad y payload, y persiste backoff exponencial con jitter. El décimo fallo pasa a `FALLIDO`. Una cancelación durante el envío deja vencer el lease para tratar el resultado como incierto.
+
+[OutboxPublisherWorkerTests](../../../tests/GlobalMart.IntegrationTests/OutboxPublisherWorkerTests.cs) aprobó **2/2 casos** sobre PostgreSQL 16.4 temporal: fallo transitorio seguido de publicación con el mismo `EventId`/payload y cancelación limpia del servicio hospedado. [Evidencia TRX](../../qa/S2-009/S2-009.trx). La regresión de S2-008 y cobro aprobó **6/6 casos**. El reproceso manual de filas `FALLIDO` continúa [PLANIFICADO].
 
 ## Fuentes y conexiones
 

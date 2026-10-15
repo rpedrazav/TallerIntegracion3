@@ -10,7 +10,6 @@ public enum OutboxStatus
 
 /// <summary>
 /// Snapshot durable de un evento de MS-5. Los reintentos reutilizan EventId y Payload.
-/// La integración con el cobro y el publicador se implementan en tareas posteriores.
 /// </summary>
 public class OutboxMessage
 {

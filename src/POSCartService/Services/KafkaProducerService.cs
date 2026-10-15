@@ -59,8 +59,7 @@ public sealed class KafkaProducerService : IKafkaProducerService
                 ex,
                 "Kafka: error publicando en topic={Topic} key={Key}: {Reason}",
                 topico, clave, ex.Error.Reason);
-            // Se conserva el comportamiento del adaptador existente. El worker de outbox
-            // deberá usar un resultado de publicación inequívoco antes de marcar PUBLICADO.
+            throw;
         }
     }
 

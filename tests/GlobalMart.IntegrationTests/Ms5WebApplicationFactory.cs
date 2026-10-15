@@ -10,5 +10,6 @@ public class Ms5WebApplicationFactory : WebApplicationFactory<POSCartServiceAlia
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Development");
+        builder.UseSetting("OutboxPublisher:Enabled", "false");
     }
 }
