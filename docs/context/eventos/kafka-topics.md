@@ -3,7 +3,7 @@ id: kafka-topics
 tipo: evento
 titulo: Kafka Topics — Diseño vs Implementación Real
 estado: parcial
-fuentes: [src/POSCartService/Services/KafkaProducerService.cs, src/POSCartService/Services/OutboxPublisherWorker.cs, src/POSCartService/Messaging/SaleCompletedEvent.cs, src/WarehouseInventoryService/Messaging/KafkaConsumerService.cs, Docker/docker-compose.yml, Docker/scripts/init-kafka-topics.sh]
+fuentes: [src/POSCartService/Services/KafkaProducerService.cs, src/POSCartService/Services/OutboxPublisherWorker.cs, src/POSCartService/Messaging/SaleCompletedEvent.cs, src/WarehouseInventoryService/Messaging/KafkaConsumerService.cs, tests/GlobalMart.IntegrationTests/OutboxBrokerRecoveryIntegrationTests.cs, Docker/docker-compose.yml, Docker/scripts/init-kafka-topics.sh]
 verificado_contra_codigo: true
 ultima_revision: 2026-10-15
 depende_de: [ms5-pos, ms4-inventory]
@@ -120,7 +120,7 @@ await _ventaRepository.CompletarConOutboxAsync(venta.Id, pago, outboxMessage);
 
 ## Cobertura de integración
 
-La persistencia y publicación de `sale.completed` están cubiertas con PostgreSQL real y un productor controlado: el cobro deja venta, pago y outbox pendiente en un solo commit; el worker conserva identidad y payload entre intentos, reprograma un fallo transitorio y marca `PUBLICADO` tras el éxito.
+La persistencia y publicación de `sale.completed` están cubiertas con PostgreSQL real y un productor controlado: el cobro deja venta, pago y outbox pendiente en un solo commit; el worker conserva identidad y payload entre intentos, reprograma un fallo transitorio y marca `PUBLICADO` tras el éxito. S2-010 agrega el escenario completo de indisponibilidad y recuperación del productor, con una única entrega lógica del JSON persistido. La caída de un proceso Kafka real permanece [NO VERIFICADO].
 
 El consumo de `sale.completed` por MS-4 también está cubierto mediante un test de integración que publica un evento real, espera el procesamiento asíncrono y verifica el descuento de stock a través de la API de inventario.
 
@@ -136,3 +136,4 @@ El consumo de `sale.completed` por MS-4 también está cubierto mediante un test
 - `Docker/docker-compose.yml` (kafka-init-topics)
 - `Docker/scripts/init-kafka-topics.sh`
 - `tests/GlobalMart.IntegrationTests/KafkaPublishIntegrationTests.cs`
+- `tests/GlobalMart.IntegrationTests/OutboxBrokerRecoveryIntegrationTests.cs`

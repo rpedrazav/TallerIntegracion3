@@ -182,6 +182,7 @@ await _ventaRepository.CompletarConOutboxAsync(venta.Id, pago, outboxMessage);
 - `KafkaPublishIntegrationTests`: verifica mediante HTTP que el cobro conserva en outbox el payload `sale.completed` versión 1.
 - `VentaOutboxTransactionTests` (S2-008): verifica el commit conjunto y el rollback cuando falla la inserción del outbox sobre PostgreSQL real.
 - `OutboxPublisherWorkerTests` (S2-009): verifica reintento con identidad y payload estables, marcado de publicado y cancelación limpia.
+- `OutboxBrokerRecoveryIntegrationTests` (S2-010): cobra con el productor simulado como indisponible, verifica venta/pago/outbox conservados y, al recuperarlo, una única entrega lógica del payload persistido.
 - `CierreTurnoIntegrationTests`: prepara una venta completada en efectivo y verifica el cuadre, el efectivo esperado, el monto declarado y la diferencia.
 - Los flujos de venta y cobro usan handlers HTTP en memoria para devolver respuestas deterministas de `CatalogClient` (MS-3) y `TaxClient` (MS-2), sin levantar esos microservicios.
 
@@ -270,3 +271,7 @@ Defensa adicional en [PosRepositoryTenantIsolationTests.cs](../../../tests/Globa
 ## S2-009 — Worker de publicación de outbox
 
 [IMPLEMENTADO] `OutboxPublisherWorker` procesa lotes con cancelación del host; `OutboxRepository` usa reservas PostgreSQL `FOR UPDATE SKIP LOCKED`, lease y actualización condicional por tenant/evento/token. Un fallo transitorio vuelve a `PENDIENTE` con backoff exponencial y jitter; el éxito marca `PUBLICADO` sin reconstruir el evento. Pruebas enfocadas **2/2 aprobadas** y regresión de cobro/outbox **6/6 aprobada** el 2026-10-15. [Diseño y evidencia](../eventos/sale-completed-outbox.md).
+
+## S2-010 — Caída y recuperación del broker
+
+[IMPLEMENTADO] [OutboxBrokerRecoveryIntegrationTests](../../../tests/GlobalMart.IntegrationTests/OutboxBrokerRecoveryIntegrationTests.cs) recorre cobro, pago, outbox, fallo de publicación y recuperación con PostgreSQL real y un productor controlado en el límite Kafka. Comprueba una venta, un pago y un evento lógico; los dos intentos conservan topic, clave, JSON y `EventId`, mientras solo el intento posterior a la recuperación se entrega. Prueba enfocada **1/1 aprobada** y regresión S2-008/S2-009/S2-010 **5/5 aprobada** el 2026-10-15. [Evidencia TRX](../../qa/S2-010/S2-010.trx). La detención de un proceso Kafka real no forma parte de esta prueba determinista.

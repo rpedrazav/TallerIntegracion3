@@ -30,7 +30,7 @@ reglas: []
 | MS-2 Tax | ✅ 1 controller | ❌ No Kafka | ✅ ManualTest | **PARCIAL** |
 | MS-3 Catalog | ✅ 2 controllers | ❌ No Kafka | ✅ Manual .http + baja/PUT TI3-642 + 9 casos RN-01 S2-023 | **PARCIAL** |
 | MS-4 Warehouse | ✅ 1 controller | ✅ Consumer sale.completed | ❌ No tests | **PARCIAL** |
-| MS-5 POS | ✅ 2 controllers | ✅ OutboxPublisherWorker sale.completed | ✅ AgregarItemTest + CobroCuadreTest + S2-008/S2-009 + 10 HTTP y 13 directos RN-01 S2-023 | **PARCIAL** |
+| MS-5 POS | ✅ 2 controllers | ✅ OutboxPublisherWorker sale.completed | ✅ AgregarItemTest + CobroCuadreTest + S2-008/S2-009/S2-010 + 10 HTTP y 13 directos RN-01 S2-023 | **PARCIAL** |
 | MS-6 SupplyChain | ❌ Sin controllers | ❌ Sin Kafka | ❌ Sin tests | **PLANIFICADO** |
 | MS-7 Analytics | ❌ Sin controllers | ❌ Sin consumers | ❌ Sin tests | **PLANIFICADO** |
 | MS-8 Loyalty | ❌ Sin controllers | ⚠️ Registrado en DI sin consumer loop | ❌ Sin tests | **PLANIFICADO** |
@@ -246,3 +246,7 @@ Refuerzo posterior [IMPLEMENTADO]: `VentaRepository.ActualizarAsync` y `ItemVent
 ## S2-009 — Publicación de pendientes
 
 [IMPLEMENTADO] Worker hospedado con reserva atómica `FOR UPDATE SKIP LOCKED`, lease, logging estructurado, backoff exponencial con jitter, límite de 10 intentos y cancelación limpia. Publica el payload almacenado sin generar otro GUID; un fallo temporal vuelve a `PENDIENTE`. Prueba enfocada **2/2 aprobada** y regresión S2-008/cobro **6/6 aprobada** el 2026-10-15. [Diseño y evidencia](eventos/sale-completed-outbox.md).
+
+## S2-010 — Caída y recuperación del broker
+
+[IMPLEMENTADO] Prueba de integración sobre PostgreSQL 18.6 temporal y productor Kafka controlado: completa la venta y pago, simula indisponibilidad durante el primer intento, conserva una sola fila outbox `PENDIENTE` y, tras recuperar el productor, entrega una sola vez el payload persistido con el mismo `EventId`, clave, topic y versión. Prueba enfocada **1/1 aprobada** y regresión S2-008/S2-009/S2-010 **5/5 aprobada** el 2026-10-15. No acredita una caída de un proceso Kafka real. [Diseño y evidencia](eventos/sale-completed-outbox.md).

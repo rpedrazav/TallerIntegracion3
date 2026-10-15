@@ -3,7 +3,7 @@ id: sale-completed-outbox
 tipo: decision
 titulo: "S2-006 — Contrato de sale.completed, outbox y reintentos"
 estado: parcial
-fuentes: [src/POSCartService/Messaging/SaleCompletedEvent.cs, src/POSCartService/Services/VentaService.cs, src/POSCartService/Services/OutboxPublisherWorker.cs, src/POSCartService/Repositories/OutboxRepository.cs, src/POSCartService/Services/KafkaProducerService.cs, src/POSCartService/Repositories/VentaRepository.cs, src/WarehouseInventoryService/Messaging/KafkaConsumerService.cs, tareas/sprint2_youtrack_resultado.json]
+fuentes: [src/POSCartService/Messaging/SaleCompletedEvent.cs, src/POSCartService/Services/VentaService.cs, src/POSCartService/Services/OutboxPublisherWorker.cs, src/POSCartService/Repositories/OutboxRepository.cs, src/POSCartService/Services/KafkaProducerService.cs, src/POSCartService/Repositories/VentaRepository.cs, tests/GlobalMart.IntegrationTests/OutboxBrokerRecoveryIntegrationTests.cs, src/WarehouseInventoryService/Messaging/KafkaConsumerService.cs, tareas/sprint2_youtrack_resultado.json]
 verificado_contra_codigo: true
 ultima_revision: 2026-10-15
 depende_de: [ms5-pos, kafka-topics]
@@ -16,9 +16,9 @@ reglas: [RN-01, RN-02, RN-06, RN-07]
 **Plan:** S2-006 · **YouTrack:** TI3-637 · **Prioridad:** Must · **Dificultad:** Baja.  
 **Meta:** Carrito y venta funcional.  
 **Decisión:** diseño aprobado por el responsable de la tarea en esta conversación el 2026-10-14.  
-**Entrega S2-006:** diseño de outbox y política de reintentos documentados. **Implementación: [PARCIAL]** — S2-007 incorpora entidad y migración; S2-008 integra el cobro atómico; S2-009 implementa publicación y reintentos automáticos. El reproceso operativo manual sigue pendiente.
+**Entrega S2-006:** diseño de outbox y política de reintentos documentados. **Implementación: [PARCIAL]** — S2-007 incorpora entidad y migración; S2-008 integra el cobro atómico; S2-009 implementa publicación y reintentos automáticos; S2-010 verifica caída y recuperación mediante un productor controlado. El reproceso operativo manual sigue pendiente.
 
-Este documento define el comportamiento objetivo y registra la implementación comprobada de S2-007, S2-008 y S2-009.
+Este documento define el comportamiento objetivo y registra la implementación comprobada de S2-007, S2-008, S2-009 y S2-010.
 
 ## Evidencia actual y discrepancia resuelta en el diseño
 
@@ -119,11 +119,11 @@ Para que esos duplicados no descuenten stock dos veces, MS-4 necesita deduplicac
 
 ## Escenarios verificables de aceptación
 
-Son criterios del flujo completo definido en S2-006. S2-008 acredita el commit y rollback del cobro; S2-009 acredita fallo transitorio, identidad estable y cancelación. Los escenarios restantes conservan su estado [NO VERIFICADO].
+Son criterios del flujo completo definido en S2-006. S2-008 acredita el commit y rollback del cobro; S2-009 acredita fallo transitorio, identidad estable y cancelación; S2-010 integra cobro, caída simulada y recuperación sobre PostgreSQL real. Los escenarios restantes conservan su estado [NO VERIFICADO].
 
 | Escenario | Resultado esperado y evidencia requerida |
 |---|---|
-| Kafka falla en los primeros intentos y luego responde | Una fila outbox; capturas de todos los envíos con igual `event_id`, versión, JSON y clave; finalmente `PUBLICADO`. |
+| Kafka falla en los primeros intentos y luego responde | [IMPLEMENTADO S2-010 con productor controlado] Una fila outbox; todos los intentos conservan `event_id`, versión, JSON y clave; finalmente `PUBLICADO` y una única entrega exitosa. Caída de proceso Kafka real [NO VERIFICADO]. |
 | Reinicio entre intentos | Se recuperan el evento, contador y `NextAttemptAt` persistidos; el siguiente envío conserva ID y contenido. |
 | Kafka recibe, pero se pierde la confirmación | Se permite una nueva entrega con el mismo ID; nunca se fabrica un evento nuevo. |
 | Reinicio después del commit del cobro y antes de publicar | Venta y pago existen junto al outbox recuperable; el worker puede enviarlo sin repetir el cobro. |
@@ -179,6 +179,12 @@ La prueba [VentaOutboxTransactionTests](../../../tests/GlobalMart.IntegrationTes
 El worker enumera internamente solo los identificadores de tenant con trabajo en la base local de MS-5. Antes de consultar, reservar o actualizar una fila establece `CurrentTenantId`; esas operaciones conservan el filtro global RN-01. Un fallo vuelve la fila a `PENDIENTE`, conserva identidad y payload, y persiste backoff exponencial con jitter. El décimo fallo pasa a `FALLIDO`. Una cancelación durante el envío deja vencer el lease para tratar el resultado como incierto.
 
 [OutboxPublisherWorkerTests](../../../tests/GlobalMart.IntegrationTests/OutboxPublisherWorkerTests.cs) aprobó **2/2 casos** sobre PostgreSQL 16.4 temporal: fallo transitorio seguido de publicación con el mismo `EventId`/payload y cancelación limpia del servicio hospedado. [Evidencia TRX](../../qa/S2-009/S2-009.trx). La regresión de S2-008 y cobro aprobó **6/6 casos**. El reproceso manual de filas `FALLIDO` continúa [PLANIFICADO].
+
+## S2-010 / TI3-641 — Caída y recuperación del broker [IMPLEMENTADO]
+
+[OutboxBrokerRecoveryIntegrationTests](../../../tests/GlobalMart.IntegrationTests/OutboxBrokerRecoveryIntegrationTests.cs) completa una venta contra PostgreSQL real, intenta publicar mientras un productor controlado simula indisponibilidad y verifica que venta, pago, `EventId` y payload permanezcan intactos en una sola fila `PENDIENTE`. Tras recuperar el productor y alcanzar `NextAttemptAt`, el mismo publicador entrega exactamente el JSON almacenado, marca `PUBLICADO` y una ejecución adicional no vuelve a enviarlo.
+
+La prueba enfocada aprobó **1/1 caso** y la regresión conjunta S2-008/S2-009/S2-010 aprobó **5/5 casos** el 2026-10-15 sobre PostgreSQL 18.6 temporal. [Evidencia TRX](../../qa/S2-010/S2-010.trx). El doble intento conserva topic, clave y payload; solo el segundo se registra como entrega exitosa, por lo que existe una venta, un pago, una fila outbox y un `event_id` lógico. La prueba sustituye únicamente el límite externo de Kafka por un productor recuperable determinista; detener y reiniciar un broker Kafka real sigue [NO VERIFICADO].
 
 ## Fuentes y conexiones
 
