@@ -5,7 +5,7 @@ titulo: Requerimientos Funcionales (MoSCoW) — GlobalMart OS
 estado: parcial
 fuentes: [GlobalMart_ContextMaster.md#sec8, src/]
 verificado_contra_codigo: true
-ultima_revision: 2026-09-28
+ultima_revision: 2026-10-16
 depende_de: [vision, reglas-negocio]
 publica: []
 consume: []
@@ -25,7 +25,7 @@ reglas: []
 | RF-04 | Escanear o buscar productos | [IMPLEMENTADO] | MS-3 `/products/lookup` y `/products/search` |
 | RF-05 | Calcular total con impuestos | [IMPLEMENTADO] | MS-5 → MS-2 `/tax/calculate` |
 | RF-06 | Cobrar en efectivo con cálculo de vuelto | [PARCIAL] | MS-5 existe, sin vuelto automático |
-| RF-07 | Cobrar con tarjeta vía pasarela | [PLANIFICADO] | Sin integración pasarela |
+| RF-07 | Cobrar con tarjeta vía pasarela | [PARCIAL] | Adaptador HTTP implementado; faltan simulador y orquestación del cobro |
 | RF-08 | Emitir DTE al completar venta | [PLANIFICADO] | MS-2 sin DTE |
 | RF-09 | Descontar stock asíncronamente vía Kafka | [PARCIAL] | MS-4 consumer listo; MS-5 no produce evento |
 | RF-10 | Registrar recepción con FEFO | [PLANIFICADO] | MS-4 sin endpoint recepciones |

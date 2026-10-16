@@ -2,8 +2,8 @@
 id: pasarela-pago
 tipo: integracion
 titulo: Integración con Pasarela de Pago
-estado: planificado
-fuentes: [GlobalMart_ContextMaster.md#sec12, src/POSCartService/, tareas/sprint2_youtrack_resultado.json]
+estado: parcial
+fuentes: [GlobalMart_ContextMaster.md#sec12, src/POSCartService/Services/IPaymentGatewayClient.cs, src/POSCartService/Services/PaymentGatewayClient.cs, src/POSCartService/DTOs/PaymentGatewayDtos.cs, src/POSCartService/Program.cs, tests/GlobalMart.IntegrationTests/PaymentGatewayClientTests.cs, tareas/sprint2_youtrack_resultado.json]
 verificado_contra_codigo: true
 ultima_revision: 2026-10-16
 depende_de: [ms5-pos]
@@ -13,11 +13,11 @@ reglas: [RN-02, RF-07, PC-17, PC-27, PC-28]
 ---
 # Integración con Pasarela de Pago
 
-> Toda transacción con tarjeta DEBE ir por una pasarela externa (RN-02). **Estado: PLANIFICADO** — MS-5 no tiene integración de pago implementada.
+> Toda transacción con tarjeta DEBE ir por una pasarela externa (RN-02). **Estado: PARCIAL** — MS-5 dispone del adaptador HTTP, pero todavía no orquesta el cobro con tarjeta ni existe el endpoint del simulador.
 
-## Estado: [PLANIFICADO]
+## Estado: [PARCIAL]
 
-S2-036 / TI3-667 define el contrato reproducible del simulador. El endpoint, el cliente de pasarela y el cobro con tarjeta todavía no están implementados. `POST /ventas/{id}/cobrar` solo admite efectivo y rechaza ventas `TARJETA` o `MIXTO`.
+S2-036 / TI3-667 define el contrato reproducible del simulador. S2-037 / TI3-668 implementa `IPaymentGatewayClient` y su adaptador HTTP. El endpoint del simulador y el cobro con tarjeta todavía no están implementados; `POST /ventas/{id}/cobrar` solo admite efectivo y rechaza ventas `TARJETA` o `MIXTO`.
 
 ## S2-036 — Escenarios controlables del simulador [CONTRATO DEFINIDO]
 
@@ -113,6 +113,16 @@ Cada solicitud debe producir una traza estructurada con `request_id`, `tenant_id
 
 No se registra el cuerpo completo, encabezados de autorización, JWT, datos de tarjeta ni secretos. MS-5 y el simulador deben usar el mismo `request_id` como correlación. Estas trazas se definen en S2-036; su persistencia o transporte se implementará en tareas posteriores.
 
+## S2-037 — Adaptador HTTP de pasarela [IMPLEMENTADO]
+
+`PaymentGatewayClient` implementa `IPaymentGatewayClient` mediante el `HttpClient` nombrado `PasarelaPago`. `Program.cs` obtiene `PasarelaPago:BaseUrl` y `PasarelaPago:TimeoutSeconds`, exige un timeout positivo y registra el adaptador con alcance scoped.
+
+El adaptador envía `POST simulator/payments`, serializa exclusivamente `request_id`, `tenant_id`, `sale_id`, `amount`, `currency` y `scenario_id`, y propaga el mismo UUID en `Idempotency-Key`. El contrato C# no dispone de propiedades para PAN, CVV, vencimiento, titular, PIN o track de tarjeta. Tampoco propaga JWT ni encabezados del request del cajero.
+
+Las trazas estructuradas contienen únicamente identificadores de correlación, escenario, estado, referencia simulada y tiempo transcurrido. No se registra el cuerpo de solicitud o respuesta. Un timeout del `HttpClient` se traduce a `TimeoutException`; la cancelación solicitada por el llamador conserva `OperationCanceledException`; fallos HTTP o payloads inconsistentes se exponen como `ExternalServiceException` sin incluir el cuerpo remoto.
+
+[PaymentGatewayClientTests](../../../tests/GlobalMart.IntegrationTests/PaymentGatewayClientTests.cs) aprobó **4/4 casos** el 2026-10-16: URL configurada, propagación de idempotencia, conjunto exacto de campos seguros, respuesta rechazada, timeout explícito y rechazo local de `request_id` vacío sin invocar la red. [Evidencia TRX](../../qa/S2-037/S2-037.trx). El simulador y la integración con el endpoint de cobro permanecen [PLANIFICADO].
+
 ## Pasarelas contempladas por región
 
 | Región | Pasarela | Protocolo |
@@ -158,10 +168,10 @@ Al anular una venta cobrada con tarjeta:
 
 | ID | Caso de Uso | Estado |
 |----|-------------|--------|
-| PC-17 | Cobrar con Tarjeta (débito/crédito) | [PLANIFICADO] |
+| PC-17 | Cobrar con Tarjeta (débito/crédito) | [PARCIAL — adaptador disponible, sin orquestación] |
 | PC-18 | Cobrar Mixto (efectivo + tarjeta) | [PLANIFICADO] |
-| PC-27 | Procesar Pago en Pasarela | [PLANIFICADO] |
-| PC-28 | Manejar Respuesta de Pasarela | [PLANIFICADO] |
+| PC-27 | Procesar Pago en Pasarela | [PARCIAL — cliente HTTP implementado, aún no invocado] |
+| PC-28 | Manejar Respuesta de Pasarela | [PARCIAL — DTO y errores implementados, sin flujo de cobro] |
 
 ## Conexiones
 - POS: [[ms5-pos]]
@@ -171,6 +181,11 @@ Al anular una venta cobrada con tarjeta:
 ## Fuentes
 - `GlobalMart_ContextMaster.md` §12
 - `tareas/sprint2_youtrack_resultado.json` (`S2-036` → `TI3-667`)
+- `tareas/sprint2_youtrack_resultado.json` (`S2-037` → `TI3-668`)
 - `src/POSCartService/Program.cs` (HttpClient `PasarelaPago` y timeout vigente)
+- `src/POSCartService/Services/IPaymentGatewayClient.cs`
+- `src/POSCartService/Services/PaymentGatewayClient.cs`
+- `src/POSCartService/DTOs/PaymentGatewayDtos.cs`
+- `tests/GlobalMart.IntegrationTests/PaymentGatewayClientTests.cs`
 - `src/POSCartService/Controllers/VentasController.cs` (cobro vigente solo en efectivo)
 - `src/POSCartService/Services/VentaService.cs` (AnularAsync sin reembolso)

@@ -30,7 +30,7 @@ reglas: []
 | MS-2 Tax | ✅ 1 controller | ❌ No Kafka | ✅ ManualTest | **PARCIAL** |
 | MS-3 Catalog | ✅ 2 controllers | ❌ No Kafka | ✅ Manual .http + baja/PUT TI3-642 + 9 casos RN-01 S2-023 | **PARCIAL** |
 | MS-4 Warehouse | ✅ 1 controller | ✅ Consumer sale.completed | ❌ No tests | **PARCIAL** |
-| MS-5 POS | ✅ 2 controllers | ✅ OutboxPublisherWorker sale.completed | ✅ AgregarItemTest + CobroCuadreTest + S2-008/S2-009/S2-010 + 10 HTTP y 13 directos RN-01 S2-023 | **PARCIAL** |
+| MS-5 POS | ✅ 2 controllers | ✅ OutboxPublisherWorker sale.completed | ✅ AgregarItemTest + CobroCuadreTest + S2-008/S2-009/S2-010/S2-037 + 10 HTTP y 13 directos RN-01 S2-023 | **PARCIAL** |
 | MS-6 SupplyChain | ❌ Sin controllers | ❌ Sin Kafka | ❌ Sin tests | **PLANIFICADO** |
 | MS-7 Analytics | ❌ Sin controllers | ❌ Sin consumers | ❌ Sin tests | **PLANIFICADO** |
 | MS-8 Loyalty | ❌ Sin controllers | ⚠️ Registrado en DI sin consumer loop | ❌ Sin tests | **PLANIFICADO** |
@@ -135,6 +135,7 @@ reglas: []
 - `POST /ventas/{id}/cobrar` — valida que la venta tenga método de pago EFECTIVO (rechaza TARJETA o MIXTO con 400 Bad Request según S2-004), valida `monto_recibido` ≥ total, y confirma venta, pago y `sale.completed` pendiente en una transacción [IMPLEMENTADO]
 - VentaService con métodos `CompletarAsync` y `AnularAsync` [IMPLEMENTADO en service]
 - OutboxPublisherWorker y KafkaProducerService — publicación automática con lease, reintento y cancelación limpia [IMPLEMENTADO]
+- PaymentGatewayClient — adaptador HTTP con URL/timeout configurables, idempotencia y payload seguro; todavía no conectado al endpoint de cobro [IMPLEMENTADO]
 - test de integración abre turno con JWT de cajero y verifica persistencia en estado `ABIERTO` [IMPLEMENTADO]
 - tests de integración en `VentaIntegrationTests` validan creación de venta con resolución autoritativa en MS-3 e IVA en MS-2, agregado de ítems, y rechazo de productos inexistentes (404) e inactivos (400) sin persistir venta ni ítems [IMPLEMENTADO]
 - 7 tests unitarios en `CrearVentaRequestValidatorTests` validan el contrato S2-001 (venta unitaria sin precio, venta a peso con balanza, venta mixta y rechazo de precios/pesos negativos) [IMPLEMENTADO]
@@ -145,7 +146,7 @@ reglas: []
 
 **No implementado / CRÍTICO:**
 - Endpoint HTTP `POST /ventas/{id}/anular` aún no está expuesto en `VentasController.cs`
-- Integración con pasarela de cobro externa (planificada simulación con pasarelas tipo Mercado Pago)
+- Orquestación del cobro con tarjeta y endpoint del simulador; el adaptador HTTP ya está implementado
 - Integración con hardware (balanza, impresora, cajón de dinero)
 
 ---
@@ -177,7 +178,7 @@ reglas: []
 |---|---------------|----------------|----------|
 | 1 | Exponer endpoint `POST /ventas/{id}/anular` en `VentasController.cs` | RF-22 | 🔴 Crítica |
 | 2 | Emisión simulada de DTE (boleta/factura) en MS-2 | RN-03, RF-08, TC-08/09 | 🔴 Crítica |
-| 3 | Integración con pasarela de cobro (Mercado Pago o simulador) | RN-02, RF-07, PC-27/28 | 🔴 Crítica |
+| 3 | Orquestar el cobro con tarjeta y exponer el simulador; el adaptador HTTP ya existe | RN-02, RF-07, PC-27/28 | 🔴 Crítica |
 | 4 | FEFO en recepción e inventario en MS-4 | RN-05, RF-10, WI-04/05 | 🟠 Alta |
 | 5 | Integrar frontend `Pos.tsx` con backend real | RF-04, RF-05 | 🟠 Alta |
 | 6 | Endpoint POST /auth/refresh | RF-01 | 🟠 Alta |
@@ -254,3 +255,7 @@ Refuerzo posterior [IMPLEMENTADO]: `VentaRepository.ActualizarAsync` y `ItemVent
 ## S2-036 — Escenarios del simulador de pagos
 
 [PLANIFICADO — CONTRATO DEFINIDO] Se especificaron los escenarios no sensibles `sim-approved-v1`, `sim-declined-v1` y `sim-timeout-v1`, con solicitudes y respuestas reproducibles, idempotencia por `request_id`, timeout controlado y campos mínimos de auditoría. Ningún escenario usa PAN, CVV ni otra credencial bancaria. El endpoint del simulador y el cobro con tarjeta en MS-5 todavía no están implementados. [Contrato S2-036](integraciones/pasarela-pago.md).
+
+## S2-037 — Adaptador HTTP de pasarela
+
+[IMPLEMENTADO] `PaymentGatewayClient` implementa `IPaymentGatewayClient` y queda registrado en DI con `PasarelaPago:BaseUrl` y `PasarelaPago:TimeoutSeconds`. Envía únicamente referencias de negocio y el escenario simulado, propaga `request_id` en `Idempotency-Key` y produce trazas estructuradas sin cuerpos, JWT ni datos de tarjeta. Pruebas enfocadas **4/4 aprobadas** el 2026-10-16; el endpoint del simulador y su uso desde el cobro siguen planificados. [Contrato y evidencia](integraciones/pasarela-pago.md).

@@ -5,7 +5,7 @@ titulo: MS-5 · POS & Cart Service
 estado: parcial
 fuentes: [src/POSCartService/]
 verificado_contra_codigo: true
-ultima_revision: 2026-10-15
+ultima_revision: 2026-10-16
 depende_de: [ms1-identity, ms2-tax, ms3-catalog]
 publica: [sale.completed]
 consume: []
@@ -13,7 +13,7 @@ reglas: [RN-01, RN-02, RN-03, RN-06, RF-02, RF-03, RF-04, RF-05, RF-06, RF-07]
 ---
 # MS-5 · POS & Cart Service
 
-> Servicio central del punto de venta. Gestiona turnos de caja y el ciclo completo de una venta (carrito, ítems, cobro, anulación). Integrado con MS-2 (IVA) y MS-3 (productos). Persiste y publica `sale.completed` mediante outbox; falta la pasarela de pago y el hardware.
+> Servicio central del punto de venta. Gestiona turnos de caja y el ciclo completo de una venta (carrito, ítems, cobro, anulación). Integrado con MS-2 (IVA) y MS-3 (productos). Persiste y publica `sale.completed` mediante outbox; dispone del adaptador HTTP de pasarela, pero faltan la orquestación del cobro con tarjeta, el simulador y el hardware.
 
 ## Contrato Oficial de Creación de Venta (POST /ventas) — S2-001 / S2-002 / S2-003
 
@@ -86,7 +86,7 @@ reglas: [RN-01, RN-02, RN-03, RN-06, RF-02, RF-03, RF-04, RF-05, RF-06, RF-07]
    → VentaRepository.CompletarConOutboxAsync persiste estado, Pago y OutboxMessage PENDIENTE en una transacción
    → Retorna venta completada + monto_recibido + vuelto
    → OutboxPublisherWorker publica el payload persistido y conserva event_id entre reintentos
-   → ❌ NO integra pasarela de pago externa
+   → PaymentGatewayClient está disponible por DI, pero este endpoint aún no lo invoca
 
 5. POST /ventas/{id}/anular  { motivo }
    → VentaService.AnularAsync: estado → ANULADA
@@ -207,7 +207,7 @@ await _ventaRepository.CompletarConOutboxAsync(venta.Id, pago, outboxMessage);
 | PC-14 | Calcular Total con Impuestos | [IMPLEMENTADO] |
 | PC-15 | Cobrar en Efectivo | [IMPLEMENTADO — endpoint expuesto, valida monto ≥ total, calcula vuelto y persiste sale.completed pendiente] |
 | PC-16 | Calcular Vuelto | [PLANIFICADO] |
-| PC-17 | Cobrar con Tarjeta | [PLANIFICADO] |
+| PC-17 | Cobrar con Tarjeta | [PARCIAL — adaptador disponible, sin orquestación] |
 | PC-18 | Pago Mixto (efectivo + tarjeta) | [PLANIFICADO] |
 | PC-19 | Emitir Recibo / Comprobante | [PLANIFICADO] |
 | PC-20 | Anular Venta (Devolución) | [PARCIAL — implementado en VentaService.AnularAsync] |
@@ -217,8 +217,8 @@ await _ventaRepository.CompletarConOutboxAsync(venta.Id, pago, outboxMessage);
 | PC-24 | Publicar sale.completed | [IMPLEMENTADO — outbox, worker y reintentos automáticos] |
 | PC-25 | Publicar sale.reversed | [PLANIFICADO] |
 | PC-26 | Leer Tarjeta en Terminal (NFC/chip/mag) | [PLANIFICADO] |
-| PC-27 | Enviar Solicitud a Pasarela | [PLANIFICADO] |
-| PC-28 | Recibir Respuesta de Pasarela | [PLANIFICADO] |
+| PC-27 | Enviar Solicitud a Pasarela | [PARCIAL — adaptador implementado, aún no invocado] |
+| PC-28 | Recibir Respuesta de Pasarela | [PARCIAL — DTO y errores implementados, sin flujo de cobro] |
 | PC-29 | Manejar Rechazo de Pago | [PLANIFICADO] |
 | PC-30 | Solicitar Reembolso a Pasarela | [PLANIFICADO] |
 | PC-31 | Confirmar Reembolso | [PLANIFICADO] |
@@ -240,6 +240,8 @@ await _ventaRepository.CompletarConOutboxAsync(venta.Id, pago, outboxMessage);
 - `src/POSCartService/Controllers/TurnosController.cs`
 - `src/POSCartService/Services/VentaService.cs`
 - `src/POSCartService/Services/TurnoService.cs`
+- `src/POSCartService/Services/IPaymentGatewayClient.cs`
+- `src/POSCartService/Services/PaymentGatewayClient.cs`
 - `tests/GlobalMart.IntegrationTests/TurnoIntegrationTests.cs`
 - `tests/GlobalMart.IntegrationTests/VentaIntegrationTests.cs`
 - `tests/GlobalMart.IntegrationTests/KafkaPublishIntegrationTests.cs`
@@ -275,3 +277,7 @@ Defensa adicional en [PosRepositoryTenantIsolationTests.cs](../../../tests/Globa
 ## S2-010 — Caída y recuperación del broker
 
 [IMPLEMENTADO] [OutboxBrokerRecoveryIntegrationTests](../../../tests/GlobalMart.IntegrationTests/OutboxBrokerRecoveryIntegrationTests.cs) recorre cobro, pago, outbox, fallo de publicación y recuperación con PostgreSQL real y un productor controlado en el límite Kafka. Comprueba una venta, un pago y un evento lógico; los dos intentos conservan topic, clave, JSON y `EventId`, mientras solo el intento posterior a la recuperación se entrega. Prueba enfocada **1/1 aprobada** y regresión S2-008/S2-009/S2-010 **5/5 aprobada** el 2026-10-15. [Evidencia TRX](../../qa/S2-010/S2-010.trx). La detención de un proceso Kafka real no forma parte de esta prueba determinista.
+
+## S2-037 — Adaptador HTTP de pasarela
+
+[IMPLEMENTADO] `PaymentGatewayClient` implementa `IPaymentGatewayClient`, usa la URL y timeout configurados para `PasarelaPago`, y propaga `request_id` como `Idempotency-Key`. Su DTO transmite solo tenant, venta, monto, moneda y escenario; no admite datos de tarjeta. Registra trazas estructuradas sin cuerpos ni credenciales y distingue timeout, cancelación del llamador y errores HTTP. Pruebas enfocadas **4/4 aprobadas** el 2026-10-16. [Contrato y evidencia](../integraciones/pasarela-pago.md).

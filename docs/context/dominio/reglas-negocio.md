@@ -5,7 +5,7 @@ titulo: Reglas de Negocio (MoSCoW) — GlobalMart OS
 estado: parcial
 fuentes: [GlobalMart_ContextMaster.md#sec7, src/]
 verificado_contra_codigo: true
-ultima_revision: 2026-09-28
+ultima_revision: 2026-10-16
 depende_de: [vision]
 publica: []
 consume: []
@@ -20,7 +20,7 @@ reglas: []
 | ID | Regla | Estado |
 |----|-------|--------|
 | RN-01 | Aislamiento completo entre tenants. Ningún query puede retornar datos de otro tenant. | [IMPLEMENTADO] — TenantMiddleware + HasQueryFilter |
-| RN-02 | Todo pago con tarjeta pasa OBLIGATORIAMENTE por pasarela de pago externa. Nunca localmente. | [PLANIFICADO] — sin integración pasarela |
+| RN-02 | Todo pago con tarjeta pasa OBLIGATORIAMENTE por pasarela de pago externa. Nunca localmente. | [PARCIAL] — adaptador seguro implementado; cobro con tarjeta aún no orquestado |
 | RN-03 | Toda venta completada genera documento tributario válido (boleta/factura) según normativa del país. | [PLANIFICADO] — MS-2 solo calcula IVA, sin DTE |
 | RN-04 | El stock se descuenta automáticamente al completar una venta exitosa. | [PARCIAL] — MS-4 consumer listo; MS-5 no produce evento |
 | RN-05 | Productos perecederos gestionados bajo FEFO: lote menor fecha de vencimiento se despacha primero. | [PLANIFICADO] — modelos de lote existen, sin lógica FEFO |

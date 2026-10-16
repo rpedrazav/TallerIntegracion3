@@ -86,16 +86,19 @@ builder.Services.AddCors(options =>
 // â”€â”€â”€ Cliente HTTP para Pasarela de Pago (Stripe/Transbank) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // RN-02: todo pago con tarjeta pasa por la pasarela externa vÃ­a HTTPS.
 // Nunca se procesan datos de tarjeta localmente (cumplimiento PCI DSS).
-builder.Services.AddHttpClient("PasarelaPago", client =>
+builder.Services.AddHttpClient(PaymentGatewayClient.HttpClientName, client =>
 {
     var baseUrl = builder.Configuration["PasarelaPago:BaseUrl"]
         ?? throw new InvalidOperationException("PasarelaPago:BaseUrl no configurada en appsettings.json");
     var timeoutSeconds = builder.Configuration.GetValue<int>("PasarelaPago:TimeoutSeconds", 30);
+    if (timeoutSeconds <= 0)
+        throw new InvalidOperationException("PasarelaPago:TimeoutSeconds debe ser mayor que cero.");
 
-    client.BaseAddress = new Uri(baseUrl);
+    client.BaseAddress = new Uri(baseUrl.TrimEnd('/') + "/", UriKind.Absolute);
     client.Timeout = TimeSpan.FromSeconds(timeoutSeconds);
     client.DefaultRequestHeaders.Add("Accept", "application/json");
 });
+builder.Services.AddScoped<IPaymentGatewayClient, PaymentGatewayClient>();
 
 // â”€â”€â”€ Clientes HTTP hacia microservicios MS-3 y MS-2 â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 builder.Services.AddHttpClient(CatalogClient.HttpClientName, client =>
