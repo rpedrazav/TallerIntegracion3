@@ -5,7 +5,7 @@ titulo: Estado Real de Implementación — GlobalMart OS
 estado: vigente
 fuentes: [docs/context/_reports/inventario.md, src/, globalmart-frontend/src/api/client.ts, git log, docs/context/_reports/preguntas-abiertas.md]
 verificado_contra_codigo: true
-ultima_revision: 2026-10-15
+ultima_revision: 2026-10-16
 depende_de: []
 publica: []
 consume: []
@@ -250,3 +250,7 @@ Refuerzo posterior [IMPLEMENTADO]: `VentaRepository.ActualizarAsync` y `ItemVent
 ## S2-010 — Caída y recuperación del broker
 
 [IMPLEMENTADO] Prueba de integración sobre PostgreSQL 18.6 temporal y productor Kafka controlado: completa la venta y pago, simula indisponibilidad durante el primer intento, conserva una sola fila outbox `PENDIENTE` y, tras recuperar el productor, entrega una sola vez el payload persistido con el mismo `EventId`, clave, topic y versión. Prueba enfocada **1/1 aprobada** y regresión S2-008/S2-009/S2-010 **5/5 aprobada** el 2026-10-15. No acredita una caída de un proceso Kafka real. [Diseño y evidencia](eventos/sale-completed-outbox.md).
+
+## S2-036 — Escenarios del simulador de pagos
+
+[PLANIFICADO — CONTRATO DEFINIDO] Se especificaron los escenarios no sensibles `sim-approved-v1`, `sim-declined-v1` y `sim-timeout-v1`, con solicitudes y respuestas reproducibles, idempotencia por `request_id`, timeout controlado y campos mínimos de auditoría. Ningún escenario usa PAN, CVV ni otra credencial bancaria. El endpoint del simulador y el cobro con tarjeta en MS-5 todavía no están implementados. [Contrato S2-036](integraciones/pasarela-pago.md).
