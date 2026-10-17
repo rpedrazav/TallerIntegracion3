@@ -177,6 +177,30 @@ services:
         plugins:
           - name: jwt
 
+  # --------------------------------------------------------------------------
+  # Payment Gateway Simulator (TI3-688 / S2-057, TI3-689 / S2-058)
+  # --------------------------------------------------------------------------
+  - name: payment-simulator-service
+    url: http://payment-simulator:5050
+    routes:
+      - name: simulator-payments-route
+        paths:
+          - /simulator/payments
+          - /api/simulator/payments
+        strip_path: false
+        methods:
+          - POST
+          - OPTIONS
+
+      - name: simulator-health-route
+        paths:
+          - /simulator/health
+          - /api/simulator/health
+        strip_path: false
+        methods:
+          - GET
+          - OPTIONS
+
 # ==============================================================================
 # Plugins Globales
 # ==============================================================================

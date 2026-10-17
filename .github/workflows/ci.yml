@@ -116,7 +116,7 @@ jobs:
             postgres-tenant postgres-supply postgres-catalog \
             postgres-pos postgres-tax postgres-warehouse \
             postgres-analytics postgres-loyalty \
-            zookeeper kafka kong
+            zookeeper kafka kong payment-simulator
 
       # ------------------------------------------------------------------
       # 6. Verificar que todos los contenedores están saludables
@@ -137,6 +137,7 @@ jobs:
             zookeeper
             kafka
             kong
+            payment-simulator
           )
 
           MAX_WAIT=120

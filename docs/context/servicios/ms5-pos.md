@@ -288,3 +288,8 @@ Defensa adicional en [PosRepositoryTenantIsolationTests.cs](../../../tests/Globa
 
 [IMPLEMENTADO] La configuración de la pasarela separa endpoints de sandbox/producción, timeouts y claves en `src/POSCartService/appsettings.json`, `Docker/env.example` y `.env.example`, sin exponer secretos reales ni permitir datos de tarjeta (RN-02 / PCI DSS). [Detalles](../integraciones/pasarela-pago.md).
 
+## S2-057 y S2-058 — Simulador local y ruta en Gateway
+
+[IMPLEMENTADO] El simulador de pasarela se ejecuta localmente en Docker (`payment-simulator:5050`) y en host, y queda expuesto en Kong (`/simulator/payments`, `/simulator/health`). MS-5 (`PaymentGatewayClient`) puede alcanzarlo por Gateway (:8000) o directo (:5050). Se validó con 5 pruebas de integración en `PaymentSimulatorIntegrationTests`. [Detalles](../integraciones/pasarela-pago.md).
+
+

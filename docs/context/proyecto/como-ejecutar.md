@@ -51,6 +51,7 @@ docker compose -f Docker/docker-compose.yml ps
 
 Puertos de infraestructura:
 - **Kong API Gateway (Proxy):** `http://localhost:8000` (Admin: `:8001`)
+- **Simulador de Pagos:** `http://localhost:5050` (Gateway: `http://localhost:8000/simulator/payments`)
 - **Apache Kafka:** `localhost:9092` (Zookeeper: `:2181`)
 - **Kafdrop (Kafka UI):** `http://localhost:9000`
 - **PostgreSQL x8:** Puertos `5432` a `5439` (mapeados por microservicio)
@@ -79,7 +80,7 @@ dotnet run --project src/POSCartService              # MS-5 (:5000)
 
 ## 4. Validar el núcleo con Smoke Test HTTP
 
-Ejecutar el script automatizado para verificar el flujo crítico completo (health, login de cajero seed, consulta de catálogo y estado de POS):
+Ejecutar el script automatizado para verificar el flujo crítico completo (health, login de cajero seed, consulta de catálogo, estado de POS y pasarela simulada):
 
 ```bash
 ./scripts/smoke-test.sh
@@ -90,6 +91,7 @@ El script valida:
 2. Autenticación pública en `POST /api/auth/login` con credenciales seed (`cajero@demo.cl` / `demo1234`).
 3. Consulta autorizada a `GET /api/products` (MS-3 vía Kong) usando el token JWT obtenido.
 4. Consulta autorizada a `GET /api/turnos/activo` (MS-5 vía Kong).
+5. Health check y cobro seguro `sim-approved-v1` en Simulador de Pagos (directo y vía Kong), verificando el bloqueo estricto de números de tarjeta (RN-02 / PCI DSS).
 
 ## 5. Ejecutar el frontend Electron
 

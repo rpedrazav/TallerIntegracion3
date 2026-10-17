@@ -31,6 +31,7 @@ reglas: [RN-01, RN-06, RN-07]
 | **MS-6 Supply Chain** | `supply-chain-service` | `[PLANIFICADO]` | `5006` / `8080` | `[PLANIFICADO]` | `[PLANIFICADO]` |
 | **MS-7 Analytics & Notif.** | `analytics-notification-service` | `5127` (HTTP) / `7209` (HTTPS) | `5007` / `8080` | `[PLANIFICADO]` | `[PLANIFICADO]` |
 | **MS-8 Loyalty & Customer** | `loyalty-customer-service` | `5128` (HTTP) / `7210` (HTTPS) | `5008` / `8080` | `[PLANIFICADO]` | `[PLANIFICADO]` |
+| **Simulador de Pagos** | `payment-simulator` | `5050` (HTTP) | `5050` | `8000` (`/simulator/payments`, `/simulator/health`) | N/A (Mock desarrollo) |
 | **Kong API Gateway** | `kong` | `8000` (Proxy), `8001` (Admin) | `8000` (Proxy), `8001` (Admin) | `8000` | N/A |
 
 ---
@@ -95,6 +96,13 @@ reglas: [RN-01, RN-06, RN-07]
 | Endpoint Lógico | Método | Ruta Controlador (`[Route]`) | Acceso | Requisitos | Consumidor |
 |---|---|---|---|---|---|
 | Consultar Stock Producto | `GET` | `stock/{productId}`, `api/stock/{productId}` | Interno / Gateway | ✅ JWT (RN-01) | POS / Inventario |
+
+### Simulador de Pasarela de Pagos (Dev Host :5050 / Docker `payment-simulator:5050` — TI3-688 / TI3-689)
+
+| Endpoint Lógico | Método | Ruta Controlador / Servidor | Ruta Kong (`kong.yaml`) | Auth / Requisitos | Consumidor |
+|---|---|---|---|---|---|
+| Procesar Pago Seguro | `POST` | `simulator/payments`, `api/simulator/payments` | `/simulator/payments`, `/api/simulator/payments` | ❌ Sin JWT / Sin datos de tarjeta (RN-02) | MS-5 `PaymentGatewayClient` |
+| Health Check | `GET` | `health`, `simulator/health`, `api/simulator/health` | `/simulator/health`, `/api/simulator/health` | ❌ Público | Docker healthcheck, Smoke Test |
 
 ---
 

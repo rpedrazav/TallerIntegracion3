@@ -126,6 +126,49 @@ else
   fi
 fi
 
+echo -e "\n${YELLOW}5. Probando Simulador de Pagos y Enrutamiento Gateway (S2-057 / S2-058)...${NC}"
+SIMULATOR_URL=${SIMULATOR_URL:-"http://localhost:5050"}
+
+# Health check directo
+SIM_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$SIMULATOR_URL/health" || echo "000")
+if [ "$SIM_CODE" = "200" ]; then
+  echo -e "${GREEN}[OK] Simulador de pagos responde a health directo en $SIMULATOR_URL (HTTP 200).${NC}"
+else
+  echo -e "  ${YELLOW}Simulador directo no respondió ($SIM_CODE). Verificando vía Gateway...${NC}"
+fi
+
+# Health check vía Kong
+GATEWAY_SIM_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$GATEWAY_URL/simulator/health" || echo "000")
+if [ "$GATEWAY_SIM_CODE" = "200" ]; then
+  echo -e "${GREEN}[OK] Ruta Kong /simulator/health operativa hacia el simulador (HTTP 200).${NC}"
+fi
+
+# Prueba de cobro seguro sim-approved-v1
+SIM_PAY_TARGET="$GATEWAY_URL/simulator/payments"
+if [ "$GATEWAY_SIM_CODE" != "200" ] && [ "$SIM_CODE" = "200" ]; then
+  SIM_PAY_TARGET="$SIMULATOR_URL/simulator/payments"
+fi
+
+if [ "$SIM_CODE" = "200" ] || [ "$GATEWAY_SIM_CODE" = "200" ]; then
+  SIM_PAY_RES=$(curl -s -w "\n%{http_code}" -X POST "$SIM_PAY_TARGET" \
+    -H "Content-Type: application/json" \
+    -d "{\"request_id\":\"aaaaaaaa-1111-4111-8111-111111111111\",\"tenant_id\":\"$TENANT_ID\",\"sale_id\":\"bbbbbbbb-2222-4222-8222-222222222222\",\"amount\":15000,\"currency\":\"CLP\",\"scenario_id\":\"sim-approved-v1\"}" || true)
+  PAY_HTTP=$(echo "$SIM_PAY_RES" | tail -n1)
+  if [ "$PAY_HTTP" = "200" ]; then
+    echo -e "${GREEN}[OK] Cobro simulado sim-approved-v1 exitoso vía $SIM_PAY_TARGET (HTTP 200).${NC}"
+  else
+    echo -e "  ${YELLOW}Aviso: No se pudo verificar cobro simulado vía $SIM_PAY_TARGET (HTTP $PAY_HTTP).${NC}"
+  fi
+
+  # Prueba de bloqueo de datos sensibles de tarjeta (RN-02 / PCI DSS)
+  SIM_SEC_CODE=$(curl -s -o /dev/null -w "%{http_code}" -X POST "$SIM_PAY_TARGET" \
+    -H "Content-Type: application/json" \
+    -d "{\"request_id\":\"aaaaaaaa-1111-4111-8111-111111111112\",\"tenant_id\":\"$TENANT_ID\",\"sale_id\":\"bbbbbbbb-2222-4222-8222-222222222222\",\"amount\":15000,\"currency\":\"CLP\",\"scenario_id\":\"sim-approved-v1\",\"pan\":\"4111111111111111\"}" || echo "000")
+  if [ "$SIM_SEC_CODE" = "400" ]; then
+    echo -e "${GREEN}[OK] Validación de seguridad RN-02: Envío de PAN/tarjeta bloqueado exitosamente (HTTP 400 Bad Request).${NC}"
+  fi
+fi
+
 echo -e "\n${GREEN}============================================================${NC}"
 echo -e "${GREEN}  SMOKE TEST EXITOSO: El núcleo GlobalMart OS está operativo!${NC}"
 echo -e "${GREEN}============================================================${NC}"

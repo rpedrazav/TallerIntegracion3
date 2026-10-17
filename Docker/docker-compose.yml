@@ -306,10 +306,40 @@ services:
       - minimarket-net
 
   # ==========================================================================
+  # SIMULADOR DE PASARELA DE PAGOS — Mock Externo (TI3-688 / S2-057)
+  # ==========================================================================
+
+  # --- 13. Payment Gateway Simulator (Desarrollo y Testing) ---
+  payment-simulator:
+    image: node:20-alpine
+    container_name: payment-simulator
+    restart: unless-stopped
+    mem_limit: 128m
+    cpus: 0.25
+    working_dir: /app
+    volumes:
+      - ./simulator:/app:ro
+    command: [ "node", "server.js" ]
+    ports:
+      - "${SIMULATOR_PORT:-5050}:5050"
+    environment:
+      - PORT=5050
+      - HOST=0.0.0.0
+      - NODE_ENV=development
+    networks:
+      - minimarket-net
+    healthcheck:
+      test: [ "CMD-SHELL", "wget -q --spider http://127.0.0.1:5050/health || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
+  # ==========================================================================
   # API GATEWAY — Kong 3.6 DB-less (TI3-113)
   # ==========================================================================
 
-  # --- 13. Kong API Gateway (Modo Declarativo DB-less) ---
+  # --- 14. Kong API Gateway (Modo Declarativo DB-less) ---
   kong:
     image: kong:3.6
     container_name: kong

@@ -143,6 +143,25 @@ Para garantizar entornos reproducibles y proteger credenciales de producción (R
 3. **Idempotencia obligatoria**: Se propaga `request_id` como `Idempotency-Key` en los encabezados HTTP.
 4. **Instalación limpia**: Cualquier máquina o contenedor conoce la totalidad de variables requeridas a través de `Docker/env.example` y `.env.example`.
 
+## S2-057 / TI3-688 — Incorporación del simulador al entorno local [IMPLEMENTADO]
+
+Se implementó el servicio de pasarela de pruebas en `Docker/simulator/server.js` y su contenedor en `Docker/docker-compose.yml` (`payment-simulator:5050`).
+- Expone `GET /health` respondiendo HTTP 200 `{"status":"Healthy"}` para Docker healthchecks y monitoreo.
+- Implementa los escenarios controlables `sim-approved-v1`, `sim-declined-v1` y `sim-timeout-v1` según el contrato S2-036.
+- Almacena idempotencia en memoria por `(tenant_id, request_id)` y detecta conflictos (HTTP 409).
+- Rechaza de forma estricta e inmediata cualquier campo sensible de tarjeta (`pan`, `card`, `cvv`, etc.) con HTTP 400 (`CARD_DATA_FORBIDDEN`), garantizando cumplimiento total de RN-02 y el alcance PCI DSS.
+- Pruebas de integración en C# [PaymentSimulatorIntegrationTests](../../../tests/GlobalMart.IntegrationTests/PaymentSimulatorIntegrationTests.cs): **5/5 aprobadas** el 2026-10-16.
+
+## S2-058 / TI3-689 — Exposición de ruta de pagos en gateway [IMPLEMENTADO]
+
+Se configuró el enrutamiento en Kong API Gateway (`Docker/config/kong.yaml`) para exponer el simulador al entorno local y microservicios:
+- Servicio: `payment-simulator-service` (`http://payment-simulator:5050`).
+- Rutas:
+  - `simulator-payments-route`: `POST /simulator/payments` y `POST /api/simulator/payments` (`strip_path: false`).
+  - `simulator-health-route`: `GET /simulator/health` y `GET /api/simulator/health` (`strip_path: false`).
+- Permite que MS-5 (`PaymentGatewayClient`) alcance el simulador directamente en `http://localhost:5050` o a través del Gateway en `http://localhost:8000/simulator/payments`.
+- Se validó el contrato de red impidiendo que el frontend Electron transmita datos de tarjeta bancarios hacia la pasarela o el backend.
+
 ## Pasarelas contempladas por región
 
 | Región | Pasarela | Protocolo |

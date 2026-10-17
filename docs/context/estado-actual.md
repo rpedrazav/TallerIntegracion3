@@ -286,3 +286,12 @@ Refuerzo posterior [IMPLEMENTADO]: `VentaRepository.ActualizarAsync` y `ItemVent
 
 [IMPLEMENTADO] Se definió y documentó la configuración segura del simulador de pagos y pasarela en `Docker/env.example`, la plantilla raíz `.env.example` y `src/POSCartService/appsettings.json`. Separa estrictamente URL base (`PasarelaPago:BaseUrl`), timeouts (`PasarelaPago:TimeoutSeconds` = 30s), claves dummy (`PasarelaPago:ApiKey` = `sim_key_dummy_test_only`) y ambientes (`sandbox` vs `production`). Garantiza el cumplimiento de RN-02 y PCI DSS prohibiendo datos de tarjeta en el código y repositorios. Documentado en `docs/context/integraciones/pasarela-pago.md`.
 
+## S2-057 / TI3-688 — Incorporar simulador al entorno local
+
+[IMPLEMENTADO] Se creó el simulador de pasarela externa en `Docker/simulator/server.js` y se añadió el contenedor `payment-simulator` (puerto 5050) en `Docker/docker-compose.yml` con healthcheck automático (`/health`). Implementa los escenarios deterministas `sim-approved-v1`, `sim-declined-v1` y `sim-timeout-v1` con almacenamiento de idempotencia en memoria. Rechaza de forma estricta cualquier payload que contenga números de tarjeta (PAN), CVV o PIN (HTTP 400 `CARD_DATA_FORBIDDEN`), garantizando cumplimiento de RN-02 y PCI DSS. Se añadió al script de arranque local `run-apis.sh` y `run-apis.bat`. Suite `PaymentSimulatorIntegrationTests` **5/5 aprobada** el 2026-10-16. Documentado en `docs/context/integraciones/pasarela-pago.md`.
+
+## S2-058 / TI3-689 — Exponer ruta de pagos en gateway
+
+[IMPLEMENTADO] Se incorporó el servicio `payment-simulator-service` (`http://payment-simulator:5050`) en Kong API Gateway (`Docker/config/kong.yaml`) con las rutas `/simulator/payments` y `/simulator/health` (admitiendo variantes `/api/*` y preservando paths con `strip_path: false`). Permite a MS-5 alcanzar el simulador vía Gateway (`:8000`) o de forma directa (`:5050`). Se validó el contrato de red impidiendo que el frontend Electron transmita datos bancarios. Validado en `scripts/smoke-test.sh` y documentado en `docs/context/infraestructura/matriz-rutas.md` y `docs/context/integraciones/pasarela-pago.md`.
+
+
