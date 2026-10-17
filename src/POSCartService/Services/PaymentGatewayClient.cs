@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using POSCartService.DTOs;
@@ -64,8 +65,34 @@ public sealed class PaymentGatewayClient : IPaymentGatewayClient
                 request.ScenarioId,
                 "TIMED_OUT",
                 elapsedMs);
-            throw new TimeoutException(
-                $"La pasarela no respondió dentro del tiempo configurado para RequestId={request.RequestId}.",
+            try
+            {
+                var reconciled = await GetPaymentStatusAsync(
+                    request.TenantId,
+                    request.RequestId,
+                    cancellationToken);
+                if (reconciled is not null)
+                {
+                    _logger.LogInformation(
+                        "Autorización reconciliada tras timeout RequestId={RequestId} TenantId={TenantId} Status={Status} TransactionId={TransactionId}",
+                        request.RequestId,
+                        request.TenantId,
+                        reconciled.Status,
+                        reconciled.TransactionId);
+                    return reconciled;
+                }
+            }
+            catch (ExternalServiceException statusException)
+            {
+                throw new PaymentAuthorizationUncertainException(
+                    request.TenantId,
+                    request.RequestId,
+                    new AggregateException(ex, statusException));
+            }
+
+            throw new PaymentAuthorizationUncertainException(
+                request.TenantId,
+                request.RequestId,
                 ex);
         }
         catch (HttpRequestException ex)
@@ -149,6 +176,102 @@ public sealed class PaymentGatewayClient : IPaymentGatewayClient
                 result.TransactionId,
                 elapsedMs);
 
+            return result;
+        }
+    }
+
+    public async Task<PaymentGatewayResponse?> GetPaymentStatusAsync(
+        Guid tenantId,
+        Guid requestId,
+        CancellationToken cancellationToken = default)
+    {
+        if (tenantId == Guid.Empty)
+            throw new ArgumentException("tenant_id es obligatorio.", nameof(tenantId));
+        if (requestId == Guid.Empty)
+            throw new ArgumentException("request_id es obligatorio.", nameof(requestId));
+
+        var client = _httpClientFactory.CreateClient(HttpClientName);
+        using var message = new HttpRequestMessage(
+            HttpMethod.Get,
+            $"simulator/payments/{requestId}?tenant_id={tenantId}");
+        message.Headers.Add("Idempotency-Key", requestId.ToString());
+
+        var startedAt = Stopwatch.GetTimestamp();
+        _logger.LogInformation(
+            "Consultando estado de autorización RequestId={RequestId} TenantId={TenantId}",
+            requestId,
+            tenantId);
+
+        HttpResponseMessage response;
+        try
+        {
+            response = await client.SendAsync(message, cancellationToken);
+        }
+        catch (OperationCanceledException ex) when (!cancellationToken.IsCancellationRequested)
+        {
+            throw new ExternalServiceException(
+                "PaymentGateway",
+                "La consulta de estado agotó el tiempo configurado.",
+                innerException: ex);
+        }
+        catch (HttpRequestException ex)
+        {
+            throw new ExternalServiceException(
+                "PaymentGateway",
+                "No fue posible consultar el estado de la autorización.",
+                innerException: ex);
+        }
+
+        using (response)
+        {
+            var elapsedMs = Stopwatch.GetElapsedTime(startedAt).TotalMilliseconds;
+            if (response.StatusCode == HttpStatusCode.NotFound)
+            {
+                _logger.LogWarning(
+                    "Estado de autorización desconocido RequestId={RequestId} TenantId={TenantId} Status={Status} ElapsedMs={ElapsedMs}",
+                    requestId,
+                    tenantId,
+                    "UNKNOWN",
+                    elapsedMs);
+                return null;
+            }
+
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new ExternalServiceException(
+                    "PaymentGateway",
+                    $"La consulta de estado devolvió HTTP {(int)response.StatusCode}.",
+                    (int)response.StatusCode);
+            }
+
+            PaymentGatewayResponse? result;
+            try
+            {
+                result = await response.Content.ReadFromJsonAsync<PaymentGatewayResponse>(
+                    cancellationToken: cancellationToken);
+            }
+            catch (JsonException ex)
+            {
+                throw new ExternalServiceException(
+                    "PaymentGateway",
+                    "La consulta de estado devolvió un payload inválido.",
+                    innerException: ex);
+            }
+
+            if (result is null || result.RequestId != requestId)
+            {
+                throw new ExternalServiceException(
+                    "PaymentGateway",
+                    "La consulta de estado devolvió una respuesta vacía o con request_id diferente.");
+            }
+
+            _logger.LogInformation(
+                "Estado de autorización recuperado RequestId={RequestId} TenantId={TenantId} Status={Status} TransactionId={TransactionId} ElapsedMs={ElapsedMs}",
+                requestId,
+                tenantId,
+                result.Status,
+                result.TransactionId,
+                elapsedMs);
             return result;
         }
     }

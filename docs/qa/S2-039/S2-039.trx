@@ -1,0 +1,52 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="fbaa5c2c-6fa4-41e2-b49c-f69f50a21041" name="@NicoOS 2026-10-17 13:35:51" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2026-10-17T13:35:51.1225985-03:00" queuing="2026-10-17T13:35:51.1225986-03:00" start="2026-10-17T13:35:50.2149107-03:00" finish="2026-10-17T13:35:51.1335407-03:00" />
+  <TestSettings name="default" id="21a9b429-974d-407e-8643-bd8a0ffb0c2a">
+    <Deployment runDeploymentRoot="_NicoOS_2026-10-17_13_35_51" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="cc161b26-0599-4b8e-90c5-01a6b1dc16e7" testId="b5ca0561-2546-f43c-8948-5f0e18c80c0e" testName="GlobalMart.IntegrationTests.PaymentSimulatorIntegrationTests.Simulator_StatusQuery_ReturnsStoredResultForSameKey" computerName="NicoOS" duration="00:00:00.0503002" startTime="2026-10-17T13:35:50.9365885-03:00" endTime="2026-10-17T13:35:50.9366069-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="cc161b26-0599-4b8e-90c5-01a6b1dc16e7" />
+    <UnitTestResult executionId="8ecf6dad-cbb6-4337-942f-c2863c9065d2" testId="a891a3a2-c6f9-6796-98bb-8eb10e4b755e" testName="GlobalMart.IntegrationTests.PaymentRetrySafetyTests.Rechazo_EsResultadoDefinitivoYNoConsultaEstado" computerName="NicoOS" duration="00:00:00.0067768" startTime="2026-10-17T13:35:50.9511852-03:00" endTime="2026-10-17T13:35:50.9511852-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="8ecf6dad-cbb6-4337-942f-c2863c9065d2" />
+    <UnitTestResult executionId="9a31b601-dce6-45e7-af63-1bd34daba08d" testId="a0654123-ab10-0055-d077-65a15e062279" testName="GlobalMart.IntegrationTests.PaymentRetrySafetyTests.Timeout_SinEstadoConfirmado_ConsultaUnaVezYNoReautoriza" computerName="NicoOS" duration="00:00:00.0329822" startTime="2026-10-17T13:35:51.0137042-03:00" endTime="2026-10-17T13:35:51.0137043-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="9a31b601-dce6-45e7-af63-1bd34daba08d" />
+    <UnitTestResult executionId="fceaecc0-b2d3-4eec-9ee5-0a7379e0d178" testId="8548ddea-7551-2bae-ca64-13fc2ef973d3" testName="GlobalMart.IntegrationTests.PaymentRetrySafetyTests.Timeout_ConEstadoAprobado_RecuperaResultadoSinSegundoPost" computerName="NicoOS" duration="00:00:00.0287340" startTime="2026-10-17T13:35:50.9804250-03:00" endTime="2026-10-17T13:35:50.9804251-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="fceaecc0-b2d3-4eec-9ee5-0a7379e0d178" />
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="GlobalMart.IntegrationTests.PaymentRetrySafetyTests.Rechazo_EsResultadoDefinitivoYNoConsultaEstado" storage="/home/noir_txger/documentos/universidad/semestre 6/integraiii/repo/tallerintegracion3/tests/globalmart.integrationtests/bin/debug/net8.0/globalmart.integrationtests.dll" id="a891a3a2-c6f9-6796-98bb-8eb10e4b755e">
+      <Execution id="8ecf6dad-cbb6-4337-942f-c2863c9065d2" />
+      <TestMethod codeBase="/home/noir_txger/Documentos/Universidad/SEMESTRE 6/INTEGRAIII/repo/TallerIntegracion3/tests/GlobalMart.IntegrationTests/bin/Debug/net8.0/GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.PaymentRetrySafetyTests" name="Rechazo_EsResultadoDefinitivoYNoConsultaEstado" />
+    </UnitTest>
+    <UnitTest name="GlobalMart.IntegrationTests.PaymentSimulatorIntegrationTests.Simulator_StatusQuery_ReturnsStoredResultForSameKey" storage="/home/noir_txger/documentos/universidad/semestre 6/integraiii/repo/tallerintegracion3/tests/globalmart.integrationtests/bin/debug/net8.0/globalmart.integrationtests.dll" id="b5ca0561-2546-f43c-8948-5f0e18c80c0e">
+      <Execution id="cc161b26-0599-4b8e-90c5-01a6b1dc16e7" />
+      <TestMethod codeBase="/home/noir_txger/Documentos/Universidad/SEMESTRE 6/INTEGRAIII/repo/TallerIntegracion3/tests/GlobalMart.IntegrationTests/bin/Debug/net8.0/GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.PaymentSimulatorIntegrationTests" name="Simulator_StatusQuery_ReturnsStoredResultForSameKey" />
+    </UnitTest>
+    <UnitTest name="GlobalMart.IntegrationTests.PaymentRetrySafetyTests.Timeout_ConEstadoAprobado_RecuperaResultadoSinSegundoPost" storage="/home/noir_txger/documentos/universidad/semestre 6/integraiii/repo/tallerintegracion3/tests/globalmart.integrationtests/bin/debug/net8.0/globalmart.integrationtests.dll" id="8548ddea-7551-2bae-ca64-13fc2ef973d3">
+      <Execution id="fceaecc0-b2d3-4eec-9ee5-0a7379e0d178" />
+      <TestMethod codeBase="/home/noir_txger/Documentos/Universidad/SEMESTRE 6/INTEGRAIII/repo/TallerIntegracion3/tests/GlobalMart.IntegrationTests/bin/Debug/net8.0/GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.PaymentRetrySafetyTests" name="Timeout_ConEstadoAprobado_RecuperaResultadoSinSegundoPost" />
+    </UnitTest>
+    <UnitTest name="GlobalMart.IntegrationTests.PaymentRetrySafetyTests.Timeout_SinEstadoConfirmado_ConsultaUnaVezYNoReautoriza" storage="/home/noir_txger/documentos/universidad/semestre 6/integraiii/repo/tallerintegracion3/tests/globalmart.integrationtests/bin/debug/net8.0/globalmart.integrationtests.dll" id="a0654123-ab10-0055-d077-65a15e062279">
+      <Execution id="9a31b601-dce6-45e7-af63-1bd34daba08d" />
+      <TestMethod codeBase="/home/noir_txger/Documentos/Universidad/SEMESTRE 6/INTEGRAIII/repo/TallerIntegracion3/tests/GlobalMart.IntegrationTests/bin/Debug/net8.0/GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.PaymentRetrySafetyTests" name="Timeout_SinEstadoConfirmado_ConsultaUnaVezYNoReautoriza" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="b5ca0561-2546-f43c-8948-5f0e18c80c0e" executionId="cc161b26-0599-4b8e-90c5-01a6b1dc16e7" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="a891a3a2-c6f9-6796-98bb-8eb10e4b755e" executionId="8ecf6dad-cbb6-4337-942f-c2863c9065d2" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="a0654123-ab10-0055-d077-65a15e062279" executionId="9a31b601-dce6-45e7-af63-1bd34daba08d" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="8548ddea-7551-2bae-ca64-13fc2ef973d3" executionId="fceaecc0-b2d3-4eec-9ee5-0a7379e0d178" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="Results Not in a List" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="All Loaded Results" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Completed">
+    <Counters total="4" executed="4" passed="4" failed="0" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Output>
+      <StdOut>[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v2.8.2+699d445a1a (64-bit .NET 8.0.31)
+[xUnit.net 00:00:00.07]   Discovering: GlobalMart.IntegrationTests
+[xUnit.net 00:00:00.15]   Discovered:  GlobalMart.IntegrationTests
+[xUnit.net 00:00:00.16]   Starting:    GlobalMart.IntegrationTests
+[xUnit.net 00:00:00.51]   Finished:    GlobalMart.IntegrationTests
+</StdOut>
+    </Output>
+  </ResultSummary>
+</TestRun>

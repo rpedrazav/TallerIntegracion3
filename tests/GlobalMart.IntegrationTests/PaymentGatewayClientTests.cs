@@ -111,7 +111,7 @@ public sealed class PaymentGatewayClientTests
     }
 
     [Fact]
-    public async Task ProcessPaymentAsync_SiVenceTimeout_LanzaTimeoutException()
+    public async Task ProcessPaymentAsync_SiVenceTimeout_LanzaEstadoIncierto()
     {
         var handler = new StubHandler(async (_, cancellationToken) =>
         {
@@ -120,7 +120,7 @@ public sealed class PaymentGatewayClientTests
         });
         var client = Client(handler, new Uri("https://simulator.test/"), TimeSpan.FromMilliseconds(25));
 
-        var exception = await Assert.ThrowsAsync<TimeoutException>(
+        var exception = await Assert.ThrowsAsync<Pos.Exceptions.PaymentAuthorizationUncertainException>(
             () => client.ProcessPaymentAsync(ValidRequest("sim-timeout-v1")));
 
         Assert.Contains("no respondió", exception.Message);

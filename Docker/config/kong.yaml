@@ -189,6 +189,7 @@ services:
           - /api/simulator/payments
         strip_path: false
         methods:
+          - GET
           - POST
           - OPTIONS
 

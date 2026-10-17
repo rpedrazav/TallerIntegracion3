@@ -239,6 +239,20 @@ public sealed class PaymentSimulatorIntegrationTests : IAsyncLifetime
         Assert.Contains("IDEMPOTENCY_CONFLICT", body);
     }
 
+    [Fact]
+    [Trait("Plan", "S2-039")]
+    public async Task Simulator_StatusQuery_ReturnsStoredResultForSameKey()
+    {
+        var client = CreatePaymentClient(_baseUrl);
+        var request = ValidRequest("sim-approved-v1");
+        var authorized = await client.ProcessPaymentAsync(request);
+
+        var recovered = await client.GetPaymentStatusAsync(request.TenantId, request.RequestId);
+
+        Assert.NotNull(recovered);
+        Assert.Equal(authorized, recovered);
+    }
+
     private async Task<HttpResponseMessage> PostRawAsync(object payload, Guid idempotencyKey)
     {
         using var request = new HttpRequestMessage(HttpMethod.Post, $"{_baseUrl}simulator/payments")

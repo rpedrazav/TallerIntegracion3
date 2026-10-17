@@ -3,7 +3,7 @@ id: pasarela-pago
 tipo: integracion
 titulo: Integración con Pasarela de Pago
 estado: parcial
-fuentes: [GlobalMart_ContextMaster.md#sec12, src/POSCartService/Services/IPaymentGatewayClient.cs, src/POSCartService/Services/PaymentGatewayClient.cs, src/POSCartService/DTOs/PaymentGatewayDtos.cs, src/POSCartService/Program.cs, Docker/simulator/server.js, tests/GlobalMart.IntegrationTests/PaymentGatewayClientTests.cs, tests/GlobalMart.IntegrationTests/PaymentSimulatorIntegrationTests.cs, tareas/sprint2_youtrack_resultado.json, Docker/env.example, .env.example, src/POSCartService/appsettings.json]
+fuentes: [GlobalMart_ContextMaster.md#sec12, src/POSCartService/Services/IPaymentGatewayClient.cs, src/POSCartService/Services/PaymentGatewayClient.cs, src/POSCartService/Exceptions/PaymentAuthorizationUncertainException.cs, src/POSCartService/DTOs/PaymentGatewayDtos.cs, src/POSCartService/Program.cs, Docker/simulator/server.js, tests/GlobalMart.IntegrationTests/PaymentGatewayClientTests.cs, tests/GlobalMart.IntegrationTests/PaymentSimulatorIntegrationTests.cs, tests/GlobalMart.IntegrationTests/PaymentRetrySafetyTests.cs, tareas/sprint2_youtrack_resultado.json, Docker/env.example, .env.example, src/POSCartService/appsettings.json]
 verificado_contra_codigo: true
 ultima_revision: 2026-10-17
 depende_de: [ms5-pos]
@@ -17,7 +17,7 @@ reglas: [RN-02, RF-07, PC-17, PC-27, PC-28]
 
 ## Estado: [PARCIAL]
 
-S2-031 / TI3-662 define el contrato de pasarela simulada (`IPaymentGatewayClient` y DTOs seguros). S2-036 / TI3-667 define los escenarios reproducibles. S2-037 / TI3-668 implementa `IPaymentGatewayClient` y su adaptador HTTP. S2-038 / TI3-669 completa el endpoint local de autorización. El cobro con tarjeta aún no está implementado en el controller de ventas.
+S2-031 / TI3-662 define el contrato de pasarela simulada (`IPaymentGatewayClient` y DTOs seguros). S2-036 / TI3-667 define los escenarios reproducibles. S2-037 / TI3-668 implementa `IPaymentGatewayClient` y su adaptador HTTP. S2-038 / TI3-669 completa el endpoint local de autorización. S2-039 / TI3-670 impide reautorizar automáticamente tras un timeout y consulta primero el estado por la misma clave. El cobro con tarjeta aún no está implementado en el controller de ventas.
 
 ## S2-031 / TI3-662 — Contrato de pasarela simulada [IMPLEMENTADO]
 
@@ -141,7 +141,7 @@ No se registra el cuerpo completo, encabezados de autorización, JWT, datos de t
 
 El adaptador envía `POST simulator/payments`, serializa exclusivamente `request_id`, `tenant_id`, `sale_id`, `amount`, `currency` y `scenario_id`, y propaga el mismo UUID en `Idempotency-Key`. El contrato C# no dispone de propiedades para PAN, CVV, vencimiento, titular, PIN o track de tarjeta. Tampoco propaga JWT ni encabezados del request del cajero.
 
-Las trazas estructuradas contienen únicamente identificadores de correlación, escenario, estado, referencia simulada y tiempo transcurrido. No se registra el cuerpo de solicitud o respuesta. Un timeout del `HttpClient` se traduce a `TimeoutException`; la cancelación solicitada por el llamador conserva `OperationCanceledException`; fallos HTTP o payloads inconsistentes se exponen como `ExternalServiceException` sin incluir el cuerpo remoto.
+Las trazas estructuradas contienen únicamente identificadores de correlación, escenario, estado, referencia simulada y tiempo transcurrido. No se registra el cuerpo de solicitud o respuesta. La cancelación solicitada por el llamador conserva `OperationCanceledException`; fallos HTTP o payloads inconsistentes se exponen como `ExternalServiceException` sin incluir el cuerpo remoto. Desde S2-039, un timeout inicia la consulta de estado y, si no puede resolverse, produce `PaymentAuthorizationUncertainException`, derivada de `TimeoutException`.
 
 [PaymentGatewayClientTests](../../../tests/GlobalMart.IntegrationTests/PaymentGatewayClientTests.cs) aprobó **4/4 casos** el 2026-10-16: URL configurada, propagación de idempotencia, conjunto exacto de campos seguros, respuesta rechazada, timeout explícito y rechazo local de `request_id` vacío sin invocar la red. [Evidencia TRX](../../qa/S2-037/S2-037.trx). La integración con el endpoint de cobro permanece [PLANIFICADO].
 
@@ -152,6 +152,14 @@ El proceso Node existente en `Docker/simulator/server.js` expone `POST /simulato
 `sim-approved-v1` y `sim-declined-v1` responden HTTP 200 con resultados de negocio deterministas. Las referencias `SIM-TXN-*` y `SIM-REF-*` usan un resumen SHA-256 estable y no exponen el UUID original. `sim-timeout-v1` demora 35 segundos y devuelve HTTP 504 si el cliente no cancela antes. Los payloads con campos de tarjeta se rechazan con HTTP 400 antes de autorizar.
 
 Las trazas son JSON estructurado y contienen solo fecha UTC, identificadores de correlación, escenario, estado, duración y referencia simulada. [PaymentSimulatorIntegrationTests](../../../tests/GlobalMart.IntegrationTests/PaymentSimulatorIntegrationTests.cs), ejecutada con el proceso Node real y `PaymentGatewayClient`, aprobó **7/7 casos** el 2026-10-17. [Evidencia TRX](../../qa/S2-038/S2-038.trx).
+
+## S2-039 / TI3-670 — Reintento seguro de cobro [IMPLEMENTADO]
+
+`PaymentGatewayClient` distingue el rechazo de negocio del resultado incierto. Una respuesta `DECLINED` se devuelve como resultado definitivo y no dispara una consulta ni un nuevo intento. Si el `POST /simulator/payments` vence por timeout, el adaptador ejecuta una sola consulta `GET /simulator/payments/{request_id}?tenant_id={tenant_id}`, enviando el mismo `request_id` como `Idempotency-Key`; nunca repite automáticamente el `POST` de autorización.
+
+La consulta devuelve la respuesta ya almacenada cuando la pasarela alcanzó a procesar la autorización. Si responde 404 o la consulta falla, MS-5 lanza `PaymentAuthorizationUncertainException` con `tenant_id` y `request_id`. Ese estado exige reconciliar la misma clave y evita iniciar otro cargo con un identificador nuevo. El almacenamiento del simulador es en memoria: tras reiniciar el proceso, un estado no encontrado continúa siendo incierto y no habilita un reintento automático.
+
+[PaymentRetrySafetyTests](../../../tests/GlobalMart.IntegrationTests/PaymentRetrySafetyTests.cs) y la prueba contra el proceso Node real validaron **4/4 casos** el 2026-10-17: timeout desconocido, timeout con aprobación recuperable, rechazo sin consulta y recuperación del payload almacenado. En ambos casos de timeout hubo exactamente un `POST` y una consulta `GET`. [Evidencia TRX](../../qa/S2-039/S2-039.trx).
 
 ## S2-056 / TI3-687 — Configuración segura del simulador [IMPLEMENTADO]
 
@@ -187,7 +195,7 @@ Se implementó el servicio de pasarela de pruebas en `Docker/simulator/server.js
 Se configuró el enrutamiento en Kong API Gateway (`Docker/config/kong.yaml`) para exponer el simulador al entorno local y microservicios:
 - Servicio: `payment-simulator-service` (`http://payment-simulator:5050`).
 - Rutas:
-  - `simulator-payments-route`: `POST /simulator/payments` y `POST /api/simulator/payments` (`strip_path: false`).
+  - `simulator-payments-route`: `POST` de autorización y `GET` de estado en `/simulator/payments` y `/api/simulator/payments` (`strip_path: false`).
   - `simulator-health-route`: `GET /simulator/health` y `GET /api/simulator/health` (`strip_path: false`).
 - Permite que MS-5 (`PaymentGatewayClient`) alcance el simulador directamente en `http://localhost:5050` o a través del Gateway en `http://localhost:8000/simulator/payments`.
 - Se validó el contrato de red impidiendo que el frontend Electron transmita datos de tarjeta bancarios hacia la pasarela o el backend.
@@ -252,14 +260,18 @@ Al anular una venta cobrada con tarjeta:
 - `tareas/sprint2_youtrack_resultado.json` (`S2-036` → `TI3-667`)
 - `tareas/sprint2_youtrack_resultado.json` (`S2-037` → `TI3-668`)
 - `tareas/sprint2_youtrack_resultado.json` (`S2-038` → `TI3-669`)
+- `tareas/sprint2_youtrack_resultado.json` (`S2-039` → `TI3-670`)
 - `src/POSCartService/Program.cs` (HttpClient `PasarelaPago` y timeout vigente)
 - `src/POSCartService/Services/IPaymentGatewayClient.cs`
 - `src/POSCartService/Services/PaymentGatewayClient.cs`
+- `src/POSCartService/Exceptions/PaymentAuthorizationUncertainException.cs`
 - `src/POSCartService/DTOs/PaymentGatewayDtos.cs`
 - `tests/GlobalMart.IntegrationTests/PaymentGatewayClientTests.cs`
 - `Docker/simulator/server.js`
 - `tests/GlobalMart.IntegrationTests/PaymentSimulatorIntegrationTests.cs`
 - `docs/qa/S2-038/S2-038.trx`
+- `tests/GlobalMart.IntegrationTests/PaymentRetrySafetyTests.cs`
+- `docs/qa/S2-039/S2-039.trx`
 - `src/POSCartService/Controllers/VentasController.cs` (cobro vigente solo en efectivo)
 - `src/POSCartService/Services/VentaService.cs` (AnularAsync sin reembolso)
 - `Docker/env.example`

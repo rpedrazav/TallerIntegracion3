@@ -3,7 +3,7 @@ id: ms5-pos
 tipo: microservicio
 titulo: MS-5 · POS & Cart Service
 estado: parcial
-fuentes: [src/POSCartService/, Docker/simulator/server.js, tests/GlobalMart.IntegrationTests/PaymentSimulatorIntegrationTests.cs]
+fuentes: [src/POSCartService/, Docker/simulator/server.js, tests/GlobalMart.IntegrationTests/PaymentSimulatorIntegrationTests.cs, tests/GlobalMart.IntegrationTests/PaymentRetrySafetyTests.cs]
 verificado_contra_codigo: true
 ultima_revision: 2026-10-17
 depende_de: [ms1-identity, ms2-tax, ms3-catalog]
@@ -295,6 +295,10 @@ Defensa adicional en [PosRepositoryTenantIsolationTests.cs](../../../tests/Globa
 ## S2-038 — Servicio simulador de autorizaciones
 
 [IMPLEMENTADO] El simulador Node existente implementa aprobación, rechazo y timeout sin conexión bancaria. Exige la misma identidad en `Idempotency-Key` y `request_id`, conserva la respuesta por tenant y genera referencias opacas. La integración real con `PaymentGatewayClient` aprobó **7/7 pruebas** el 2026-10-17. El controller de cobro aún no invoca el adaptador. [Contrato y evidencia](../integraciones/pasarela-pago.md).
+
+## S2-039 — Evitar reintento inseguro de cobro
+
+[IMPLEMENTADO] Ante timeout de autorización, `PaymentGatewayClient` consulta una vez el estado con el mismo `tenant_id`, `request_id` e `Idempotency-Key`, sin repetir el `POST`. Si recupera un resultado lo devuelve; si el estado no existe o no puede consultarse, lanza `PaymentAuthorizationUncertainException`. Un rechazo `DECLINED` sigue siendo un resultado definitivo y no activa la consulta. Pruebas enfocadas y simulador real: **4/4 aprobadas** el 2026-10-17. La orquestación desde el controller de cobro continúa pendiente. [Política y evidencia](../integraciones/pasarela-pago.md).
 
 ## S2-056 — Configuración segura del simulador
 

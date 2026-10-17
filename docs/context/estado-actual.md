@@ -30,7 +30,7 @@ reglas: []
 | MS-2 Tax | ✅ 1 controller | ❌ No Kafka | ✅ ManualTest | **PARCIAL** |
 | MS-3 Catalog | ✅ 2 controllers | ❌ No Kafka | ✅ Manual .http + baja/PUT TI3-642 + 9 casos RN-01 S2-023 | **PARCIAL** |
 | MS-4 Warehouse | ✅ 1 controller | ✅ Consumer sale.completed | ❌ No tests | **PARCIAL** |
-| MS-5 POS | ✅ 2 controllers | ✅ OutboxPublisherWorker sale.completed | ✅ AgregarItemTest + CobroCuadreTest + S2-008/S2-009/S2-010/S2-037/S2-038 + 10 HTTP y 13 directos RN-01 S2-023 | **PARCIAL** |
+| MS-5 POS | ✅ 2 controllers | ✅ OutboxPublisherWorker sale.completed | ✅ AgregarItemTest + CobroCuadreTest + S2-008/S2-009/S2-010/S2-037/S2-038/S2-039 + 10 HTTP y 13 directos RN-01 S2-023 | **PARCIAL** |
 | MS-6 SupplyChain | ❌ Sin controllers | ❌ Sin Kafka | ❌ Sin tests | **PLANIFICADO** |
 | MS-7 Analytics | ❌ Sin controllers | ❌ Sin consumers | ❌ Sin tests | **PLANIFICADO** |
 | MS-8 Loyalty | ❌ Sin controllers | ⚠️ Registrado en DI sin consumer loop | ❌ Sin tests | **PLANIFICADO** |
@@ -135,7 +135,7 @@ reglas: []
 - `POST /ventas/{id}/cobrar` — valida que la venta tenga método de pago EFECTIVO (rechaza TARJETA o MIXTO con 400 Bad Request según S2-004), valida `monto_recibido` ≥ total, y confirma venta, pago y `sale.completed` pendiente en una transacción [IMPLEMENTADO]
 - VentaService con métodos `CompletarAsync` y `AnularAsync` [IMPLEMENTADO en service]
 - OutboxPublisherWorker y KafkaProducerService — publicación automática con lease, reintento y cancelación limpia [IMPLEMENTADO]
-- PaymentGatewayClient — adaptador HTTP con URL/timeout configurables, idempotencia y payload seguro; todavía no conectado al endpoint de cobro [IMPLEMENTADO]
+- PaymentGatewayClient — adaptador HTTP con URL/timeout configurables, idempotencia, payload seguro y consulta de estado tras timeout sin repetir la autorización; todavía no conectado al endpoint de cobro [IMPLEMENTADO]
 - PaymentGatewaySimulator — proceso Node local con aprobación, rechazo, timeout, idempotencia y referencias opacas [IMPLEMENTADO]
 - test de integración abre turno con JWT de cajero y verifica persistencia en estado `ABIERTO` [IMPLEMENTADO]
 - tests de integración en `VentaIntegrationTests` validan creación de venta con resolución autoritativa en MS-3 e IVA en MS-2, agregado de ítems, y rechazo de productos inexistentes (404) e inactivos (400) sin persistir venta ni ítems [IMPLEMENTADO]
@@ -274,6 +274,10 @@ Refuerzo posterior [IMPLEMENTADO]: `VentaRepository.ActualizarAsync` y `ItemVent
 ## S2-038 — Servicio simulador de autorizaciones
 
 [IMPLEMENTADO] El proceso local `Docker/simulator/server.js` devuelve aprobación y rechazo deterministas, simula timeout, exige que `Idempotency-Key` coincida con `request_id` y conserva la respuesta por `(tenant_id, request_id)`. Genera referencias opacas estables, rechaza campos de tarjeta y emite trazas JSON con metadatos seguros. Integración real con `PaymentGatewayClient`: **7/7 pruebas aprobadas** el 2026-10-17. [Contrato y evidencia](integraciones/pasarela-pago.md).
+
+## S2-039 / TI3-670 — Evitar reintento inseguro de cobro
+
+[IMPLEMENTADO] Un timeout del `POST` de autorización ahora provoca una única consulta de estado con el mismo `tenant_id`, `request_id` e `Idempotency-Key`; el adaptador no repite automáticamente el cargo. Un resultado almacenado se recupera, mientras que un 404 o una consulta fallida produce `PaymentAuthorizationUncertainException`. Los rechazos son resultados definitivos y no activan reconciliación. Pruebas enfocadas y simulador Node real: **4/4 aprobadas** el 2026-10-17. El controller de cobro aún no invoca el adaptador. [Política y evidencia](integraciones/pasarela-pago.md).
 
 ## S2-026 / TI3-657 — Inventario y matriz de rutas y puertos reales
 

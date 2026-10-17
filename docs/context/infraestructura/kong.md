@@ -5,7 +5,7 @@ titulo: Kong API Gateway — Configuración y Rutas
 estado: parcial
 fuentes: [Docker/config/kong.yaml, Docker/config/README_KONG.md]
 verificado_contra_codigo: true
-ultima_revision: 2026-10-16
+ultima_revision: 2026-10-17
 depende_de: [ms1-identity, ms3-catalog, ms5-pos]
 publica: []
 consume: []
@@ -41,6 +41,13 @@ reglas: [RN-07]
 |-----------|---------|-----|
 | `/api/turnos` | GET, POST, PUT, DELETE, OPTIONS | ✅ |
 | `/api/ventas` | GET, POST, PUT, DELETE, OPTIONS | ✅ |
+
+### Simulador de pagos (interno :5050)
+
+| Ruta Kong | Métodos | JWT | Descripción |
+|-----------|---------|-----|-------------|
+| `/simulator/payments`, `/api/simulator/payments` | GET, POST, OPTIONS | ❌ Sin JWT | Autorizar y consultar estado por clave idempotente |
+| `/simulator/health`, `/api/simulator/health` | GET, OPTIONS | ❌ Sin JWT | Health check local |
 
 ## Servicios SIN rutas Kong
 

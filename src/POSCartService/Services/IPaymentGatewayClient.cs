@@ -10,4 +10,9 @@ public interface IPaymentGatewayClient
     Task<PaymentGatewayResponse> ProcessPaymentAsync(
         PaymentGatewayRequest request,
         CancellationToken cancellationToken = default);
+
+    Task<PaymentGatewayResponse?> GetPaymentStatusAsync(
+        Guid tenantId,
+        Guid requestId,
+        CancellationToken cancellationToken = default);
 }

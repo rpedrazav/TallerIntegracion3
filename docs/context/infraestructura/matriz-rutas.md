@@ -5,7 +5,7 @@ titulo: Matriz Integral de Rutas, Puertos y Endpoints
 estado: implementado
 fuentes: [Docker/config/kong.yaml, src/*/Controllers/*.cs, src/*/Properties/launchSettings.json, globalmart-frontend/src/]
 verificado_contra_codigo: true
-ultima_revision: 2026-10-16
+ultima_revision: 2026-10-17
 depende_de: [ms1-identity, ms2-tax, ms3-catalog, ms4-warehouse, ms5-pos, kong]
 publica: []
 consume: []
@@ -102,6 +102,7 @@ reglas: [RN-01, RN-06, RN-07]
 | Endpoint Lógico | Método | Ruta Controlador / Servidor | Ruta Kong (`kong.yaml`) | Auth / Requisitos | Consumidor |
 |---|---|---|---|---|---|
 | Procesar Pago Seguro | `POST` | `simulator/payments`, `api/simulator/payments` | `/simulator/payments`, `/api/simulator/payments` | ❌ Sin JWT / Sin datos de tarjeta (RN-02) | MS-5 `PaymentGatewayClient` |
+| Consultar Estado de Pago | `GET` | `simulator/payments/{request_id}?tenant_id={tenant_id}`, `api/simulator/payments/{request_id}?tenant_id={tenant_id}` | `/simulator/payments`, `/api/simulator/payments` | ❌ Sin JWT / `Idempotency-Key = request_id` | MS-5 `PaymentGatewayClient` tras timeout |
 | Health Check | `GET` | `health`, `simulator/health`, `api/simulator/health` | `/simulator/health`, `/api/simulator/health` | ❌ Público | Docker healthcheck, Smoke Test |
 
 ---

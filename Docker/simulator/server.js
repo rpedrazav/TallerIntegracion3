@@ -10,6 +10,7 @@
  *   - RN-02 / PCI DSS: Prohíbe estrictamente datos de tarjeta (PAN, CVV, PIN, etc.).
  *   - S2-036: Escenarios 'sim-approved-v1', 'sim-declined-v1', 'sim-timeout-v1'.
  *   - S2-037: Idempotencia por (tenant_id, request_id) e Idempotency-Key.
+ *   - S2-039: Un timeout se reconcilia consultando la clave antes de reautorizar.
  * ==============================================================================
  */
 
@@ -104,7 +105,8 @@ function sendJson(res, statusCode, data) {
  * Manejador principal de peticiones HTTP.
  */
 const server = http.createServer((req, res) => {
-  const urlPath = (req.url || '').split('?')[0];
+  const requestUrl = new URL(req.url || '/', `http://${req.headers.host || 'localhost'}`);
+  const urlPath = requestUrl.pathname;
 
   // Manejo de preflight CORS (OPTIONS)
   if (req.method === 'OPTIONS') {
@@ -125,7 +127,61 @@ const server = http.createServer((req, res) => {
     });
   }
 
-  // 2. Procesamiento de Pagos Simulados
+  // 2. Consulta de estado por la misma clave idempotente (S2-039)
+  const statusRoute = urlPath.match(/^\/(?:api\/)?simulator\/payments\/([^/]+)$/i);
+  if (req.method === 'GET' && statusRoute) {
+    const startedAt = process.hrtime.bigint();
+    const request_id = decodeURIComponent(statusRoute[1]);
+    const tenant_id = requestUrl.searchParams.get('tenant_id');
+    const body = { request_id, tenant_id, sale_id: null, scenario_id: null };
+
+    if (!UUID_PATTERN.test(request_id) || !UUID_PATTERN.test(tenant_id)) {
+      logAudit(body, 'VALIDATION_ERROR', startedAt);
+      return sendJson(res, 400, {
+        error: 'VALIDATION_ERROR',
+        message: 'request_id y tenant_id deben ser UUID válidos.'
+      });
+    }
+
+    const idempotencyHeader = req.headers['idempotency-key'];
+    if (typeof idempotencyHeader !== 'string' || !UUID_PATTERN.test(idempotencyHeader)) {
+      logAudit(body, 'INVALID_IDEMPOTENCY_KEY', startedAt);
+      return sendJson(res, 400, {
+        error: 'INVALID_IDEMPOTENCY_KEY',
+        message: 'Idempotency-Key debe contener un UUID válido.'
+      });
+    }
+
+    if (idempotencyHeader.toLowerCase() !== request_id.toLowerCase()) {
+      logAudit(body, 'IDEMPOTENCY_CONFLICT', startedAt);
+      return sendJson(res, 409, {
+        error: 'IDEMPOTENCY_CONFLICT',
+        message: 'Idempotency-Key debe coincidir con request_id.'
+      });
+    }
+
+    const idempotencyKey = `${tenant_id.toLowerCase()}:${request_id.toLowerCase()}`;
+    const existing = idempotencyStore.get(idempotencyKey);
+    if (!existing) {
+      logAudit(body, 'UNKNOWN', startedAt);
+      return sendJson(res, 404, {
+        error: 'PAYMENT_STATUS_NOT_FOUND',
+        request_id,
+        status: 'UNKNOWN'
+      });
+    }
+
+    const auditBody = {
+      request_id,
+      tenant_id,
+      sale_id: existing.sale_id,
+      scenario_id: existing.scenario_id
+    };
+    logAudit(auditBody, existing.response.status, startedAt, existing.response.transaction_id);
+    return sendJson(res, 200, existing.response);
+  }
+
+  // 3. Procesamiento de Pagos Simulados
   if (req.method === 'POST' && (urlPath === '/simulator/payments' || urlPath === '/api/simulator/payments')) {
     const startedAt = process.hrtime.bigint();
     let rawBody = '';
@@ -296,7 +352,7 @@ const server = http.createServer((req, res) => {
 
 server.listen(PORT, HOST, () => {
   console.log(`[SIMULATOR] Payment Gateway Simulator activo en http://${HOST}:${PORT}`);
-  console.log(`[SIMULATOR] Endpoints: GET /health | POST /simulator/payments`);
+  console.log(`[SIMULATOR] Endpoints: GET /health | POST /simulator/payments | GET /simulator/payments/:request_id?tenant_id=...`);
 });
 
 // Manejo de cierre limpio
