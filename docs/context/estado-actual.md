@@ -279,6 +279,10 @@ Refuerzo posterior [IMPLEMENTADO]: `VentaRepository.ActualizarAsync` y `ItemVent
 
 [IMPLEMENTADO] Un timeout del `POST` de autorización ahora provoca una única consulta de estado con el mismo `tenant_id`, `request_id` e `Idempotency-Key`; el adaptador no repite automáticamente el cargo. Un resultado almacenado se recupera, mientras que un 404 o una consulta fallida produce `PaymentAuthorizationUncertainException`. Los rechazos son resultados definitivos y no activan reconciliación. Pruebas enfocadas y simulador Node real: **4/4 aprobadas** el 2026-10-17. El controller de cobro aún no invoca el adaptador. [Política y evidencia](integraciones/pasarela-pago.md).
 
+## S2-051 / TI3-682 — Matriz RN-02 de pagos
+
+[CONTRATO DEFINIDO] Se documentaron [18 casos de aceptación](../../diagramas/matriz/S2-051-matriz-rn02-pagos.md) por método, resultado, idempotencia y logs permitidos, con prohibición explícita de captura local de PAN/CVV. La matriz distingue cobertura parcial del adaptador/simulador de la aceptación E2E pendiente. No se ejecutaron estos casos como parte de la definición ni se implementó el cobro con tarjeta; aceptación E2E [NO VERIFICADO], bloqueada por la orquestación pendiente.
+
 ## S2-026 / TI3-657 — Inventario y matriz de rutas y puertos reales
 
 [IMPLEMENTADO] Se documentó la matriz integral de endpoints, puertos locales (`launchSettings.json`), puertos internos de Docker, rutas Kong y consumidores del frontend en `docs/context/infraestructura/matriz-rutas.md`. Incluye mapeo de los 8 microservicios y reconciliación de prefijos `/api`.

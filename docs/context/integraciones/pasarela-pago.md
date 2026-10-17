@@ -17,6 +17,10 @@ reglas: [RN-02, RF-07, PC-17, PC-27, PC-28]
 
 ## Estado: [PARCIAL]
 
+### S2-051 — Matriz RN-02 de pagos [CONTRATO DEFINIDO]
+
+La [matriz S2-051](../../../diagramas/matriz/S2-051-matriz-rn02-pagos.md) define 18 casos de aceptación por método, resultado, idempotencia y datos permitidos en logs. Prohíbe explícitamente captura local, almacenamiento y transmisión de PAN/CVV, incluso de prueba. Incluye aprobación, rechazo, incertidumbre, concurrencia, recuperación, aislamiento y controles de efectivo/MIXTO. Su ejecución está pendiente y no acredita E2E: falta conectar el cobro de tarjeta. La unicidad local de intentos no demuestra por sí sola ausencia de doble autorización externa; la sanitización integral de errores/logs queda [NO VERIFICADO].
+
 S2-031 / TI3-662 define el contrato de pasarela simulada (`IPaymentGatewayClient` y DTOs seguros). S2-036 / TI3-667 define los escenarios reproducibles. S2-037 / TI3-668 implementa `IPaymentGatewayClient` y su adaptador HTTP. S2-038 / TI3-669 completa el endpoint local de autorización. S2-039 / TI3-670 impide reautorizar automáticamente tras un timeout y consulta primero el estado por la misma clave. El cobro con tarjeta aún no está implementado en el controller de ventas.
 
 ## S2-031 / TI3-662 — Contrato de pasarela simulada [IMPLEMENTADO]
