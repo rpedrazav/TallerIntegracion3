@@ -32,6 +32,15 @@ Define la interfaz de comunicación y los objetos de transferencia de datos en M
 - **Aceptación y Seguridad**:
   El contrato **no transporta, almacena ni serializa PAN, CVV, fecha de caducidad, PIN ni datos de tarjeta**. Se valida mediante pruebas de reflexión y serialización en `PaymentGatewayClientTests` (trait `S2-031`).
 
+## S2-032 / TI3-663 — Persistencia de intentos de pago e idempotencia [IMPLEMENTADO]
+
+Para cumplir el criterio P03 de la matriz de aceptación (evitar doble cargo por doble clic, reintentos de red o recarga de página), MS-5 persiste cada intento de cobro con tarjeta en la tabla `IntentosPago` (`IntentoPago.cs`):
+
+- **Campos almacenados**: `Id`, `TenantId`, `VentaId`, `IdempotencyKey` (string max 100), `Estado` (`EstadoIntentoPago`: `PENDIENTE`, `APROBADO`, `RECHAZADO`, `FALLIDO`), `Monto` (18,2), `Moneda` (3), `Referencia` opaca (100), `AuthorizationCode` (100), `DeclineCode` (100), `Mensaje` (500), `CreatedAt` y `UpdatedAt`.
+- **Garantía de idempotencia (Criterio de Aceptación)**: Se impone mediante el índice único compuesto `IX_IntentosPago_TenantId_IdempotencyKey`. Si un cliente reenvía la misma clave para el mismo tenant, la base de datos rechaza la inserción duplicada evitando la creación de un segundo cobro o cargo.
+- **Aislamiento Multi-Tenant (RN-01)**: Filtro global `CurrentTenantId` en `PosCartDbContext`. Claves de idempotencia iguales pertenecientes a distintos tenants no colisionan.
+- **Migración**: `20261017163020_AddIntentoPago.cs`. Pruebas en `IntentoPagoPersistenceTests` (trait `S2-032`).
+
 ## S2-036 — Escenarios controlables del simulador [CONTRATO DEFINIDO]
 
 El simulador debe exponer `POST /simulator/payments` únicamente en entornos de desarrollo y pruebas. El resultado se selecciona mediante `scenario_id`, nunca mediante un número de tarjeta. Los tres identificadores son públicos, no sensibles y estables.

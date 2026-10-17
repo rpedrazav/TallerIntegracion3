@@ -284,6 +284,10 @@ Defensa adicional en [PosRepositoryTenantIsolationTests.cs](../../../tests/Globa
 
 [IMPLEMENTADO] Se definieron `IPaymentGatewayClient` y los DTOs `PaymentGatewayRequest` y `PaymentGatewayResponse`. Transportan únicamente referencias opacas de pago (`transaction_id`, `authorization_code`, `gateway_reference`), moneda, monto, tenant y venta; sin datos de tarjeta (PAN/CVV), en cumplimiento estricto de RN-02 y PCI DSS. Pruebas de contrato **5/5 aprobadas** en `PaymentGatewayClientTests`. [Detalles](../integraciones/pasarela-pago.md).
 
+## S2-032 — Agregar persistencia de intento de tarjeta
+
+[IMPLEMENTADO] Entidad `IntentoPago` (`IntentosPago`) y migración EF Core `20261017163020_AddIntentoPago`. Persiste `IdempotencyKey`, `Estado` (`PENDIENTE`, `APROBADO`, `RECHAZADO`, `FALLIDO`), monto, moneda y referencias opacas vinculadas a la venta y tenant. Idempotencia forzada en base de datos mediante índice único `(TenantId, IdempotencyKey)`. Pruebas **4/4 aprobadas** en `IntentoPagoPersistenceTests`. [Detalles](../integraciones/pasarela-pago.md).
+
 ## S2-037 — Adaptador HTTP de pasarela
 
 [IMPLEMENTADO] `PaymentGatewayClient` implementa `IPaymentGatewayClient`, usa la URL y timeout configurados para `PasarelaPago`, y propaga `request_id` como `Idempotency-Key`. Su DTO transmite solo tenant, venta, monto, moneda y escenario; no admite datos de tarjeta. Registra trazas estructuradas sin cuerpos ni credenciales y distingue timeout, cancelación del llamador y errores HTTP. Pruebas enfocadas **4/4 aprobadas** el 2026-10-16. [Contrato y evidencia](../integraciones/pasarela-pago.md).

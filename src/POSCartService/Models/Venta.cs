@@ -49,4 +49,5 @@ public class Venta
     public ICollection<ItemVenta> Items { get; set; } = new List<ItemVenta>();
     public ICollection<Pago> Pagos { get; set; } = new List<Pago>();
     public Anulacion? Anulacion { get; set; }
+    public ICollection<IntentoPago> IntentosPago { get; set; } = new List<IntentoPago>();
 }

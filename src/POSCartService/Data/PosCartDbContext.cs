@@ -28,6 +28,7 @@ public class PosCartDbContext : DbContext
     public DbSet<Pago> Pagos => Set<Pago>();
     public DbSet<Anulacion> Anulaciones => Set<Anulacion>();
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
+    public DbSet<IntentoPago> IntentosPago => Set<IntentoPago>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -130,6 +131,31 @@ public class PosCartDbContext : DbContext
              .WithOne(v => v.Anulacion)
              .HasForeignKey<Anulacion>(a => a.VentaId)
              .OnDelete(DeleteBehavior.Cascade); // "revocada por (CASCADE)" según ERD
+        });
+
+        // ── IntentoPago (S2-032 / TI3-663) ──────────────────────────────────
+        modelBuilder.Entity<IntentoPago>(e =>
+        {
+            e.HasKey(i => i.Id);
+            e.Property(i => i.IdempotencyKey).IsRequired().HasMaxLength(100);
+            e.Property(i => i.Monto).HasPrecision(18, 2);
+            e.Property(i => i.Moneda).IsRequired().HasMaxLength(3);
+            e.Property(i => i.Referencia).HasMaxLength(100);
+            e.Property(i => i.AuthorizationCode).HasMaxLength(100);
+            e.Property(i => i.DeclineCode).HasMaxLength(100);
+            e.Property(i => i.Mensaje).HasMaxLength(500);
+
+            // RN-01: Índice único compuesto de idempotencia por tenant
+            e.HasIndex(i => new { i.TenantId, i.IdempotencyKey }).IsUnique();
+            e.HasIndex(i => new { i.TenantId, i.VentaId });
+
+            // FILTRO GLOBAL MULTI-TENANT: tenant_id propio
+            e.HasQueryFilter(i => CurrentTenantId.HasValue && i.TenantId == CurrentTenantId);
+
+            e.HasOne(i => i.Venta)
+             .WithMany(v => v.IntentosPago)
+             .HasForeignKey(i => i.VentaId)
+             .OnDelete(DeleteBehavior.Cascade);
         });
     }
 }

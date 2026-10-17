@@ -49,6 +49,69 @@ namespace POSCartService.Data.Migrations
                     b.ToTable("Anulaciones");
                 });
 
+            modelBuilder.Entity("POSCartService.Models.IntentoPago", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("AuthorizationCode")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DeclineCode")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<int>("Estado")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("IdempotencyKey")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Mensaje")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("Moneda")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("character varying(3)");
+
+                    b.Property<decimal>("Monto")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<string>("Referencia")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("VentaId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("VentaId");
+
+                    b.HasIndex("TenantId", "IdempotencyKey")
+                        .IsUnique();
+
+                    b.HasIndex("TenantId", "VentaId");
+
+                    b.ToTable("IntentosPago");
+                });
+
             modelBuilder.Entity("POSCartService.Models.ItemVenta", b =>
                 {
                     b.Property<Guid>("Id")
@@ -296,6 +359,17 @@ namespace POSCartService.Data.Migrations
                     b.Navigation("Venta");
                 });
 
+            modelBuilder.Entity("POSCartService.Models.IntentoPago", b =>
+                {
+                    b.HasOne("POSCartService.Models.Venta", "Venta")
+                        .WithMany("IntentosPago")
+                        .HasForeignKey("VentaId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Venta");
+                });
+
             modelBuilder.Entity("POSCartService.Models.ItemVenta", b =>
                 {
                     b.HasOne("POSCartService.Models.Venta", "Venta")
@@ -337,6 +411,8 @@ namespace POSCartService.Data.Migrations
             modelBuilder.Entity("POSCartService.Models.Venta", b =>
                 {
                     b.Navigation("Anulacion");
+
+                    b.Navigation("IntentosPago");
 
                     b.Navigation("Items");
 
