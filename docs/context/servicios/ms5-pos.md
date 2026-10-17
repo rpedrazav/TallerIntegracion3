@@ -5,7 +5,7 @@ titulo: MS-5 · POS & Cart Service
 estado: parcial
 fuentes: [src/POSCartService/]
 verificado_contra_codigo: true
-ultima_revision: 2026-10-16
+ultima_revision: 2026-10-17
 depende_de: [ms1-identity, ms2-tax, ms3-catalog]
 publica: [sale.completed]
 consume: []
@@ -279,6 +279,10 @@ Defensa adicional en [PosRepositoryTenantIsolationTests.cs](../../../tests/Globa
 ## S2-010 — Caída y recuperación del broker
 
 [IMPLEMENTADO] [OutboxBrokerRecoveryIntegrationTests](../../../tests/GlobalMart.IntegrationTests/OutboxBrokerRecoveryIntegrationTests.cs) recorre cobro, pago, outbox, fallo de publicación y recuperación con PostgreSQL real y un productor controlado en el límite Kafka. Comprueba una venta, un pago y un evento lógico; los dos intentos conservan topic, clave, JSON y `EventId`, mientras solo el intento posterior a la recuperación se entrega. Prueba enfocada **1/1 aprobada** y regresión S2-008/S2-009/S2-010 **5/5 aprobada** el 2026-10-15. [Evidencia TRX](../../qa/S2-010/S2-010.trx). La detención de un proceso Kafka real no forma parte de esta prueba determinista.
+
+## S2-031 — Definir contrato de pasarela simulada
+
+[IMPLEMENTADO] Se definieron `IPaymentGatewayClient` y los DTOs `PaymentGatewayRequest` y `PaymentGatewayResponse`. Transportan únicamente referencias opacas de pago (`transaction_id`, `authorization_code`, `gateway_reference`), moneda, monto, tenant y venta; sin datos de tarjeta (PAN/CVV), en cumplimiento estricto de RN-02 y PCI DSS. Pruebas de contrato **5/5 aprobadas** en `PaymentGatewayClientTests`. [Detalles](../integraciones/pasarela-pago.md).
 
 ## S2-037 — Adaptador HTTP de pasarela
 

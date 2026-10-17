@@ -9,9 +9,39 @@ using Pos = POSCartServiceAlias::POSCartService;
 
 namespace GlobalMart.IntegrationTests;
 
+[Trait("Plan", "S2-031")]
 [Trait("Plan", "S2-037")]
 public sealed class PaymentGatewayClientTests
 {
+    [Fact]
+    public void ContratoPasarela_NoContieneCamposSensiblesDeTarjeta_SoloReferenciasOpacas()
+    {
+        // S2-031: Verificar por contrato/reflexión que los DTOs de pasarela
+        // no transportan ni exponen campos de tarjeta (PAN, CVV, CardNumber, etc.)
+        var tiposContrato = new[] { typeof(Pos.DTOs.PaymentGatewayRequest), typeof(Pos.DTOs.PaymentGatewayResponse) };
+        var palabrasProhibidas = new[] { "card", "pan", "cvv", "cvc", "pin", "track", "expiration", "vencimiento" };
+
+        foreach (var tipo in tiposContrato)
+        {
+            var propiedades = tipo.GetProperties().Select(p => p.Name.ToLowerInvariant());
+            foreach (var prop in propiedades)
+            {
+                foreach (var prohibida in palabrasProhibidas)
+                {
+                    Assert.DoesNotContain(prohibida, prop);
+                }
+            }
+        }
+
+        // Verificar que PaymentGatewayResponse expone únicamente referencias opacas
+        var propsResponse = typeof(Pos.DTOs.PaymentGatewayResponse).GetProperties().Select(p => p.Name).ToArray();
+        Assert.Contains(nameof(Pos.DTOs.PaymentGatewayResponse.TransactionId), propsResponse);
+        Assert.Contains(nameof(Pos.DTOs.PaymentGatewayResponse.AuthorizationCode), propsResponse);
+        Assert.Contains(nameof(Pos.DTOs.PaymentGatewayResponse.GatewayReference), propsResponse);
+        Assert.Contains(nameof(Pos.DTOs.PaymentGatewayResponse.Status), propsResponse);
+        Assert.Contains(nameof(Pos.DTOs.PaymentGatewayResponse.DeclineCode), propsResponse);
+    }
+
     [Fact]
     public async Task ProcessPaymentAsync_PropagaIdempotencyKeyYEnviaSoloCamposSeguros()
     {

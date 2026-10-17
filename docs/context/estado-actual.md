@@ -5,7 +5,7 @@ titulo: Estado Real de Implementación — GlobalMart OS
 estado: vigente
 fuentes: [docs/context/_reports/inventario.md, src/, globalmart-frontend/src/api/client.ts, git log, docs/context/_reports/preguntas-abiertas.md]
 verificado_contra_codigo: true
-ultima_revision: 2026-10-16
+ultima_revision: 2026-10-17
 depende_de: []
 publica: []
 consume: []
@@ -253,6 +253,10 @@ Refuerzo posterior [IMPLEMENTADO]: `VentaRepository.ActualizarAsync` y `ItemVent
 ## S2-010 — Caída y recuperación del broker
 
 [IMPLEMENTADO] Prueba de integración sobre PostgreSQL 18.6 temporal y productor Kafka controlado: completa la venta y pago, simula indisponibilidad durante el primer intento, conserva una sola fila outbox `PENDIENTE` y, tras recuperar el productor, entrega una sola vez el payload persistido con el mismo `EventId`, clave, topic y versión. Prueba enfocada **1/1 aprobada** y regresión S2-008/S2-009/S2-010 **5/5 aprobada** el 2026-10-15. No acredita una caída de un proceso Kafka real. [Diseño y evidencia](eventos/sale-completed-outbox.md).
+
+## S2-031 / TI3-662 — Definir contrato de pasarela simulada
+
+[IMPLEMENTADO] Se definieron la interfaz `IPaymentGatewayClient` y los DTOs `PaymentGatewayRequest` y `PaymentGatewayResponse` en `POSCartService`. El contrato respeta estrictamente la regla de dominio RN-02 y las normas PCI DSS: no recibe, transporta ni serializa PAN, CVV, fecha de expiración ni PIN. Transporta únicamente referencias opacas de transacción (`transaction_id`, `authorization_code`, `gateway_reference`), moneda (`currency`), monto (`amount`), tenant (`tenant_id`), venta (`sale_id`) e identificador de escenario de simulación (`scenario_id`). Pruebas de contrato y seguridad **5/5 aprobadas** en `PaymentGatewayClientTests` bajo el trait `S2-031`. [Contrato y diseño](integraciones/pasarela-pago.md).
 
 ## S2-036 — Escenarios del simulador de pagos
 

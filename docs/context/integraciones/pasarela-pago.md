@@ -5,7 +5,7 @@ titulo: Integración con Pasarela de Pago
 estado: parcial
 fuentes: [GlobalMart_ContextMaster.md#sec12, src/POSCartService/Services/IPaymentGatewayClient.cs, src/POSCartService/Services/PaymentGatewayClient.cs, src/POSCartService/DTOs/PaymentGatewayDtos.cs, src/POSCartService/Program.cs, tests/GlobalMart.IntegrationTests/PaymentGatewayClientTests.cs, tareas/sprint2_youtrack_resultado.json, Docker/env.example, .env.example, src/POSCartService/appsettings.json]
 verificado_contra_codigo: true
-ultima_revision: 2026-10-16
+ultima_revision: 2026-10-17
 depende_de: [ms5-pos]
 publica: []
 consume: []
@@ -13,11 +13,24 @@ reglas: [RN-02, RF-07, PC-17, PC-27, PC-28]
 ---
 # Integración con Pasarela de Pago
 
-> Toda transacción con tarjeta DEBE ir por una pasarela externa (RN-02). **Estado: PARCIAL** — MS-5 dispone del adaptador HTTP, pero todavía no orquesta el cobro con tarjeta ni existe el endpoint del simulador.
+> Toda transacción con tarjeta DEBE ir por una pasarela externa (RN-02). **Estado: PARCIAL** — MS-5 dispone de contratos y adaptador HTTP, pero todavía no orquesta el cobro con tarjeta en `POST /ventas/{id}/cobrar` (solo admite efectivo y rechaza `TARJETA` o `MIXTO`).
 
 ## Estado: [PARCIAL]
 
-S2-036 / TI3-667 define el contrato reproducible del simulador. S2-037 / TI3-668 implementa `IPaymentGatewayClient` y su adaptador HTTP. El endpoint del simulador y el cobro con tarjeta todavía no están implementados; `POST /ventas/{id}/cobrar` solo admite efectivo y rechaza ventas `TARJETA` o `MIXTO`.
+S2-031 / TI3-662 define el contrato de pasarela simulada (`IPaymentGatewayClient` y DTOs seguros). S2-036 / TI3-667 define el contrato reproducible del simulador. S2-037 / TI3-668 implementa `IPaymentGatewayClient` y su adaptador HTTP. El cobro con tarjeta aún no está implementado en el controller de ventas.
+
+## S2-031 / TI3-662 — Contrato de pasarela simulada [IMPLEMENTADO]
+
+Define la interfaz de comunicación y los objetos de transferencia de datos en MS-5 para interactuar con pasarelas de pago externas o su simulador de pruebas, asegurando estricto cumplimiento de **RN-02** y normativas PCI DSS:
+
+- **`IPaymentGatewayClient`** (`src/POSCartService/Services/IPaymentGatewayClient.cs`):
+  Expone el método asíncrono `ProcessPaymentAsync(PaymentGatewayRequest request, CancellationToken cancellationToken = default)`.
+- **`PaymentGatewayRequest`** (`src/POSCartService/DTOs/PaymentGatewayDtos.cs`):
+  Transporta exclusivamente `request_id` (UUID idempotente), `tenant_id` (aislamiento multi-tenant RN-01), `sale_id`, `amount` (monto decimal), `currency` (código ISO 4217) y `scenario_id` (escenario de prueba).
+- **`PaymentGatewayResponse`** (`src/POSCartService/DTOs/PaymentGatewayDtos.cs`):
+  Transporta el resultado del procesamiento conteniendo únicamente referencias opacas: `request_id`, `transaction_id`, `status` (`APPROVED`, `DECLINED`), `authorization_code`, `gateway_reference` (RRN), `decline_code`, `message` y `processed_at` (UTC).
+- **Aceptación y Seguridad**:
+  El contrato **no transporta, almacena ni serializa PAN, CVV, fecha de caducidad, PIN ni datos de tarjeta**. Se valida mediante pruebas de reflexión y serialización en `PaymentGatewayClientTests` (trait `S2-031`).
 
 ## S2-036 — Escenarios controlables del simulador [CONTRATO DEFINIDO]
 
