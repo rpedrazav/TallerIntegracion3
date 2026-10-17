@@ -3,7 +3,7 @@ id: pasarela-pago
 tipo: integracion
 titulo: Integración con Pasarela de Pago
 estado: parcial
-fuentes: [GlobalMart_ContextMaster.md#sec12, src/POSCartService/Services/IPaymentGatewayClient.cs, src/POSCartService/Services/PaymentGatewayClient.cs, src/POSCartService/DTOs/PaymentGatewayDtos.cs, src/POSCartService/Program.cs, tests/GlobalMart.IntegrationTests/PaymentGatewayClientTests.cs, tareas/sprint2_youtrack_resultado.json]
+fuentes: [GlobalMart_ContextMaster.md#sec12, src/POSCartService/Services/IPaymentGatewayClient.cs, src/POSCartService/Services/PaymentGatewayClient.cs, src/POSCartService/DTOs/PaymentGatewayDtos.cs, src/POSCartService/Program.cs, tests/GlobalMart.IntegrationTests/PaymentGatewayClientTests.cs, tareas/sprint2_youtrack_resultado.json, Docker/env.example, .env.example, src/POSCartService/appsettings.json]
 verificado_contra_codigo: true
 ultima_revision: 2026-10-16
 depende_de: [ms5-pos]
@@ -123,6 +123,26 @@ Las trazas estructuradas contienen únicamente identificadores de correlación, 
 
 [PaymentGatewayClientTests](../../../tests/GlobalMart.IntegrationTests/PaymentGatewayClientTests.cs) aprobó **4/4 casos** el 2026-10-16: URL configurada, propagación de idempotencia, conjunto exacto de campos seguros, respuesta rechazada, timeout explícito y rechazo local de `request_id` vacío sin invocar la red. [Evidencia TRX](../../qa/S2-037/S2-037.trx). El simulador y la integración con el endpoint de cobro permanecen [PLANIFICADO].
 
+## S2-056 / TI3-687 — Configuración segura del simulador [IMPLEMENTADO]
+
+Para garantizar entornos reproducibles y proteger credenciales de producción (RN-02 / PCI DSS), la configuración de la pasarela y simulador separa estrictamente endpoints, llaves y timeouts entre desarrollo y producción.
+
+### Variables de entorno y configuración
+
+| Parámetro | Variable de Entorno | `appsettings.json` (`PasarelaPago`) | Propósito / Valor Desarrollo | Valor Producción |
+|---|---|---|---|---|
+| URL Base | `PASARELA_BASE_URL` o `PasarelaPago__BaseUrl` | `BaseUrl` | `https://api.sandbox-pasarela.example.com` | Endpoint HTTPS oficial de la pasarela |
+| Timeout | `PASARELA_TIMEOUT_SECONDS` o `PasarelaPago__TimeoutSeconds` | `TimeoutSeconds` | `30` (segundos; permite validar timeout frente a demoras de 35s en `sim-timeout-v1`) | `30` a `60` segundos según SLA |
+| Clave de API | `PASARELA_API_KEY` o `PasarelaPago__ApiKey` | `ApiKey` | `sim_key_dummy_test_only` (clave pública no sensible) | Secreto inyectado desde Key Vault / Secrets Manager |
+| Ambiente | `PASARELA_ENVIRONMENT` o `PasarelaPago__Environment` | `Environment` | `sandbox` | `production` |
+| Escenario por defecto | `PASARELA_DEFAULT_SCENARIO` o `PasarelaPago__DefaultScenario` | `DefaultScenario` | `sim-approved-v1` | N/A (en producción no se envían escenarios) |
+
+### Reglas de seguridad aplicadas
+1. **Sin secretos reales en repositorios**: `Docker/env.example` y la plantilla raíz `.env.example` definen únicamente valores ficticios y de sandbox.
+2. **Sin datos de tarjeta (RN-02)**: La pasarela/simulador solo recibe `{ request_id, tenant_id, sale_id, amount, currency, scenario_id }`. No existen variables ni campos para PAN, CVV, fecha de expiración ni PIN.
+3. **Idempotencia obligatoria**: Se propaga `request_id` como `Idempotency-Key` en los encabezados HTTP.
+4. **Instalación limpia**: Cualquier máquina o contenedor conoce la totalidad de variables requeridas a través de `Docker/env.example` y `.env.example`.
+
 ## Pasarelas contempladas por región
 
 | Región | Pasarela | Protocolo |
@@ -189,3 +209,6 @@ Al anular una venta cobrada con tarjeta:
 - `tests/GlobalMart.IntegrationTests/PaymentGatewayClientTests.cs`
 - `src/POSCartService/Controllers/VentasController.cs` (cobro vigente solo en efectivo)
 - `src/POSCartService/Services/VentaService.cs` (AnularAsync sin reembolso)
+- `Docker/env.example`
+- `.env.example`
+- `src/POSCartService/appsettings.json`

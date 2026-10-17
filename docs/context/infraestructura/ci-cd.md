@@ -5,7 +5,7 @@ titulo: CI/CD — GitHub Actions
 estado: implementado
 fuentes: [.github/workflows/ci.yml]
 verificado_contra_codigo: true
-ultima_revision: 2026-09-28
+ultima_revision: 2026-10-16
 depende_de: [docker-compose, testing]
 publica: []
 consume: []
@@ -13,7 +13,7 @@ reglas: []
 ---
 # CI/CD — GitHub Actions
 
-> Pipeline de build y test automatizado. Se ejecuta en cada push a `main` o `dev` y en pull requests hacia esas ramas.
+> Pipeline de build y test automatizado. Se ejecuta en cada push a `main` o `dev` y en pull requests hacia esas ramas. Incluye gate de validación estricta de tipos TypeScript para el frontend antes de empaquetado y tests de backend con infraestructura.
 
 ## Triggers
 
@@ -25,8 +25,15 @@ on:
     branches: [main, dev]
 ```
 
-## Pasos del pipeline
+## Jobs del pipeline
 
+### 1. `frontend-typecheck` (Gate TypeScript — S2-029 / TI3-660)
+- Checkout del código
+- Setup Node.js 20 con caché de npm
+- `npm ci` en `globalmart-frontend/`
+- `npm run typecheck` (`tsc --noEmit`), garantizando que cualquier error de tipos bloquee el pipeline.
+
+### 2. `build-and-test` (.NET 8 + Integración)
 | # | Paso | Descripción |
 |---|------|-------------|
 | 1 | Checkout | `actions/checkout@v4` |
@@ -35,7 +42,7 @@ on:
 | 4 | Build (8 servicios) | `dotnet build` por cada microservicio |
 | 5 | Docker Compose up | Levanta PostgreSQL x8, Zookeeper, Kafka, Kong |
 | 6 | Health check | Espera hasta 120s por contenedor, falla si no pasa |
-| 7 | Tests | `dotnet test GlobalMartOS.sln` |
+| 7 | Tests | `dotnet test GlobalMartOS.sln` con PostgreSQL efímero |
 | 8 | Teardown | `docker compose down -v --remove-orphans` (siempre) |
 
 ## Variables de entorno en CI

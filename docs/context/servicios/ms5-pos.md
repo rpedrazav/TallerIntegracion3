@@ -283,3 +283,8 @@ Defensa adicional en [PosRepositoryTenantIsolationTests.cs](../../../tests/Globa
 ## S2-037 — Adaptador HTTP de pasarela
 
 [IMPLEMENTADO] `PaymentGatewayClient` implementa `IPaymentGatewayClient`, usa la URL y timeout configurados para `PasarelaPago`, y propaga `request_id` como `Idempotency-Key`. Su DTO transmite solo tenant, venta, monto, moneda y escenario; no admite datos de tarjeta. Registra trazas estructuradas sin cuerpos ni credenciales y distingue timeout, cancelación del llamador y errores HTTP. Pruebas enfocadas **4/4 aprobadas** el 2026-10-16. [Contrato y evidencia](../integraciones/pasarela-pago.md).
+
+## S2-056 — Configuración segura del simulador
+
+[IMPLEMENTADO] La configuración de la pasarela separa endpoints de sandbox/producción, timeouts y claves en `src/POSCartService/appsettings.json`, `Docker/env.example` y `.env.example`, sin exponer secretos reales ni permitir datos de tarjeta (RN-02 / PCI DSS). [Detalles](../integraciones/pasarela-pago.md).
+

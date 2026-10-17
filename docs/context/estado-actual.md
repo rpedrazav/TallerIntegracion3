@@ -273,3 +273,16 @@ Refuerzo posterior [IMPLEMENTADO]: `VentaRepository.ActualizarAsync` y `ItemVent
 ## S2-028 / TI3-659 — Parametrización de destinos de APIs en el frontend
 
 [IMPLEMENTADO] Se centralizó la resolución de URLs en `globalmart-frontend/src/config/api.ts` y plantilla `.env.example`, soportando los modos `remote`, `gateway` y `local` con normalización de prefijos `/api` en interceptores. Se eliminaron URLs hardcodeadas de `client.ts`, `Admin.tsx`, `ProductosPage.tsx` y `TenantConfig.tsx`. Typecheck sin errores en código fuente.
+
+## S2-029 / TI3-660 — Añadir TypeScript al gate CI
+
+[IMPLEMENTADO] Se integró un gate de validación estricta de tipos en el workflow `.github/workflows/ci.yml` mediante el job `frontend-typecheck` que ejecuta `npm ci` y `npm run typecheck` (`tsc --noEmit`). Se agregó el script `typecheck` en `globalmart-frontend/package.json`. Bloquea el pipeline de CI ante discrepancias de tipos como las detectadas previamente en `TenantConfig`. Documentado en `docs/context/infraestructura/ci-cd.md`.
+
+## S2-030 / TI3-661 — Documentar arranque reproducible del núcleo y smoke test HTTP
+
+[IMPLEMENTADO] Se actualizó la guía de arranque reproducible en `docs/context/proyecto/como-ejecutar.md` clarificando explícitamente que Docker Compose aprovisiona la infraestructura compartida (PostgreSQL x8, Kafka, Kong Gateway) pero no contiene los 8 microservicios .NET, los cuales se ejecutan en el host mediante los scripts actualizados `run-apis.sh` y `run-apis.bat` (MS-1 a MS-5). Se implementó el script ejecutable `scripts/smoke-test.sh` que valida de forma automatizada los health checks de MS-1 a MS-5, autenticación pública con credenciales seed (`cajero@demo.cl`), consulta autorizada de catálogo con JWT y estado de turno activo del POS.
+
+## S2-056 / TI3-687 — Definir configuración segura del simulador
+
+[IMPLEMENTADO] Se definió y documentó la configuración segura del simulador de pagos y pasarela en `Docker/env.example`, la plantilla raíz `.env.example` y `src/POSCartService/appsettings.json`. Separa estrictamente URL base (`PasarelaPago:BaseUrl`), timeouts (`PasarelaPago:TimeoutSeconds` = 30s), claves dummy (`PasarelaPago:ApiKey` = `sim_key_dummy_test_only`) y ambientes (`sandbox` vs `production`). Garantiza el cumplimiento de RN-02 y PCI DSS prohibiendo datos de tarjeta en el código y repositorios. Documentado en `docs/context/integraciones/pasarela-pago.md`.
+
