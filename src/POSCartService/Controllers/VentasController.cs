@@ -23,19 +23,22 @@ public sealed class VentasController : ControllerBase
     private readonly ICatalogClient _catalogClient;
     private readonly ITaxClient _taxClient;
     private readonly ILogger<VentasController>? _logger;
+    private readonly IPaymentGatewayClient? _paymentGatewayClient;
 
     public VentasController(
         IVentaService ventaService,
         ITurnoService turnoService,
         ICatalogClient catalogClient,
         ITaxClient taxClient,
-        ILogger<VentasController>? logger = null)
+        ILogger<VentasController>? logger = null,
+        IPaymentGatewayClient? paymentGatewayClient = null)
     {
-        _ventaService  = ventaService  ?? throw new ArgumentNullException(nameof(ventaService));
-        _turnoService  = turnoService  ?? throw new ArgumentNullException(nameof(turnoService));
-        _catalogClient = catalogClient ?? throw new ArgumentNullException(nameof(catalogClient));
-        _taxClient     = taxClient     ?? throw new ArgumentNullException(nameof(taxClient));
-        _logger        = logger;
+        _ventaService          = ventaService  ?? throw new ArgumentNullException(nameof(ventaService));
+        _turnoService          = turnoService  ?? throw new ArgumentNullException(nameof(turnoService));
+        _catalogClient         = catalogClient ?? throw new ArgumentNullException(nameof(catalogClient));
+        _taxClient             = taxClient     ?? throw new ArgumentNullException(nameof(taxClient));
+        _logger                = logger;
+        _paymentGatewayClient = paymentGatewayClient;
     }
 
 
@@ -722,5 +725,154 @@ public sealed class VentasController : ControllerBase
             ventaCompletada.Id, ventaCompletada.Total, request.MontoRecibido, vuelto);
 
         return Ok(new CobrarVentaResponse(VentaResponse.FromModel(ventaCompletada), request.MontoRecibido, vuelto));
+    }
+
+    // ── POST /ventas/{id}/cobrar-tarjeta ───────────────────────────────────────
+
+    /// <summary>
+    /// Procesa el cobro con tarjeta para una venta PENDIENTE mediante la pasarela simulada/real.
+    /// Valida JWT, tenant, turno activo, estado PENDIENTE y total antes de contactar a la pasarela.
+    /// </summary>
+    /// <response code="200">Cobro procesado exitosamente por la pasarela.</response>
+    /// <response code="400">Request inválido, total no válido o método de pago no compatible con TARJETA.</response>
+    /// <response code="401">Token JWT ausente o inválido.</response>
+    /// <response code="404">Venta no encontrada (o perteneciente a otro tenant).</response>
+    /// <response code="409">La venta no está en estado PENDIENTE o el cajero no tiene turno ABIERTO.</response>
+    /// <response code="502">Error de comunicación o payload inválido de la pasarela.</response>
+    /// <response code="504">Timeout en la comunicación con la pasarela.</response>
+    [HttpPost("{id:guid}/cobrar-tarjeta")]
+    [ProducesResponseType(typeof(CobrarTarjetaResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    [ProducesResponseType(StatusCodes.Status502BadGateway)]
+    [ProducesResponseType(StatusCodes.Status504GatewayTimeout)]
+    public async Task<IActionResult> CobrarTarjeta(
+        [FromRoute] Guid id,
+        [FromBody] CobrarTarjetaRequest? request,
+        CancellationToken cancellationToken)
+    {
+        // 1. Extraer y validar claims del JWT (RN-07 / RN-01)
+        if (!TryGetClaims(out var cajeroId, out var tenantId))
+            return Unauthorized(new { error = "Token inválido: faltan cajero_id/sub o tenant_id." });
+
+        // 2. Verificar turno activo del cajero en el tenant (RN-06)
+        var turno = await _turnoService.GetActivo(cajeroId, tenantId);
+        if (turno is null)
+        {
+            return Conflict(new
+            {
+                error = "El cajero no tiene un turno abierto. Debe abrir un turno antes de cobrar ventas.",
+                cajeroId
+            });
+        }
+
+        // 3. Verificar que la venta exista en el tenant actual (RN-01)
+        var venta = await _ventaService.GetByIdAsync(id);
+        if (venta is null || venta.TenantId != tenantId)
+            return NotFound(new { error = $"Venta {id} no encontrada." });
+
+        // 4. Verificar que la venta esté en estado PENDIENTE
+        if (venta.Estado != EstadoVenta.PENDIENTE)
+        {
+            return Conflict(new
+            {
+                error = $"Solo se puede cobrar una venta en estado PENDIENTE. Estado actual: {venta.Estado}."
+            });
+        }
+
+        // 5. Restringir método de cobro: no admite ventas EFECTIVO
+        if (venta.MetodoPago == MetodoPagoVenta.EFECTIVO)
+        {
+            return BadRequest(new
+            {
+                error = $"El método de pago de esta venta es 'EFECTIVO'. Este endpoint solo procesa cobros con TARJETA.",
+                metodo_pago = venta.MetodoPago.ToString()
+            });
+        }
+
+        // 6. Validar total positivo de la venta
+        if (venta.Total <= 0)
+        {
+            return BadRequest(new
+            {
+                error = "El total de la venta debe ser mayor a 0 para cobrar con tarjeta.",
+                total = venta.Total
+            });
+        }
+
+        // 7. Si se envió monto en el request, verificar coincidencia con el total
+        if (request?.Monto.HasValue == true && request.Monto.Value != venta.Total)
+        {
+            return BadRequest(new
+            {
+                error = "El monto especificado en el request no coincide con el total de la venta.",
+                monto_request = request.Monto.Value,
+                total_venta = venta.Total
+            });
+        }
+
+        // 8. Invocar cliente de pasarela (solo una vez superadas todas las guardias)
+        if (_paymentGatewayClient is null)
+        {
+            return StatusCode(StatusCodes.Status503ServiceUnavailable, new
+            {
+                error = "Servicio de pasarela de pago no configurado en el servidor."
+            });
+        }
+
+        // Resolver requestId e IdempotencyKey
+        var headerKey = Request.Headers["Idempotency-Key"].FirstOrDefault();
+        var rawKey = !string.IsNullOrWhiteSpace(request?.IdempotencyKey) ? request.IdempotencyKey : headerKey;
+        var requestId = Guid.TryParse(rawKey, out var parsedGuid) ? parsedGuid : Guid.NewGuid();
+
+        var scenarioId = string.IsNullOrWhiteSpace(request?.ScenarioId)
+            ? "sim-approved-v1"
+            : request.ScenarioId;
+
+        var gatewayRequest = new PaymentGatewayRequest
+        {
+            RequestId = requestId,
+            TenantId = tenantId,
+            SaleId = venta.Id,
+            Amount = venta.Total,
+            Currency = "CLP",
+            ScenarioId = scenarioId
+        };
+
+        PaymentGatewayResponse gatewayResponse;
+        try
+        {
+            gatewayResponse = await _paymentGatewayClient.ProcessPaymentAsync(gatewayRequest, cancellationToken);
+        }
+        catch (TimeoutException ex)
+        {
+            _logger?.LogWarning(ex, "Timeout al comunicarse con la pasarela para venta {VentaId}", venta.Id);
+            return StatusCode(StatusCodes.Status504GatewayTimeout, new
+            {
+                error = "La pasarela de pago no respondió dentro del tiempo límite.",
+                sale_id = venta.Id,
+                request_id = requestId
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger?.LogError(ex, "Error al comunicarse con la pasarela para venta {VentaId}", venta.Id);
+            return StatusCode(StatusCodes.Status502BadGateway, new
+            {
+                error = "Error al comunicarse con la pasarela de pago.",
+                detalle = ex.Message
+            });
+        }
+
+        return Ok(new CobrarTarjetaResponse(
+            VentaResponse.FromModel(venta),
+            gatewayResponse.Status,
+            gatewayResponse.TransactionId,
+            gatewayResponse.AuthorizationCode,
+            gatewayResponse.GatewayReference,
+            gatewayResponse.Message
+        ));
     }
 }

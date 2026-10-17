@@ -45,6 +45,18 @@ Para cumplir el criterio P03 de la matriz de aceptación (evitar doble cargo por
 - **Aislamiento Multi-Tenant (RN-01)**: Filtro global `CurrentTenantId` en `PosCartDbContext`. Claves de idempotencia iguales pertenecientes a distintos tenants no colisionan.
 - **Migración**: `20261017163020_AddIntentoPago.cs`. Pruebas en `IntentoPagoPersistenceTests` (trait `S2-032`).
 
+## S2-033 / TI3-664 — Endpoint cobrar-tarjeta [IMPLEMENTADO]
+
+Expone `POST /ventas/{id}/cobrar-tarjeta` en `VentasController` (MS-5). El endpoint implementa validación estricta de precondiciones antes de invocar `IPaymentGatewayClient`:
+
+1. **Autenticación (RN-07):** Exige JWT válido con claims `tenant_id` y `cajero_id` / `sub` (HTTP 401 si falta o es inválido).
+2. **Turno Activo (RN-06):** Verifica que el cajero en sesión disponga de un turno `ABIERTO` en el tenant autenticado (HTTP 409 si no tiene turno).
+3. **Existencia y Aislamiento (RN-01):** Busca la venta filtrada por `tenant_id`. Si no existe o pertenece a otro tenant, responde HTTP 404.
+4. **Estado PENDIENTE:** La venta debe estar en estado `PENDIENTE` (HTTP 409 si ya está `COMPLETADA`, `ANULADA` o `CANCELADA`).
+5. **Método de Pago:** Rechaza ventas creadas con método `EFECTIVO` (HTTP 400).
+6. **Monto Válido:** Valida que `Total > 0` y que coincida con `monto` del request si fue provisto (HTTP 400).
+7. **Regla de Aceptación:** Una venta ajena o completada (o sin turno / JWT) **nunca contacta a la pasarela**. Pruebas de integración en `CobrarTarjetaIntegrationTests` (6/6 aprobadas).
+
 ## S2-036 — Escenarios controlables del simulador [CONTRATO DEFINIDO]
 
 El simulador debe exponer `POST /simulator/payments` únicamente en entornos de desarrollo y pruebas. El resultado se selecciona mediante `scenario_id`, nunca mediante un número de tarjeta. Los tres identificadores son públicos, no sensibles y estables.

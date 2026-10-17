@@ -288,6 +288,10 @@ Defensa adicional en [PosRepositoryTenantIsolationTests.cs](../../../tests/Globa
 
 [IMPLEMENTADO] Entidad `IntentoPago` (`IntentosPago`) y migración EF Core `20261017163020_AddIntentoPago`. Persiste `IdempotencyKey`, `Estado` (`PENDIENTE`, `APROBADO`, `RECHAZADO`, `FALLIDO`), monto, moneda y referencias opacas vinculadas a la venta y tenant. Idempotencia forzada en base de datos mediante índice único `(TenantId, IdempotencyKey)`. Pruebas **4/4 aprobadas** en `IntentoPagoPersistenceTests`. [Detalles](../integraciones/pasarela-pago.md).
 
+## S2-033 — Endpoint cobrar-tarjeta
+
+[IMPLEMENTADO] Endpoint `POST /ventas/{id}/cobrar-tarjeta` en `VentasController` con DTOs `CobrarTarjetaRequest` y `CobrarTarjetaResponse`. Implementa validación de guardias (JWT, turno abierto, venta PENDIENTE en el tenant, total positivo). Criterio de aceptación validado: ventas ajenas o completadas nunca llaman a la pasarela externa. Pruebas **6/6 aprobadas** en `CobrarTarjetaIntegrationTests`. [Detalles](../integraciones/pasarela-pago.md).
+
 ## S2-037 — Adaptador HTTP de pasarela
 
 [IMPLEMENTADO] `PaymentGatewayClient` implementa `IPaymentGatewayClient`, usa la URL y timeout configurados para `PasarelaPago`, y propaga `request_id` como `Idempotency-Key`. Su DTO transmite solo tenant, venta, monto, moneda y escenario; no admite datos de tarjeta. Registra trazas estructuradas sin cuerpos ni credenciales y distingue timeout, cancelación del llamador y errores HTTP. Pruebas enfocadas **4/4 aprobadas** el 2026-10-16. [Contrato y evidencia](../integraciones/pasarela-pago.md).
