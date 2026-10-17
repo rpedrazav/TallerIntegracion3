@@ -3,7 +3,7 @@ id: ms5-pos
 tipo: microservicio
 titulo: MS-5 · POS & Cart Service
 estado: parcial
-fuentes: [src/POSCartService/]
+fuentes: [src/POSCartService/, Docker/simulator/server.js, tests/GlobalMart.IntegrationTests/PaymentSimulatorIntegrationTests.cs]
 verificado_contra_codigo: true
 ultima_revision: 2026-10-17
 depende_de: [ms1-identity, ms2-tax, ms3-catalog]
@@ -13,7 +13,7 @@ reglas: [RN-01, RN-02, RN-03, RN-06, RF-02, RF-03, RF-04, RF-05, RF-06, RF-07]
 ---
 # MS-5 · POS & Cart Service
 
-> Servicio central del punto de venta. Gestiona turnos de caja y el ciclo completo de una venta (carrito, ítems, cobro, anulación). Integrado con MS-2 (IVA) y MS-3 (productos). Persiste y publica `sale.completed` mediante outbox; dispone del adaptador HTTP de pasarela, pero faltan la orquestación del cobro con tarjeta, el simulador y el hardware.
+> Servicio central del punto de venta. Gestiona turnos de caja y el ciclo completo de una venta (carrito, ítems, cobro, anulación). Integrado con MS-2 (IVA) y MS-3 (productos). Persiste y publica `sale.completed` mediante outbox; dispone del adaptador HTTP y del simulador local de pasarela, pero faltan la orquestación del cobro con tarjeta y el hardware.
 
 ## Contrato Oficial de Creación de Venta (POST /ventas) — S2-001 / S2-002 / S2-003
 
@@ -220,7 +220,7 @@ await _ventaRepository.CompletarConOutboxAsync(venta.Id, pago, outboxMessage);
 | PC-25 | Publicar sale.reversed | [PLANIFICADO] |
 | PC-26 | Leer Tarjeta en Terminal (NFC/chip/mag) | [PLANIFICADO] |
 | PC-27 | Enviar Solicitud a Pasarela | [PARCIAL — adaptador implementado, aún no invocado] |
-| PC-28 | Recibir Respuesta de Pasarela | [PARCIAL — DTO y errores implementados, sin flujo de cobro] |
+| PC-28 | Recibir Respuesta de Pasarela | [PARCIAL — DTO, errores y simulador implementados, sin flujo de cobro] |
 | PC-29 | Manejar Rechazo de Pago | [PLANIFICADO] |
 | PC-30 | Solicitar Reembolso a Pasarela | [PLANIFICADO] |
 | PC-31 | Confirmar Reembolso | [PLANIFICADO] |
@@ -292,12 +292,16 @@ Defensa adicional en [PosRepositoryTenantIsolationTests.cs](../../../tests/Globa
 
 [IMPLEMENTADO] `PaymentGatewayClient` implementa `IPaymentGatewayClient`, usa la URL y timeout configurados para `PasarelaPago`, y propaga `request_id` como `Idempotency-Key`. Su DTO transmite solo tenant, venta, monto, moneda y escenario; no admite datos de tarjeta. Registra trazas estructuradas sin cuerpos ni credenciales y distingue timeout, cancelación del llamador y errores HTTP. Pruebas enfocadas **4/4 aprobadas** el 2026-10-16. [Contrato y evidencia](../integraciones/pasarela-pago.md).
 
+## S2-038 — Servicio simulador de autorizaciones
+
+[IMPLEMENTADO] El simulador Node existente implementa aprobación, rechazo y timeout sin conexión bancaria. Exige la misma identidad en `Idempotency-Key` y `request_id`, conserva la respuesta por tenant y genera referencias opacas. La integración real con `PaymentGatewayClient` aprobó **7/7 pruebas** el 2026-10-17. El controller de cobro aún no invoca el adaptador. [Contrato y evidencia](../integraciones/pasarela-pago.md).
+
 ## S2-056 — Configuración segura del simulador
 
 [IMPLEMENTADO] La configuración de la pasarela separa endpoints de sandbox/producción, timeouts y claves en `src/POSCartService/appsettings.json`, `Docker/env.example` y `.env.example`, sin exponer secretos reales ni permitir datos de tarjeta (RN-02 / PCI DSS). [Detalles](../integraciones/pasarela-pago.md).
 
 ## S2-057 y S2-058 — Simulador local y ruta en Gateway
 
-[IMPLEMENTADO] El simulador de pasarela se ejecuta localmente en Docker (`payment-simulator:5050`) y en host, y queda expuesto en Kong (`/simulator/payments`, `/simulator/health`). MS-5 (`PaymentGatewayClient`) puede alcanzarlo por Gateway (:8000) o directo (:5050). Se validó con 5 pruebas de integración en `PaymentSimulatorIntegrationTests`. [Detalles](../integraciones/pasarela-pago.md).
+[IMPLEMENTADO] El simulador de pasarela se ejecuta localmente en Docker (`payment-simulator:5050`) y en host, y queda expuesto en Kong (`/simulator/payments`, `/simulator/health`). MS-5 (`PaymentGatewayClient`) puede alcanzarlo por Gateway (:8000) o directo (:5050). Se validó con 7 pruebas de integración en `PaymentSimulatorIntegrationTests`. [Detalles](../integraciones/pasarela-pago.md).
 
 
