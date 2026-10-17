@@ -5,7 +5,7 @@ titulo: Kong API Gateway — Configuración y Rutas
 estado: parcial
 fuentes: [Docker/config/kong.yaml, Docker/config/README_KONG.md]
 verificado_contra_codigo: true
-ultima_revision: 2026-09-28
+ultima_revision: 2026-10-16
 depende_de: [ms1-identity, ms3-catalog, ms5-pos]
 publica: []
 consume: []
@@ -31,6 +31,7 @@ reglas: [RN-07]
 | Ruta Kong | Métodos | JWT |
 |-----------|---------|-----|
 | `/api/products` | GET, POST, PUT, DELETE, OPTIONS | ✅ |
+| `/api/categories` | GET, POST, PUT, DELETE, OPTIONS | ✅ |
 | `/api/prices` | GET, POST, PUT, DELETE, OPTIONS | ✅ |
 | `/api/promotions` | GET, POST, PUT, DELETE, OPTIONS | ✅ |
 
@@ -82,9 +83,10 @@ El plugin `jwt` de Kong valida el token antes de llegar al microservicio. Kong v
 
 ## Conexiones
 - Servicios enrutados: [[ms1-identity]], [[ms3-catalog]], [[ms5-pos]]
-- Infraestructura: [[docker-compose]]
+- Infraestructura: [[docker-compose]], [[matriz-rutas]]
 - JWT: [[rbac-multirol]]
 
 ## Fuentes
 - `Docker/config/kong.yaml`
 - `Docker/config/README_KONG.md`
+- `docs/context/infraestructura/matriz-rutas.md`

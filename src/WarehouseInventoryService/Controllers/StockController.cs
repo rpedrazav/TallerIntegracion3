@@ -6,6 +6,7 @@ namespace WarehouseInventoryService.Controllers;
 
 [ApiController]
 [Route("stock")]
+[Route("api/stock")]
 [Authorize]
 public sealed class StockController : ControllerBase
 {

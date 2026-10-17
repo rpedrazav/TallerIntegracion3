@@ -1,4 +1,4 @@
-﻿using FluentValidation;
+using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 using TenantIdentityService.DTOs;
 using TenantIdentityService.Services;
@@ -16,6 +16,7 @@ namespace TenantIdentityService.Controllers;
 /// </summary>
 [ApiController]
 [Route("auth")]
+[Route("api/auth")]
 public class AuthController : ControllerBase
 {
     private readonly IAuthService _authService;

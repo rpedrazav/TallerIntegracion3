@@ -14,6 +14,7 @@ namespace TenantIdentityService.Controllers;
 [ApiController]
 [Authorize]
 [Route("api/v1/tenants")]
+[Route("api/tenants")]
 [Route("tenants")]
 public class TenantConfigController : ControllerBase
 {

@@ -210,6 +210,7 @@ Ver el nodo [[guia-estilo]] para el resumen y las reglas aplicables.
 
 ## Conexiones
 - Servicios: [[ms1-identity]], [[ms2-tax]], [[ms3-catalog]], [[ms4-inventory]], [[ms5-pos]]
+- Infraestructura: [[docker-compose]], [[kong]], [[matriz-rutas]]
 - Eventos: [[kafka-topics]]
 - Planificación: [[sprint-actual]]
 - Reporte de discrepancias: `docs/context/_reports/discrepancias.md`
@@ -217,6 +218,7 @@ Ver el nodo [[guia-estilo]] para el resumen y las reglas aplicables.
 ## Fuentes
 - `docs/context/_reports/inventario.md`
 - `docs/context/_reports/preguntas-abiertas.md`
+- `docs/context/infraestructura/matriz-rutas.md`
 - `src/POSCartService/Controllers/VentasController.cs`
 - `src/POSCartService/Services/VentaService.cs`
 - `src/WarehouseInventoryService/Messaging/KafkaConsumerService.cs`
@@ -259,3 +261,15 @@ Refuerzo posterior [IMPLEMENTADO]: `VentaRepository.ActualizarAsync` y `ItemVent
 ## S2-037 — Adaptador HTTP de pasarela
 
 [IMPLEMENTADO] `PaymentGatewayClient` implementa `IPaymentGatewayClient` y queda registrado en DI con `PasarelaPago:BaseUrl` y `PasarelaPago:TimeoutSeconds`. Envía únicamente referencias de negocio y el escenario simulado, propaga `request_id` en `Idempotency-Key` y produce trazas estructuradas sin cuerpos, JWT ni datos de tarjeta. Pruebas enfocadas **4/4 aprobadas** el 2026-10-16; el endpoint del simulador y su uso desde el cobro siguen planificados. [Contrato y evidencia](integraciones/pasarela-pago.md).
+
+## S2-026 / TI3-657 — Inventario y matriz de rutas y puertos reales
+
+[IMPLEMENTADO] Se documentó la matriz integral de endpoints, puertos locales (`launchSettings.json`), puertos internos de Docker, rutas Kong y consumidores del frontend en `docs/context/infraestructura/matriz-rutas.md`. Incluye mapeo de los 8 microservicios y reconciliación de prefijos `/api`.
+
+## S2-027 / TI3-658 — Corrección de rutas Kong del flujo crítico y rutas duales
+
+[IMPLEMENTADO] Se resolvieron los errores 404 producidos por Kong (`strip_path: false`) mediante la incorporación de atributos duales `[Route("api/...")]` y `[Route("...")]` en los controladores de MS-1 (`AuthController`, `TenantConfigController`, `SucursalesController`), MS-3 (`ProductoController`, `CategoriaController`), MS-5 (`VentasController`), MS-2 (`TaxController`, `ComprobantesController`) y MS-4 (`StockController`). En MS-1 se actualizó `TenantMiddleware` para admitir `/api/auth/login` y `/api/tenants`. En Kong se agregó `categories-route` y `sucursales-route`, y en Docker Compose se configuró `extra_hosts` para resolución de host gateway. Suite de integración `RoutePrefixIntegrationTests` **10/10 aprobada** el 2026-10-16.
+
+## S2-028 / TI3-659 — Parametrización de destinos de APIs en el frontend
+
+[IMPLEMENTADO] Se centralizó la resolución de URLs en `globalmart-frontend/src/config/api.ts` y plantilla `.env.example`, soportando los modos `remote`, `gateway` y `local` con normalización de prefijos `/api` en interceptores. Se eliminaron URLs hardcodeadas de `client.ts`, `Admin.tsx`, `ProductosPage.tsx` y `TenantConfig.tsx`. Typecheck sin errores en código fuente.

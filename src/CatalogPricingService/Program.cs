@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
@@ -127,8 +127,15 @@ app.MapControllers();
 // Ejecutar migraciones automaticamente
 using (var scope = app.Services.CreateScope())
 {
-    var db = scope.ServiceProvider.GetRequiredService<CatalogPricingService.Data.CatalogDbContext>();
-    db.Database.Migrate();
+    try
+    {
+        var db = scope.ServiceProvider.GetRequiredService<CatalogPricingService.Data.CatalogDbContext>();
+        db.Database.Migrate();
+    }
+    catch (Npgsql.PostgresException ex) when (ex.SqlState == "42P07")
+    {
+        // Tablas ya existen en la base de datos
+    }
 }
 
 app.Run();

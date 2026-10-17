@@ -76,6 +76,17 @@ services:
         plugins:
           - name: jwt
 
+      - name: sucursales-route
+        paths:
+          - /api/sucursales
+        strip_path: false
+        methods:
+          - GET
+          - POST
+          - OPTIONS
+        plugins:
+          - name: jwt
+
   # --------------------------------------------------------------------------
   # MS-3: Catalog & Pricing Service (puerto interno 5003)
   # --------------------------------------------------------------------------
@@ -85,6 +96,19 @@ services:
       - name: products-route
         paths:
           - /api/products
+        strip_path: false
+        methods:
+          - GET
+          - POST
+          - PUT
+          - DELETE
+          - OPTIONS
+        plugins:
+          - name: jwt
+
+      - name: categories-route
+        paths:
+          - /api/categories
         strip_path: false
         methods:
           - GET

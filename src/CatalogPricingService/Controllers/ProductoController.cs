@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using CatalogPricingService.Services;
 using CatalogPricingService.DTOs;
@@ -14,6 +14,7 @@ namespace CatalogPricingService.Controllers
 {
     [ApiController]
     [Route("products")]
+    [Route("api/products")]
     [Authorize]
     public class ProductoController : ControllerBase
     {

@@ -23,12 +23,15 @@ public class TenantMiddleware
 
     public async Task InvokeAsync(HttpContext context, TenantDbContext db)
     {
-        // Endpoints públicos que NO requieren tenant_id en el JWT (solo login y health)
+        // Endpoints públicos o de infraestructura que NO requieren tenant_id en el JWT
         var path = context.Request.Path.Value ?? string.Empty;
-        if (path.StartsWith("/auth/login") ||
-            path.StartsWith("/health")     ||
-            path.StartsWith("/swagger")    ||
-            path.StartsWith("/tenants"))   // Endpoint interno: consumido por otros microservicios
+        if (path.StartsWith("/auth/login")     ||
+            path.StartsWith("/api/auth/login") ||
+            path.StartsWith("/health")         ||
+            path.StartsWith("/swagger")        ||
+            path.StartsWith("/tenants")        ||
+            path.StartsWith("/api/tenants")    ||
+            path.StartsWith("/api/v1/tenants"))   // Endpoint interno: consumido por otros microservicios
         {
             await _next(context);
             return;

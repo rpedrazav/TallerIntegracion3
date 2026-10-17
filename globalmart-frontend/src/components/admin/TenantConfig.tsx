@@ -4,8 +4,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useTenantStore } from '../../store/useTenantStore';
-
-const IDENTITY_URL = 'https://auth-rpedraza.dev.censei.cl';
+import { buildServiceUrl } from '../../config/api';
 
 const configSchema = z.object({
   pais: z.string()
@@ -96,7 +95,7 @@ export default function TenantConfig({ token: tokenProp }: TenantConfigProps) {
     setErrorMsg('');
     setSuccessMsg('');
     try {
-      const res = await axios.get(`${IDENTITY_URL}/tenants/${tenantId}/config`, {
+      const res = await axios.get(buildServiceUrl('identity', `/tenants/${tenantId}/config`), {
         headers: {
           Authorization: `Bearer ${token}`,
           'x-tenant-id': tenantId,
@@ -144,7 +143,7 @@ export default function TenantConfig({ token: tokenProp }: TenantConfigProps) {
     setSuccessMsg('');
 
     try {
-      const res = await axios.put(`${IDENTITY_URL}/tenants/${tenantId}/config`, data, {
+      const res = await axios.put(buildServiceUrl('identity', `/tenants/${tenantId}/config`), data, {
         headers: {
           Authorization: `Bearer ${token}`,
           'x-tenant-id': tenantId,

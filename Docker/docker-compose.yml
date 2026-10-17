@@ -334,6 +334,8 @@ services:
       - "8002:8002"                        # Kong Manager GUI
     volumes:
       - ./config/kong.yaml:/etc/kong/kong.yaml:ro
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     networks:
       - minimarket-net
     healthcheck:

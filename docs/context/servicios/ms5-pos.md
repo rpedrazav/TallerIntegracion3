@@ -42,19 +42,21 @@ reglas: [RN-01, RN-02, RN-03, RN-06, RF-02, RF-03, RF-04, RF-05, RF-06, RF-07]
 
 | Método | Ruta | Auth | Estado |
 |--------|------|------|--------|
-| POST | `/turnos/abrir` o `/api/turnos/abrir` | JWT | [IMPLEMENTADO] |
-| GET | `/turnos/activo` o `/api/turnos/activo` | JWT | [IMPLEMENTADO] |
-| POST | `/turnos/cerrar` o `/api/turnos/cerrar` | JWT | [IMPLEMENTADO] |
-| POST | `/turnos/cuadre` | JWT | [IMPLEMENTADO — suma pagos EFECTIVO/COMPLETADAS; retorna efectivo_esperado, monto_declarado, diferencia] |
-| POST | `/ventas` | JWT | [IMPLEMENTADO — Contrato fijado S2-001] |
-| POST | `/ventas/{id}/items` | JWT | [IMPLEMENTADO] |
-| PUT | `/ventas/{id}/items/{itemId}` | JWT | [IMPLEMENTADO] |
-| DELETE | `/ventas/{id}/items/{itemId}` | JWT | [IMPLEMENTADO] |
-| GET | `/ventas/{id}` | JWT | [IMPLEMENTADO] |
-| GET | `/ventas/turno/{turnoId}` | JWT | [IMPLEMENTADO] |
-| POST | `/ventas/{id}/cobrar` | JWT | [IMPLEMENTADO — valida monto_recibido ≥ total, calcula vuelto y persiste venta, pago y sale.completed pendiente en una transacción] |
-| POST | `/ventas/{id}/anular` | JWT | [PLANIFICADO en controller — implementado en VentaService.AnularAsync] |
+| POST | `/turnos/abrir` (alias `/api/turnos/abrir`) | JWT | [IMPLEMENTADO] |
+| GET | `/turnos/activo` (alias `/api/turnos/activo`) | JWT | [IMPLEMENTADO] |
+| POST | `/turnos/cerrar` (alias `/api/turnos/cerrar`) | JWT | [IMPLEMENTADO] |
+| POST | `/turnos/cuadre` (alias `/api/turnos/cuadre`) | JWT | [IMPLEMENTADO — suma pagos EFECTIVO/COMPLETADAS; retorna efectivo_esperado, monto_declarado, diferencia] |
+| POST | `/ventas` (alias `/api/ventas`) | JWT | [IMPLEMENTADO — Contrato fijado S2-001] |
+| POST | `/ventas/{id}/items` (alias `/api/ventas/{id}/items`) | JWT | [IMPLEMENTADO] |
+| PUT | `/ventas/{id}/items/{itemId}` (alias `/api/ventas/{id}/items/{itemId}`) | JWT | [IMPLEMENTADO] |
+| DELETE | `/ventas/{id}/items/{itemId}` (alias `/api/ventas/{id}/items/{itemId}`) | JWT | [IMPLEMENTADO] |
+| GET | `/ventas/{id}` (alias `/api/ventas/{id}`) | JWT | [IMPLEMENTADO] |
+| GET | `/ventas/turno/{turnoId}` (alias `/api/ventas/turno/{turnoId}`) | JWT | [IMPLEMENTADO] |
+| POST | `/ventas/{id}/cobrar` (alias `/api/ventas/{id}/cobrar`) | JWT | [IMPLEMENTADO — valida monto_recibido ≥ total, calcula vuelto y persiste venta, pago y sale.completed pendiente en una transacción] |
+| POST | `/ventas/{id}/anular` (alias `/api/ventas/{id}/anular`) | JWT | [PLANIFICADO en controller — implementado en VentaService.AnularAsync] |
 | GET | `/health` | Público | [IMPLEMENTADO] |
+
+> Ver [[matriz-rutas]] para la comparativa exhaustiva de rutas Kong, controladores y puertos de host.
 
 ## Flujo de venta (implementado)
 

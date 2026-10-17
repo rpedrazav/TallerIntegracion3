@@ -5,7 +5,7 @@ titulo: MS-1 · Tenant & Identity Service
 estado: parcial
 fuentes: [src/TenantIdentityService/, Docker/config/kong.yaml]
 verificado_contra_codigo: true
-ultima_revision: 2026-10-15
+ultima_revision: 2026-10-16
 depende_de: []
 publica: []
 consume: []
@@ -13,16 +13,17 @@ reglas: [RN-01, RN-07, RN-08, RN-12]
 ---
 # MS-1 · Tenant & Identity Service
 
-> Responsable de autenticación, gestión de usuarios/roles, configuración del tenant y (en diseño) tipos de cambio FX. Es el único microservicio que no requiere JWT para su endpoint de login. Todos los demás microservicios dependen de él para obtener config de tenant.
+> Responsable de autenticación, gestión de usuarios/roles, configuración del tenant y (en diseño) tipos de cambio FX. Es el único microservicio que no requiere JWT para su endpoint de login. Todos los demás microservicios dependen de él para obtener config de tenant. Ver [[matriz-rutas]] para el inventario de puertos y prefijos.
 
 ## Estructura del proyecto
 
 ```
 src/TenantIdentityService/
 ├── Controllers/
-│   ├── AuthController.cs          POST /auth/login
-│   ├── UsuarioController.cs       CRUD /api/v1/users + asignar roles
-│   └── TenantConfigController.cs  GET+PUT /tenants/{id}/config + /api/v1/tenants/{id}/config
+│   ├── AuthController.cs          POST /auth/login + /api/auth/login
+│   ├── UsuarioController.cs       CRUD /api/v1/users + /api/users + /users
+│   ├── TenantConfigController.cs  GET+PUT /tenants/{id}/config + /api/tenants + /api/v1/tenants
+│   └── SucursalesController.cs    GET+POST /sucursales + /api/sucursales
 ├── Data/  TenantDbContext.cs + Migrations/
 ├── Models/  Tenant · Usuario · UsuarioRol · Rol
 ├── Repositories/  IUsuarioRepository · UsuarioRepository · ITenantRepository · TenantRepository
@@ -35,15 +36,16 @@ src/TenantIdentityService/
 
 | Método | Ruta | Auth | Estado |
 |--------|------|------|--------|
-| POST | `/auth/login` | Público (sin JWT) | [IMPLEMENTADO] |
+| POST | `/auth/login` (alias `/api/auth/login`) | Público (sin JWT) | [IMPLEMENTADO] |
 | GET | `/users` (alias `/api/v1/users`, `/api/users`) | JWT + ADMIN | [IMPLEMENTADO] (cada item incluye `roles: string[]`) |
-| POST | `/users` (alias `/api/v1/users`) | JWT + ADMIN | [IMPLEMENTADO] (soporta `roles?: string[]` en el body) |
-| PUT | `/users/{id}` (alias `/api/v1/users/{id}`) | JWT + ADMIN | [IMPLEMENTADO] |
-| DELETE | `/users/{id}` (alias `/api/v1/users/{id}`) | JWT + ADMIN | [IMPLEMENTADO] |
+| POST | `/users` (alias `/api/v1/users`, `/api/users`) | JWT + ADMIN | [IMPLEMENTADO] (soporta `roles?: string[]` en el body) |
+| PUT | `/users/{id}` (alias `/api/v1/users/{id}`, `/api/users/{id}`) | JWT + ADMIN | [IMPLEMENTADO] |
+| DELETE | `/users/{id}` (alias `/api/v1/users/{id}`, `/api/users/{id}`) | JWT + ADMIN | [IMPLEMENTADO] |
 | POST | `/users/{id}/roles` (alias `/api/v1/users/{id}/roles`) | JWT + ADMIN | [IMPLEMENTADO] |
-| GET | `/tenants/{id}/config` | JWT | [IMPLEMENTADO] |
-| PUT | `/tenants/{id}/config` | JWT + ADMIN | [IMPLEMENTADO] |
-| GET | `/sucursales` | JWT | [IMPLEMENTADO] |
+| GET | `/tenants/{id}/config` (alias `/api/tenants`, `/api/v1/tenants`) | JWT | [IMPLEMENTADO] |
+| PUT | `/tenants/{id}/config` (alias `/api/tenants`, `/api/v1/tenants`) | JWT + ADMIN | [IMPLEMENTADO] |
+| GET | `/sucursales` (alias `/api/sucursales`) | JWT | [IMPLEMENTADO] |
+| POST | `/sucursales` (alias `/api/sucursales`) | JWT + ADMIN | [IMPLEMENTADO] |
 | GET | `/health` | Público | [IMPLEMENTADO] |
 
 ### PUT /api/v1/users/{id}

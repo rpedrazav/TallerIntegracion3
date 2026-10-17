@@ -5,7 +5,7 @@ titulo: MS-3 · Catalog & Pricing Service
 estado: parcial
 fuentes: [src/CatalogPricingService/]
 verificado_contra_codigo: true
-ultima_revision: 2026-10-14
+ultima_revision: 2026-10-16
 depende_de: [ms1-identity]
 publica: []
 consume: []
@@ -13,21 +13,21 @@ reglas: [RN-01, RN-11, RF-04, RF-11, CP-01, CP-04, CP-05]
 ---
 # MS-3 · Catalog & Pricing Service
 
-> Gestiona el catálogo de productos del tenant con búsqueda por nombre (full-text) y lookup por código de barras. Soporta categorías jerárquicas y productos de peso variable. Precios dinámicos y promociones son PLANIFICADOS.
+> Gestiona el catálogo de productos del tenant con búsqueda por nombre (full-text) y lookup por código de barras. Soporta categorías jerárquicas y productos de peso variable. Precios dinámicos y promociones son PLANIFICADOS. Ver [[matriz-rutas]] para el inventario de puertos y prefijos.
 
 ## Endpoints reales
 
 | Método | Ruta | Auth | Estado |
 |--------|------|------|--------|
-| GET | `/products?page=&pageSize=` | JWT | [IMPLEMENTADO] |
-| GET | `/products/search?q=&page=&pageSize=` | JWT | [IMPLEMENTADO] |
-| GET | `/products/lookup?barcode=` | JWT | [IMPLEMENTADO] |
-| GET | `/products/{id}` | JWT | [IMPLEMENTADO] |
-| POST | `/products` | JWT | [IMPLEMENTADO] |
-| PUT | `/products/{id}` | JWT; ADMIN si cambia IsActive | [IMPLEMENTADO] |
-| DELETE | `/products/{id}` | JWT + ADMIN | [IMPLEMENTADO — baja lógica] |
-| GET | `/categories` | JWT | [IMPLEMENTADO] |
-| POST | `/categories` | JWT | [IMPLEMENTADO] |
+| GET | `/products` (alias `/api/products`) | JWT | [IMPLEMENTADO] |
+| GET | `/products/search` (alias `/api/products/search`) | JWT | [IMPLEMENTADO] |
+| GET | `/products/lookup` (alias `/api/products/lookup`) | JWT | [IMPLEMENTADO] |
+| GET | `/products/{id}` (alias `/api/products/{id}`) | JWT | [IMPLEMENTADO] |
+| POST | `/products` (alias `/api/products`) | JWT | [IMPLEMENTADO] |
+| PUT | `/products/{id}` (alias `/api/products/{id}`) | JWT; ADMIN si cambia IsActive | [IMPLEMENTADO] |
+| DELETE | `/products/{id}` (alias `/api/products/{id}`) | JWT + ADMIN | [IMPLEMENTADO — baja lógica] |
+| GET | `/categories` (alias `/api/categories`) | JWT | [IMPLEMENTADO] |
+| POST | `/categories` (alias `/api/categories`) | JWT | [IMPLEMENTADO] |
 | GET | `/health` | Público | [IMPLEMENTADO] |
 
 ### No implementados

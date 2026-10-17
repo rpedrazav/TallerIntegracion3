@@ -1,4 +1,4 @@
-﻿using FluentValidation;
+using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TenantIdentityService.DTOs;
@@ -19,6 +19,7 @@ namespace TenantIdentityService.Controllers;
 [ApiController]
 [Authorize]
 [Route("sucursales")]
+[Route("api/sucursales")]
 public class SucursalesController : ControllerBase
 {
     private readonly ISucursalRepository _sucursalRepository;

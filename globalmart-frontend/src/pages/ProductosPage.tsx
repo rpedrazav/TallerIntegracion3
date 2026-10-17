@@ -1,9 +1,7 @@
-﻿import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import axios, { AxiosError } from 'axios';
 import { useAuth } from '../hooks/useAuth';
-
-// Puerto del CatalogPricingService (MS-3)
-const CATALOG_URL = 'https://catalog-rpedraza.dev.censei.cl';
+import { buildServiceUrl } from '../config/api';
 
 // UomBaseId requerido por el DTO (uuid genérico para "unidad")
 const DEFAULT_UOM_ID = '00000000-0000-0000-0000-000000000001';
@@ -382,8 +380,8 @@ export default function ProductosPage() {
       const headers = { Authorization: `Bearer ${token}` };
       try {
         const [prodRes, catRes] = await Promise.all([
-          axios.get(`${CATALOG_URL}/products`, { params: { page: 1, pageSize: 500 }, headers }),
-          axios.get(`${CATALOG_URL}/categories`, { headers }),
+          axios.get(buildServiceUrl('catalog', '/products'), { params: { page: 1, pageSize: 500 }, headers }),
+          axios.get(buildServiceUrl('catalog', '/categories'), { headers }),
         ]);
         if (!isMounted) return;
         setProductos(prodRes.data?.data ?? prodRes.data ?? []);
@@ -446,7 +444,7 @@ export default function ProductosPage() {
     try {
       const token = await window.api?.getToken();
       if (!token) return;
-      await axios.delete(`${CATALOG_URL}/products/${id}`, {
+      await axios.delete(buildServiceUrl('catalog', `/products/${id}`), {
         headers: { Authorization: `Bearer ${token}` }
       });
       fetchDatos();
@@ -504,9 +502,9 @@ export default function ProductosPage() {
 
     try {
       if (modalModo === 'crear') {
-        await axios.post(`${CATALOG_URL}/products`, payload, { headers });
+        await axios.post(buildServiceUrl('catalog', '/products'), payload, { headers });
       } else {
-        await axios.put(`${CATALOG_URL}/products/${editandoId}`, payload, { headers });
+        await axios.put(buildServiceUrl('catalog', `/products/${editandoId}`), payload, { headers });
       }
       setModalAbierto(false);
       fetchDatos(); // recargar lista
@@ -826,7 +824,7 @@ export default function ProductosPage() {
                   )}
                 </tr>
               </thead>
-              ﻿<tbody>
+              <tbody>
                 {productosFiltrados.map((prod, index) => {
                   const isEven = index % 2 === 0;
                   const categoriaNombre = prod.categoriaId ? catMap[prod.categoriaId] ?? '-' : '-';

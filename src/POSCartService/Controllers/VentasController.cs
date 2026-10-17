@@ -14,6 +14,7 @@ namespace POSCartService.Controllers;
 /// </summary>
 [ApiController]
 [Route("ventas")]
+[Route("api/ventas")]
 [Authorize]
 public sealed class VentasController : ControllerBase
 {

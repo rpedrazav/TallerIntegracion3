@@ -4,9 +4,7 @@ import { useAuth } from '../hooks/useAuth';
 import CrearUsuarioModal, { CrearUsuarioValues } from '../components/admin/CrearUsuarioModal';
 import UsuariosList, { Usuario } from '../components/admin/UsuariosList';
 import TenantConfig from '../components/admin/TenantConfig';
-
-// MS-1 Tenant & Identity
-const IDENTITY_URL = 'https://auth-rpedraza.dev.censei.cl';
+import { buildServiceUrl } from '../config/api';
 
 export default function Admin() {
   const { token } = useAuth();
@@ -29,7 +27,7 @@ export default function Admin() {
       setLoading(true);
       setError('');
       try {
-        const res = await axios.get(`${IDENTITY_URL}/users`, {
+        const res = await axios.get(buildServiceUrl('identity', '/users'), {
           params: { page: 1, pageSize: 100 },
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -56,7 +54,7 @@ export default function Admin() {
     const headers = { Authorization: `Bearer ${token}` };
     try {
       const res = await axios.post(
-        `${IDENTITY_URL}/users`,
+        buildServiceUrl('identity', '/users'),
         {
           nombre: v.nombre,
           email: v.email,
@@ -66,7 +64,7 @@ export default function Admin() {
         { headers },
       );
       if (!res.data?.roles || res.data.roles.length === 0) {
-        await axios.post(`${IDENTITY_URL}/users/${res.data.id}/roles`, { roles: [v.rol] }, { headers });
+        await axios.post(buildServiceUrl('identity', `/users/${res.data.id}/roles`), { roles: [v.rol] }, { headers });
       }
     } catch (err) {
       let msg: string | undefined;

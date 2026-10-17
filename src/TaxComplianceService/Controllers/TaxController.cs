@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TaxComplianceService.Data;
 using TaxComplianceService.Models;
@@ -12,6 +12,7 @@ namespace TaxComplianceService.Controllers;
 /// </summary>
 [ApiController]
 [Route("tax")]
+[Route("api/tax")]
 [Authorize]
 public class TaxController : ControllerBase
 {

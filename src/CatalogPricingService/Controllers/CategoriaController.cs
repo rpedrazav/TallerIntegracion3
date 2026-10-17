@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using FluentValidation;
 using CatalogPricingService.DTOs;
@@ -9,6 +9,7 @@ namespace CatalogPricingService.Controllers;
 
 [ApiController]
 [Route("categories")]
+[Route("api/categories")]
 [Authorize]
 public class CategoriaController : ControllerBase
 {

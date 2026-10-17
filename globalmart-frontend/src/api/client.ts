@@ -1,14 +1,19 @@
 import axios, { AxiosError, AxiosInstance } from 'axios';
+import { API_URLS } from '../config/api';
 
 const API_TIMEOUT_MS = 15000;
-const API_URLS = {
-  identity: 'https://auth-rpedraza.dev.censei.cl',
-  catalog: 'https://catalog-rpedraza.dev.censei.cl',
-  pos: 'https://pos-rpedraza.dev.censei.cl',
-} as const;
 
 function createClient(baseURL: string, protectedApi: boolean): AxiosInstance {
   const client = axios.create({ baseURL, timeout: API_TIMEOUT_MS });
+
+  // Normalizar para evitar duplicación de /api cuando baseURL ya lo contiene (modo gateway)
+  client.interceptors.request.use((config) => {
+    if (config.baseURL?.endsWith('/api') && config.url?.startsWith('/api/')) {
+      config.url = config.url.substring(4);
+    }
+    return config;
+  });
+
   if (protectedApi) {
     client.interceptors.request.use(async (config) => {
       const token = await window.api.getToken();

@@ -1,4 +1,4 @@
-﻿using System.Security.Claims;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TaxComplianceService.Exceptions;
@@ -13,6 +13,7 @@ namespace TaxComplianceService.Controllers;
 /// </summary>
 [ApiController]
 [Route("comprobantes")]
+[Route("api/comprobantes")]
 [Authorize]
 public class ComprobantesController : ControllerBase
 {
