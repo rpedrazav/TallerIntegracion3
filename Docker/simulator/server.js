@@ -14,6 +14,7 @@
  */
 
 const http = require('http');
+const crypto = require('crypto');
 
 const PORT = parseInt(process.env.PORT || '5050', 10);
 const HOST = process.env.HOST || '0.0.0.0';
@@ -27,6 +28,43 @@ const SENSITIVE_CARD_PATTERNS = [
 
 // Almacén en memoria de idempotencia: key = `${tenant_id}:${request_id}`
 const idempotencyStore = new Map();
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const SCENARIO_PATTERN = /^[a-z0-9-]{1,64}$/;
+
+function safeUuid(value) {
+  return typeof value === 'string' && UUID_PATTERN.test(value) ? value : null;
+}
+
+function safeScenario(value) {
+  return typeof value === 'string' && SCENARIO_PATTERN.test(value) ? value : null;
+}
+
+function elapsedMilliseconds(startedAt) {
+  return Number(process.hrtime.bigint() - startedAt) / 1e6;
+}
+
+function logAudit(body, status, startedAt, transactionId = null) {
+  console.log(JSON.stringify({
+    event: 'payment_simulator.authorization',
+    timestamp: new Date().toISOString(),
+    request_id: safeUuid(body.request_id),
+    tenant_id: safeUuid(body.tenant_id),
+    sale_id: safeUuid(body.sale_id),
+    scenario_id: safeScenario(body.scenario_id),
+    status,
+    elapsed_ms: elapsedMilliseconds(startedAt),
+    transaction_id: transactionId
+  }));
+}
+
+function createOpaqueId(tenantId, requestId) {
+  return crypto
+    .createHash('sha256')
+    .update(`${tenantId.toLowerCase()}:${requestId.toLowerCase()}`, 'utf8')
+    .digest('hex')
+    .slice(0, 24)
+    .toUpperCase();
+}
 
 /**
  * Verifica si un objeto contiene algún campo prohibido con datos de tarjeta.
@@ -89,6 +127,7 @@ const server = http.createServer((req, res) => {
 
   // 2. Procesamiento de Pagos Simulados
   if (req.method === 'POST' && (urlPath === '/simulator/payments' || urlPath === '/api/simulator/payments')) {
+    const startedAt = process.hrtime.bigint();
     let rawBody = '';
     req.on('data', chunk => {
       rawBody += chunk;
@@ -111,7 +150,7 @@ const server = http.createServer((req, res) => {
 
       // Regla Crítica (RN-02 / PCI DSS): Rechazar cualquier intento de transmitir datos de tarjeta
       if (containsCardData(body)) {
-        console.warn(`[SIMULATOR WARN] Intento de envío de datos de tarjeta bloqueado (RN-02 / PCI DSS). IP=${req.socket.remoteAddress}`);
+        logAudit(body, 'CARD_DATA_FORBIDDEN', startedAt);
         return sendJson(res, 400, {
           error: 'CARD_DATA_FORBIDDEN',
           message: 'No se permiten datos de tarjeta. Toda transacción con tarjeta debe procesarse externamente sin transmitir PAN ni CVV (cumplimiento RN-02 / PCI DSS).'
@@ -121,25 +160,51 @@ const server = http.createServer((req, res) => {
       const { request_id, tenant_id, sale_id, amount, currency, scenario_id } = body;
 
       // Validación de campos obligatorios
-      if (!request_id || !tenant_id || !sale_id || typeof amount !== 'number' || amount <= 0 || !currency || !scenario_id) {
+      if (!UUID_PATTERN.test(request_id)
+        || !UUID_PATTERN.test(tenant_id)
+        || !UUID_PATTERN.test(sale_id)
+        || typeof amount !== 'number'
+        || amount <= 0
+        || typeof currency !== 'string'
+        || !/^[A-Z]{3}$/.test(currency)
+        || typeof scenario_id !== 'string'
+        || !scenario_id) {
+        logAudit(body, 'VALIDATION_ERROR', startedAt);
         return sendJson(res, 400, {
           error: 'VALIDATION_ERROR',
-          message: 'Los campos request_id, tenant_id, sale_id, amount (>0), currency y scenario_id son obligatorios.'
+          message: 'request_id, tenant_id y sale_id deben ser UUID válidos; amount debe ser positivo; currency debe ser ISO 4217 y scenario_id es obligatorio.'
+        });
+      }
+
+      const idempotencyHeader = req.headers['idempotency-key'];
+      if (typeof idempotencyHeader !== 'string' || !UUID_PATTERN.test(idempotencyHeader)) {
+        logAudit(body, 'INVALID_IDEMPOTENCY_KEY', startedAt);
+        return sendJson(res, 400, {
+          error: 'INVALID_IDEMPOTENCY_KEY',
+          message: 'Idempotency-Key debe contener un UUID válido.'
+        });
+      }
+
+      if (idempotencyHeader.toLowerCase() !== request_id.toLowerCase()) {
+        logAudit(body, 'IDEMPOTENCY_CONFLICT', startedAt);
+        return sendJson(res, 409, {
+          error: 'IDEMPOTENCY_CONFLICT',
+          message: 'Idempotency-Key debe coincidir con request_id.'
         });
       }
 
       // Validación de Idempotencia por (tenant_id, request_id)
-      const idempotencyKey = `${tenant_id}:${request_id}`;
+      const idempotencyKey = `${tenant_id.toLowerCase()}:${request_id.toLowerCase()}`;
       const existing = idempotencyStore.get(idempotencyKey);
 
       if (existing) {
         // Si los parámetros coinciden exactamente, retornar el resultado previo almacenado
         if (existing.sale_id === sale_id && existing.amount === amount && existing.currency === currency && existing.scenario_id === scenario_id) {
-          console.log(`[SIMULATOR] Respuesta idempotente retornada para RequestId=${request_id}`);
+          logAudit(body, existing.response.status, startedAt, existing.response.transaction_id);
           return sendJson(res, 200, existing.response);
         } else {
           // Reutilización de request_id con diferentes parámetros -> HTTP 409 Conflict
-          console.warn(`[SIMULATOR CONFLICT] Conflicto de idempotencia en RequestId=${request_id}`);
+          logAudit(body, 'IDEMPOTENCY_CONFLICT', startedAt);
           return sendJson(res, 409, {
             error: 'IDEMPOTENCY_CONFLICT',
             message: 'El request_id ya fue utilizado previamente con parámetros diferentes.'
@@ -147,17 +212,17 @@ const server = http.createServer((req, res) => {
         }
       }
 
-      const cleanId = String(request_id).replace(/-/g, '');
+      const opaqueId = createOpaqueId(tenant_id, request_id);
 
       // Ejecución de Escenarios Controlables (S2-036)
       switch (scenario_id) {
         case 'sim-approved-v1': {
           const responsePayload = {
             request_id,
-            transaction_id: `SIM-APP-${cleanId}`,
+            transaction_id: `SIM-TXN-${opaqueId}`,
             status: 'APPROVED',
             authorization_code: 'SIM-APPROVED',
-            gateway_reference: `SIM-RRN-${cleanId}`,
+            gateway_reference: `SIM-REF-${opaqueId}`,
             processed_at: new Date().toISOString()
           };
 
@@ -169,14 +234,14 @@ const server = http.createServer((req, res) => {
             response: responsePayload
           });
 
-          console.log(`[SIMULATOR] Pago aprobado RequestId=${request_id} TransactionId=${responsePayload.transaction_id} Amount=${amount} ${currency}`);
+          logAudit(body, responsePayload.status, startedAt, responsePayload.transaction_id);
           return sendJson(res, 200, responsePayload);
         }
 
         case 'sim-declined-v1': {
           const responsePayload = {
             request_id,
-            transaction_id: `SIM-DEC-${cleanId}`,
+            transaction_id: `SIM-TXN-${opaqueId}`,
             status: 'DECLINED',
             decline_code: 'DO_NOT_HONOR',
             message: 'Pago rechazado por escenario de prueba.',
@@ -191,15 +256,15 @@ const server = http.createServer((req, res) => {
             response: responsePayload
           });
 
-          console.log(`[SIMULATOR] Pago rechazado RequestId=${request_id} Status=DECLINED Code=DO_NOT_HONOR`);
+          logAudit(body, responsePayload.status, startedAt, responsePayload.transaction_id);
           return sendJson(res, 200, responsePayload);
         }
 
         case 'sim-timeout-v1': {
-          console.log(`[SIMULATOR] Escenario sim-timeout-v1 iniciado para RequestId=${request_id} (demora 35s)...`);
           // Demora 35 segundos para inducir el timeout configurado en MS-5 (30s)
           setTimeout(() => {
             if (!res.writableEnded) {
+              logAudit(body, 'TIMED_OUT', startedAt);
               sendJson(res, 504, {
                 error: 'GATEWAY_TIMEOUT',
                 message: 'El simulador excedió el tiempo de respuesta esperado.'
@@ -210,6 +275,7 @@ const server = http.createServer((req, res) => {
         }
 
         default: {
+          logAudit(body, 'UNKNOWN_SCENARIO', startedAt);
           return sendJson(res, 400, {
             error: 'UNKNOWN_SCENARIO',
             message: `Escenario '${scenario_id}' desconocido. Escenarios soportados: sim-approved-v1, sim-declined-v1, sim-timeout-v1.`

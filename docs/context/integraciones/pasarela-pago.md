@@ -3,7 +3,7 @@ id: pasarela-pago
 tipo: integracion
 titulo: Integración con Pasarela de Pago
 estado: parcial
-fuentes: [GlobalMart_ContextMaster.md#sec12, src/POSCartService/Services/IPaymentGatewayClient.cs, src/POSCartService/Services/PaymentGatewayClient.cs, src/POSCartService/DTOs/PaymentGatewayDtos.cs, src/POSCartService/Program.cs, tests/GlobalMart.IntegrationTests/PaymentGatewayClientTests.cs, tareas/sprint2_youtrack_resultado.json, Docker/env.example, .env.example, src/POSCartService/appsettings.json]
+fuentes: [GlobalMart_ContextMaster.md#sec12, src/POSCartService/Services/IPaymentGatewayClient.cs, src/POSCartService/Services/PaymentGatewayClient.cs, src/POSCartService/DTOs/PaymentGatewayDtos.cs, src/POSCartService/Program.cs, Docker/simulator/server.js, tests/GlobalMart.IntegrationTests/PaymentGatewayClientTests.cs, tests/GlobalMart.IntegrationTests/PaymentSimulatorIntegrationTests.cs, tareas/sprint2_youtrack_resultado.json, Docker/env.example, .env.example, src/POSCartService/appsettings.json]
 verificado_contra_codigo: true
 ultima_revision: 2026-10-17
 depende_de: [ms5-pos]
@@ -13,11 +13,11 @@ reglas: [RN-02, RF-07, PC-17, PC-27, PC-28]
 ---
 # Integración con Pasarela de Pago
 
-> Toda transacción con tarjeta DEBE ir por una pasarela externa (RN-02). **Estado: PARCIAL** — MS-5 dispone de contratos y adaptador HTTP, pero todavía no orquesta el cobro con tarjeta en `POST /ventas/{id}/cobrar` (solo admite efectivo y rechaza `TARJETA` o `MIXTO`).
+> Toda transacción con tarjeta DEBE ir por una pasarela externa (RN-02). **Estado: PARCIAL** — MS-5 dispone de contratos, adaptador HTTP y simulador local, pero todavía no orquesta el cobro con tarjeta en `POST /ventas/{id}/cobrar` (solo admite efectivo y rechaza `TARJETA` o `MIXTO`).
 
 ## Estado: [PARCIAL]
 
-S2-031 / TI3-662 define el contrato de pasarela simulada (`IPaymentGatewayClient` y DTOs seguros). S2-036 / TI3-667 define el contrato reproducible del simulador. S2-037 / TI3-668 implementa `IPaymentGatewayClient` y su adaptador HTTP. El cobro con tarjeta aún no está implementado en el controller de ventas.
+S2-031 / TI3-662 define el contrato de pasarela simulada (`IPaymentGatewayClient` y DTOs seguros). S2-036 / TI3-667 define los escenarios reproducibles. S2-037 / TI3-668 implementa `IPaymentGatewayClient` y su adaptador HTTP. S2-038 / TI3-669 completa el endpoint local de autorización. El cobro con tarjeta aún no está implementado en el controller de ventas.
 
 ## S2-031 / TI3-662 — Contrato de pasarela simulada [IMPLEMENTADO]
 
@@ -81,15 +81,15 @@ Para `sim-approved-v1`:
 ```json
 {
   "request_id": "11111111-1111-4111-8111-111111111111",
-  "transaction_id": "SIM-APP-11111111111141118111111111111111",
+  "transaction_id": "SIM-TXN-3306D887135306CE2B1A4AC9",
   "status": "APPROVED",
   "authorization_code": "SIM-APPROVED",
-  "gateway_reference": "SIM-RRN-11111111111141118111111111111111",
+  "gateway_reference": "SIM-REF-3306D887135306CE2B1A4AC9",
   "processed_at": "2026-10-16T12:00:00Z"
 }
 ```
 
-`transaction_id` y `gateway_reference` se derivan de `request_id`; no representan una transacción bancaria. `processed_at` corresponde al primer procesamiento y se conserva en repeticiones idempotentes.
+`transaction_id` y `gateway_reference` se derivan de un resumen SHA-256 de `tenant_id` y `request_id`; son opacos y no representan una transacción bancaria. `processed_at` corresponde al primer procesamiento y se conserva en repeticiones idempotentes durante la vida del proceso.
 
 ### Payload rechazado
 
@@ -98,7 +98,7 @@ Para `sim-declined-v1`:
 ```json
 {
   "request_id": "11111111-1111-4111-8111-111111111111",
-  "transaction_id": "SIM-DEC-11111111111141118111111111111111",
+  "transaction_id": "SIM-TXN-3306D887135306CE2B1A4AC9",
   "status": "DECLINED",
   "decline_code": "DO_NOT_HONOR",
   "message": "Pago rechazado por escenario de prueba.",
@@ -124,7 +124,7 @@ Para `sim-timeout-v1`, el cuerpo de solicitud es el mismo y solo cambia `scenari
 
 Cada solicitud debe producir una traza estructurada con `request_id`, `tenant_id`, `sale_id`, `scenario_id`, `status`, `elapsed_ms`, `transaction_id` cuando exista y fecha UTC. En timeout, `status = TIMED_OUT`; en conflicto idempotente, `status = IDEMPOTENCY_CONFLICT`.
 
-No se registra el cuerpo completo, encabezados de autorización, JWT, datos de tarjeta ni secretos. MS-5 y el simulador deben usar el mismo `request_id` como correlación. Estas trazas se definen en S2-036; su persistencia o transporte se implementará en tareas posteriores.
+No se registra el cuerpo completo, encabezados de autorización, JWT, datos de tarjeta ni secretos. MS-5 y el simulador usan el mismo `request_id` como correlación. El simulador emite estas trazas como JSON estructurado por salida estándar; su persistencia o transporte se implementará en tareas posteriores.
 
 ## S2-037 — Adaptador HTTP de pasarela [IMPLEMENTADO]
 
@@ -134,7 +134,15 @@ El adaptador envía `POST simulator/payments`, serializa exclusivamente `request
 
 Las trazas estructuradas contienen únicamente identificadores de correlación, escenario, estado, referencia simulada y tiempo transcurrido. No se registra el cuerpo de solicitud o respuesta. Un timeout del `HttpClient` se traduce a `TimeoutException`; la cancelación solicitada por el llamador conserva `OperationCanceledException`; fallos HTTP o payloads inconsistentes se exponen como `ExternalServiceException` sin incluir el cuerpo remoto.
 
-[PaymentGatewayClientTests](../../../tests/GlobalMart.IntegrationTests/PaymentGatewayClientTests.cs) aprobó **4/4 casos** el 2026-10-16: URL configurada, propagación de idempotencia, conjunto exacto de campos seguros, respuesta rechazada, timeout explícito y rechazo local de `request_id` vacío sin invocar la red. [Evidencia TRX](../../qa/S2-037/S2-037.trx). El simulador y la integración con el endpoint de cobro permanecen [PLANIFICADO].
+[PaymentGatewayClientTests](../../../tests/GlobalMart.IntegrationTests/PaymentGatewayClientTests.cs) aprobó **4/4 casos** el 2026-10-16: URL configurada, propagación de idempotencia, conjunto exacto de campos seguros, respuesta rechazada, timeout explícito y rechazo local de `request_id` vacío sin invocar la red. [Evidencia TRX](../../qa/S2-037/S2-037.trx). La integración con el endpoint de cobro permanece [PLANIFICADO].
+
+## S2-038 / TI3-669 — Servicio simulador de autorizaciones [IMPLEMENTADO]
+
+El proceso Node existente en `Docker/simulator/server.js` expone `POST /simulator/payments` sin conexión bancaria. Valida UUID, monto y moneda; exige que `Idempotency-Key` sea un UUID igual a `request_id`; y usa `(tenant_id, request_id)` para conservar la primera respuesta. Repetir la misma solicitud devuelve exactamente los mismos identificadores y `processed_at`; reutilizar la clave con otros datos devuelve HTTP 409.
+
+`sim-approved-v1` y `sim-declined-v1` responden HTTP 200 con resultados de negocio deterministas. Las referencias `SIM-TXN-*` y `SIM-REF-*` usan un resumen SHA-256 estable y no exponen el UUID original. `sim-timeout-v1` demora 35 segundos y devuelve HTTP 504 si el cliente no cancela antes. Los payloads con campos de tarjeta se rechazan con HTTP 400 antes de autorizar.
+
+Las trazas son JSON estructurado y contienen solo fecha UTC, identificadores de correlación, escenario, estado, duración y referencia simulada. [PaymentSimulatorIntegrationTests](../../../tests/GlobalMart.IntegrationTests/PaymentSimulatorIntegrationTests.cs), ejecutada con el proceso Node real y `PaymentGatewayClient`, aprobó **7/7 casos** el 2026-10-17. [Evidencia TRX](../../qa/S2-038/S2-038.trx).
 
 ## S2-056 / TI3-687 — Configuración segura del simulador [IMPLEMENTADO]
 
@@ -163,7 +171,7 @@ Se implementó el servicio de pasarela de pruebas en `Docker/simulator/server.js
 - Implementa los escenarios controlables `sim-approved-v1`, `sim-declined-v1` y `sim-timeout-v1` según el contrato S2-036.
 - Almacena idempotencia en memoria por `(tenant_id, request_id)` y detecta conflictos (HTTP 409).
 - Rechaza de forma estricta e inmediata cualquier campo sensible de tarjeta (`pan`, `card`, `cvv`, etc.) con HTTP 400 (`CARD_DATA_FORBIDDEN`), garantizando cumplimiento total de RN-02 y el alcance PCI DSS.
-- Pruebas de integración en C# [PaymentSimulatorIntegrationTests](../../../tests/GlobalMart.IntegrationTests/PaymentSimulatorIntegrationTests.cs): **5/5 aprobadas** el 2026-10-16.
+- Pruebas de integración en C# [PaymentSimulatorIntegrationTests](../../../tests/GlobalMart.IntegrationTests/PaymentSimulatorIntegrationTests.cs): **7/7 aprobadas** el 2026-10-17, incluidos los controles S2-038 de referencia opaca y coincidencia de `Idempotency-Key`.
 
 ## S2-058 / TI3-689 — Exposición de ruta de pagos en gateway [IMPLEMENTADO]
 
@@ -223,7 +231,7 @@ Al anular una venta cobrada con tarjeta:
 | PC-17 | Cobrar con Tarjeta (débito/crédito) | [PARCIAL — adaptador disponible, sin orquestación] |
 | PC-18 | Cobrar Mixto (efectivo + tarjeta) | [PLANIFICADO] |
 | PC-27 | Procesar Pago en Pasarela | [PARCIAL — cliente HTTP implementado, aún no invocado] |
-| PC-28 | Manejar Respuesta de Pasarela | [PARCIAL — DTO y errores implementados, sin flujo de cobro] |
+| PC-28 | Manejar Respuesta de Pasarela | [PARCIAL — DTO, errores y simulador implementados, sin flujo de cobro] |
 
 ## Conexiones
 - POS: [[ms5-pos]]
@@ -234,11 +242,15 @@ Al anular una venta cobrada con tarjeta:
 - `GlobalMart_ContextMaster.md` §12
 - `tareas/sprint2_youtrack_resultado.json` (`S2-036` → `TI3-667`)
 - `tareas/sprint2_youtrack_resultado.json` (`S2-037` → `TI3-668`)
+- `tareas/sprint2_youtrack_resultado.json` (`S2-038` → `TI3-669`)
 - `src/POSCartService/Program.cs` (HttpClient `PasarelaPago` y timeout vigente)
 - `src/POSCartService/Services/IPaymentGatewayClient.cs`
 - `src/POSCartService/Services/PaymentGatewayClient.cs`
 - `src/POSCartService/DTOs/PaymentGatewayDtos.cs`
 - `tests/GlobalMart.IntegrationTests/PaymentGatewayClientTests.cs`
+- `Docker/simulator/server.js`
+- `tests/GlobalMart.IntegrationTests/PaymentSimulatorIntegrationTests.cs`
+- `docs/qa/S2-038/S2-038.trx`
 - `src/POSCartService/Controllers/VentasController.cs` (cobro vigente solo en efectivo)
 - `src/POSCartService/Services/VentaService.cs` (AnularAsync sin reembolso)
 - `Docker/env.example`

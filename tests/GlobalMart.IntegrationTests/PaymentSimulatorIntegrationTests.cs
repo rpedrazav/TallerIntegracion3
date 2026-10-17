@@ -13,6 +13,7 @@ namespace GlobalMart.IntegrationTests;
 
 [Trait("Plan", "S2-057")]
 [Trait("Plan", "S2-058")]
+[Trait("Plan", "S2-038")]
 public sealed class PaymentSimulatorIntegrationTests : IAsyncLifetime
 {
     private Process? _simulatorProcess;
@@ -125,9 +126,13 @@ public sealed class PaymentSimulatorIntegrationTests : IAsyncLifetime
         Assert.NotNull(result);
         Assert.Equal("APPROVED", result.Status);
         Assert.Equal(request.RequestId, result.RequestId);
-        Assert.StartsWith("SIM-APP-", result.TransactionId);
+        Assert.StartsWith("SIM-TXN-", result.TransactionId);
         Assert.Equal("SIM-APPROVED", result.AuthorizationCode);
-        Assert.StartsWith("SIM-RRN-", result.GatewayReference);
+        Assert.StartsWith("SIM-REF-", result.GatewayReference);
+        Assert.DoesNotContain(
+            request.RequestId.ToString("N"),
+            result.GatewayReference!,
+            StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -159,12 +164,7 @@ public sealed class PaymentSimulatorIntegrationTests : IAsyncLifetime
             cvv = "123"
         };
 
-        var content = new StringContent(
-            JsonSerializer.Serialize(payloadWithPan),
-            Encoding.UTF8,
-            "application/json");
-
-        var response = await _rawHttpClient.PostAsync($"{_baseUrl}simulator/payments", content);
+        var response = await PostRawAsync(payloadWithPan, payloadWithPan.request_id);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         var body = await response.Content.ReadAsStringAsync();
@@ -198,16 +198,58 @@ public sealed class PaymentSimulatorIntegrationTests : IAsyncLifetime
             scenario_id = "sim-approved-v1"
         };
 
-        var content1 = new StringContent(JsonSerializer.Serialize(payload1), Encoding.UTF8, "application/json");
-        var content2 = new StringContent(JsonSerializer.Serialize(payload2WithDifferentAmount), Encoding.UTF8, "application/json");
-
-        var res1 = await _rawHttpClient.PostAsync($"{_baseUrl}simulator/payments", content1);
+        var res1 = await PostRawAsync(payload1, requestId);
         Assert.Equal(HttpStatusCode.OK, res1.StatusCode);
 
-        var res2 = await _rawHttpClient.PostAsync($"{_baseUrl}simulator/payments", content2);
+        var res2 = await PostRawAsync(payload2WithDifferentAmount, requestId);
         Assert.Equal(HttpStatusCode.Conflict, res2.StatusCode);
         var body2 = await res2.Content.ReadAsStringAsync();
         Assert.Contains("IDEMPOTENCY_CONFLICT", body2);
+    }
+
+    [Fact]
+    public async Task Simulator_SameLogicalRequest_ReturnsExactlySameResult()
+    {
+        var client = CreatePaymentClient(_baseUrl);
+        var request = ValidRequest("sim-approved-v1");
+
+        var first = await client.ProcessPaymentAsync(request);
+        var second = await client.ProcessPaymentAsync(request);
+
+        Assert.Equal(first, second);
+    }
+
+    [Fact]
+    public async Task Simulator_MismatchedIdempotencyKey_Returns409()
+    {
+        var payload = new
+        {
+            request_id = Guid.NewGuid(),
+            tenant_id = Guid.NewGuid(),
+            sale_id = Guid.NewGuid(),
+            amount = 5000,
+            currency = "CLP",
+            scenario_id = "sim-approved-v1"
+        };
+
+        var response = await PostRawAsync(payload, Guid.NewGuid());
+
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+        var body = await response.Content.ReadAsStringAsync();
+        Assert.Contains("IDEMPOTENCY_CONFLICT", body);
+    }
+
+    private async Task<HttpResponseMessage> PostRawAsync(object payload, Guid idempotencyKey)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Post, $"{_baseUrl}simulator/payments")
+        {
+            Content = new StringContent(
+                JsonSerializer.Serialize(payload),
+                Encoding.UTF8,
+                "application/json")
+        };
+        request.Headers.Add("Idempotency-Key", idempotencyKey.ToString());
+        return await _rawHttpClient.SendAsync(request);
     }
 
     private static Pos.Services.PaymentGatewayClient CreatePaymentClient(string baseUrl)
