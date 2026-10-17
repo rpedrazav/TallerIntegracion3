@@ -407,6 +407,300 @@ public sealed class CobrarTarjetaIntegrationTests : IClassFixture<Ms5WebApplicat
         Assert.Equal("RRN-456", result.GatewayReference);
     }
 
+    // ── Tests S2-034: Persistencia de aprobación y rechazo ────────────────────
+
+    [Fact]
+    [Trait("Plan", "S2-034")]
+    public async Task CobrarTarjeta_PasarelaAprueba_CompletaVentaGeneraPagoTarjetaYOutbox()
+    {
+        var tenantId   = Guid.NewGuid();
+        var cajeroId   = Guid.NewGuid();
+        var sucursalId = Guid.NewGuid();
+        var turnoId    = Guid.NewGuid();
+        var ventaId    = Guid.NewGuid();
+
+        var gatewayMock = new RecordingPaymentGatewayClient
+        {
+            ResponseFunc = req => new Pos.DTOs.PaymentGatewayResponse
+            {
+                RequestId         = req.RequestId,
+                TransactionId     = "TX-APPROVED-001",
+                Status            = "APPROVED",
+                AuthorizationCode = "AUTH-S034",
+                GatewayReference  = "REF-S034",
+                ProcessedAt       = DateTimeOffset.UtcNow
+            }
+        };
+
+        var configuredFactory = _factory.WithWebHostBuilder(b =>
+            b.ConfigureTestServices(s =>
+                s.AddSingleton<Pos.Services.IPaymentGatewayClient>(gatewayMock)));
+
+        using (var scope = configuredFactory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<Pos.Data.PosCartDbContext>();
+            await db.Database.MigrateAsync();
+            db.CurrentTenantId = tenantId;
+            db.Turnos.Add(new Pos.Models.Turno
+            {
+                Id = turnoId, TenantId = tenantId, CajeroId = cajeroId,
+                SucursalId = sucursalId, MontoApertura = 10000m,
+                Estado = Pos.Models.EstadoTurno.ABIERTO
+            });
+            db.Ventas.Add(new Pos.Models.Venta
+            {
+                Id = ventaId, TenantId = tenantId, TurnoId = turnoId,
+                CajeroId = cajeroId, SucursalId = sucursalId,
+                Subtotal = 10000m, Impuestos = 1900m, Total = 11900m,
+                MetodoPago = Pos.Models.MetodoPagoVenta.TARJETA,
+                Estado = Pos.Models.EstadoVenta.PENDIENTE
+            });
+            await db.SaveChangesAsync();
+        }
+
+        var config = configuredFactory.Services.GetRequiredService<IConfiguration>();
+        var token  = CreateCajeroToken(config, tenantId, cajeroId);
+        using var client = configuredFactory.CreateClient();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        var response = await client.PostAsJsonAsync($"/ventas/{ventaId}/cobrar-tarjeta",
+            new { scenario_id = "sim-approved-v1" });
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        // Verificar DB: venta COMPLETADA, 1 Pago TARJETA, 1 OutboxMessage, 1 IntentoPago APROBADO
+        using var verifyScope = configuredFactory.Services.CreateScope();
+        var dbVerify = verifyScope.ServiceProvider.GetRequiredService<Pos.Data.PosCartDbContext>();
+        dbVerify.CurrentTenantId = tenantId;
+
+        var venta = await dbVerify.Ventas.FindAsync(ventaId);
+        Assert.NotNull(venta);
+        Assert.Equal(Pos.Models.EstadoVenta.COMPLETADA, venta!.Estado);
+
+        var pagos = dbVerify.Pagos.Where(p => p.VentaId == ventaId).ToList();
+        var pago  = Assert.Single(pagos);
+        Assert.Equal(Pos.Models.MetodoPago.TARJETA, pago.Metodo);
+        Assert.Equal(11900m, pago.Monto);
+
+        var outbox = dbVerify.OutboxMessages.Where(o => o.VentaId == ventaId).ToList();
+        Assert.Single(outbox);
+
+        var intentos = dbVerify.IntentosPago.Where(i => i.VentaId == ventaId).ToList();
+        var intento  = Assert.Single(intentos);
+        Assert.Equal(Pos.Models.EstadoIntentoPago.APROBADO, intento.Estado);
+        Assert.Equal("AUTH-S034", intento.AuthorizationCode);
+        Assert.Equal("REF-S034", intento.Referencia);
+    }
+
+    [Fact]
+    [Trait("Plan", "S2-034")]
+    public async Task CobrarTarjeta_PasarelaRechaza_ConservaVentaPendienteSinPagoNiOutbox_Retorna422()
+    {
+        var tenantId   = Guid.NewGuid();
+        var cajeroId   = Guid.NewGuid();
+        var sucursalId = Guid.NewGuid();
+        var turnoId    = Guid.NewGuid();
+        var ventaId    = Guid.NewGuid();
+
+        var gatewayMock = new RecordingPaymentGatewayClient
+        {
+            ResponseFunc = req => new Pos.DTOs.PaymentGatewayResponse
+            {
+                RequestId    = req.RequestId,
+                TransactionId = "TX-DECLINED-001",
+                Status       = "DECLINED",
+                DeclineCode  = "INSUFFICIENT_FUNDS",
+                Message      = "Fondos insuficientes",
+                ProcessedAt  = DateTimeOffset.UtcNow
+            }
+        };
+
+        var configuredFactory = _factory.WithWebHostBuilder(b =>
+            b.ConfigureTestServices(s =>
+                s.AddSingleton<Pos.Services.IPaymentGatewayClient>(gatewayMock)));
+
+        using (var scope = configuredFactory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<Pos.Data.PosCartDbContext>();
+            await db.Database.MigrateAsync();
+            db.CurrentTenantId = tenantId;
+            db.Turnos.Add(new Pos.Models.Turno
+            {
+                Id = turnoId, TenantId = tenantId, CajeroId = cajeroId,
+                SucursalId = sucursalId, MontoApertura = 5000m,
+                Estado = Pos.Models.EstadoTurno.ABIERTO
+            });
+            db.Ventas.Add(new Pos.Models.Venta
+            {
+                Id = ventaId, TenantId = tenantId, TurnoId = turnoId,
+                CajeroId = cajeroId, SucursalId = sucursalId,
+                Subtotal = 10000m, Impuestos = 1900m, Total = 11900m,
+                MetodoPago = Pos.Models.MetodoPagoVenta.TARJETA,
+                Estado = Pos.Models.EstadoVenta.PENDIENTE
+            });
+            await db.SaveChangesAsync();
+        }
+
+        var config = configuredFactory.Services.GetRequiredService<IConfiguration>();
+        var token  = CreateCajeroToken(config, tenantId, cajeroId);
+        using var client = configuredFactory.CreateClient();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        var response = await client.PostAsJsonAsync($"/ventas/{ventaId}/cobrar-tarjeta",
+            new { scenario_id = "sim-declined-v1" });
+
+        // Criterio: rechazo no genera sale.completed ni Pago aprobado
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+
+        using var verifyScope = configuredFactory.Services.CreateScope();
+        var dbVerify = verifyScope.ServiceProvider.GetRequiredService<Pos.Data.PosCartDbContext>();
+        dbVerify.CurrentTenantId = tenantId;
+
+        var venta = await dbVerify.Ventas.FindAsync(ventaId);
+        Assert.Equal(Pos.Models.EstadoVenta.PENDIENTE, venta!.Estado);
+
+        var pagos = dbVerify.Pagos.Where(p => p.VentaId == ventaId).ToList();
+        Assert.Empty(pagos);
+
+        var outbox = dbVerify.OutboxMessages.Where(o => o.VentaId == ventaId).ToList();
+        Assert.Empty(outbox);
+
+        var intentos = dbVerify.IntentosPago.Where(i => i.VentaId == ventaId).ToList();
+        var intento  = Assert.Single(intentos);
+        Assert.Equal(Pos.Models.EstadoIntentoPago.RECHAZADO, intento.Estado);
+        Assert.Equal("INSUFFICIENT_FUNDS", intento.DeclineCode);
+    }
+
+    [Fact]
+    [Trait("Plan", "S2-034")]
+    public async Task CobrarTarjeta_PasarelaTimeout_ConservaVentaPendienteSinPagoNiOutbox_Retorna504()
+    {
+        var tenantId   = Guid.NewGuid();
+        var cajeroId   = Guid.NewGuid();
+        var sucursalId = Guid.NewGuid();
+        var turnoId    = Guid.NewGuid();
+        var ventaId    = Guid.NewGuid();
+
+        var gatewayMock = new RecordingPaymentGatewayClient
+        {
+            ResponseFunc = _ => throw new TimeoutException("Simulated gateway timeout")
+        };
+
+        var configuredFactory = _factory.WithWebHostBuilder(b =>
+            b.ConfigureTestServices(s =>
+                s.AddSingleton<Pos.Services.IPaymentGatewayClient>(gatewayMock)));
+
+        using (var scope = configuredFactory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<Pos.Data.PosCartDbContext>();
+            await db.Database.MigrateAsync();
+            db.CurrentTenantId = tenantId;
+            db.Turnos.Add(new Pos.Models.Turno
+            {
+                Id = turnoId, TenantId = tenantId, CajeroId = cajeroId,
+                SucursalId = sucursalId, MontoApertura = 5000m,
+                Estado = Pos.Models.EstadoTurno.ABIERTO
+            });
+            db.Ventas.Add(new Pos.Models.Venta
+            {
+                Id = ventaId, TenantId = tenantId, TurnoId = turnoId,
+                CajeroId = cajeroId, SucursalId = sucursalId,
+                Subtotal = 8000m, Impuestos = 1520m, Total = 9520m,
+                MetodoPago = Pos.Models.MetodoPagoVenta.TARJETA,
+                Estado = Pos.Models.EstadoVenta.PENDIENTE
+            });
+            await db.SaveChangesAsync();
+        }
+
+        var config = configuredFactory.Services.GetRequiredService<IConfiguration>();
+        var token  = CreateCajeroToken(config, tenantId, cajeroId);
+        using var client = configuredFactory.CreateClient();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        var response = await client.PostAsJsonAsync($"/ventas/{ventaId}/cobrar-tarjeta",
+            new { scenario_id = "sim-timeout-v1" });
+
+        Assert.Equal(HttpStatusCode.GatewayTimeout, response.StatusCode);
+
+        using var verifyScope = configuredFactory.Services.CreateScope();
+        var dbVerify = verifyScope.ServiceProvider.GetRequiredService<Pos.Data.PosCartDbContext>();
+        dbVerify.CurrentTenantId = tenantId;
+
+        var venta = await dbVerify.Ventas.FindAsync(ventaId);
+        Assert.Equal(Pos.Models.EstadoVenta.PENDIENTE, venta!.Estado);
+        Assert.Empty(dbVerify.Pagos.Where(p => p.VentaId == ventaId).ToList());
+        Assert.Empty(dbVerify.OutboxMessages.Where(o => o.VentaId == ventaId).ToList());
+
+        var intentos = dbVerify.IntentosPago.Where(i => i.VentaId == ventaId).ToList();
+        var intento  = Assert.Single(intentos);
+        Assert.Equal(Pos.Models.EstadoIntentoPago.FALLIDO, intento.Estado);
+    }
+
+    [Fact]
+    [Trait("Plan", "S2-034")]
+    public async Task CobrarTarjeta_PasarelaError_ConservaVentaPendienteSinPagoNiOutbox_Retorna502()
+    {
+        var tenantId   = Guid.NewGuid();
+        var cajeroId   = Guid.NewGuid();
+        var sucursalId = Guid.NewGuid();
+        var turnoId    = Guid.NewGuid();
+        var ventaId    = Guid.NewGuid();
+
+        var gatewayMock = new RecordingPaymentGatewayClient
+        {
+            ResponseFunc = _ => throw new InvalidOperationException("Simulated gateway error")
+        };
+
+        var configuredFactory = _factory.WithWebHostBuilder(b =>
+            b.ConfigureTestServices(s =>
+                s.AddSingleton<Pos.Services.IPaymentGatewayClient>(gatewayMock)));
+
+        using (var scope = configuredFactory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<Pos.Data.PosCartDbContext>();
+            await db.Database.MigrateAsync();
+            db.CurrentTenantId = tenantId;
+            db.Turnos.Add(new Pos.Models.Turno
+            {
+                Id = turnoId, TenantId = tenantId, CajeroId = cajeroId,
+                SucursalId = sucursalId, MontoApertura = 5000m,
+                Estado = Pos.Models.EstadoTurno.ABIERTO
+            });
+            db.Ventas.Add(new Pos.Models.Venta
+            {
+                Id = ventaId, TenantId = tenantId, TurnoId = turnoId,
+                CajeroId = cajeroId, SucursalId = sucursalId,
+                Subtotal = 5000m, Impuestos = 950m, Total = 5950m,
+                MetodoPago = Pos.Models.MetodoPagoVenta.TARJETA,
+                Estado = Pos.Models.EstadoVenta.PENDIENTE
+            });
+            await db.SaveChangesAsync();
+        }
+
+        var config = configuredFactory.Services.GetRequiredService<IConfiguration>();
+        var token  = CreateCajeroToken(config, tenantId, cajeroId);
+        using var client = configuredFactory.CreateClient();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        var response = await client.PostAsJsonAsync($"/ventas/{ventaId}/cobrar-tarjeta",
+            new { scenario_id = "sim-error-v1" });
+
+        Assert.Equal(HttpStatusCode.BadGateway, response.StatusCode);
+
+        using var verifyScope = configuredFactory.Services.CreateScope();
+        var dbVerify = verifyScope.ServiceProvider.GetRequiredService<Pos.Data.PosCartDbContext>();
+        dbVerify.CurrentTenantId = tenantId;
+
+        var venta = await dbVerify.Ventas.FindAsync(ventaId);
+        Assert.Equal(Pos.Models.EstadoVenta.PENDIENTE, venta!.Estado);
+        Assert.Empty(dbVerify.Pagos.Where(p => p.VentaId == ventaId).ToList());
+        Assert.Empty(dbVerify.OutboxMessages.Where(o => o.VentaId == ventaId).ToList());
+
+        var intentos = dbVerify.IntentosPago.Where(i => i.VentaId == ventaId).ToList();
+        var intento  = Assert.Single(intentos);
+        Assert.Equal(Pos.Models.EstadoIntentoPago.FALLIDO, intento.Estado);
+    }
+
     private static string CreateCajeroToken(IConfiguration configuration, Guid tenantId, Guid cajeroId)
     {
         var key = configuration["Jwt:Key"]

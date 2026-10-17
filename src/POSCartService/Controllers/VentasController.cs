@@ -841,6 +841,8 @@ public sealed class VentasController : ControllerBase
             ScenarioId = scenarioId
         };
 
+        var timestamp = DateTime.UtcNow;
+        IntentoPago intentoPago;
         PaymentGatewayResponse gatewayResponse;
         try
         {
@@ -849,30 +851,123 @@ public sealed class VentasController : ControllerBase
         catch (TimeoutException ex)
         {
             _logger?.LogWarning(ex, "Timeout al comunicarse con la pasarela para venta {VentaId}", venta.Id);
+
+            intentoPago = new IntentoPago
+            {
+                Id             = Guid.NewGuid(),
+                TenantId       = tenantId,
+                VentaId        = venta.Id,
+                IdempotencyKey = requestId.ToString(),
+                Estado         = EstadoIntentoPago.FALLIDO,
+                Monto          = venta.Total,
+                Moneda         = "CLP",
+                Mensaje        = "Timeout: la pasarela no respondió dentro del tiempo límite.",
+                CreatedAt      = timestamp,
+                UpdatedAt      = timestamp
+            };
+            await _ventaService.RegistrarIntentoPagoAsync(intentoPago);
+
             return StatusCode(StatusCodes.Status504GatewayTimeout, new
             {
-                error = "La pasarela de pago no respondió dentro del tiempo límite.",
-                sale_id = venta.Id,
+                error      = "La pasarela de pago no respondió dentro del tiempo límite.",
+                sale_id    = venta.Id,
                 request_id = requestId
             });
         }
         catch (Exception ex)
         {
             _logger?.LogError(ex, "Error al comunicarse con la pasarela para venta {VentaId}", venta.Id);
+
+            intentoPago = new IntentoPago
+            {
+                Id             = Guid.NewGuid(),
+                TenantId       = tenantId,
+                VentaId        = venta.Id,
+                IdempotencyKey = requestId.ToString(),
+                Estado         = EstadoIntentoPago.FALLIDO,
+                Monto          = venta.Total,
+                Moneda         = "CLP",
+                Mensaje        = $"Error de comunicación: {ex.Message}",
+                CreatedAt      = timestamp,
+                UpdatedAt      = timestamp
+            };
+            await _ventaService.RegistrarIntentoPagoAsync(intentoPago);
+
             return StatusCode(StatusCodes.Status502BadGateway, new
             {
-                error = "Error al comunicarse con la pasarela de pago.",
+                error   = "Error al comunicarse con la pasarela de pago.",
                 detalle = ex.Message
             });
         }
 
-        return Ok(new CobrarTarjetaResponse(
-            VentaResponse.FromModel(venta),
-            gatewayResponse.Status,
-            gatewayResponse.TransactionId,
-            gatewayResponse.AuthorizationCode,
-            gatewayResponse.GatewayReference,
-            gatewayResponse.Message
-        ));
+        // ── Ramificar según resultado de pasarela ──────────────────────────────
+
+        if (gatewayResponse.Status == "APPROVED")
+        {
+            intentoPago = new IntentoPago
+            {
+                Id                = Guid.NewGuid(),
+                TenantId          = tenantId,
+                VentaId           = venta.Id,
+                IdempotencyKey    = requestId.ToString(),
+                Estado            = EstadoIntentoPago.APROBADO,
+                Monto             = venta.Total,
+                Moneda            = "CLP",
+                Referencia        = gatewayResponse.GatewayReference,
+                AuthorizationCode = gatewayResponse.AuthorizationCode,
+                Mensaje           = gatewayResponse.Message,
+                CreatedAt         = timestamp,
+                UpdatedAt         = timestamp
+            };
+
+            var ventaCompletada = await _ventaService.CompletarTarjetaAsync(venta.Id, intentoPago);
+
+            _logger?.LogInformation(
+                "Venta {VentaId} cobrada con tarjeta. Ref: {Ref}, Auth: {Auth}",
+                ventaCompletada.Id, gatewayResponse.GatewayReference, gatewayResponse.AuthorizationCode);
+
+            return Ok(new CobrarTarjetaResponse(
+                VentaResponse.FromModel(ventaCompletada),
+                gatewayResponse.Status,
+                gatewayResponse.TransactionId,
+                gatewayResponse.AuthorizationCode,
+                gatewayResponse.GatewayReference,
+                gatewayResponse.Message
+            ));
+        }
+        else
+        {
+            // DECLINED u otro estado no aprobado
+            intentoPago = new IntentoPago
+            {
+                Id             = Guid.NewGuid(),
+                TenantId       = tenantId,
+                VentaId        = venta.Id,
+                IdempotencyKey = requestId.ToString(),
+                Estado         = EstadoIntentoPago.RECHAZADO,
+                Monto          = venta.Total,
+                Moneda         = "CLP",
+                Referencia     = gatewayResponse.GatewayReference,
+                DeclineCode    = gatewayResponse.DeclineCode,
+                Mensaje        = gatewayResponse.Message,
+                CreatedAt      = timestamp,
+                UpdatedAt      = timestamp
+            };
+            await _ventaService.RegistrarIntentoPagoAsync(intentoPago);
+
+            _logger?.LogWarning(
+                "Pago rechazado para venta {VentaId}. Status: {Status}, Decline: {DeclineCode}",
+                venta.Id, gatewayResponse.Status, gatewayResponse.DeclineCode);
+
+            return UnprocessableEntity(new
+            {
+                error        = "La pasarela rechazó el pago.",
+                status       = gatewayResponse.Status,
+                decline_code = gatewayResponse.DeclineCode,
+                mensaje      = gatewayResponse.Message,
+                sale_id      = venta.Id,
+                request_id   = requestId
+            });
+        }
     }
 }

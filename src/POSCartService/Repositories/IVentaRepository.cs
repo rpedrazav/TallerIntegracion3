@@ -42,4 +42,20 @@ public interface IVentaRepository
         Guid ventaId,
         Pago pago,
         OutboxMessage outboxMessage);
+
+    /// <summary>
+    /// Completa una venta TARJETA marcando el IntentoPago como APROBADO,
+    /// creando el Pago y el OutboxMessage en una sola transacción atómica.
+    /// </summary>
+    Task<Venta> CompletarTarjetaConOutboxAsync(
+        Guid ventaId,
+        Pago pago,
+        IntentoPago intentoPago,
+        OutboxMessage outboxMessage);
+
+    /// <summary>
+    /// Persiste un IntentoPago sin modificar el estado de la venta.
+    /// Se usa ante rechazo o timeout de la pasarela.
+    /// </summary>
+    Task RegistrarIntentoPagoAsync(IntentoPago intentoPago);
 }

@@ -267,6 +267,16 @@ Refuerzo posterior [IMPLEMENTADO]: `VentaRepository.ActualizarAsync` y `ItemVent
 
 [IMPLEMENTADO] Se expuso el endpoint `POST /ventas/{id}/cobrar-tarjeta` en `VentasController` (MS-5) con DTOs seguros `CobrarTarjetaRequest` y `CobrarTarjetaResponse`. Ejecuta validaciones de guardia estrictas antes de invocar `IPaymentGatewayClient`: valida JWT (401), turno `ABIERTO` del cajero en el tenant (RN-06 -> 409), venta existente y perteneciente al tenant actual (RN-01 -> 404), estado `PENDIENTE` (409), método de pago compatible con tarjeta (400) y total de la venta mayor a 0 (400). Pruebas de integración **6/6 aprobadas** en `CobrarTarjetaIntegrationTests` (trait `S2-033`), verificando en particular que ventas ajenas, completadas o sin turno no realizan ninguna llamada a la pasarela externa. [Diseño](integraciones/pasarela-pago.md).
 
+## S2-034 / TI3-665 — Persistir aprobación y rechazo
+
+[IMPLEMENTADO] El endpoint `POST /ventas/{id}/cobrar-tarjeta` ahora persiste el resultado de cada llamada a la pasarela en un `IntentoPago` y ramifica el flujo según el status devuelto:
+- **APPROVED** → llama a `IVentaService.CompletarTarjetaAsync` (atómico con `CompletarTarjetaConOutboxAsync`): marca la venta `COMPLETADA`, crea un `Pago` con `MetodoPago.TARJETA` y publica `sale.completed` en el outbox. Devuelve **HTTP 200**.
+- **DECLINED** → persiste `IntentoPago` con `EstadoIntentoPago.RECHAZADO` y `DeclineCode`, la venta se mantiene `PENDIENTE`, no hay `Pago` ni `OutboxMessage`. Devuelve **HTTP 422 Unprocessable Entity**.
+- **TimeoutException** → persiste `IntentoPago` con `EstadoIntentoPago.FALLIDO`, venta `PENDIENTE`, sin `Pago` ni `OutboxMessage`. Devuelve **HTTP 504 Gateway Timeout**.
+- **Exception genérica** → persiste `IntentoPago` con `EstadoIntentoPago.FALLIDO`. Devuelve **HTTP 502 Bad Gateway**.
+
+Cumple criterio de aceptación: el rechazo no genera `sale.completed` ni un `Pago` aprobado. Nuevas pruebas de integración **4/4 aprobadas** en `CobrarTarjetaIntegrationTests` (trait `S2-034`), verificando DB post-llamada: venta COMPLETADA/PENDIENTE, presencia/ausencia de Pagos, OutboxMessages e IntentosPago con estado correcto. [Diseño](integraciones/pasarela-pago.md).
+
 ## S2-036 — Escenarios del simulador de pagos
 
 [IMPLEMENTADO] Se especificaron y materializaron los escenarios no sensibles `sim-approved-v1`, `sim-declined-v1` y `sim-timeout-v1`, con solicitudes y respuestas reproducibles, idempotencia por `request_id`, timeout controlado y campos mínimos de auditoría. Ningún escenario usa PAN, CVV ni otra credencial bancaria. El cobro con tarjeta en MS-5 todavía no está implementado. [Contrato S2-036](integraciones/pasarela-pago.md).

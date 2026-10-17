@@ -117,6 +117,22 @@ public interface IVentaService
         decimal nuevoSubtotalVenta,
         decimal nuevosImpuestosVenta,
         decimal nuevoTotalVenta);
+
+    /// <summary>
+    /// Marca una venta PENDIENTE de tipo TARJETA como COMPLETADA,
+    /// registra el pago TARJETA con referencia de pasarela
+    /// y publica el evento <c>sale.completed</c> vía outbox.
+    /// </summary>
+    /// <param name="ventaId">Id de la venta a completar.</param>
+    /// <param name="intentoPago">Intento de pago con datos de la respuesta de la pasarela (Status=APROBADO se asigna internamente).</param>
+    /// <exception cref="InvalidOperationException">Si la venta no está en estado PENDIENTE o no es TARJETA.</exception>
+    Task<Venta> CompletarTarjetaAsync(Guid ventaId, IntentoPago intentoPago);
+
+    /// <summary>
+    /// Persiste un IntentoPago sin modificar el estado de la venta.
+    /// Se usa cuando la pasarela rechaza o no responde dentro del tiempo límite.
+    /// </summary>
+    Task RegistrarIntentoPagoAsync(IntentoPago intentoPago);
 }
 
 

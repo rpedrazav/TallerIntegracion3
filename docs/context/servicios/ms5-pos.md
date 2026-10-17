@@ -90,7 +90,14 @@ reglas: [RN-01, RN-02, RN-03, RN-06, RF-02, RF-03, RF-04, RF-05, RF-06, RF-07]
    → OutboxPublisherWorker publica el payload persistido y conserva event_id entre reintentos
    → PaymentGatewayClient está disponible por DI, pero este endpoint aún no lo invoca
 
-5. POST /ventas/{id}/anular  { motivo }
+5. POST /ventas/{id}/cobrar-tarjeta  { scenario_id?, idempotency_key?, monto? }
+   → S2-033 / S2-034: Valida JWT, turno ABIERTO, venta PENDIENTE y MetodoPago != EFECTIVO
+   → Llama a IPaymentGatewayClient.ProcessPaymentAsync
+   → Si APPROVED: CompletarTarjetaAsync completa venta, crea Pago TARJETA, IntentoPago APROBADO y OutboxMessage sale.completed (200 OK)
+   → Si DECLINED: IntentoPago RECHAZADO, venta sigue PENDIENTE, 0 pagos y 0 outbox (422 Unprocessable Entity)
+   → Si Timeout/Error: IntentoPago FALLIDO, venta sigue PENDIENTE, 0 pagos y 0 outbox (504 / 502)
+
+6. POST /ventas/{id}/anular  { motivo }
    → VentaService.AnularAsync: estado → ANULADA
    → Crea Anulacion { ventaId, autorizadoPor, motivo }
    → ❌ NO solicita reembolso a pasarela

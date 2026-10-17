@@ -57,6 +57,26 @@ Expone `POST /ventas/{id}/cobrar-tarjeta` en `VentasController` (MS-5). El endpo
 6. **Monto Válido:** Valida que `Total > 0` y que coincida con `monto` del request si fue provisto (HTTP 400).
 7. **Regla de Aceptación:** Una venta ajena o completada (o sin turno / JWT) **nunca contacta a la pasarela**. Pruebas de integración en `CobrarTarjetaIntegrationTests` (6/6 aprobadas).
 
+## S2-034 / TI3-665 — Persistir aprobación y rechazo [IMPLEMENTADO]
+
+En `POST /ventas/{id}/cobrar-tarjeta`, la respuesta de la pasarela persiste de manera atómica el resultado mediante `IntentoPago` y gestiona el ciclo de vida de la venta:
+- **Aprobado (`status == APPROVED`):**
+  - Venta transiciona a `COMPLETADA`.
+  - Se genera registro `Pago` con `Metodo = TARJETA`, `Monto = Total`, `Vuelto = 0`.
+  - Se registra `IntentoPago` con `Estado = APROBADO`, `AuthorizationCode`, `Referencia` y `Mensaje`.
+  - Se publica el evento `sale.completed` mediante el `OutboxMessage` en la misma transacción atómica de EF Core (`CompletarTarjetaConOutboxAsync`).
+  - Retorna **HTTP 200 OK**.
+- **Rechazado (`status == DECLINED` o diferente de APPROVED):**
+  - La venta permanece en estado `PENDIENTE`.
+  - Se registra `IntentoPago` con `Estado = RECHAZADO`, `DeclineCode` y `Mensaje`.
+  - **No** se genera registro `Pago` ni evento outbox `sale.completed`.
+  - Retorna **HTTP 422 Unprocessable Entity**.
+- **Timeout o error de red:**
+  - La venta permanece en `PENDIENTE`.
+  - Se registra `IntentoPago` con `Estado = FALLIDO`.
+  - Retorna **HTTP 504 Gateway Timeout** (en timeout) o **HTTP 502 Bad Gateway** (en fallo de transporte/500).
+- **Pruebas:** 10/10 en `CobrarTarjetaIntegrationTests` (incluye 4 pruebas `S2-034` verificando DB, pagos, outbox e intentos).
+
 ## S2-036 — Escenarios controlables del simulador [CONTRATO DEFINIDO]
 
 El simulador debe exponer `POST /simulator/payments` únicamente en entornos de desarrollo y pruebas. El resultado se selecciona mediante `scenario_id`, nunca mediante un número de tarjeta. Los tres identificadores son públicos, no sensibles y estables.

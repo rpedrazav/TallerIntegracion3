@@ -263,6 +263,77 @@ public class VentaService : IVentaService
 
         return (venta, item);
     }
+
+    /// <inheritdoc/>
+    public async Task<Venta> CompletarTarjetaAsync(Guid ventaId, IntentoPago intentoPago)
+    {
+        var venta = await _ventaRepository.GetByIdAsync(ventaId)
+            ?? throw new KeyNotFoundException($"Venta {ventaId} no encontrada.");
+
+        if (venta.Estado != EstadoVenta.PENDIENTE)
+            throw new InvalidOperationException(
+                $"Solo se puede completar una venta PENDIENTE. Estado actual: {venta.Estado}.");
+
+        if (venta.MetodoPago == MetodoPagoVenta.EFECTIVO)
+            throw new InvalidOperationException(
+                "CompletarTarjetaAsync no puede usarse para ventas con método de pago EFECTIVO.");
+
+        var pago = new Pago
+        {
+            Id      = Guid.NewGuid(),
+            VentaId = venta.Id,
+            Metodo  = MetodoPago.TARJETA,
+            Monto   = venta.Total,
+            Vuelto  = 0m
+        };
+
+        var eventId = Guid.NewGuid();
+        var timestamp = DateTime.UtcNow;
+        var evento = new SaleCompletedEvent
+        {
+            EventId       = eventId,
+            SchemaVersion = 1,
+            TenantId      = venta.TenantId,
+            VentaId       = venta.Id,
+            CajeroId      = venta.CajeroId,
+            SucursalId    = venta.SucursalId,
+            Subtotal      = venta.Subtotal,
+            Iva           = venta.Impuestos,
+            Total         = venta.Total,
+            MetodoPago    = venta.MetodoPago.ToString(),
+            Timestamp     = timestamp,
+            Items         = venta.Items.Select(i => new SaleCompletedItemEvent
+            {
+                ProductoId     = i.ProductoId,
+                Cantidad       = i.Cantidad,
+                PrecioUnitario = i.PrecioUnitario
+            }).ToList()
+        };
+        var outboxMessage = new OutboxMessage
+        {
+            EventId       = eventId,
+            TenantId      = venta.TenantId,
+            VentaId       = venta.Id,
+            EventType     = "sale.completed",
+            SchemaVersion = evento.SchemaVersion,
+            Topic         = "sale.completed",
+            MessageKey    = venta.TenantId.ToString(),
+            Payload       = JsonSerializer.Serialize(evento),
+            Status        = OutboxStatus.PENDIENTE,
+            CreatedAt     = timestamp,
+            NextAttemptAt = timestamp
+        };
+
+        intentoPago.TenantId  = venta.TenantId;
+        intentoPago.VentaId   = venta.Id;
+        intentoPago.CreatedAt = intentoPago.CreatedAt == default ? timestamp : intentoPago.CreatedAt;
+
+        return await _ventaRepository.CompletarTarjetaConOutboxAsync(venta.Id, pago, intentoPago, outboxMessage);
+    }
+
+    /// <inheritdoc/>
+    public Task RegistrarIntentoPagoAsync(IntentoPago intentoPago)
+        => _ventaRepository.RegistrarIntentoPagoAsync(intentoPago);
 }
 
 

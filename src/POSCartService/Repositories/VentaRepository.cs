@@ -138,4 +138,59 @@ public class VentaRepository : IVentaRepository
 
         return tracked;
     }
+
+    /// <inheritdoc/>
+    public async Task<Venta> CompletarTarjetaConOutboxAsync(
+        Guid ventaId,
+        Pago pago,
+        IntentoPago intentoPago,
+        OutboxMessage outboxMessage)
+    {
+        var tenantId = _context.CurrentTenantId
+            ?? throw new KeyNotFoundException($"Venta {ventaId} no encontrada para completar.");
+
+        if (outboxMessage.EventId == Guid.Empty
+            || outboxMessage.TenantId != tenantId
+            || outboxMessage.VentaId != ventaId)
+        {
+            throw new InvalidOperationException("El evento outbox no coincide con la venta y el tenant actuales.");
+        }
+
+        await using var transaction = await _context.Database.BeginTransactionAsync();
+
+        var tracked = await _context.Ventas
+            .Include(v => v.Items)
+            .Include(v => v.Pagos)
+            .FirstOrDefaultAsync(v => v.Id == ventaId && v.TenantId == tenantId)
+            ?? throw new KeyNotFoundException($"Venta {ventaId} no encontrada para completar.");
+
+        if (tracked.Estado != EstadoVenta.PENDIENTE)
+        {
+            throw new InvalidOperationException(
+                $"Solo se puede completar una venta PENDIENTE. Estado actual: {tracked.Estado}.");
+        }
+
+        tracked.Estado = EstadoVenta.COMPLETADA;
+        pago.VentaId = tracked.Id;
+        intentoPago.VentaId = tracked.Id;
+        intentoPago.Estado = EstadoIntentoPago.APROBADO;
+        intentoPago.UpdatedAt = DateTime.UtcNow;
+
+        _context.Pagos.Add(pago);
+        _context.IntentosPago.Add(intentoPago);
+        _context.OutboxMessages.Add(outboxMessage);
+
+        await _context.SaveChangesAsync();
+        await transaction.CommitAsync();
+
+        return tracked;
+    }
+
+    /// <inheritdoc/>
+    public async Task RegistrarIntentoPagoAsync(IntentoPago intentoPago)
+    {
+        intentoPago.UpdatedAt = DateTime.UtcNow;
+        _context.IntentosPago.Add(intentoPago);
+        await _context.SaveChangesAsync();
+    }
 }
