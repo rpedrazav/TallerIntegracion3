@@ -4,6 +4,7 @@ import axios from 'axios';
 import { catalogApi, CatalogProduct, posApi, VentaPendiente } from '../api/client';
 import BarcodeInput from '../components/pos/BarcodeInput';
 import CartItem from '../components/pos/CartItem';
+import PaymentModal from '../components/pos/PaymentModal';
 
 export interface ProductItem {
   id: string;
@@ -43,6 +44,7 @@ export default function Pos() {
   const [venta, setVenta] = useState<VentaPendiente | null>(null);
   const [ventaError, setVentaError] = useState('');
   const [isStartingSale, setIsStartingSale] = useState(false);
+  const [isPaymentOpen, setIsPaymentOpen] = useState(false);
   const [pendingMutations, setPendingMutations] = useState(0);
   const [saleNeedsRefresh, setSaleNeedsRefresh] = useState(false);
   const saleRef = useRef<VentaPendiente | null>(null);
@@ -305,7 +307,7 @@ export default function Pos() {
   const handleCheckout = async () => {
     if (venta) {
       if (pendingMutations > 0 || saleNeedsRefresh) return;
-      alert('Funcionalidad de cobro se implementará en el futuro.');
+      setIsPaymentOpen(true);
       return;
     }
     if (draftItems.length === 0 || isStartingSale || turnoStatus !== 'ready' || !turnoId) return;
@@ -405,6 +407,7 @@ export default function Pos() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 100px)', gap: '1rem' }}>
+      {isPaymentOpen && venta && <PaymentModal total={venta.total} saleMethod={venta.metodo_pago === 'EFECTIVO' ? 'cash' : 'card'} state="available" onClose={() => setIsPaymentOpen(false)} />}
       {ventaError && (
         <div role="alert" style={{ padding: '0.75rem 1rem', border: '1px solid var(--color-danger)', background: 'var(--color-danger-bg)', color: 'var(--color-danger)', borderRadius: '8px' }}>
           {ventaError} {saleNeedsRefresh && <button type="button" onClick={retrySaleRefresh} disabled={pendingMutations > 0}>Actualizar venta</button>}

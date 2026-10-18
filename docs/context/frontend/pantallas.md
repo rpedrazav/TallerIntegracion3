@@ -45,7 +45,7 @@ Carrito de compras con:
   - BarcodeInput (búsqueda con debounce)
   - Lista de CartItem (ítems del carrito)
   - Totales locales antes de iniciar venta; luego subtotal, impuestos y total devueltos por MS-5
-  - Botón "Iniciar venta" que envía producto_id y cantidad; después muestra "Cobrar" (cobro aún no implementado)
+  - Botón "Iniciar venta" que envía producto_id y cantidad; después muestra "Cobrar" y abre el contrato visual del modal (envío del pago aún no conectado)
   - Botón "Cancelar borrador" antes de crear venta; en venta pendiente permite agregar, cambiar cantidad y eliminar ítems
 
 Productos obtenidos de MS-3 mediante `catalogApi`; solo el borrador anterior a la venta se guarda en `localStorage`
@@ -59,6 +59,20 @@ Eliminar una fila de la venta pendiente llama `DELETE /ventas/{id}/items/{itemId
 Errores de inicio visibles; ante respuesta perdida, vuelve a consultar el turno antes de permitir otro intento [IMPLEMENTADO].
 NO abre turno desde esta pantalla; dirige a /abrir-turno cuando falta
 ```
+
+### Modal de cobro — contrato visual S2-046 [IMPLEMENTADO]
+
+`PaymentModal` presenta el total devuelto por MS-5 y permite ver las vistas de efectivo y tarjeta. En efectivo muestra monto recibido y vuelto estimado; en tarjeta muestra solo el monto y, si la pasarela ya respondió, su referencia opaca. No pide ni conserva número de tarjeta, CVV, PIN ni vencimiento. El método seleccionado debe coincidir con `metodo_pago` de la venta para habilitar la confirmación.
+
+| Estado | Mensaje visible | Acción permitida |
+|---|---|---|
+| Disponible | Método, total y detalle de efectivo o tarjeta | Confirmar solo con método compatible, monto válido en efectivo y manejador de pago conectado |
+| Procesando | Esperando respuesta; evitar otro cobro | Sin cerrar ni repetir |
+| Aprobado | Venta confirmada; referencia opaca si es tarjeta | Cerrar |
+| Rechazado | Venta pendiente; referencia opaca si existe | Cerrar y revisar |
+| Resultado incierto | Verificar venta antes de intentar otro cobro | Verificar, cuando exista manejador; o cerrar |
+
+El botón **Cobrar** del POS abre actualmente el modal en estado Disponible. Los estados posteriores están definidos como contrato de presentación mediante la propiedad `state`; ningún botón del POS simula una aprobación o dispara el endpoint de pago todavía [PARCIAL]. Las ventas iniciadas desde `Pos.tsx` usan por ahora `EFECTIVO`, por lo que seleccionar Tarjeta muestra una advertencia y no habilita confirmación.
 
 ## AbrirTurnoPage.tsx [IMPLEMENTADO]
 
