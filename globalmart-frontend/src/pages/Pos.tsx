@@ -4,7 +4,7 @@ import axios from 'axios';
 import { catalogApi, CatalogProduct, posApi, VentaPendiente } from '../api/client';
 import BarcodeInput from '../components/pos/BarcodeInput';
 import CartItem from '../components/pos/CartItem';
-import PaymentModal from '../components/pos/PaymentModal';
+import PaymentModal, { PaymentMethod, PaymentState } from '../components/pos/PaymentModal';
 
 export interface ProductItem {
   id: string;
@@ -45,6 +45,11 @@ export default function Pos() {
   const [ventaError, setVentaError] = useState('');
   const [isStartingSale, setIsStartingSale] = useState(false);
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
+  const [paymentState, setPaymentState] = useState<PaymentState>('available');
+  const [paymentError, setPaymentError] = useState('');
+  const [paymentShortfall, setPaymentShortfall] = useState<number | null>(null);
+  const [paymentChange, setPaymentChange] = useState<number | null>(null);
+  const paymentInFlight = useRef(false);
   const [pendingMutations, setPendingMutations] = useState(0);
   const [saleNeedsRefresh, setSaleNeedsRefresh] = useState(false);
   const saleRef = useRef<VentaPendiente | null>(null);
@@ -196,7 +201,7 @@ export default function Pos() {
   };
 
   const addProductToCart = useCallback((product: CatalogProduct) => {
-    if (isStartingSale || saleNeedsRefresh) return;
+    if (isStartingSale || saleNeedsRefresh || paymentState === 'uncertain' || paymentState === 'processing') return;
     if (venta) {
       void queueSaleMutation(async (current) => {
         const existing = current.items.find((item) => item.producto_id === product.id);
@@ -222,7 +227,7 @@ export default function Pos() {
       }];
     });
     setSearchResults([]);
-  }, [venta, isStartingSale, saleNeedsRefresh, queueSaleMutation]);
+  }, [venta, isStartingSale, saleNeedsRefresh, paymentState, queueSaleMutation]);
 
   const handleTypingSearch = useCallback((query: string) => {
     if (!query || query.trim() === '') {
@@ -271,7 +276,7 @@ export default function Pos() {
   }, [todosProductos, addProductToCart]);
 
   const handleQuantityChange = useCallback((id: string, newQuantity: number) => {
-    if (isStartingSale || saleNeedsRefresh) return;
+    if (isStartingSale || saleNeedsRefresh || paymentState === 'uncertain' || paymentState === 'processing') return;
     if (venta) {
       void queueSaleMutation(async (current) => {
         const item = current.items.find((entry) => entry.id === id);
@@ -283,10 +288,10 @@ export default function Pos() {
     setDraftItems(prev => prev.map(item =>
       item.id === id ? { ...item, quantity: newQuantity } : item
     ));
-  }, [venta, isStartingSale, saleNeedsRefresh, queueSaleMutation]);
+  }, [venta, isStartingSale, saleNeedsRefresh, paymentState, queueSaleMutation]);
 
   const handleRemoveItem = useCallback((id: string) => {
-    if (isStartingSale || saleNeedsRefresh) return;
+    if (isStartingSale || saleNeedsRefresh || paymentState === 'uncertain' || paymentState === 'processing') return;
     if (venta) {
       void queueSaleMutation(async (current) => {
         if (!current.items.some((item) => item.id === id)) return;
@@ -295,7 +300,7 @@ export default function Pos() {
       return;
     }
     setDraftItems(prev => prev.filter(item => item.id !== id));
-  }, [venta, isStartingSale, saleNeedsRefresh, queueSaleMutation]);
+  }, [venta, isStartingSale, saleNeedsRefresh, paymentState, queueSaleMutation]);
 
   const handleCancelSale = () => {
     if (venta || isStartingSale || draftItems.length === 0) return;
@@ -307,6 +312,11 @@ export default function Pos() {
   const handleCheckout = async () => {
     if (venta) {
       if (pendingMutations > 0 || saleNeedsRefresh) return;
+      if (paymentState === 'available') {
+        setPaymentError('');
+        setPaymentShortfall(null);
+        setPaymentChange(null);
+      }
       setIsPaymentOpen(true);
       return;
     }
@@ -367,6 +377,79 @@ export default function Pos() {
     }
   };
 
+  const handleCashPayment = async (method: PaymentMethod, cashReceived?: number) => {
+    const current = saleRef.current;
+    if (paymentState !== 'available' || method !== 'cash' || !current || current.estado !== 'PENDIENTE' || current.metodo_pago !== 'EFECTIVO'
+      || cashReceived === undefined || !Number.isFinite(cashReceived) || cashReceived <= 0 || paymentInFlight.current) return;
+
+    paymentInFlight.current = true;
+    setPaymentState('processing');
+    setPaymentError('');
+    setPaymentShortfall(null);
+    try {
+      const result = await posApi.chargeCash(current.id, cashReceived);
+      if (result.venta?.id !== current.id || result.venta.estado !== 'COMPLETADA' || !Number.isFinite(result.vuelto)) {
+        setPaymentState('uncertain');
+        setPaymentError('MS-5 no devolvió una confirmación completa. Verifica la venta antes de otro intento.');
+        return;
+      }
+      saleRef.current = result.venta;
+      setVenta(result.venta);
+      setPaymentChange(result.vuelto);
+      setPaymentState('approved');
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error) && error.response?.status === 400) {
+        const data = error.response.data as { error?: string; diferencia?: number } | undefined;
+        setPaymentState('available');
+        setPaymentError(data?.error || 'No se pudo cobrar la venta en efectivo.');
+        setPaymentShortfall(data?.error === 'Monto insuficiente' && typeof data.diferencia === 'number' ? data.diferencia : null);
+      } else {
+        setPaymentState('uncertain');
+        setPaymentError('No se pudo confirmar el resultado del cobro. Verifica la venta antes de otro intento.');
+      }
+    } finally {
+      paymentInFlight.current = false;
+    }
+  };
+
+  const verifyCashPayment = async () => {
+    const current = saleRef.current;
+    if (!current || paymentInFlight.current) return;
+    paymentInFlight.current = true;
+    setPaymentState('processing');
+    setPaymentError('');
+    try {
+      const updated = await posApi.getSale(current.id);
+      saleRef.current = updated;
+      setVenta(updated);
+      if (updated.estado === 'COMPLETADA') {
+        setPaymentState('approved');
+        setPaymentError('La venta está completada. El vuelto no está disponible en esta consulta.');
+      } else {
+        setPaymentState('uncertain');
+        setPaymentError('La venta aún figura pendiente. Confirma el resultado antes de intentar otro cobro.');
+      }
+    } catch {
+      setPaymentState('uncertain');
+      setPaymentError('No se pudo consultar la venta. Reintenta la verificación.');
+    } finally {
+      paymentInFlight.current = false;
+    }
+  };
+
+  const closePayment = () => {
+    if (paymentState === 'processing') return;
+    setIsPaymentOpen(false);
+    if (paymentState === 'approved') {
+      saleRef.current = null;
+      setVenta(null);
+      setPaymentState('available');
+      setPaymentChange(null);
+      setPaymentError('');
+      setPaymentShortfall(null);
+    }
+  };
+
   const { subtotal: draftSubtotal, totalItems } = useMemo(() => {
     return cartItems.reduce(
       (acc, item) => {
@@ -407,16 +490,28 @@ export default function Pos() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 100px)', gap: '1rem' }}>
-      {isPaymentOpen && venta && <PaymentModal total={venta.total} saleMethod={venta.metodo_pago === 'EFECTIVO' ? 'cash' : 'card'} state="available" onClose={() => setIsPaymentOpen(false)} />}
+      {isPaymentOpen && venta && <PaymentModal
+        total={venta.total}
+        saleMethod={venta.metodo_pago === 'EFECTIVO' ? 'cash' : 'card'}
+        state={paymentState}
+        change={paymentChange}
+        errorMessage={paymentError}
+        shortfall={paymentShortfall}
+        onClose={closePayment}
+        onConfirm={venta.metodo_pago === 'EFECTIVO' ? handleCashPayment : undefined}
+        onCashInputChange={() => { setPaymentError(''); setPaymentShortfall(null); }}
+        onVerify={paymentState === 'uncertain' ? verifyCashPayment : undefined}
+      />}
       {ventaError && (
         <div role="alert" style={{ padding: '0.75rem 1rem', border: '1px solid var(--color-danger)', background: 'var(--color-danger-bg)', color: 'var(--color-danger)', borderRadius: '8px' }}>
           {ventaError} {saleNeedsRefresh && <button type="button" onClick={retrySaleRefresh} disabled={pendingMutations > 0}>Actualizar venta</button>}
         </div>
       )}
+      {paymentState === 'uncertain' && venta && <div role="alert" style={{ padding: '0.75rem 1rem', border: '1px solid var(--color-warning)', background: 'var(--color-warning-bg)', color: 'var(--color-warning-text)', borderRadius: '8px' }}>Resultado del cobro sin confirmar. Abre Cobrar y verifica la venta antes de continuar.</div>}
       {pendingMutations > 0 && <div role="status">Sincronizando ítems con MS-5...</div>}
       {venta && (
         <div role="status" style={{ padding: '0.75rem 1rem', border: '1px solid var(--color-success)', background: 'var(--color-success-bg)', color: 'var(--color-success)', borderRadius: '8px' }}>
-          Venta pendiente #{venta.id.slice(0, 8)}. Los ítems y totales provienen de MS-5.
+          Venta {venta.estado === 'COMPLETADA' ? 'completada' : 'pendiente'} #{venta.id.slice(0, 8)}. Los ítems y totales provienen de MS-5.
         </div>
       )}
       {mensajeConfirmacion && (
@@ -460,7 +555,7 @@ export default function Pos() {
         {/* Columna Izquierda: Búsqueda y Escaneo */}
         <div style={{ flex: '0 0 320px', display: 'flex', flexDirection: 'column', background: 'var(--color-surface)', padding: '1rem', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
                 <h3 style={{ marginTop: 0, color: 'var(--color-primary)', fontSize: '1.25rem' }}>Buscar Producto</h3>
-        {isStartingSale || saleNeedsRefresh || (venta && venta.estado !== 'PENDIENTE') ? (
+        {isStartingSale || saleNeedsRefresh || paymentState === 'uncertain' || paymentState === 'processing' || (venta && venta.estado !== 'PENDIENTE') ? (
           <p style={{ color: 'var(--color-ink-soft)' }}>{isStartingSale ? 'Iniciando venta...' : 'Actualiza la venta para seguir agregando productos.'}</p>
         ) : (
           <BarcodeInput onSearch={handleSearch} onTyping={handleTypingSearch} />
@@ -546,7 +641,7 @@ export default function Pos() {
                     price={item.price} 
                     quantity={item.quantity} 
                     subtotal={item.subtotal}
-                    readOnly={isStartingSale || pendingMutations > 0 || saleNeedsRefresh || !!(venta && venta.estado !== 'PENDIENTE')}
+                    readOnly={isStartingSale || pendingMutations > 0 || saleNeedsRefresh || paymentState === 'uncertain' || paymentState === 'processing' || !!(venta && venta.estado !== 'PENDIENTE')}
                     canRemove={!venta || venta.estado === 'PENDIENTE'}
                     onQuantityChange={handleQuantityChange}
                     onRemove={handleRemoveItem}

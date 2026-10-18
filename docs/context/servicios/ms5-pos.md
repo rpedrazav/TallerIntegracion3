@@ -13,7 +13,7 @@ reglas: [RN-01, RN-02, RN-03, RN-06, RF-02, RF-03, RF-04, RF-05, RF-06, RF-07]
 ---
 # MS-5 · POS & Cart Service
 
-> Servicio central del punto de venta. Gestiona turnos de caja y el ciclo completo de una venta (carrito, ítems, cobro, anulación). Integrado con MS-2 (IVA) y MS-3 (productos). Persiste y publica `sale.completed` mediante outbox y dispone de endpoint, adaptador HTTP y simulador para cobro con tarjeta; faltan el frontend de cobro y el hardware.
+> Servicio central del punto de venta. Gestiona turnos de caja y el ciclo completo de una venta (carrito, ítems, cobro, anulación). Integrado con MS-2 (IVA) y MS-3 (productos). Persiste y publica `sale.completed` mediante outbox; el frontend ya usa el cobro en efectivo. Dispone de endpoint, adaptador HTTP y simulador para tarjeta, cuya integración frontend sigue pendiente, al igual que el hardware.
 
 ## Contrato Oficial de Creación de Venta (POST /ventas) — S2-001 / S2-002 / S2-003
 

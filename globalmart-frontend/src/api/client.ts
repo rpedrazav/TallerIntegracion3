@@ -124,6 +124,12 @@ export interface CrearVentaItem {
   cantidad: number;
 }
 
+export interface CobrarEfectivoResponse {
+  venta: VentaPendiente;
+  montoRecibido: number;
+  vuelto: number;
+}
+
 export const posApi = {
   activeShift: async (): Promise<TurnoActivo> => {
     const response = await pos.get<TurnoActivo>('/api/turnos/activo');
@@ -166,6 +172,12 @@ export const posApi = {
     const response = await pos.post<VentaPendiente>('/ventas', {
       items,
       metodo_pago: 'EFECTIVO',
+    });
+    return response.data;
+  },
+  chargeCash: async (saleId: string, amountReceived: number): Promise<CobrarEfectivoResponse> => {
+    const response = await pos.post<CobrarEfectivoResponse>(`/ventas/${saleId}/cobrar`, {
+      monto_recibido: amountReceived,
     });
     return response.data;
   },

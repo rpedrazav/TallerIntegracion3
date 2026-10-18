@@ -45,7 +45,7 @@ Carrito de compras con:
   - BarcodeInput (búsqueda con debounce)
   - Lista de CartItem (ítems del carrito)
   - Totales locales antes de iniciar venta; luego subtotal, impuestos y total devueltos por MS-5
-  - Botón "Iniciar venta" que envía producto_id y cantidad; después muestra "Cobrar" y abre el contrato visual del modal (envío del pago aún no conectado)
+  - Botón "Iniciar venta" que envía producto_id y cantidad; después muestra "Cobrar" y abre el modal de efectivo
   - Botón "Cancelar borrador" antes de crear venta; en venta pendiente permite agregar, cambiar cantidad y eliminar ítems
 
 Productos obtenidos de MS-3 mediante `catalogApi`; solo el borrador anterior a la venta se guarda en `localStorage`
@@ -62,7 +62,7 @@ NO abre turno desde esta pantalla; dirige a /abrir-turno cuando falta
 
 ### Modal de cobro — contrato visual S2-046 [IMPLEMENTADO]
 
-`PaymentModal` presenta el total devuelto por MS-5 y permite ver las vistas de efectivo y tarjeta. En efectivo muestra monto recibido y vuelto estimado; en tarjeta muestra solo el monto y, si la pasarela ya respondió, su referencia opaca. No pide ni conserva número de tarjeta, CVV, PIN ni vencimiento. El método seleccionado debe coincidir con `metodo_pago` de la venta para habilitar la confirmación.
+`PaymentModal` presenta el total devuelto por MS-5 y permite ver las vistas de efectivo y tarjeta. En efectivo muestra monto recibido y diferencia estimada; tras un cobro aprobado muestra el vuelto devuelto por MS-5. En tarjeta muestra solo el monto y, si la pasarela ya respondió, su referencia opaca. No pide ni conserva número de tarjeta, CVV, PIN ni vencimiento. El método seleccionado debe coincidir con `metodo_pago` de la venta para habilitar la confirmación.
 
 | Estado | Mensaje visible | Acción permitida |
 |---|---|---|
@@ -72,7 +72,7 @@ NO abre turno desde esta pantalla; dirige a /abrir-turno cuando falta
 | Rechazado | Venta pendiente; referencia opaca si existe | Cerrar y revisar |
 | Resultado incierto | Verificar venta antes de intentar otro cobro | Verificar, cuando exista manejador; o cerrar |
 
-El botón **Cobrar** del POS abre actualmente el modal en estado Disponible. Los estados posteriores están definidos como contrato de presentación mediante la propiedad `state`; ningún botón del POS simula una aprobación o dispara el endpoint de pago todavía [PARCIAL]. Las ventas iniciadas desde `Pos.tsx` usan por ahora `EFECTIVO`, por lo que seleccionar Tarjeta muestra una advertencia y no habilita confirmación.
+El botón **Cobrar** del POS abre el modal en estado Disponible. En una venta `EFECTIVO`, confirmar un monto positivo llama `POST /ventas/{id}/cobrar` con `monto_recibido`; Procesando evita un segundo envío, Aprobado usa la venta `COMPLETADA` y el `vuelto` de la respuesta, y un 400 `Monto insuficiente` conserva la venta `PENDIENTE` y muestra `diferencia` devuelta por MS-5 [IMPLEMENTADO]. Ante un resultado de red incierto, bloquea otra confirmación y permite consultar `GET /ventas/{id}`; la consulta puede confirmar el estado de la venta, pero no reconstruye el vuelto si se perdió la respuesta del cobro. Las ventas iniciadas desde `Pos.tsx` usan por ahora `EFECTIVO`; seleccionar Tarjeta muestra una advertencia y no habilita confirmación. El envío de cobros con tarjeta sigue pendiente [PARCIAL].
 
 ## AbrirTurnoPage.tsx [IMPLEMENTADO]
 

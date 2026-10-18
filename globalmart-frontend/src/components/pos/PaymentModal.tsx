@@ -9,8 +9,12 @@ interface PaymentModalProps {
   saleMethod: PaymentMethod;
   state: PaymentState;
   reference?: string | null;
+  change?: number | null;
+  errorMessage?: string;
+  shortfall?: number | null;
   onClose: () => void;
   onConfirm?: (method: PaymentMethod, cashReceived?: number) => void;
+  onCashInputChange?: () => void;
   onVerify?: () => void;
 }
 
@@ -39,12 +43,12 @@ const stateText: Record<Exclude<PaymentState, 'available'>, { title: string; det
   },
 };
 
-export default function PaymentModal({ total, saleMethod, state, reference, onClose, onConfirm, onVerify }: PaymentModalProps) {
+export default function PaymentModal({ total, saleMethod, state, reference, change, errorMessage, shortfall, onClose, onConfirm, onCashInputChange, onVerify }: PaymentModalProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [method, setMethod] = useState<PaymentMethod>(saleMethod);
   const [cashInput, setCashInput] = useState('');
   const cashReceived = Number(cashInput);
-  const cashIsValid = cashInput.trim() !== '' && Number.isFinite(cashReceived) && cashReceived >= total;
+  const cashIsValid = cashInput.trim() !== '' && Number.isFinite(cashReceived) && cashReceived > 0;
   const methodMatchesSale = method === saleMethod;
   const canConfirm = state === 'available' && methodMatchesSale && !!onConfirm && (method === 'card' || cashIsValid);
 
@@ -85,9 +89,9 @@ export default function PaymentModal({ total, saleMethod, state, reference, onCl
           {method === 'cash' ? (
             <div className="payment-modal__fields">
               <label htmlFor="cash-received">Monto recibido</label>
-              <input id="cash-received" type="number" min={total} step="1" inputMode="decimal" value={cashInput} onChange={(event) => setCashInput(event.target.value)} placeholder="Ingresa el efectivo recibido" />
-              <p>Vuelto estimado: <strong>{money(cashIsValid ? cashReceived - total : 0)}</strong></p>
-              {cashInput !== '' && !cashIsValid && <p className="payment-modal__error" role="alert">El monto recibido debe cubrir el total.</p>}
+              <input id="cash-received" type="number" min="0.01" step="0.01" inputMode="decimal" value={cashInput} onChange={(event) => { setCashInput(event.target.value); onCashInputChange?.(); }} placeholder="Ingresa el efectivo recibido" />
+              {cashIsValid && <p>{cashReceived >= total ? 'Vuelto estimado:' : 'Faltan (estimado):'} <strong>{money(Math.abs(cashReceived - total))}</strong></p>}
+              {cashInput !== '' && !cashIsValid && <p className="payment-modal__error" role="alert">Ingresa un monto mayor que cero.</p>}
             </div>
           ) : (
             <div className="payment-modal__card-info">
@@ -98,11 +102,14 @@ export default function PaymentModal({ total, saleMethod, state, reference, onCl
 
           {!methodMatchesSale && <p className="payment-modal__notice" role="status">Esta venta se inició con {saleMethod === 'cash' ? 'efectivo' : 'tarjeta'}. Para cobrar con otro método se requiere una venta compatible.</p>}
           {!onConfirm && <p className="payment-modal__notice" role="status">La interfaz de cobro está definida; el envío del pago desde POS aún no está conectado.</p>}
+          {errorMessage && <p className="payment-modal__error" role="alert">{errorMessage}{shortfall != null && ` Faltan según MS-5: ${money(shortfall)}.`}</p>}
         </>
       ) : (
         <div id="payment-modal-description" className={`payment-modal__result payment-modal__result--${state}`} role="status" aria-live="polite">
           <span className="payment-modal__symbol" aria-hidden="true">{stateText[state].symbol}</span>
           <p>{stateText[state].detail}</p>
+          {state === 'approved' && method === 'cash' && change != null && <p className="payment-modal__change">Vuelto calculado por MS-5: <strong>{money(change)}</strong></p>}
+          {errorMessage && <p>{errorMessage}</p>}
           {method === 'card' && reference && <p className="payment-modal__reference">Referencia opaca: <code>{reference}</code></p>}
         </div>
       )}

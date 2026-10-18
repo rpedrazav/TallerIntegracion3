@@ -26,6 +26,8 @@
 .payment-modal__fields input { width: 100%; box-sizing: border-box; padding: 12px; border: 1px solid var(--color-line); border-radius: 8px; background: var(--color-surface); color: var(--color-ink); font: inherit; }
 .payment-modal__fields p, .payment-modal__card-info p { color: var(--color-ink-soft); line-height: 1.5; }
 .payment-modal__fields .payment-modal__error { color: var(--color-danger-text); }
+.payment-modal__error { color: var(--color-danger-text); font-weight: 600; line-height: 1.5; }
+.payment-modal__change { font-size: 1.125rem; font-variant-numeric: tabular-nums; }
 .payment-modal__card-info { padding: 16px; box-sizing: border-box; border-radius: 8px; background: var(--color-info-bg); }
 .payment-modal__card-info p { margin-bottom: 0; }
 .payment-modal__notice { padding: 12px; border-radius: 8px; background: var(--color-warning-bg); color: var(--color-warning-text); line-height: 1.4; }
