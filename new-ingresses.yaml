@@ -7,6 +7,10 @@ metadata:
     external-dns.alpha.kubernetes.io/target: proxy.inf.uct.cl
 spec:
   ingressClassName: nginx
+  tls:
+  - hosts:
+    - auth-rpedraza.dev.censei.cl
+    secretName: globalmart-dev-tls
   rules:
   - host: auth-rpedraza.dev.censei.cl
     http:
@@ -28,6 +32,10 @@ metadata:
     external-dns.alpha.kubernetes.io/target: proxy.inf.uct.cl
 spec:
   ingressClassName: nginx
+  tls:
+  - hosts:
+    - catalog-rpedraza.dev.censei.cl
+    secretName: globalmart-dev-tls
   rules:
   - host: catalog-rpedraza.dev.censei.cl
     http:
@@ -49,6 +57,10 @@ metadata:
     external-dns.alpha.kubernetes.io/target: proxy.inf.uct.cl
 spec:
   ingressClassName: nginx
+  tls:
+  - hosts:
+    - pos-rpedraza.dev.censei.cl
+    secretName: globalmart-dev-tls
   rules:
   - host: pos-rpedraza.dev.censei.cl
     http:

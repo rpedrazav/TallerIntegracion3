@@ -3,7 +3,7 @@ id: estado-actual
 tipo: indice
 titulo: Estado Real de Implementación — GlobalMart OS
 estado: vigente
-fuentes: [docs/context/_reports/inventario.md, src/, globalmart-frontend/src/api/client.ts, git log, docs/context/_reports/preguntas-abiertas.md]
+fuentes: [docs/context/_reports/inventario.md, src/, globalmart-frontend/src/api/client.ts, new-ingresses.yaml, git log, docs/context/_reports/preguntas-abiertas.md]
 verificado_contra_codigo: true
 ultima_revision: 2026-10-18
 depende_de: []
@@ -190,6 +190,8 @@ reglas: []
 ## Estado del Frontend
 
 El frontend usa `src/api/client.ts` para Login (MS-1), catálogo del POS (MS-3) y turnos y ventas (MS-5): URL por servicio, métodos tipados, JWT y timeout de 15 s centralizados, con cierre de sesión ante 401 en llamadas protegidas [IMPLEMENTADO]. POS consulta el turno activo al entrar, muestra carga y solo habilita el carrito tras confirmarlo; ante 404 redirige a apertura y ante otros errores ofrece reintentar [IMPLEMENTADO]. El borrador previo a la venta sigue local; al iniciar, POS envía solo producto y cantidad a `POST /ventas` y usa la respuesta de MS-5 para ID, ítems y totales. Al recargar, identifica la venta PENDIENTE con `GET /ventas/turno/{turnoId}` y recupera ítems y totales con `GET /ventas/{id}`, sin tomar el borrador local como autoridad [IMPLEMENTADO]. En esa venta, escaneo, búsqueda, cambio de cantidad y eliminación usan los endpoints de ítems de MS-5; después de cada operación, `GET /ventas/{id}` renueva ítems, subtotal, impuestos y total [IMPLEMENTADO]. El botón Cobrar abre `PaymentModal`; para efectivo llama `POST /ventas/{id}/cobrar`, muestra el vuelto devuelto por MS-5 o la diferencia del error 400 sin completar la venta, y bloquea reintentos automáticos ante resultado incierto [IMPLEMENTADO]. El modal define los estados de tarjeta sin capturar sus datos, pero el envío de cobros con tarjeta desde POS sigue pendiente [PARCIAL].
+
+El 2026-10-18, los tres destinos remotos del frontend (MS-1, MS-3 y MS-5) respondieron `GET /health` con HTTP 200 y certificado HTTPS válido de Let's Encrypt. Los Ingress usan `globalmart-dev-tls` [IMPLEMENTADO]. La renovación no está automatizada en el clúster actual; el certificado vence el 2027-01-16. Ver [[matriz-rutas]].
 
 ### Guía visual aprobada
 

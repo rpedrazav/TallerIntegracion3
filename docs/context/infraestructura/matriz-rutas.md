@@ -3,9 +3,9 @@ id: matriz-rutas
 tipo: infra
 titulo: Matriz Integral de Rutas, Puertos y Endpoints
 estado: implementado
-fuentes: [Docker/config/kong.yaml, src/*/Controllers/*.cs, src/*/Properties/launchSettings.json, globalmart-frontend/src/]
+fuentes: [Docker/config/kong.yaml, src/*/Controllers/*.cs, src/*/Properties/launchSettings.json, globalmart-frontend/src/, new-ingresses.yaml]
 verificado_contra_codigo: true
-ultima_revision: 2026-10-17
+ultima_revision: 2026-10-18
 depende_de: [ms1-identity, ms2-tax, ms3-catalog, ms4-warehouse, ms5-pos, kong]
 publica: []
 consume: []
@@ -33,6 +33,8 @@ reglas: [RN-01, RN-06, RN-07]
 | **MS-8 Loyalty & Customer** | `loyalty-customer-service` | `5128` (HTTP) / `7210` (HTTPS) | `5008` / `8080` | `[PLANIFICADO]` | `[PLANIFICADO]` |
 | **Simulador de Pagos** | `payment-simulator` | `5050` (HTTP) | `5050` | `8000` (`/simulator/payments`, `/simulator/health`) | N/A (Mock desarrollo) |
 | **Kong API Gateway** | `kong` | `8000` (Proxy), `8001` (Admin) | `8000` (Proxy), `8001` (Admin) | `8000` | N/A |
+
+Los Ingress remotos de MS-1, MS-3 y MS-5 usan el secreto TLS `globalmart-dev-tls` en `student-rpedraza` (`new-ingresses.yaml`). El 2026-10-18 se verificó HTTPS con certificado Let's Encrypt válido para los tres hosts y `GET /health` HTTP 200 sin omitir la validación TLS. El certificado vence el 2027-01-16; el clúster no tiene `cert-manager`, por lo que requiere renovación antes de esa fecha.
 
 ---
 
