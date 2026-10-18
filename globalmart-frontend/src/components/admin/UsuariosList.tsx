@@ -13,6 +13,7 @@ interface UsuariosListProps {
   usuarios: Usuario[];
   loading?: boolean;
   error?: string;
+  onEdit: (usuario: Usuario) => void;
 }
 
 const th: React.CSSProperties = {
@@ -34,7 +35,7 @@ const rolChip: React.CSSProperties = {
 };
 
 /** Tabla de usuarios del tenant: nombre, email, roles y estado. */
-export default function UsuariosList({ usuarios, loading = false, error = '' }: UsuariosListProps) {
+export default function UsuariosList({ usuarios, loading = false, error = '', onEdit }: UsuariosListProps) {
   return (
     <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-line)', borderRadius: '12px', overflow: 'hidden' }}>
       <table style={{ width: '100%', borderCollapse: 'collapse' }}>
@@ -44,12 +45,13 @@ export default function UsuariosList({ usuarios, loading = false, error = '' }: 
             <th style={th}>Correo</th>
             <th style={th}>Roles</th>
             <th style={th}>Estado</th>
+            <th style={th}>Acciones</th>
           </tr>
         </thead>
         <tbody>
-          {loading && <tr><td style={td} colSpan={4}>Cargando…</td></tr>}
+          {loading && <tr><td style={td} colSpan={5}>Cargando…</td></tr>}
           {!loading && usuarios.length === 0 && !error && (
-            <tr><td style={td} colSpan={4}>No hay usuarios.</td></tr>
+            <tr><td style={td} colSpan={5}>No hay usuarios.</td></tr>
           )}
           {usuarios.map(u => (
             <tr key={u.id}>
@@ -61,6 +63,24 @@ export default function UsuariosList({ usuarios, loading = false, error = '' }: 
                   : <span style={{ color: 'var(--color-ink-soft)' }}>Sin roles</span>}
               </td>
               <td style={td}><span style={badge(u.activo)}>{u.activo ? 'Activo' : 'Inactivo'}</span></td>
+              <td style={td}>
+                <button
+                  type="button"
+                  onClick={() => onEdit(u)}
+                  aria-label={`Editar usuario ${u.nombre}`}
+                  style={{
+                    background: 'transparent',
+                    color: 'var(--color-primary)',
+                    border: '1px solid var(--color-primary)',
+                    borderRadius: '6px',
+                    padding: '0.35rem 0.7rem',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                  }}
+                >
+                  Editar
+                </button>
+              </td>
             </tr>
           ))}
         </tbody>

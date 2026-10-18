@@ -5,7 +5,7 @@ titulo: Pantallas del Frontend — GlobalMart OS
 estado: parcial
 fuentes: [globalmart-frontend/src/pages/, globalmart-frontend/src/components/, globalmart-frontend/src/api/client.ts]
 verificado_contra_codigo: true
-ultima_revision: 2026-10-15
+ultima_revision: 2026-10-17
 depende_de: [estructura, ms1-identity, ms5-pos, guia-estilo]
 publica: []
 consume: []
@@ -93,14 +93,16 @@ NO abre turno desde esta pantalla; dirige a /abrir-turno cuando falta
 ## Admin.tsx [PARCIAL]
 
 Ruta `/admin`. Panel de administración con pestañas ("Usuarios" y "Configuración del Tenant"):
-- **Usuarios:** Lista usuarios (`GET /users` en MS-1, con alias `/api/v1/users` y `/api/users`) mediante el componente `UsuariosList` (`components/admin/UsuariosList.tsx`, mostrando nombre, correo, roles con badges/chips y estado activo/inactivo), botón de refresco y formulario modal `CrearUsuarioModal` (`components/admin/CrearUsuarioModal.tsx`, nombre, correo, contraseña ≥ 8 con confirmación, rol CAJERO/REPONEDOR/ADMIN; validación en frontend alineada a `CrearUsuarioDto`). Al enviar llama `POST /users` y luego `POST /users/{id}/roles` con extracción de errores de validación/conflicto.
+- **Usuarios:** Lista usuarios (`GET /users` en MS-1, con alias `/api/v1/users` y `/api/users`) mediante el componente `UsuariosList` (`components/admin/UsuariosList.tsx`, mostrando nombre, correo, roles con badges/chips y estado activo/inactivo), botón de refresco y formulario modal `CrearUsuarioModal` (`components/admin/CrearUsuarioModal.tsx`, nombre, correo, contraseña ≥ 8 con confirmación, rol CAJERO/REPONEDOR/ADMIN; validación en frontend alineada a `CrearUsuarioDto`). Al enviar llama `POST /users` y luego `POST /users/{id}/roles` con extracción de errores de validación/conflicto. TI3-673 agrega una acción **Editar** por fila y `EditarUsuarioModal`, precargado con el email disponible. Valida email requerido, formato y máximo 200 caracteres, ejecuta `PUT /users/{id}` con el mismo ID seleccionado, muestra estados de guardado/éxito/error y recarga la lista mediante `recargar()` sin crear otro usuario [IMPLEMENTADO].
 - **Configuración del Tenant:** Componente `TenantConfig` (`components/admin/TenantConfig.tsx`) que conecta con `GET /tenants/{id}/config` y `PUT /tenants/{id}/config` en MS-1. Permite ver y actualizar parámetros regionales y fiscales: país, moneda, idioma, zona horaria IANA y porcentaje de IVA. TI3-645 alinea Zod 4, `zodResolver` y React Hook Form mediante tipos separados de entrada/salida; `z.coerce.number()` convierte el IVA y `onSubmit` recibe un `number`, sin casts inseguros. La prueba Playwright `TenantConfig convierte porcentajeIva a number antes de actualizar` verifica que un IVA introducido en el formulario se envía en el `PUT` como `number` y no como `string` [IMPLEMENTADO]. Maneja feedback de carga, éxito (`var(--color-success)`), advertencia en modo lectura para no administradores y errores.
 
 **Contrato de acceso TI3-672 [IMPLEMENTADO]:** `AppLayout` y la guarda de `/admin/*` consumen `esAdmin` desde `useTenantStore`, que reconoce los claims `active_role`/`roles` con valor `ADMIN` o `SUPER_ADMIN`. Estos roles ven el enlace y acceden al panel para listar y crear usuarios. CAJERO no ve el enlace **Administración** y el acceso directo a `/admin/*` redirige a `/pos`; MS-1 mantiene `403` como defensa. La prueba Node `ADMIN y SUPER_ADMIN acceden a Administración y CAJERO no` cubre la regla compartida, sin navegador.
 
-La UI aún no expone edición, baja lógica ni reactivación. MS-1 ya dispone de PUT y DELETE lógico. Su contrato actual contempla `400` por datos inválidos o autodesactivación según la operación, `401` sin autenticación, `403` para rol no autorizado, `404` para usuario inexistente o de otro tenant y `409` por email duplicado en edición.
+La UI expone edición de email; todavía no expone baja lógica ni reactivación. MS-1 ya dispone de PUT y DELETE lógico. Su contrato actual contempla `400` por datos inválidos o autodesactivación según la operación, `401` sin autenticación, `403` para rol no autorizado, `404` para usuario inexistente o de otro tenant y `409` por email duplicado en edición.
 
-Usa los tokens de color de la [[guia-estilo]] definidos en `index.css`. No hay edición ni desactivación individual de usuarios en UI todavía.
+**Dependencia pendiente TI3-673:** `GET /users` no entrega `sucursalId` y no existe `GET /users/{id}`. Por ello el modal no muestra ni inventa ese campo y el payload frontend contiene solo `email`. El contrato actual de MS-1 interpreta `sucursalId` omitido como `null` y puede borrar una asignación existente; resolver la lectura/preservación segura de `sucursalId` requiere un cambio posterior del contrato backend [NO VERIFICADO en integración frontend-backend].
+
+Usa los tokens de color de la [[guia-estilo]] definidos en `index.css`. No hay desactivación ni reactivación individual de usuarios en UI todavía.
 
 ## ProductosPage.tsx — baja lógica TI3-642 / S2-011 [IMPLEMENTADO]
 
