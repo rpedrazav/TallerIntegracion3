@@ -1,4 +1,5 @@
 import React from 'react';
+import { confirmarDesactivacionUsuario } from './desactivarUsuario';
 
 export interface Usuario {
   id: string;
@@ -14,6 +15,8 @@ interface UsuariosListProps {
   loading?: boolean;
   error?: string;
   onEdit: (usuario: Usuario) => void;
+  onDeactivate: (usuario: Usuario) => void;
+  deactivatingUserId?: string | null;
 }
 
 const th: React.CSSProperties = {
@@ -35,7 +38,14 @@ const rolChip: React.CSSProperties = {
 };
 
 /** Tabla de usuarios del tenant: nombre, email, roles y estado. */
-export default function UsuariosList({ usuarios, loading = false, error = '', onEdit }: UsuariosListProps) {
+export default function UsuariosList({
+  usuarios,
+  loading = false,
+  error = '',
+  onEdit,
+  onDeactivate,
+  deactivatingUserId = null,
+}: UsuariosListProps) {
   return (
     <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-line)', borderRadius: '12px', overflow: 'hidden' }}>
       <table style={{ width: '100%', borderCollapse: 'collapse' }}>
@@ -63,7 +73,7 @@ export default function UsuariosList({ usuarios, loading = false, error = '', on
                   : <span style={{ color: 'var(--color-ink-soft)' }}>Sin roles</span>}
               </td>
               <td style={td}><span style={badge(u.activo)}>{u.activo ? 'Activo' : 'Inactivo'}</span></td>
-              <td style={td}>
+              <td style={{ ...td, display: 'flex', gap: '0.5rem' }}>
                 <button
                   type="button"
                   onClick={() => onEdit(u)}
@@ -80,6 +90,32 @@ export default function UsuariosList({ usuarios, loading = false, error = '', on
                 >
                   Editar
                 </button>
+                {u.activo && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const confirmado = confirmarDesactivacionUsuario(
+                        u,
+                        mensaje => window.confirm(mensaje),
+                      );
+                      if (confirmado) onDeactivate(u);
+                    }}
+                    disabled={deactivatingUserId === u.id}
+                    aria-label={`Desactivar usuario ${u.nombre}`}
+                    style={{
+                      background: 'transparent',
+                      color: 'var(--color-danger-text)',
+                      border: '1px solid var(--color-danger)',
+                      borderRadius: '6px',
+                      padding: '0.35rem 0.7rem',
+                      fontWeight: 600,
+                      cursor: deactivatingUserId === u.id ? 'not-allowed' : 'pointer',
+                      opacity: deactivatingUserId === u.id ? 0.6 : 1,
+                    }}
+                  >
+                    {deactivatingUserId === u.id ? 'Desactivando…' : 'Desactivar'}
+                  </button>
+                )}
               </td>
             </tr>
           ))}

@@ -4,6 +4,10 @@ import { useAuth } from '../hooks/useAuth';
 import CrearUsuarioModal, { CrearUsuarioValues } from '../components/admin/CrearUsuarioModal';
 import EditarUsuarioModal from '../components/admin/EditarUsuarioModal';
 import { SolicitudEdicionUsuario } from '../components/admin/editarUsuario';
+import {
+  crearSolicitudDesactivacionUsuario,
+  marcarUsuarioInactivo,
+} from '../components/admin/desactivarUsuario';
 import UsuariosList, { Usuario } from '../components/admin/UsuariosList';
 import TenantConfig from '../components/admin/TenantConfig';
 import { buildServiceUrl } from '../config/api';
@@ -16,6 +20,7 @@ export default function Admin() {
   const [error, setError] = useState('');
   const [modalAbierto, setModalAbierto] = useState(false);
   const [usuarioEditando, setUsuarioEditando] = useState<Usuario | null>(null);
+  const [deactivatingUserId, setDeactivatingUserId] = useState<string | null>(null);
   const [success, setSuccess] = useState('');
   const [reloadTick, setReloadTick] = useState(0);
 
@@ -130,6 +135,57 @@ export default function Admin() {
     setUsuarioEditando(null);
     setSuccess('Usuario actualizado exitosamente.');
     recargar();
+  };
+
+  const desactivarUsuario = async (usuario: Usuario) => {
+    const solicitud = crearSolicitudDesactivacionUsuario(usuario);
+    setDeactivatingUserId(usuario.id);
+    setError('');
+    setSuccess('');
+
+    try {
+      const response = await axios.request({
+        method: solicitud.method,
+        url: buildServiceUrl('identity', solicitud.path),
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (response.status !== 204) throw new Error('Respuesta inesperada al desactivar el usuario.');
+
+      setUsuarios(actuales => marcarUsuarioInactivo(actuales, usuario.id));
+      setSuccess(`${usuario.nombre} fue desactivado y permanece visible como Inactivo.`);
+    } catch (err) {
+      if (!isAxiosError(err)) {
+        setError(err instanceof Error ? err.message : 'No se pudo desactivar el usuario.');
+        return;
+      }
+
+      const data = err.response?.data;
+      const serverMessage = typeof data?.message === 'string' ? data.message : undefined;
+      if (!err.response) {
+        setError('No se pudo conectar con el servicio de usuarios.');
+        return;
+      }
+
+      switch (err.response.status) {
+        case 400:
+          setError(serverMessage ?? 'Un administrador no puede desactivarse a sí mismo.');
+          break;
+        case 401:
+          setError(serverMessage ?? 'La sesión no es válida. Vuelve a iniciar sesión.');
+          break;
+        case 403:
+          setError(serverMessage ?? 'No tienes permisos para desactivar usuarios.');
+          break;
+        case 404:
+          setError(serverMessage ?? 'El usuario no existe o pertenece a otro tenant.');
+          break;
+        default:
+          setError(serverMessage ?? 'No se pudo desactivar el usuario.');
+      }
+    } finally {
+      setDeactivatingUserId(null);
+    }
   };
 
   const tabButtonStyle = (activa: boolean): React.CSSProperties => ({
@@ -250,6 +306,8 @@ export default function Admin() {
               setSuccess('');
               setUsuarioEditando(usuario);
             }}
+            onDeactivate={desactivarUsuario}
+            deactivatingUserId={deactivatingUserId}
           />
 
           <CrearUsuarioModal
