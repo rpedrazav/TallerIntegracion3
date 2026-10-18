@@ -14,6 +14,8 @@ public interface IVentaService
     /// </summary>
     Task<Venta?> GetByIdAsync(Guid ventaId);
 
+    Task<Venta> CambiarMetodoPagoAsync(Guid ventaId, MetodoPagoVenta metodoPago);
+
     /// <summary>
     /// Obtiene todas las ventas de un turno de caja.
     /// </summary>

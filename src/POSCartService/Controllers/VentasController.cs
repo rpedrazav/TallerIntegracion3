@@ -729,6 +729,32 @@ public sealed class VentasController : ControllerBase
 
     // ── POST /ventas/{id}/cobrar-tarjeta ───────────────────────────────────────
 
+    [HttpPatch("{id:guid}/metodo-pago")]
+    public async Task<IActionResult> CambiarMetodoPago([FromRoute] Guid id, [FromBody] CambiarMetodoPagoRequest request)
+    {
+        if (!TryGetClaims(out var cajeroId, out var tenantId))
+            return Unauthorized(new { error = "Token inválido: faltan cajero_id/sub o tenant_id." });
+        var turno = await _turnoService.GetActivo(cajeroId, tenantId);
+        if (turno is null)
+            return Conflict(new { error = "El cajero no tiene un turno abierto." });
+        var venta = await _ventaService.GetByIdAsync(id);
+        if (venta is null || venta.TenantId != tenantId || venta.TurnoId != turno.Id || venta.CajeroId != cajeroId)
+            return NotFound(new { error = $"Venta {id} no encontrada." });
+        if (venta.Estado != EstadoVenta.PENDIENTE || venta.Pagos.Count != 0)
+            return Conflict(new { error = "Solo se puede cambiar el método de una venta pendiente sin pagos." });
+        if (!Enum.TryParse<MetodoPagoVenta>(request.MetodoPago, true, out var metodo) ||
+            metodo is not (MetodoPagoVenta.EFECTIVO or MetodoPagoVenta.TARJETA))
+            return BadRequest(new { error = "Use EFECTIVO o TARJETA." });
+        try
+        {
+            return Ok(VentaResponse.FromModel(await _ventaService.CambiarMetodoPagoAsync(id, metodo)));
+        }
+        catch (InvalidOperationException)
+        {
+            return Conflict(new { error = "La venta ya no permite cambiar el método de pago." });
+        }
+    }
+
     /// <summary>
     /// Procesa el cobro con tarjeta para una venta PENDIENTE mediante la pasarela simulada/real.
     /// Valida JWT, tenant, turno activo, estado PENDIENTE y total antes de contactar a la pasarela.

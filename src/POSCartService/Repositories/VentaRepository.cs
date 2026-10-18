@@ -98,6 +98,19 @@ public class VentaRepository : IVentaRepository
         return tracked;
     }
 
+    public async Task<Venta> CambiarMetodoPagoPendienteAsync(Guid ventaId, MetodoPagoVenta metodoPago)
+    {
+        var updated = await _context.Ventas
+            .Where(v => v.Id == ventaId && _context.CurrentTenantId.HasValue
+                && v.TenantId == _context.CurrentTenantId && v.Estado == EstadoVenta.PENDIENTE
+                && !v.Pagos.Any()
+                && !v.IntentosPago.Any(i => i.Estado != EstadoIntentoPago.RECHAZADO))
+            .ExecuteUpdateAsync(setters => setters.SetProperty(v => v.MetodoPago, metodoPago));
+        if (updated != 1)
+            throw new InvalidOperationException("Solo se puede cambiar el método de una venta pendiente sin pagos.");
+        return (await GetByIdAsync(ventaId))!;
+    }
+
     /// <inheritdoc/>
     public async Task<Venta> CompletarConOutboxAsync(
         Guid ventaId,

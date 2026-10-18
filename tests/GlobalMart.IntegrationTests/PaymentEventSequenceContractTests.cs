@@ -121,6 +121,8 @@ public sealed class PaymentEventSequenceContractTests
             throw new NotSupportedException();
         public Task<Pos.Models.Venta> ActualizarAsync(Pos.Models.Venta actualizada) =>
             throw new NotSupportedException();
+        public Task<Pos.Models.Venta> CambiarMetodoPagoPendienteAsync(Guid ventaId, Pos.Models.MetodoPagoVenta metodoPago) =>
+            throw new NotSupportedException();
         public Task<Pos.Models.Venta> CompletarConOutboxAsync(
             Guid ventaId,
             Pos.Models.Pago pago,

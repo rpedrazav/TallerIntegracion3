@@ -14,6 +14,7 @@ interface PaymentModalProps {
   shortfall?: number | null;
   onClose: () => void;
   onConfirm?: (method: PaymentMethod, cashReceived?: number) => void;
+  onChangeMethod?: (method: PaymentMethod) => void;
   onCashInputChange?: () => void;
   onVerify?: () => void;
 }
@@ -43,7 +44,7 @@ const stateText: Record<Exclude<PaymentState, 'available'>, { title: string; det
   },
 };
 
-export default function PaymentModal({ total, saleMethod, state, reference, change, errorMessage, shortfall, onClose, onConfirm, onCashInputChange, onVerify }: PaymentModalProps) {
+export default function PaymentModal({ total, saleMethod, state, reference, change, errorMessage, shortfall, onClose, onConfirm, onChangeMethod, onCashInputChange, onVerify }: PaymentModalProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [method, setMethod] = useState<PaymentMethod>(saleMethod);
   const [cashInput, setCashInput] = useState('');
@@ -100,7 +101,7 @@ export default function PaymentModal({ total, saleMethod, state, reference, chan
             </div>
           )}
 
-          {!methodMatchesSale && <p className="payment-modal__notice" role="status">Esta venta se inició con {saleMethod === 'cash' ? 'efectivo' : 'tarjeta'}. Para cobrar con otro método se requiere una venta compatible.</p>}
+          {!methodMatchesSale && <p className="payment-modal__notice" role="status">Esta venta se inició con {saleMethod === 'cash' ? 'efectivo' : 'tarjeta'}. Cambia el método de la venta antes de cobrar.</p>}
           {!onConfirm && <p className="payment-modal__notice" role="status">La interfaz de cobro está definida; el envío del pago desde POS aún no está conectado.</p>}
           {errorMessage && <p className="payment-modal__error" role="alert">{errorMessage}{shortfall != null && ` Faltan según MS-5: ${money(shortfall)}.`}</p>}
         </>
@@ -114,13 +115,20 @@ export default function PaymentModal({ total, saleMethod, state, reference, chan
         </div>
       )}
 
+      {state === 'declined' && <div className="payment-modal__methods" role="group" aria-label="Cambiar método tras rechazo">
+        <button type="button" className={method === 'cash' ? 'is-selected' : ''} aria-pressed={method === 'cash'} onClick={() => setMethod('cash')}>Efectivo</button>
+        <button type="button" className={method === 'card' ? 'is-selected' : ''} aria-pressed={method === 'card'} onClick={() => setMethod('card')}>Tarjeta</button>
+      </div>}
+
       <div className="payment-modal__actions">
         {state === 'available' && (
           <>
             <button type="button" className="payment-modal__secondary" onClick={onClose}>Volver al carrito</button>
-            <button type="button" className="payment-modal__primary" disabled={!canConfirm} onClick={() => onConfirm?.(method, method === 'cash' ? cashReceived : undefined)}>Confirmar {method === 'cash' ? 'efectivo' : 'tarjeta'}</button>
+            {methodMatchesSale ? <button type="button" className="payment-modal__primary" disabled={!canConfirm} onClick={() => onConfirm?.(method, method === 'cash' ? cashReceived : undefined)}>Confirmar {method === 'cash' ? 'efectivo' : 'tarjeta'}</button> :
+              <button type="button" className="payment-modal__primary" disabled={!onChangeMethod} onClick={() => onChangeMethod?.(method)}>Cambiar a {method === 'cash' ? 'efectivo' : 'tarjeta'}</button>}
           </>
         )}
+        {state === 'declined' && !methodMatchesSale && onChangeMethod && <button type="button" className="payment-modal__primary" onClick={() => onChangeMethod(method)}>Cambiar a {method === 'cash' ? 'efectivo' : 'tarjeta'}</button>}
         {state === 'processing' && <span className="payment-modal__waiting">Procesando…</span>}
         {state === 'uncertain' && onVerify && <button type="button" className="payment-modal__primary" onClick={onVerify}>Verificar venta</button>}
         {state !== 'available' && state !== 'processing' && <button type="button" className="payment-modal__secondary" onClick={onClose}>Cerrar</button>}

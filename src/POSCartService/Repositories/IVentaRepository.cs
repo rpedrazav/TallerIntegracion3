@@ -35,6 +35,8 @@ public interface IVentaRepository
     /// </summary>
     Task<Venta> ActualizarAsync(Venta venta);
 
+    Task<Venta> CambiarMetodoPagoPendienteAsync(Guid ventaId, MetodoPagoVenta metodoPago);
+
     /// <summary>
     /// Completa una venta y guarda su pago y evento outbox en una sola transacción.
     /// </summary>

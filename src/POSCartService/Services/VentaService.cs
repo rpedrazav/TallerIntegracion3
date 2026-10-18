@@ -27,6 +27,15 @@ public class VentaService : IVentaService
     public Task<Venta?> GetByIdAsync(Guid ventaId)
         => _ventaRepository.GetByIdAsync(ventaId);
 
+    public async Task<Venta> CambiarMetodoPagoAsync(Guid ventaId, MetodoPagoVenta metodoPago)
+    {
+        var venta = await _ventaRepository.GetByIdAsync(ventaId)
+            ?? throw new KeyNotFoundException($"Venta {ventaId} no encontrada.");
+        if (venta.Estado != EstadoVenta.PENDIENTE || venta.Pagos.Count != 0)
+            throw new InvalidOperationException("Solo se puede cambiar el método de una venta pendiente sin pagos.");
+        return await _ventaRepository.CambiarMetodoPagoPendienteAsync(ventaId, metodoPago);
+    }
+
     /// <inheritdoc/>
     public Task<IReadOnlyList<Venta>> GetByTurnoAsync(Guid turnoId)
         => _ventaRepository.GetByTurnoAsync(turnoId);
