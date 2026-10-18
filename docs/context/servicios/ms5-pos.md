@@ -54,11 +54,16 @@ reglas: [RN-01, RN-02, RN-03, RN-06, RF-02, RF-03, RF-04, RF-05, RF-06, RF-07]
 | GET | `/ventas/turno/{turnoId}` (alias `/api/ventas/turno/{turnoId}`) | JWT | [IMPLEMENTADO] |
 | POST | `/ventas/{id}/cobrar` (alias `/api/ventas/{id}/cobrar`) | JWT | [IMPLEMENTADO — valida monto_recibido ≥ total, calcula vuelto y persiste venta, pago y sale.completed pendiente en una transacción] |
 | POST | `/ventas/{id}/cobrar-tarjeta` (alias `/api/ventas/{id}/cobrar-tarjeta`) | JWT | [IMPLEMENTADO — pasarela simulada, idempotencia y estados] |
+| GET | `/ventas/{id}/intento-tarjeta` (alias `/api/ventas/{id}/intento-tarjeta`) | JWT del cajero de la venta | [IMPLEMENTADO — consulta el último intento y reconcilia su estado con la pasarela] |
 | PATCH | `/ventas/{id}/metodo-pago` (alias `/api/ventas/{id}/metodo-pago`) | JWT | [IMPLEMENTADO — solo venta pendiente sin pagos ni intentos inciertos del cajero y turno activos en el tenant; EFECTIVO o TARJETA] |
 | POST | `/ventas/{id}/anular` (alias `/api/ventas/{id}/anular`) | JWT | [PLANIFICADO en controller — implementado en VentaService.AnularAsync] |
 | GET | `/health` | Público | [IMPLEMENTADO] |
 
 > Ver [[matriz-rutas]] para la comparativa exhaustiva de rutas Kong, controladores y puertos de host.
+
+### S2-049 — Timeout sin doble cobro
+
+Antes de autorizar tarjeta, MS-5 persiste un `IntentoPago PENDIENTE` con clave de idempotencia bajo una transacción serializable. Una venta con intento sin resultado definitivo rechaza un nuevo POST con 409, incluso si llega con otra clave. Timeout, error de red o estado desconocido conservan el intento pendiente. `GET /ventas/{id}/intento-tarjeta` consulta la pasarela con la misma clave sin reenviar la autorización: una aprobación completa la venta y una denegación marca el intento como rechazado; `UNKNOWN` mantiene bloqueado otro cobro. La consulta exige JWT, tenant y cajero de la venta. La verificación de integración HTTP con PostgreSQL está [NO VERIFICADA] en este entorno; el build y las pruebas del adaptador sin base de datos pasaron el 2026-10-18.
 
 ## Flujo de venta (implementado)
 
@@ -94,10 +99,12 @@ reglas: [RN-01, RN-02, RN-03, RN-06, RF-02, RF-03, RF-04, RF-05, RF-06, RF-07]
 
 5. POST /ventas/{id}/cobrar-tarjeta  { scenario_id?, idempotency_key?, monto? }
    → S2-033 / S2-034: Valida JWT, turno ABIERTO, venta PENDIENTE y MetodoPago != EFECTIVO
+   → Persiste IntentoPago PENDIENTE antes de llamar a la pasarela; rechaza otra autorización mientras siga incierta
    → Llama a IPaymentGatewayClient.ProcessPaymentAsync
    → Si APPROVED: CompletarTarjetaAsync completa venta, crea Pago TARJETA, IntentoPago APROBADO y OutboxMessage sale.completed (200 OK)
    → Si DECLINED: IntentoPago RECHAZADO, venta sigue PENDIENTE, 0 pagos y 0 outbox (422 Unprocessable Entity)
-   → Si Timeout/Error: IntentoPago FALLIDO, venta sigue PENDIENTE, 0 pagos y 0 outbox (504 / 502)
+   → Si Timeout/Error: IntentoPago sigue PENDIENTE, venta sigue PENDIENTE, 0 pagos y 0 outbox (504 / 502)
+   → GET /ventas/{id}/intento-tarjeta reconcilia el mismo intento sin repetir el POST
 
 6. POST /ventas/{id}/anular  { motivo }
    → VentaService.AnularAsync: estado → ANULADA

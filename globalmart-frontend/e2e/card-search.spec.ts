@@ -16,6 +16,7 @@ test.beforeEach(async ({ page }) => {
   await page.route('**/api/turnos/activo', route => route.fulfill({ json: { id: shiftId } }));
   await page.route('**/ventas/turno/**', route => route.fulfill({ json: [sale] }));
   await page.route(`**/ventas/${saleId}`, route => route.fulfill({ json: sale }));
+  await page.route(`**/ventas/${saleId}/intento-tarjeta`, route => route.fulfill({ json: { status: 'NONE', venta: sale } }));
 });
 
 test('busca por nombre en MS-3 y agrega al carrito del POS', async ({ page }) => {
@@ -68,4 +69,39 @@ test('rechazo de tarjeta permite cambiar a efectivo', async ({ page }) => {
   await page.getByRole('button', { name: 'Cambiar a efectivo' }).click();
   await expect(page.getByRole('dialog')).toContainText('Confirmar cobro');
   await expect(page.getByLabel('Monto recibido')).toBeVisible();
+});
+
+test('timeout bloquea doble clic y exige consultar el intento antes de reintentar', async ({ page }) => {
+  let posts = 0;
+  let status: 'NONE' | 'UNCERTAIN' | 'DECLINED' = 'NONE';
+  await page.route(`**/ventas/${saleId}/intento-tarjeta`, route => route.fulfill({
+    json: { status, venta: sale, message: status === 'DECLINED' ? 'Pago rechazado' : null },
+  }));
+  await page.route(`**/ventas/${saleId}/cobrar-tarjeta`, async route => {
+    posts += 1;
+    status = 'UNCERTAIN';
+    await new Promise(resolve => setTimeout(resolve, 250));
+    await route.fulfill({ status: 504, json: { error: 'Timeout', request_id: '55555555-5555-5555-5555-555555555555' } });
+  });
+  await page.goto('/');
+  await page.getByRole('button', { name: 'COBRAR' }).click();
+  await page.evaluate(() => {
+    const button = [...document.querySelectorAll<HTMLButtonElement>('button')].find(item => item.textContent?.includes('Confirmar tarjeta'));
+    button?.click();
+    button?.click();
+  });
+  await expect(page.getByRole('dialog')).toContainText('Resultado incierto');
+  expect(posts).toBe(1);
+  await page.getByRole('button', { name: 'Verificar venta' }).click();
+  await expect(page.getByRole('dialog')).toContainText('No se iniciará otra autorización');
+  expect(posts).toBe(1);
+  await page.reload();
+  await expect(page.getByRole('dialog')).toContainText('Resultado incierto');
+  status = 'DECLINED';
+  await page.getByRole('button', { name: 'Verificar venta' }).click();
+  await expect(page.getByRole('button', { name: 'Reintentar tarjeta' })).toBeVisible();
+  expect(posts).toBe(1);
+  await page.getByRole('button', { name: 'Reintentar tarjeta' }).click();
+  await page.getByRole('button', { name: 'Confirmar tarjeta' }).click();
+  await expect.poll(() => posts).toBe(2);
 });

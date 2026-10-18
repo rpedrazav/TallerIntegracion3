@@ -1,3 +1,4 @@
+using System.Data;
 using Microsoft.EntityFrameworkCore;
 using POSCartService.Data;
 using POSCartService.Models;
@@ -111,6 +112,59 @@ public class VentaRepository : IVentaRepository
         return (await GetByIdAsync(ventaId))!;
     }
 
+    public async Task<IntentoPago> IniciarIntentoPagoAsync(Guid ventaId, Guid requestId)
+    {
+        var tenantId = _context.CurrentTenantId
+            ?? throw new KeyNotFoundException($"Venta {ventaId} no encontrada.");
+        await using var transaction = await _context.Database.BeginTransactionAsync(IsolationLevel.Serializable);
+        var venta = await _context.Ventas.AsNoTracking()
+            .FirstOrDefaultAsync(v => v.Id == ventaId && v.TenantId == tenantId)
+            ?? throw new KeyNotFoundException($"Venta {ventaId} no encontrada.");
+        if (venta.Estado != EstadoVenta.PENDIENTE || venta.MetodoPago == MetodoPagoVenta.EFECTIVO ||
+            await _context.Pagos.AnyAsync(p => p.VentaId == ventaId) ||
+            await _context.IntentosPago.AnyAsync(i => i.IdempotencyKey == requestId.ToString()) ||
+            await _context.IntentosPago.AnyAsync(i => i.VentaId == ventaId && i.Estado != EstadoIntentoPago.RECHAZADO))
+            throw new InvalidOperationException("La venta ya tiene un cobro en curso o sin resultado definitivo.");
+
+        var intento = new IntentoPago
+        {
+            TenantId = tenantId,
+            VentaId = ventaId,
+            IdempotencyKey = requestId.ToString(),
+            Estado = EstadoIntentoPago.PENDIENTE,
+            Monto = venta.Total,
+            Moneda = "CLP"
+        };
+        _context.IntentosPago.Add(intento);
+        await _context.SaveChangesAsync();
+        await transaction.CommitAsync();
+        return intento;
+    }
+
+    public Task<IntentoPago?> GetUltimoIntentoPagoAsync(Guid ventaId)
+        => _context.IntentosPago.AsNoTracking()
+            .Where(i => i.VentaId == ventaId && _context.CurrentTenantId.HasValue && i.TenantId == _context.CurrentTenantId)
+            .OrderByDescending(i => i.CreatedAt)
+            .ThenByDescending(i => i.Id)
+            .FirstOrDefaultAsync();
+
+    public async Task ActualizarIntentoPagoAsync(IntentoPago intentoPago)
+    {
+        var updated = await _context.IntentosPago
+            .Where(i => i.Id == intentoPago.Id && i.VentaId == intentoPago.VentaId &&
+                _context.CurrentTenantId.HasValue && i.TenantId == _context.CurrentTenantId &&
+                (i.Estado == EstadoIntentoPago.PENDIENTE || i.Estado == EstadoIntentoPago.FALLIDO))
+            .ExecuteUpdateAsync(setters => setters
+                .SetProperty(i => i.Estado, intentoPago.Estado)
+                .SetProperty(i => i.Referencia, intentoPago.Referencia)
+                .SetProperty(i => i.AuthorizationCode, intentoPago.AuthorizationCode)
+                .SetProperty(i => i.DeclineCode, intentoPago.DeclineCode)
+                .SetProperty(i => i.Mensaje, intentoPago.Mensaje)
+                .SetProperty(i => i.UpdatedAt, DateTime.UtcNow));
+        if (updated != 1)
+            throw new InvalidOperationException("El intento de pago ya cambió de estado.");
+    }
+
     /// <inheritdoc/>
     public async Task<Venta> CompletarConOutboxAsync(
         Guid ventaId,
@@ -182,15 +236,32 @@ public class VentaRepository : IVentaRepository
             throw new InvalidOperationException(
                 $"Solo se puede completar una venta PENDIENTE. Estado actual: {tracked.Estado}.");
         }
+        if (tracked.MetodoPago == MetodoPagoVenta.EFECTIVO)
+            throw new InvalidOperationException("La venta ya no admite cobro con tarjeta.");
 
         tracked.Estado = EstadoVenta.COMPLETADA;
         pago.VentaId = tracked.Id;
         intentoPago.VentaId = tracked.Id;
-        intentoPago.Estado = EstadoIntentoPago.APROBADO;
-        intentoPago.UpdatedAt = DateTime.UtcNow;
 
         _context.Pagos.Add(pago);
-        _context.IntentosPago.Add(intentoPago);
+        var intentoExistente = await _context.IntentosPago.FirstOrDefaultAsync(i =>
+            i.VentaId == ventaId && i.TenantId == tenantId && i.IdempotencyKey == intentoPago.IdempotencyKey);
+        if (intentoExistente is null)
+        {
+            intentoPago.Estado = EstadoIntentoPago.APROBADO;
+            intentoPago.UpdatedAt = DateTime.UtcNow;
+            _context.IntentosPago.Add(intentoPago);
+        }
+        else if (intentoExistente.Estado is EstadoIntentoPago.PENDIENTE or EstadoIntentoPago.FALLIDO)
+        {
+            intentoExistente.Estado = EstadoIntentoPago.APROBADO;
+            intentoExistente.Referencia = intentoPago.Referencia;
+            intentoExistente.AuthorizationCode = intentoPago.AuthorizationCode;
+            intentoExistente.Mensaje = intentoPago.Mensaje;
+            intentoExistente.UpdatedAt = DateTime.UtcNow;
+        }
+        else
+            throw new InvalidOperationException("El intento de pago ya tiene un resultado definitivo.");
         _context.OutboxMessages.Add(outboxMessage);
 
         await _context.SaveChangesAsync();

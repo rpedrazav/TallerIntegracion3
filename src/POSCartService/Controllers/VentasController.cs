@@ -853,6 +853,21 @@ public sealed class VentasController : ControllerBase
         var rawKey = !string.IsNullOrWhiteSpace(request?.IdempotencyKey) ? request.IdempotencyKey : headerKey;
         var requestId = Guid.TryParse(rawKey, out var parsedGuid) ? parsedGuid : Guid.NewGuid();
 
+        IntentoPago intentoPago;
+        try
+        {
+            intentoPago = await _ventaService.IniciarIntentoPagoAsync(id, requestId);
+        }
+        catch (InvalidOperationException)
+        {
+            var actual = await _ventaService.GetUltimoIntentoPagoAsync(id);
+            return Conflict(new
+            {
+                error = "La venta ya tiene una autorización en curso o sin resultado confirmado. Consulte el intento antes de cobrar de nuevo.",
+                request_id = actual?.IdempotencyKey
+            });
+        }
+
         var scenarioId = string.IsNullOrWhiteSpace(request?.ScenarioId)
             ? "sim-approved-v1"
             : request.ScenarioId;
@@ -867,8 +882,6 @@ public sealed class VentasController : ControllerBase
             ScenarioId = scenarioId
         };
 
-        var timestamp = DateTime.UtcNow;
-        IntentoPago intentoPago;
         PaymentGatewayResponse gatewayResponse;
         try
         {
@@ -877,21 +890,6 @@ public sealed class VentasController : ControllerBase
         catch (TimeoutException ex)
         {
             _logger?.LogWarning(ex, "Timeout al comunicarse con la pasarela para venta {VentaId}", venta.Id);
-
-            intentoPago = new IntentoPago
-            {
-                Id             = Guid.NewGuid(),
-                TenantId       = tenantId,
-                VentaId        = venta.Id,
-                IdempotencyKey = requestId.ToString(),
-                Estado         = EstadoIntentoPago.FALLIDO,
-                Monto          = venta.Total,
-                Moneda         = "CLP",
-                Mensaje        = "Timeout: la pasarela no respondió dentro del tiempo límite.",
-                CreatedAt      = timestamp,
-                UpdatedAt      = timestamp
-            };
-            await _ventaService.RegistrarIntentoPagoAsync(intentoPago);
 
             return StatusCode(StatusCodes.Status504GatewayTimeout, new
             {
@@ -904,47 +902,27 @@ public sealed class VentasController : ControllerBase
         {
             _logger?.LogError(ex, "Error al comunicarse con la pasarela para venta {VentaId}", venta.Id);
 
-            intentoPago = new IntentoPago
-            {
-                Id             = Guid.NewGuid(),
-                TenantId       = tenantId,
-                VentaId        = venta.Id,
-                IdempotencyKey = requestId.ToString(),
-                Estado         = EstadoIntentoPago.FALLIDO,
-                Monto          = venta.Total,
-                Moneda         = "CLP",
-                Mensaje        = $"Error de comunicación: {ex.Message}",
-                CreatedAt      = timestamp,
-                UpdatedAt      = timestamp
-            };
-            await _ventaService.RegistrarIntentoPagoAsync(intentoPago);
-
             return StatusCode(StatusCodes.Status502BadGateway, new
             {
                 error   = "Error al comunicarse con la pasarela de pago.",
-                detalle = ex.Message
+                request_id = requestId
             });
         }
 
         // ── Ramificar según resultado de pasarela ──────────────────────────────
 
+        if (gatewayResponse.RequestId != requestId)
+            return StatusCode(StatusCodes.Status502BadGateway, new
+            {
+                error = "La pasarela devolvió una identidad de intento distinta. Consulte el intento antes de cobrar de nuevo.",
+                request_id = requestId
+            });
+
         if (gatewayResponse.Status == "APPROVED")
         {
-            intentoPago = new IntentoPago
-            {
-                Id                = Guid.NewGuid(),
-                TenantId          = tenantId,
-                VentaId           = venta.Id,
-                IdempotencyKey    = requestId.ToString(),
-                Estado            = EstadoIntentoPago.APROBADO,
-                Monto             = venta.Total,
-                Moneda            = "CLP",
-                Referencia        = gatewayResponse.GatewayReference,
-                AuthorizationCode = gatewayResponse.AuthorizationCode,
-                Mensaje           = gatewayResponse.Message,
-                CreatedAt         = timestamp,
-                UpdatedAt         = timestamp
-            };
+            intentoPago.Referencia = gatewayResponse.GatewayReference;
+            intentoPago.AuthorizationCode = gatewayResponse.AuthorizationCode;
+            intentoPago.Mensaje = gatewayResponse.Message;
 
             var ventaCompletada = await _ventaService.CompletarTarjetaAsync(venta.Id, intentoPago);
 
@@ -961,25 +939,14 @@ public sealed class VentasController : ControllerBase
                 gatewayResponse.Message
             ));
         }
-        else
+        else if (gatewayResponse.Status == "DECLINED")
         {
-            // DECLINED u otro estado no aprobado
-            intentoPago = new IntentoPago
-            {
-                Id             = Guid.NewGuid(),
-                TenantId       = tenantId,
-                VentaId        = venta.Id,
-                IdempotencyKey = requestId.ToString(),
-                Estado         = EstadoIntentoPago.RECHAZADO,
-                Monto          = venta.Total,
-                Moneda         = "CLP",
-                Referencia     = gatewayResponse.GatewayReference,
-                DeclineCode    = gatewayResponse.DeclineCode,
-                Mensaje        = gatewayResponse.Message,
-                CreatedAt      = timestamp,
-                UpdatedAt      = timestamp
-            };
-            await _ventaService.RegistrarIntentoPagoAsync(intentoPago);
+            // Rechazo definitivo; solo este resultado permite otro intento.
+            intentoPago.Estado = EstadoIntentoPago.RECHAZADO;
+            intentoPago.Referencia = gatewayResponse.GatewayReference;
+            intentoPago.DeclineCode = gatewayResponse.DeclineCode;
+            intentoPago.Mensaje = gatewayResponse.Message;
+            await _ventaService.ActualizarIntentoPagoAsync(intentoPago);
 
             _logger?.LogWarning(
                 "Pago rechazado para venta {VentaId}. Status: {Status}, Decline: {DeclineCode}",
@@ -995,5 +962,93 @@ public sealed class VentasController : ControllerBase
                 request_id   = requestId
             });
         }
+        return StatusCode(StatusCodes.Status502BadGateway, new
+        {
+            error = "La pasarela devolvió un estado no reconocido. Consulte el intento antes de cobrar de nuevo.",
+            request_id = requestId
+        });
+    }
+
+    [HttpGet("{id:guid}/intento-tarjeta")]
+    public async Task<IActionResult> ConsultarIntentoTarjeta([FromRoute] Guid id, CancellationToken cancellationToken)
+    {
+        if (!TryGetClaims(out var cajeroId, out var tenantId))
+            return Unauthorized(new { error = "Token inválido: faltan cajero_id/sub o tenant_id." });
+        var venta = await _ventaService.GetByIdAsync(id);
+        if (venta is null || venta.TenantId != tenantId || venta.CajeroId != cajeroId)
+            return NotFound(new { error = $"Venta {id} no encontrada." });
+
+        var intento = await _ventaService.GetUltimoIntentoPagoAsync(id);
+        if (intento is null)
+            return Ok(new { status = "NONE", venta = VentaResponse.FromModel(venta) });
+
+        if (venta.Estado == EstadoVenta.COMPLETADA)
+            return Ok(new { status = "APPROVED", venta = VentaResponse.FromModel(venta),
+                gateway_reference = venta.Pagos.FirstOrDefault(p => p.Metodo == MetodoPago.TARJETA)?.Referencia ?? intento.Referencia,
+                request_id = intento.IdempotencyKey });
+        if (intento.Estado == EstadoIntentoPago.APROBADO)
+            return Ok(new { status = "UNCERTAIN", venta = VentaResponse.FromModel(venta), request_id = intento.IdempotencyKey });
+        if (intento.Estado == EstadoIntentoPago.RECHAZADO)
+            return Ok(new { status = "DECLINED", venta = VentaResponse.FromModel(venta),
+                message = intento.Mensaje, request_id = intento.IdempotencyKey });
+
+        if (_paymentGatewayClient is null || !Guid.TryParse(intento.IdempotencyKey, out var requestId))
+            return Ok(new { status = "UNCERTAIN", venta = VentaResponse.FromModel(venta), request_id = intento.IdempotencyKey });
+
+        PaymentGatewayResponse? resultado;
+        try
+        {
+            resultado = await _paymentGatewayClient.GetPaymentStatusAsync(tenantId, requestId, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger?.LogWarning(ex, "No se pudo consultar intento de tarjeta {RequestId}", requestId);
+            return Ok(new { status = "UNCERTAIN", venta = VentaResponse.FromModel(venta), request_id = intento.IdempotencyKey });
+        }
+
+        if (resultado?.RequestId != requestId)
+            return Ok(new { status = "UNCERTAIN", venta = VentaResponse.FromModel(venta), request_id = intento.IdempotencyKey });
+
+        if (resultado?.Status == "APPROVED")
+        {
+            intento.Referencia = resultado.GatewayReference;
+            intento.AuthorizationCode = resultado.AuthorizationCode;
+            intento.Mensaje = resultado.Message;
+            try
+            {
+                var completada = await _ventaService.CompletarTarjetaAsync(id, intento);
+                return Ok(new { status = "APPROVED", venta = VentaResponse.FromModel(completada),
+                    gateway_reference = resultado.GatewayReference, request_id = intento.IdempotencyKey });
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogWarning(ex, "No se pudo completar la venta al reconciliar el intento {RequestId}", requestId);
+                var actual = await _ventaService.GetByIdAsync(id);
+                if (actual?.Estado == EstadoVenta.COMPLETADA)
+                    return Ok(new { status = "APPROVED", venta = VentaResponse.FromModel(actual),
+                        gateway_reference = resultado.GatewayReference, request_id = intento.IdempotencyKey });
+                return Ok(new { status = "UNCERTAIN", venta = VentaResponse.FromModel(venta), request_id = intento.IdempotencyKey });
+            }
+        }
+        if (resultado?.Status == "DECLINED")
+        {
+            intento.Estado = EstadoIntentoPago.RECHAZADO;
+            intento.Referencia = resultado.GatewayReference;
+            intento.DeclineCode = resultado.DeclineCode;
+            intento.Mensaje = resultado.Message;
+            try
+            {
+                await _ventaService.ActualizarIntentoPagoAsync(intento);
+            }
+            catch (InvalidOperationException)
+            {
+                var actual = await _ventaService.GetUltimoIntentoPagoAsync(id);
+                if (actual?.Estado != EstadoIntentoPago.RECHAZADO)
+                    return Ok(new { status = "UNCERTAIN", venta = VentaResponse.FromModel(venta), request_id = intento.IdempotencyKey });
+            }
+            return Ok(new { status = "DECLINED", venta = VentaResponse.FromModel(venta),
+                message = resultado.Message, request_id = intento.IdempotencyKey });
+        }
+        return Ok(new { status = "UNCERTAIN", venta = VentaResponse.FromModel(venta), request_id = intento.IdempotencyKey });
     }
 }

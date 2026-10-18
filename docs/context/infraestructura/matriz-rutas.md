@@ -82,7 +82,9 @@ Los Ingress remotos de MS-1, MS-3 y MS-5 usan el secreto TLS `globalmart-dev-tls
 | Agregar Ítem a Venta | `POST` | `ventas/{id}/items`, `api/ventas/{id}/items` | `/api/ventas` | ✅ JWT (RN-01, RN-06) | `src/api/client.ts` (`posApi.addSaleItem`), `Pos.tsx` |
 | Actualizar Ítem en Venta | `PUT` | `ventas/{id}/items/{itemId}`, `api/ventas/{id}/items/{itemId}` | `/api/ventas` | ✅ JWT (RN-01, RN-06) | `src/api/client.ts` (`posApi.updateSaleItem`), `Pos.tsx` |
 | Eliminar Ítem de Venta | `DELETE` | `ventas/{id}/items/{itemId}`, `api/ventas/{id}/items/{itemId}` | `/api/ventas` | ✅ JWT (RN-01, RN-06) | `src/api/client.ts` (`posApi.deleteSaleItem`), `Pos.tsx` |
-| Cobrar / Completar Venta | `POST` | `ventas/{id}/cobrar`, `api/ventas/{id}/cobrar` | `/api/ventas` | ✅ JWT (RN-01, RN-02 pasarela si tarjeta) | `src/api/client.ts`, `Pos.tsx` |
+| Cobrar en Efectivo | `POST` | `ventas/{id}/cobrar`, `api/ventas/{id}/cobrar` | `/api/ventas` | ✅ JWT (RN-01) | `src/api/client.ts`, `Pos.tsx` |
+| Cobrar con Tarjeta | `POST` | `ventas/{id}/cobrar-tarjeta`, `api/ventas/{id}/cobrar-tarjeta` | `/api/ventas` | ✅ JWT (RN-01, RN-02, RN-06) | `posApi.chargeCard`, `Pos.tsx` |
+| Consultar Intento de Tarjeta | `GET` | `ventas/{id}/intento-tarjeta`, `api/ventas/{id}/intento-tarjeta` | `/api/ventas` | ✅ JWT del cajero y tenant de la venta | `posApi.cardAttemptStatus`, `Pos.tsx` |
 | Anular Venta | `POST` | `ventas/{id}/anular`, `api/ventas/{id}/anular` | `/api/ventas` | ✅ JWT (RN-01) | `Pos.tsx` |
 
 ### MS-2: Tax & Compliance Service (Dev Host :5239 — Inter-servicio)

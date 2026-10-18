@@ -344,6 +344,15 @@ public class VentaService : IVentaService
     /// <inheritdoc/>
     public Task RegistrarIntentoPagoAsync(IntentoPago intentoPago)
         => _ventaRepository.RegistrarIntentoPagoAsync(intentoPago);
+
+    public Task<IntentoPago> IniciarIntentoPagoAsync(Guid ventaId, Guid requestId)
+        => _ventaRepository.IniciarIntentoPagoAsync(ventaId, requestId);
+
+    public Task<IntentoPago?> GetUltimoIntentoPagoAsync(Guid ventaId)
+        => _ventaRepository.GetUltimoIntentoPagoAsync(ventaId);
+
+    public Task ActualizarIntentoPagoAsync(IntentoPago intentoPago)
+        => _ventaRepository.ActualizarIntentoPagoAsync(intentoPago);
 }
 
 

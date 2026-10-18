@@ -17,6 +17,7 @@ interface PaymentModalProps {
   onChangeMethod?: (method: PaymentMethod) => void;
   onCashInputChange?: () => void;
   onVerify?: () => void;
+  onRetry?: () => void;
 }
 
 const money = (value: number) => `$ ${value.toLocaleString('es-CL')}`;
@@ -44,7 +45,7 @@ const stateText: Record<Exclude<PaymentState, 'available'>, { title: string; det
   },
 };
 
-export default function PaymentModal({ total, saleMethod, state, reference, change, errorMessage, shortfall, onClose, onConfirm, onChangeMethod, onCashInputChange, onVerify }: PaymentModalProps) {
+export default function PaymentModal({ total, saleMethod, state, reference, change, errorMessage, shortfall, onClose, onConfirm, onChangeMethod, onCashInputChange, onVerify, onRetry }: PaymentModalProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [method, setMethod] = useState<PaymentMethod>(saleMethod);
   const [cashInput, setCashInput] = useState('');
@@ -129,6 +130,7 @@ export default function PaymentModal({ total, saleMethod, state, reference, chan
           </>
         )}
         {state === 'declined' && !methodMatchesSale && onChangeMethod && <button type="button" className="payment-modal__primary" onClick={() => onChangeMethod(method)}>Cambiar a {method === 'cash' ? 'efectivo' : 'tarjeta'}</button>}
+        {state === 'declined' && methodMatchesSale && method === 'card' && onRetry && <button type="button" className="payment-modal__primary" onClick={onRetry}>Reintentar tarjeta</button>}
         {state === 'processing' && <span className="payment-modal__waiting">Procesando…</span>}
         {state === 'uncertain' && onVerify && <button type="button" className="payment-modal__primary" onClick={onVerify}>Verificar venta</button>}
         {state !== 'available' && state !== 'processing' && <button type="button" className="payment-modal__secondary" onClick={onClose}>Cerrar</button>}

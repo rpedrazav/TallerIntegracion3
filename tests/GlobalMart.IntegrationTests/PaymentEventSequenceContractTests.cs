@@ -129,5 +129,11 @@ public sealed class PaymentEventSequenceContractTests
             Pos.Models.OutboxMessage outboxMessage) => throw new NotSupportedException();
         public Task RegistrarIntentoPagoAsync(Pos.Models.IntentoPago intentoPago) =>
             throw new NotSupportedException();
+        public Task<Pos.Models.IntentoPago> IniciarIntentoPagoAsync(Guid ventaId, Guid requestId) =>
+            throw new NotSupportedException();
+        public Task<Pos.Models.IntentoPago?> GetUltimoIntentoPagoAsync(Guid ventaId) =>
+            throw new NotSupportedException();
+        public Task ActualizarIntentoPagoAsync(Pos.Models.IntentoPago intentoPago) =>
+            throw new NotSupportedException();
     }
 }

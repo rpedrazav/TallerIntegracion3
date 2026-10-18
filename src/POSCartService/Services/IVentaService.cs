@@ -135,6 +135,10 @@ public interface IVentaService
     /// Se usa cuando la pasarela rechaza o no responde dentro del tiempo límite.
     /// </summary>
     Task RegistrarIntentoPagoAsync(IntentoPago intentoPago);
+
+    Task<IntentoPago> IniciarIntentoPagoAsync(Guid ventaId, Guid requestId);
+    Task<IntentoPago?> GetUltimoIntentoPagoAsync(Guid ventaId);
+    Task ActualizarIntentoPagoAsync(IntentoPago intentoPago);
 }
 
 

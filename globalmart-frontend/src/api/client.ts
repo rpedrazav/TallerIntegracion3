@@ -141,6 +141,14 @@ export interface CobrarTarjetaResponse {
   message: string | null;
 }
 
+export interface EstadoIntentoTarjeta {
+  status: 'NONE' | 'UNCERTAIN' | 'APPROVED' | 'DECLINED';
+  venta: VentaPendiente;
+  gateway_reference?: string | null;
+  message?: string | null;
+  request_id?: string;
+}
+
 export const posApi = {
   activeShift: async (): Promise<TurnoActivo> => {
     const response = await pos.get<TurnoActivo>('/api/turnos/activo');
@@ -196,6 +204,10 @@ export const posApi = {
     const response = await pos.post<CobrarTarjetaResponse>(`/ventas/${saleId}/cobrar-tarjeta`, {
       idempotency_key: idempotencyKey,
     });
+    return response.data;
+  },
+  cardAttemptStatus: async (saleId: string): Promise<EstadoIntentoTarjeta> => {
+    const response = await pos.get<EstadoIntentoTarjeta>(`/ventas/${saleId}/intento-tarjeta`);
     return response.data;
   },
   changeSaleMethod: async (saleId: string, method: 'EFECTIVO' | 'TARJETA'): Promise<VentaPendiente> => {
