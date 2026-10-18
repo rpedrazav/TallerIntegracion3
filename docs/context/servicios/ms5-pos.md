@@ -3,9 +3,9 @@ id: ms5-pos
 tipo: microservicio
 titulo: MS-5 · POS & Cart Service
 estado: parcial
-fuentes: [src/POSCartService/, Docker/simulator/server.js, tests/GlobalMart.IntegrationTests/PaymentSimulatorIntegrationTests.cs, tests/GlobalMart.IntegrationTests/PaymentRetrySafetyTests.cs]
+fuentes: [src/POSCartService/, Docker/simulator/server.js, tests/GlobalMart.IntegrationTests/PaymentSimulatorIntegrationTests.cs, tests/GlobalMart.IntegrationTests/PaymentRetrySafetyTests.cs, tests/GlobalMart.IntegrationTests/CobrarTarjetaIntegrationTests.cs, tests/GlobalMart.IntegrationTests/PaymentEventSequenceContractTests.cs]
 verificado_contra_codigo: true
-ultima_revision: 2026-10-17
+ultima_revision: 2026-10-18
 depende_de: [ms1-identity, ms2-tax, ms3-catalog]
 publica: [sale.completed]
 consume: []
@@ -13,7 +13,7 @@ reglas: [RN-01, RN-02, RN-03, RN-06, RF-02, RF-03, RF-04, RF-05, RF-06, RF-07]
 ---
 # MS-5 · POS & Cart Service
 
-> Servicio central del punto de venta. Gestiona turnos de caja y el ciclo completo de una venta (carrito, ítems, cobro, anulación). Integrado con MS-2 (IVA) y MS-3 (productos). Persiste y publica `sale.completed` mediante outbox; dispone del adaptador HTTP y del simulador local de pasarela, pero faltan la orquestación del cobro con tarjeta y el hardware.
+> Servicio central del punto de venta. Gestiona turnos de caja y el ciclo completo de una venta (carrito, ítems, cobro, anulación). Integrado con MS-2 (IVA) y MS-3 (productos). Persiste y publica `sale.completed` mediante outbox y dispone de endpoint, adaptador HTTP y simulador para cobro con tarjeta; faltan el frontend de cobro y el hardware.
 
 ## Contrato Oficial de Creación de Venta (POST /ventas) — S2-001 / S2-002 / S2-003
 
@@ -216,7 +216,7 @@ await _ventaRepository.CompletarConOutboxAsync(venta.Id, pago, outboxMessage);
 | PC-14 | Calcular Total con Impuestos | [IMPLEMENTADO] |
 | PC-15 | Cobrar en Efectivo | [IMPLEMENTADO — endpoint expuesto, valida monto ≥ total, calcula vuelto y persiste sale.completed pendiente] |
 | PC-16 | Calcular Vuelto | [PLANIFICADO] |
-| PC-17 | Cobrar con Tarjeta | [PARCIAL — adaptador disponible, sin orquestación] |
+| PC-17 | Cobrar con Tarjeta | [PARCIAL — backend implementado; validación S2-040 pendiente de PostgreSQL] |
 | PC-18 | Pago Mixto (efectivo + tarjeta) | [PLANIFICADO] |
 | PC-19 | Emitir Recibo / Comprobante | [PLANIFICADO] |
 | PC-20 | Anular Venta (Devolución) | [PARCIAL — implementado en VentaService.AnularAsync] |
@@ -226,9 +226,9 @@ await _ventaRepository.CompletarConOutboxAsync(venta.Id, pago, outboxMessage);
 | PC-24 | Publicar sale.completed | [IMPLEMENTADO — outbox, worker y reintentos automáticos] |
 | PC-25 | Publicar sale.reversed | [PLANIFICADO] |
 | PC-26 | Leer Tarjeta en Terminal (NFC/chip/mag) | [PLANIFICADO] |
-| PC-27 | Enviar Solicitud a Pasarela | [PARCIAL — adaptador implementado, aún no invocado] |
-| PC-28 | Recibir Respuesta de Pasarela | [PARCIAL — DTO, errores y simulador implementados, sin flujo de cobro] |
-| PC-29 | Manejar Rechazo de Pago | [PLANIFICADO] |
+| PC-27 | Enviar Solicitud a Pasarela | [IMPLEMENTADO] |
+| PC-28 | Recibir Respuesta de Pasarela | [PARCIAL — backend implementado; validación S2-040 pendiente] |
+| PC-29 | Manejar Rechazo de Pago | [IMPLEMENTADO en backend] |
 | PC-30 | Solicitar Reembolso a Pasarela | [PLANIFICADO] |
 | PC-31 | Confirmar Reembolso | [PLANIFICADO] |
 | PC-32 | Abrir Cajón de Dinero | [PLANIFICADO] |
@@ -309,7 +309,11 @@ Defensa adicional en [PosRepositoryTenantIsolationTests.cs](../../../tests/Globa
 
 ## S2-039 — Evitar reintento inseguro de cobro
 
-[IMPLEMENTADO] Ante timeout de autorización, `PaymentGatewayClient` consulta una vez el estado con el mismo `tenant_id`, `request_id` e `Idempotency-Key`, sin repetir el `POST`. Si recupera un resultado lo devuelve; si el estado no existe o no puede consultarse, lanza `PaymentAuthorizationUncertainException`. Un rechazo `DECLINED` sigue siendo un resultado definitivo y no activa la consulta. Pruebas enfocadas y simulador real: **4/4 aprobadas** el 2026-10-17. La orquestación desde el controller de cobro continúa pendiente. [Política y evidencia](../integraciones/pasarela-pago.md).
+[IMPLEMENTADO] Ante timeout de autorización, `PaymentGatewayClient` consulta una vez el estado con el mismo `tenant_id`, `request_id` e `Idempotency-Key`, sin repetir el `POST`. Si recupera un resultado lo devuelve; si el estado no existe o no puede consultarse, lanza `PaymentAuthorizationUncertainException`. Un rechazo `DECLINED` sigue siendo un resultado definitivo y no activa la consulta. Pruebas enfocadas y simulador real: **4/4 aprobadas** el 2026-10-17. [Política y evidencia](../integraciones/pasarela-pago.md).
+
+## S2-040 — Probar secuencia de pago y evento
+
+[PARCIAL] `Pago` persiste la misma referencia opaca expuesta por `CobrarTarjetaResponse` y guardada en `IntentoPago`; la aprobación conserva venta, pago, intento y outbox en una transacción. Las pruebas de contrato y servicio aprobaron **2/2** y la migración EF no deja cambios pendientes. Las pruebas de aprobación, rechazo y timeout están implementadas y compiladas, pero [NO VERIFICADAS] porque PostgreSQL `localhost:5436` no estaba disponible y Docker no fue accesible en el entorno. [Reporte](../../qa/S2-040/reporte.md).
 
 ## S2-056 — Configuración segura del simulador
 

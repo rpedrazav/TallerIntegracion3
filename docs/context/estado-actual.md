@@ -30,7 +30,7 @@ reglas: []
 | MS-2 Tax | ✅ 1 controller | ❌ No Kafka | ✅ ManualTest | **PARCIAL** |
 | MS-3 Catalog | ✅ 2 controllers | ❌ No Kafka | ✅ Manual .http + baja/PUT TI3-642 + 9 casos RN-01 S2-023 | **PARCIAL** |
 | MS-4 Warehouse | ✅ 1 controller | ✅ Consumer sale.completed | ❌ No tests | **PARCIAL** |
-| MS-5 POS | ✅ 2 controllers | ✅ OutboxPublisherWorker sale.completed | ✅ AgregarItemTest + CobroCuadreTest + S2-008/S2-009/S2-010/S2-037/S2-038/S2-039 + 10 HTTP y 13 directos RN-01 S2-023 | **PARCIAL** |
+| MS-5 POS | ✅ 2 controllers | ✅ OutboxPublisherWorker sale.completed | ✅ AgregarItemTest + CobroCuadreTest + S2-008/S2-009/S2-010/S2-037/S2-038/S2-039 + contrato S2-040 + 10 HTTP y 13 directos RN-01 S2-023 | **PARCIAL** |
 | MS-6 SupplyChain | ❌ Sin controllers | ❌ Sin Kafka | ❌ Sin tests | **PLANIFICADO** |
 | MS-7 Analytics | ❌ Sin controllers | ❌ Sin consumers | ❌ Sin tests | **PLANIFICADO** |
 | MS-8 Loyalty | ❌ Sin controllers | ⚠️ Registrado en DI sin consumer loop | ❌ Sin tests | **PLANIFICADO** |
@@ -135,7 +135,7 @@ reglas: []
 - `POST /ventas/{id}/cobrar` — valida que la venta tenga método de pago EFECTIVO (rechaza TARJETA o MIXTO con 400 Bad Request según S2-004), valida `monto_recibido` ≥ total, y confirma venta, pago y `sale.completed` pendiente en una transacción [IMPLEMENTADO]
 - VentaService con métodos `CompletarAsync` y `AnularAsync` [IMPLEMENTADO en service]
 - OutboxPublisherWorker y KafkaProducerService — publicación automática con lease, reintento y cancelación limpia [IMPLEMENTADO]
-- PaymentGatewayClient — adaptador HTTP con URL/timeout configurables, idempotencia, payload seguro y consulta de estado tras timeout sin repetir la autorización; todavía no conectado al endpoint de cobro [IMPLEMENTADO]
+- PaymentGatewayClient — adaptador HTTP conectado a `POST /ventas/{id}/cobrar-tarjeta`, con idempotencia, payload seguro y consulta de estado tras timeout [IMPLEMENTADO]
 - PaymentGatewaySimulator — proceso Node local con aprobación, rechazo, timeout, idempotencia y referencias opacas [IMPLEMENTADO]
 - test de integración abre turno con JWT de cajero y verifica persistencia en estado `ABIERTO` [IMPLEMENTADO]
 - tests de integración en `VentaIntegrationTests` validan creación de venta con resolución autoritativa en MS-3 e IVA en MS-2, agregado de ítems, y rechazo de productos inexistentes (404) e inactivos (400) sin persistir venta ni ítems [IMPLEMENTADO]
@@ -147,7 +147,7 @@ reglas: []
 
 **No implementado / CRÍTICO:**
 - Endpoint HTTP `POST /ventas/{id}/anular` aún no está expuesto en `VentasController.cs`
-- Orquestación del cobro con tarjeta; el adaptador HTTP y el simulador local ya están implementados
+- Validación S2-040 del cobro con tarjeta contra PostgreSQL; pruebas implementadas, ejecución pendiente de infraestructura
 - Integración con hardware (balanza, impresora, cajón de dinero)
 
 ---
@@ -179,7 +179,7 @@ reglas: []
 |---|---------------|----------------|----------|
 | 1 | Exponer endpoint `POST /ventas/{id}/anular` en `VentasController.cs` | RF-22 | 🔴 Crítica |
 | 2 | Emisión simulada de DTE (boleta/factura) en MS-2 | RN-03, RF-08, TC-08/09 | 🔴 Crítica |
-| 3 | Orquestar el cobro con tarjeta usando el adaptador y simulador ya implementados | RN-02, RF-07, PC-27/28 | 🔴 Crítica |
+| 3 | Ejecutar la integración S2-040 de cobro con tarjeta con PostgreSQL disponible | RN-02, RF-07, PC-27/28 | 🟠 Alta |
 | 4 | FEFO en recepción e inventario en MS-4 | RN-05, RF-10, WI-04/05 | 🟠 Alta |
 | 5 | Integrar frontend `Pos.tsx` con backend real | RF-04, RF-05 | 🟠 Alta |
 | 6 | Endpoint POST /auth/refresh | RF-01 | 🟠 Alta |
@@ -279,7 +279,7 @@ Cumple criterio de aceptación: el rechazo no genera `sale.completed` ni un `Pag
 
 ## S2-036 — Escenarios del simulador de pagos
 
-[IMPLEMENTADO] Se especificaron y materializaron los escenarios no sensibles `sim-approved-v1`, `sim-declined-v1` y `sim-timeout-v1`, con solicitudes y respuestas reproducibles, idempotencia por `request_id`, timeout controlado y campos mínimos de auditoría. Ningún escenario usa PAN, CVV ni otra credencial bancaria. El cobro con tarjeta en MS-5 todavía no está implementado. [Contrato S2-036](integraciones/pasarela-pago.md).
+[IMPLEMENTADO] Se especificaron y materializaron los escenarios no sensibles `sim-approved-v1`, `sim-declined-v1` y `sim-timeout-v1`, con solicitudes y respuestas reproducibles, idempotencia por `request_id`, timeout controlado y campos mínimos de auditoría. Ningún escenario usa PAN, CVV ni otra credencial bancaria. [Contrato S2-036](integraciones/pasarela-pago.md).
 
 ## S2-037 — Adaptador HTTP de pasarela
 
@@ -291,11 +291,15 @@ Cumple criterio de aceptación: el rechazo no genera `sale.completed` ni un `Pag
 
 ## S2-039 / TI3-670 — Evitar reintento inseguro de cobro
 
-[IMPLEMENTADO] Un timeout del `POST` de autorización ahora provoca una única consulta de estado con el mismo `tenant_id`, `request_id` e `Idempotency-Key`; el adaptador no repite automáticamente el cargo. Un resultado almacenado se recupera, mientras que un 404 o una consulta fallida produce `PaymentAuthorizationUncertainException`. Los rechazos son resultados definitivos y no activan reconciliación. Pruebas enfocadas y simulador Node real: **4/4 aprobadas** el 2026-10-17. El controller de cobro aún no invoca el adaptador. [Política y evidencia](integraciones/pasarela-pago.md).
+[IMPLEMENTADO] Un timeout del `POST` de autorización ahora provoca una única consulta de estado con el mismo `tenant_id`, `request_id` e `Idempotency-Key`; el adaptador no repite automáticamente el cargo. Un resultado almacenado se recupera, mientras que un 404 o una consulta fallida produce `PaymentAuthorizationUncertainException`. Los rechazos son resultados definitivos y no activan reconciliación. Pruebas enfocadas y simulador Node real: **4/4 aprobadas** el 2026-10-17. [Política y evidencia](integraciones/pasarela-pago.md).
+
+## S2-040 / TI3-671 — Probar secuencia de pago y evento
+
+[PARCIAL] La aprobación copia la referencia opaca de pasarela a `IntentoPago`, `Pago` y respuesta HTTP, y conserva venta completada, `Pago TARJETA` y `sale.completed` pendiente dentro de la transacción existente. La migración `20261018040621_AddPagoGatewayReference` agrega la columna nullable sin modificar datos existentes. Pruebas de contrato y servicio **2/2 aprobadas** el 2026-10-18; tres integraciones PostgreSQL implementadas y compiladas, pero [NO VERIFICADAS] porque `localhost:5436` no estaba disponible y Docker no fue accesible. [Reporte](../qa/S2-040/reporte.md).
 
 ## S2-051 / TI3-682 — Matriz RN-02 de pagos
 
-[CONTRATO DEFINIDO] Se documentaron [18 casos de aceptación](../../diagramas/matriz/S2-051-matriz-rn02-pagos.md) por método, resultado, idempotencia y logs permitidos, con prohibición explícita de captura local de PAN/CVV. La matriz distingue cobertura parcial del adaptador/simulador de la aceptación E2E pendiente. No se ejecutaron estos casos como parte de la definición ni se implementó el cobro con tarjeta; aceptación E2E [NO VERIFICADO], bloqueada por la orquestación pendiente.
+[CONTRATO DEFINIDO] Se documentaron [18 casos de aceptación](../../diagramas/matriz/S2-051-matriz-rn02-pagos.md) por método, resultado, idempotencia y logs permitidos, con prohibición explícita de captura local de PAN/CVV. El backend de tarjeta está implementado, pero la matriz completa no se ejecutó como parte de su definición; aceptación E2E [NO VERIFICADA].
 
 ## S2-026 / TI3-657 — Inventario y matriz de rutas y puertos reales
 

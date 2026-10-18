@@ -280,11 +280,12 @@ public class VentaService : IVentaService
 
         var pago = new Pago
         {
-            Id      = Guid.NewGuid(),
-            VentaId = venta.Id,
-            Metodo  = MetodoPago.TARJETA,
-            Monto   = venta.Total,
-            Vuelto  = 0m
+            Id         = Guid.NewGuid(),
+            VentaId    = venta.Id,
+            Metodo     = MetodoPago.TARJETA,
+            Monto      = venta.Total,
+            Vuelto     = 0m,
+            Referencia = intentoPago.Referencia
         };
 
         var eventId = Guid.NewGuid();

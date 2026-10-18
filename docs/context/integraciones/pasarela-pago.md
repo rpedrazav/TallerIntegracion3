@@ -3,9 +3,9 @@ id: pasarela-pago
 tipo: integracion
 titulo: Integración con Pasarela de Pago
 estado: parcial
-fuentes: [GlobalMart_ContextMaster.md#sec12, src/POSCartService/Services/IPaymentGatewayClient.cs, src/POSCartService/Services/PaymentGatewayClient.cs, src/POSCartService/Exceptions/PaymentAuthorizationUncertainException.cs, src/POSCartService/DTOs/PaymentGatewayDtos.cs, src/POSCartService/Program.cs, Docker/simulator/server.js, tests/GlobalMart.IntegrationTests/PaymentGatewayClientTests.cs, tests/GlobalMart.IntegrationTests/PaymentSimulatorIntegrationTests.cs, tests/GlobalMart.IntegrationTests/PaymentRetrySafetyTests.cs, tareas/sprint2_youtrack_resultado.json, Docker/env.example, .env.example, src/POSCartService/appsettings.json]
+fuentes: [GlobalMart_ContextMaster.md#sec12, src/POSCartService/Services/IPaymentGatewayClient.cs, src/POSCartService/Services/PaymentGatewayClient.cs, src/POSCartService/Services/VentaService.cs, src/POSCartService/Models/Pago.cs, src/POSCartService/Exceptions/PaymentAuthorizationUncertainException.cs, src/POSCartService/DTOs/PaymentGatewayDtos.cs, src/POSCartService/DTOs/CobrarTarjetaDTOs.cs, src/POSCartService/Program.cs, Docker/simulator/server.js, tests/GlobalMart.IntegrationTests/PaymentGatewayClientTests.cs, tests/GlobalMart.IntegrationTests/PaymentSimulatorIntegrationTests.cs, tests/GlobalMart.IntegrationTests/PaymentRetrySafetyTests.cs, tests/GlobalMart.IntegrationTests/CobrarTarjetaIntegrationTests.cs, tests/GlobalMart.IntegrationTests/PaymentEventSequenceContractTests.cs, tareas/sprint2_youtrack_resultado.json, Docker/env.example, .env.example, src/POSCartService/appsettings.json]
 verificado_contra_codigo: true
-ultima_revision: 2026-10-17
+ultima_revision: 2026-10-18
 depende_de: [ms5-pos]
 publica: []
 consume: []
@@ -13,15 +13,15 @@ reglas: [RN-02, RF-07, PC-17, PC-27, PC-28]
 ---
 # Integración con Pasarela de Pago
 
-> Toda transacción con tarjeta DEBE ir por una pasarela externa (RN-02). **Estado: PARCIAL** — MS-5 dispone de contratos, adaptador HTTP y simulador local, pero todavía no orquesta el cobro con tarjeta en `POST /ventas/{id}/cobrar` (solo admite efectivo y rechaza `TARJETA` o `MIXTO`).
+> Toda transacción con tarjeta DEBE ir por una pasarela externa (RN-02). **Estado: PARCIAL** — MS-5 dispone del endpoint separado `POST /ventas/{id}/cobrar-tarjeta`, adaptador HTTP, simulador y persistencia atómica; la validación de integración S2-040 requiere PostgreSQL disponible.
 
 ## Estado: [PARCIAL]
 
 ### S2-051 — Matriz RN-02 de pagos [CONTRATO DEFINIDO]
 
-La [matriz S2-051](../../../diagramas/matriz/S2-051-matriz-rn02-pagos.md) define 18 casos de aceptación por método, resultado, idempotencia y datos permitidos en logs. Prohíbe explícitamente captura local, almacenamiento y transmisión de PAN/CVV, incluso de prueba. Incluye aprobación, rechazo, incertidumbre, concurrencia, recuperación, aislamiento y controles de efectivo/MIXTO. Su ejecución está pendiente y no acredita E2E: falta conectar el cobro de tarjeta. La unicidad local de intentos no demuestra por sí sola ausencia de doble autorización externa; la sanitización integral de errores/logs queda [NO VERIFICADO].
+La [matriz S2-051](../../../diagramas/matriz/S2-051-matriz-rn02-pagos.md) define 18 casos de aceptación por método, resultado, idempotencia y datos permitidos en logs. Prohíbe explícitamente captura local, almacenamiento y transmisión de PAN/CVV, incluso de prueba. Incluye aprobación, rechazo, incertidumbre, concurrencia, recuperación, aislamiento y controles de efectivo/MIXTO. El backend de tarjeta ya está conectado; la ejecución integral de la matriz y la sanitización completa de errores/logs quedan [NO VERIFICADAS].
 
-S2-031 / TI3-662 define el contrato de pasarela simulada (`IPaymentGatewayClient` y DTOs seguros). S2-036 / TI3-667 define los escenarios reproducibles. S2-037 / TI3-668 implementa `IPaymentGatewayClient` y su adaptador HTTP. S2-038 / TI3-669 completa el endpoint local de autorización. S2-039 / TI3-670 impide reautorizar automáticamente tras un timeout y consulta primero el estado por la misma clave. El cobro con tarjeta aún no está implementado en el controller de ventas.
+S2-031 / TI3-662 define el contrato de pasarela simulada (`IPaymentGatewayClient` y DTOs seguros). S2-033 / TI3-664 y S2-034 / TI3-665 conectan el cobro con tarjeta y persisten sus resultados. S2-036 / TI3-667 define los escenarios reproducibles. S2-037 / TI3-668 implementa el adaptador HTTP, S2-038 / TI3-669 el simulador y S2-039 / TI3-670 la consulta segura tras timeout. S2-040 / TI3-671 añade la referencia opaca al `Pago` y verifica la secuencia pago-evento.
 
 ## S2-031 / TI3-662 — Contrato de pasarela simulada [IMPLEMENTADO]
 
@@ -197,6 +197,12 @@ La consulta devuelve la respuesta ya almacenada cuando la pasarela alcanzó a pr
 
 [PaymentRetrySafetyTests](../../../tests/GlobalMart.IntegrationTests/PaymentRetrySafetyTests.cs) y la prueba contra el proceso Node real validaron **4/4 casos** el 2026-10-17: timeout desconocido, timeout con aprobación recuperable, rechazo sin consulta y recuperación del payload almacenado. En ambos casos de timeout hubo exactamente un `POST` y una consulta `GET`. [Evidencia TRX](../../qa/S2-039/S2-039.trx).
 
+## S2-040 / TI3-671 — Secuencia de pago y evento [PARCIAL]
+
+La migración `20261018040621_AddPagoGatewayReference` agrega `Pago.Referencia` nullable de 100 caracteres. En una aprobación, `CompletarTarjetaAsync` copia allí la misma referencia opaca que guarda `IntentoPago.Referencia` y que `CobrarTarjetaResponse.gateway_reference` devuelve al cliente; venta, `Pago TARJETA`, intento aprobado y `sale.completed` pendiente se conservan en la transacción existente.
+
+La suite con trait `S2-040` cubre contrato seguro, propagación servicio-pago-outbox, aprobación, rechazo y timeout. Las pruebas sin infraestructura aprobaron **2/2** el 2026-10-18 y EF confirmó que no existen cambios de modelo pendientes después de la migración. Las tres pruebas PostgreSQL están implementadas y compiladas, pero su ejecución quedó [NO VERIFICADA] porque `localhost:5436` no estaba disponible y el usuario del entorno no pudo acceder al socket Docker. [Reporte y reproducción](../../qa/S2-040/reporte.md).
+
 ## S2-056 / TI3-687 — Configuración segura del simulador [IMPLEMENTADO]
 
 Para garantizar entornos reproducibles y proteger credenciales de producción (RN-02 / PCI DSS), la configuración de la pasarela y simulador separa estrictamente endpoints, llaves y timeouts entre desarrollo y producción.
@@ -281,10 +287,10 @@ Al anular una venta cobrada con tarjeta:
 
 | ID | Caso de Uso | Estado |
 |----|-------------|--------|
-| PC-17 | Cobrar con Tarjeta (débito/crédito) | [PARCIAL — adaptador disponible, sin orquestación] |
+| PC-17 | Cobrar con Tarjeta (débito/crédito) | [PARCIAL — backend orquestado; integración S2-040 pendiente de ejecutar con PostgreSQL] |
 | PC-18 | Cobrar Mixto (efectivo + tarjeta) | [PLANIFICADO] |
-| PC-27 | Procesar Pago en Pasarela | [PARCIAL — cliente HTTP implementado, aún no invocado] |
-| PC-28 | Manejar Respuesta de Pasarela | [PARCIAL — DTO, errores y simulador implementados, sin flujo de cobro] |
+| PC-27 | Procesar Pago en Pasarela | [IMPLEMENTADO en endpoint de tarjeta] |
+| PC-28 | Manejar Respuesta de Pasarela | [PARCIAL — flujo implementado; integración S2-040 pendiente de PostgreSQL] |
 
 ## Conexiones
 - POS: [[ms5-pos]]
@@ -297,6 +303,7 @@ Al anular una venta cobrada con tarjeta:
 - `tareas/sprint2_youtrack_resultado.json` (`S2-037` → `TI3-668`)
 - `tareas/sprint2_youtrack_resultado.json` (`S2-038` → `TI3-669`)
 - `tareas/sprint2_youtrack_resultado.json` (`S2-039` → `TI3-670`)
+- `tareas/sprint2_youtrack_resultado.json` (`S2-040` → `TI3-671`)
 - `src/POSCartService/Program.cs` (HttpClient `PasarelaPago` y timeout vigente)
 - `src/POSCartService/Services/IPaymentGatewayClient.cs`
 - `src/POSCartService/Services/PaymentGatewayClient.cs`
@@ -308,7 +315,11 @@ Al anular una venta cobrada con tarjeta:
 - `docs/qa/S2-038/S2-038.trx`
 - `tests/GlobalMart.IntegrationTests/PaymentRetrySafetyTests.cs`
 - `docs/qa/S2-039/S2-039.trx`
-- `src/POSCartService/Controllers/VentasController.cs` (cobro vigente solo en efectivo)
+- `src/POSCartService/Controllers/VentasController.cs`
+- `src/POSCartService/Models/Pago.cs`
+- `tests/GlobalMart.IntegrationTests/PaymentEventSequenceContractTests.cs`
+- `tests/GlobalMart.IntegrationTests/CobrarTarjetaIntegrationTests.cs`
+- `docs/qa/S2-040/reporte.md`
 - `src/POSCartService/Services/VentaService.cs` (AnularAsync sin reembolso)
 - `Docker/env.example`
 - `.env.example`

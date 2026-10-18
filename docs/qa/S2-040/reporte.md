@@ -1,48 +1,40 @@
-# S2-040 / TI3-671 — Autorización e idempotencia
+# S2-040 / TI3-671 — Secuencia de pago y evento
 
-Fecha: 2026-10-17. Estado de la tarea: **PARCIAL**.
+Fecha: 2026-10-18. Estado: **PARCIAL — implementación terminada, integración pendiente de infraestructura**.
 
-## Alcance verificable
+## Alcance implementado
 
-Las pruebas usan `PaymentGatewayClient` real por HTTP contra un proceso Node
-aislado de `Docker/simulator/server.js`, iniciado y cerrado por cada prueba.
-No requieren conexión bancaria, Docker ni datos de tarjeta.
+- `Pago.Referencia` conserva la referencia opaca de la autorización con tarjeta.
+- `CompletarTarjetaAsync` copia exactamente `IntentoPago.Referencia` al `Pago` creado.
+- La aprobación persiste venta `COMPLETADA`, `Pago TARJETA`, `IntentoPago APROBADO` y `sale.completed` pendiente en la transacción existente.
+- Rechazo y timeout mantienen la venta `PENDIENTE` y no crean `Pago` ni outbox.
+- La respuesta `gateway_reference`, `Pago.Referencia` e `IntentoPago.Referencia` deben ser idénticas.
+- La migración `20261018040621_AddPagoGatewayReference` agrega una columna nullable de 100 caracteres y no altera pagos existentes.
 
-| Caso | Comprobación |
+## Pruebas
+
+| Caso | Resultado 2026-10-18 |
 | --- | --- |
-| Dos solicitudes secuenciales idénticas | Una autorización nueva y una reutilización; respuesta completa, referencia, transacción y fecha iguales. |
-| Dos solicitudes simultáneas idénticas | Una autorización nueva y una reutilización, con una sola identidad de transacción. |
-| Una clave en dos tenants | El segundo tenant no puede consultar la autorización del primero; autoriza independientemente y cada tenant conserva su resultado al repetir. |
-| Una clave reutilizada con otro monto | HTTP 409; la consulta posterior conserva la autorización original. |
-| Header y request_id distintos | HTTP 409. |
+| Contrato de referencia opaca y mapeo EF | **1/1 aprobada** |
+| Propagación servicio → Pago/IntentoPago/outbox | **1/1 aprobada** |
+| Aprobación: respuesta = Pago = IntentoPago, venta completada y outbox pendiente | Implementada y compilada; [NO VERIFICADA] por PostgreSQL no disponible |
+| Rechazo: venta pendiente, cero pagos y cero outbox | Implementada y compilada; [NO VERIFICADA] por PostgreSQL no disponible |
+| Timeout: venta pendiente, cero pagos y cero outbox | Implementada y compilada; [NO VERIFICADA] por PostgreSQL no disponible |
 
-Las trazas JSON incluyen `idempotency_replay`: `false` en una autorización
-nueva y `true` cuando se devuelve una respuesta almacenada (repetición o
-consulta de estado). Las pruebas cuentan las dos trazas de aprobación antes
-de consultar el estado, filtrando por tenant y clave. No se agregan datos de
-tarjeta ni secretos a las trazas.
+EF Core informó `No changes have been made to the model since the last migration`. El build enfocado de MS-5 terminó con 0 errores.
+
+La ejecución integrada falló antes de iniciar cada caso con `Connection refused` en `127.0.0.1:5436`. Se intentó iniciar únicamente `postgres-pos`, pero el usuario del entorno no tuvo permiso sobre `/var/run/docker.sock`. No se leyó ni utilizó `Docker/.env`.
 
 ## Reproducción
 
-Requisitos: .NET 8, Node disponible en PATH y dependencias NuGet restauradas.
+Con PostgreSQL de MS-5 disponible en el puerto configurado:
 
-```powershell
-dotnet test tests/GlobalMart.IntegrationTests/GlobalMart.IntegrationTests.csproj --no-restore -m:1 --filter "Plan=S2-040" --logger "trx;LogFileName=S2-040.trx" --results-directory docs/qa/S2-040
+```bash
+dotnet test tests/GlobalMart.IntegrationTests/GlobalMart.IntegrationTests.csproj \
+  --filter 'Plan=S2-040' \
+  --logger 'trx;LogFileName=S2-040.trx' \
+  --results-directory docs/qa/S2-040 \
+  -m:1
 ```
 
-## Dependencia que impide cerrar la aceptación completa
-
-`VentasController` y `VentaService.CompletarAsync` rechazan el cobro en efectivo
-de una venta TARJETA. Ningún endpoint de cobro invoca `IPaymentGatewayClient`.
-Por tanto, estas pruebas verifican **una autorización lógica simulada por
-clave y tenant**, pero **no verifican un Pago TARJETA persistido ni constituyen
-un flujo de extremo a extremo del POS**.
-
-Para cerrar la tarea falta implementar la orquestación de tarjeta con una
-clave persistente y protección ante repetición, y ejecutar dos solicitudes
-autenticadas al POS sobre la misma venta. La prueba deberá consultar una base
-PostgreSQL aislada y comprobar un solo `Pago` TARJETA con la referencia de la
-autorización y el monto de la venta, además de venta completada y un único
-evento outbox. Insertar ese Pago desde el propio test ocultaría la dependencia.
-
-La idempotencia del simulador dura únicamente mientras vive su proceso.
+Evidencia contractual: `docs/qa/S2-040/S2-040-contract.trx`.

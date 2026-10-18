@@ -6,6 +6,7 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Security.Claims;
 using System.Text;
+using System.Text.Json;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
@@ -411,6 +412,7 @@ public sealed class CobrarTarjetaIntegrationTests : IClassFixture<Ms5WebApplicat
 
     [Fact]
     [Trait("Plan", "S2-034")]
+    [Trait("Plan", "S2-040")]
     public async Task CobrarTarjeta_PasarelaAprueba_CompletaVentaGeneraPagoTarjetaYOutbox()
     {
         var tenantId   = Guid.NewGuid();
@@ -467,6 +469,11 @@ public sealed class CobrarTarjetaIntegrationTests : IClassFixture<Ms5WebApplicat
             new { scenario_id = "sim-approved-v1" });
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        using var responseDocument = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        var referenciaMostrada = responseDocument.RootElement
+            .GetProperty("gateway_reference")
+            .GetString();
+        Assert.Equal("REF-S034", referenciaMostrada);
 
         // Verificar DB: venta COMPLETADA, 1 Pago TARJETA, 1 OutboxMessage, 1 IntentoPago APROBADO
         using var verifyScope = configuredFactory.Services.CreateScope();
@@ -481,19 +488,26 @@ public sealed class CobrarTarjetaIntegrationTests : IClassFixture<Ms5WebApplicat
         var pago  = Assert.Single(pagos);
         Assert.Equal(Pos.Models.MetodoPago.TARJETA, pago.Metodo);
         Assert.Equal(11900m, pago.Monto);
+        Assert.Equal(referenciaMostrada, pago.Referencia);
 
         var outbox = dbVerify.OutboxMessages.Where(o => o.VentaId == ventaId).ToList();
-        Assert.Single(outbox);
+        var outboxMessage = Assert.Single(outbox);
+        Assert.Equal(Pos.Models.OutboxStatus.PENDIENTE, outboxMessage.Status);
+        var evento = JsonSerializer.Deserialize<Pos.Messaging.SaleCompletedEvent>(outboxMessage.Payload);
+        Assert.NotNull(evento);
+        Assert.Equal(ventaId, evento!.VentaId);
+        Assert.Equal("TARJETA", evento.MetodoPago);
 
         var intentos = dbVerify.IntentosPago.Where(i => i.VentaId == ventaId).ToList();
         var intento  = Assert.Single(intentos);
         Assert.Equal(Pos.Models.EstadoIntentoPago.APROBADO, intento.Estado);
         Assert.Equal("AUTH-S034", intento.AuthorizationCode);
-        Assert.Equal("REF-S034", intento.Referencia);
+        Assert.Equal(referenciaMostrada, intento.Referencia);
     }
 
     [Fact]
     [Trait("Plan", "S2-034")]
+    [Trait("Plan", "S2-040")]
     public async Task CobrarTarjeta_PasarelaRechaza_ConservaVentaPendienteSinPagoNiOutbox_Retorna422()
     {
         var tenantId   = Guid.NewGuid();
@@ -573,6 +587,7 @@ public sealed class CobrarTarjetaIntegrationTests : IClassFixture<Ms5WebApplicat
 
     [Fact]
     [Trait("Plan", "S2-034")]
+    [Trait("Plan", "S2-040")]
     public async Task CobrarTarjeta_PasarelaTimeout_ConservaVentaPendienteSinPagoNiOutbox_Retorna504()
     {
         var tenantId   = Guid.NewGuid();

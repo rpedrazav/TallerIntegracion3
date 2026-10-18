@@ -239,6 +239,10 @@ namespace POSCartService.Data.Migrations
                         .HasPrecision(18, 2)
                         .HasColumnType("numeric(18,2)");
 
+                    b.Property<string>("Referencia")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
                     b.Property<Guid>("VentaId")
                         .HasColumnType("uuid");
 
