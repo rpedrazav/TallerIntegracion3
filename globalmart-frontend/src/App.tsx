@@ -11,7 +11,11 @@ import { useAuth } from './hooks/useAuth';
 import { useTenantStore } from './store/useTenantStore';
 import { canAccessAdmin } from './utils/adminAccess';
 
-function AdminRoute() {
+interface AdminRouteProps {
+  children: React.ReactNode;
+}
+
+function AdminRoute({ children }: AdminRouteProps) {
   const { token, loading } = useAuth();
   const { token: tenantToken, esAdmin, setToken } = useTenantStore();
 
@@ -21,7 +25,27 @@ function AdminRoute() {
 
   if (loading || token !== tenantToken) return null;
 
-  return canAccessAdmin(esAdmin) ? <Admin /> : <Navigate to="/pos" replace />;
+  if (!canAccessAdmin(esAdmin)) {
+    return (
+      <div
+        role="alert"
+        style={{
+          maxWidth: '640px',
+          margin: '3rem auto',
+          padding: '1.5rem',
+          border: '1px solid var(--color-danger)',
+          borderRadius: '12px',
+          backgroundColor: 'var(--color-danger-bg)',
+          color: 'var(--color-danger-text)',
+        }}
+      >
+        <h2 style={{ marginTop: 0 }}>Acceso denegado</h2>
+        <p style={{ marginBottom: 0 }}>No tienes permisos para acceder a funciones administrativas.</p>
+      </div>
+    );
+  }
+
+  return <>{children}</>;
 }
 
 export default function App() {
@@ -33,8 +57,8 @@ export default function App() {
           <Route path="/pos" element={<Pos />} />
           <Route path="/abrir-turno" element={<AbrirTurnoPage />} />
           <Route path="/cerrar-turno" element={<CerrarTurnoPage />} />
-          <Route path="/admin/productos" element={<ProductosPage />} />
-          <Route path="/admin/*" element={<AdminRoute />} />
+          <Route path="/admin/productos" element={<AdminRoute><ProductosPage /></AdminRoute>} />
+          <Route path="/admin/*" element={<AdminRoute><Admin /></AdminRoute>} />
         </Route>
         {/* Redirige la raíz al login por defecto */}
         <Route path="*" element={<Navigate to="/login" replace />} />

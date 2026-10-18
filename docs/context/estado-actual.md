@@ -5,7 +5,7 @@ titulo: Estado Real de Implementación — GlobalMart OS
 estado: vigente
 fuentes: [docs/context/_reports/inventario.md, src/, globalmart-frontend/src/api/client.ts, git log, docs/context/_reports/preguntas-abiertas.md]
 verificado_contra_codigo: true
-ultima_revision: 2026-10-17
+ultima_revision: 2026-10-18
 depende_de: []
 publica: []
 consume: []
@@ -202,8 +202,8 @@ Ver el nodo [[guia-estilo]] para el resumen y las reglas aplicables.
 | Login | [IMPLEMENTADO] | Llama directo a auth service con manejo de errores específicos por HTTP status/red, timeout de 15s y spinner de carga en botón (TI3-471) |
 | Abrir Turno (`AbrirTurnoPage`) | [IMPLEMENTADO] | Llama a MS-5 `/api/turnos/activo` y `POST /api/turnos/abrir` (spinner de carga en botón, redirección con confirmación a POS y manejo 409) (TI3-471) |
 | Cerrar Turno (`CerrarTurnoPage`) | [IMPLEMENTADO] | Tabla de denominaciones (billetes/monedas) con conteo y subtotales automáticos. Llama a MS-5 `POST /api/turnos/cuadre` para obtener efectivo esperado. Muestra resultado: efectivo esperado vs declarado, diferencia en **verde** si es $0, en **rojo** si hay discrepancia (sobrante o faltante). Botón `POST /api/turnos/cerrar` con confirmación. |
-| Productos Admin (`ProductosPage`) | [IMPLEMENTADO] | `GET /products?page=1&pageSize=500` + `GET /categories` en MS-3 (puerto 5203). Tabla con nombre, código de barras, categoría, precio base, tipo (peso variable/unidad) y estado. Filtro instantáneo en frontend por texto (nombre, código, descripción, categoría), filtro por categoría dropdown y toggle "solo activos". Accesible desde `/admin/productos`. |
-| Admin | [PARCIAL] | TI3-672: solo `ADMIN`/`SUPER_ADMIN` acceden. Lista, creación y edición de email disponibles. TI3-674 agrega confirmación y `DELETE /users/{id}` para usuarios activos, con manejo de 400/401/403/404 y red. Tras 204 conserva la fila local, cambia `activo=false` y muestra **Inactivo**, sin recargar [IMPLEMENTADO]. Una recarga posterior usa `GET /users`, que solo devuelve activos, y no existe auditoría consultable; permanencia visible tras recargar queda pendiente. TI3-673 mantiene pendiente la preservación segura de `sucursalId`. Sin reactivación UI. |
+| Productos Admin (`ProductosPage`) | [IMPLEMENTADO] | `GET /products?page=1&pageSize=500` + `GET /categories` en MS-3 (puerto 5203). Tabla con filtros, estado y acciones de catálogo. TI3-675 protege `/admin/productos` con la misma regla ADMIN/SUPER_ADMIN aplicada al resto de Administración; CAJERO recibe **Acceso denegado**. |
+| Admin | [PARCIAL] | TI3-675: `/admin/*` y `/admin/productos` comparten `AdminRoute`; ADMIN/SUPER_ADMIN acceden y CAJERO ve **Acceso denegado** una vez sincronizado el token [IMPLEMENTADO]. `TenantConfig` conserva edición exclusiva de administradores, estado de carga, controles bloqueados durante guardado y feedback de éxito/error; IVA numérico ya cubierto por TI3-645. Lista, creación, edición de email y baja lógica de usuarios disponibles. Persisten las dependencias de `sucursalId`, listado de inactivos y auditoría; sin reactivación UI. |
 
 **Nota de integración Electron:** `preload.ts` expone únicamente funciones de autenticación y sesión (`ping`, `getToken`, `setToken`, `logout`). No expone hardware serial ni actualización automática por ahora.
 
