@@ -1,0 +1,40 @@
+{
+  "stats": {
+    "startTime": "2026-10-18T23:48:52.216Z",
+    "duration": 8952.549,
+    "expected": 7,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "tests": [
+    {
+      "title": "busca por nombre en MS-3 y agrega al carrito del POS",
+      "status": "expected"
+    },
+    {
+      "title": "escanea código exacto y agrega producto sin abrir administración",
+      "status": "expected"
+    },
+    {
+      "title": "aprueba tarjeta y cierra el carrito con referencia opaca",
+      "status": "expected"
+    },
+    {
+      "title": "rechazo de tarjeta permite cambiar a efectivo",
+      "status": "expected"
+    },
+    {
+      "title": "timeout bloquea doble clic y exige consultar el intento antes de reintentar",
+      "status": "expected"
+    },
+    {
+      "title": "cobra efectivo y muestra el vuelto devuelto por MS-5",
+      "status": "expected"
+    },
+    {
+      "title": "monto insuficiente conserva la venta pendiente y muestra la diferencia de MS-5",
+      "status": "expected"
+    }
+  ]
+}

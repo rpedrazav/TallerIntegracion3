@@ -5,7 +5,7 @@ titulo: Pantallas del Frontend — GlobalMart OS
 estado: parcial
 fuentes: [globalmart-frontend/src/pages/, globalmart-frontend/src/components/, globalmart-frontend/src/api/client.ts]
 verificado_contra_codigo: true
-ultima_revision: 2026-10-15
+ultima_revision: 2026-10-18
 depende_de: [estructura, ms1-identity, ms5-pos, guia-estilo]
 publica: []
 consume: []
@@ -45,7 +45,7 @@ Carrito de compras con:
   - BarcodeInput (búsqueda con debounce)
   - Lista de CartItem (ítems del carrito)
   - Totales locales antes de iniciar venta; luego subtotal, impuestos y total devueltos por MS-5
-  - Botón "Iniciar venta" que envía producto_id y cantidad; después muestra "Cobrar" (cobro aún no implementado)
+  - Botón "Iniciar venta" que envía producto_id y cantidad; después muestra "Cobrar" y abre el modal de efectivo
   - Botón "Cancelar borrador" antes de crear venta; en venta pendiente permite agregar, cambiar cantidad y eliminar ítems
 
 Productos obtenidos de MS-3 mediante `catalogApi`; solo el borrador anterior a la venta se guarda en `localStorage`
@@ -59,6 +59,24 @@ Eliminar una fila de la venta pendiente llama `DELETE /ventas/{id}/items/{itemId
 Errores de inicio visibles; ante respuesta perdida, vuelve a consultar el turno antes de permitir otro intento [IMPLEMENTADO].
 NO abre turno desde esta pantalla; dirige a /abrir-turno cuando falta
 ```
+
+### Modal de cobro — contrato visual S2-046 [IMPLEMENTADO]
+
+`PaymentModal` presenta el total devuelto por MS-5 y permite ver las vistas de efectivo y tarjeta. En efectivo muestra monto recibido y diferencia estimada; tras un cobro aprobado muestra el vuelto devuelto por MS-5. En tarjeta muestra solo el monto y, si la pasarela ya respondió, su referencia opaca. No pide ni conserva número de tarjeta, CVV, PIN ni vencimiento. El método seleccionado debe coincidir con `metodo_pago` de la venta para habilitar la confirmación.
+
+| Estado | Mensaje visible | Acción permitida |
+|---|---|---|
+| Disponible | Método, total y detalle de efectivo o tarjeta | Confirmar solo con método compatible, monto válido en efectivo y manejador de pago conectado |
+| Procesando | Esperando respuesta; evitar otro cobro | Sin cerrar ni repetir |
+| Aprobado | Venta confirmada; referencia opaca si es tarjeta | Cerrar |
+| Rechazado | Venta pendiente; motivo del rechazo | Cambiar método o cerrar |
+| Resultado incierto | Verificar venta antes de intentar otro cobro | Verificar, cuando exista manejador; o cerrar |
+
+El botón **Cobrar** del POS abre el modal en estado Disponible. En una venta `EFECTIVO`, confirmar un monto positivo llama `POST /ventas/{id}/cobrar` con `monto_recibido`; Procesando evita un segundo envío, Aprobado usa la venta `COMPLETADA` y el `vuelto` de la respuesta, y un 400 `Monto insuficiente` conserva la venta `PENDIENTE` y muestra `diferencia` devuelta por MS-5 [IMPLEMENTADO]. Ante un resultado de red incierto, bloquea otra confirmación y permite consultar `GET /ventas/{id}`; la consulta puede confirmar el estado de la venta, pero no reconstruye el vuelto si se perdió la respuesta del cobro. Antes de iniciar una venta se elige `EFECTIVO` o `TARJETA`. La tarjeta llama `POST /ventas/{id}/cobrar-tarjeta` con una clave UUID nueva, muestra aprobación y referencia opaca o rechazo, y permite cambiar el método de una venta pendiente mediante `PATCH /ventas/{id}/metodo-pago`. Un resultado incierto exige verificar la venta antes de otro cobro [IMPLEMENTADO]. Pruebas de interfaz controladas 4/4 aprobadas el 2026-10-18; integración E2E con la pasarela desplegada [NO VERIFICADA].
+
+S2-049: ante timeout o error de tarjeta, el modal muestra Resultado incierto y solo ofrece verificar. `GET /ventas/{id}/intento-tarjeta` recupera el último intento al recargar POS y consulta la pasarela; `UNCERTAIN` mantiene el cobro bloqueado, `APPROVED` cierra la venta y `DECLINED` permite un nuevo intento manual con otra clave o cambiar método. No hay reenvío automático del POST. Prueba dirigida de interfaz con doble clic, timeout, recarga y recuperación aprobada el 2026-10-18; E2E con PostgreSQL y pasarela desplegada [NO VERIFICADA].
+
+La búsqueda del POS consulta `GET /products/search` por nombre o código parcial y `GET /products/lookup` por código exacto, sin depender de la primera página del catálogo. Muestra carga, ausencia de resultados y errores; Enter conserva el texto si no se agregó un producto. `/admin/productos` permanece reservado a ADMIN/SUPER_ADMIN para la gestión administrativa; el cajero usa la búsqueda del POS [IMPLEMENTADO].
 
 ## AbrirTurnoPage.tsx [IMPLEMENTADO]
 
@@ -93,18 +111,22 @@ NO abre turno desde esta pantalla; dirige a /abrir-turno cuando falta
 ## Admin.tsx [PARCIAL]
 
 Ruta `/admin`. Panel de administración con pestañas ("Usuarios" y "Configuración del Tenant"):
-- **Usuarios:** Lista usuarios (`GET /users` en MS-1, con alias `/api/v1/users` y `/api/users`) mediante el componente `UsuariosList` (`components/admin/UsuariosList.tsx`, mostrando nombre, correo, roles con badges/chips y estado activo/inactivo), botón de refresco y formulario modal `CrearUsuarioModal` (`components/admin/CrearUsuarioModal.tsx`, nombre, correo, contraseña ≥ 8 con confirmación, rol CAJERO/REPONEDOR/ADMIN; validación en frontend alineada a `CrearUsuarioDto`). Al enviar llama `POST /users` y luego `POST /users/{id}/roles` con extracción de errores de validación/conflicto.
-- **Configuración del Tenant:** Componente `TenantConfig` (`components/admin/TenantConfig.tsx`) que conecta con `GET /tenants/{id}/config` y `PUT /tenants/{id}/config` en MS-1. Permite ver y actualizar parámetros regionales y fiscales: país, moneda, idioma, zona horaria IANA y porcentaje de IVA. TI3-645 alinea Zod 4, `zodResolver` y React Hook Form mediante tipos separados de entrada/salida; `z.coerce.number()` convierte el IVA y `onSubmit` recibe un `number`, sin casts inseguros. La prueba Playwright `TenantConfig convierte porcentajeIva a number antes de actualizar` verifica que un IVA introducido en el formulario se envía en el `PUT` como `number` y no como `string` [IMPLEMENTADO]. Maneja feedback de carga, éxito (`var(--color-success)`), advertencia en modo lectura para no administradores y errores.
+- **Usuarios:** Lista usuarios (`GET /users` en MS-1, con alias `/api/v1/users` y `/api/users`) mediante el componente `UsuariosList` (`components/admin/UsuariosList.tsx`, mostrando nombre, correo, roles con badges/chips y estado activo/inactivo), botón de refresco y formulario modal `CrearUsuarioModal` (`components/admin/CrearUsuarioModal.tsx`, nombre, correo, contraseña ≥ 8 con confirmación, rol CAJERO/REPONEDOR/ADMIN; validación en frontend alineada a `CrearUsuarioDto`). Al enviar llama `POST /users` y luego `POST /users/{id}/roles` con extracción de errores de validación/conflicto. TI3-673 agrega una acción **Editar** por fila y `EditarUsuarioModal`, precargado con el email disponible. Valida email requerido, formato y máximo 200 caracteres, ejecuta `PUT /users/{id}` con el mismo ID seleccionado, muestra estados de guardado/éxito/error y recarga la lista mediante `recargar()` sin crear otro usuario [IMPLEMENTADO]. TI3-674 agrega **Desactivar** solo para usuarios activos, exige confirmación y ejecuta `DELETE /users/{id}`. Maneja autodesactivación, sesión, permisos, inexistente/otro tenant y fallos de red [IMPLEMENTADO].
+- **Configuración del Tenant:** Componente `TenantConfig` (`components/admin/TenantConfig.tsx`) que conecta con `GET /tenants/{id}/config` y `PUT /tenants/{id}/config` en MS-1. Permite ver y actualizar parámetros regionales y fiscales: país, moneda, idioma, zona horaria IANA y porcentaje de IVA. TI3-645 alinea Zod 4, `zodResolver` y React Hook Form mediante tipos separados de entrada/salida; `z.coerce.number()` convierte el IVA y `onSubmit` recibe un `number`, sin casts inseguros. La prueba Playwright `TenantConfig convierte porcentajeIva a number antes de actualizar` verifica que un IVA introducido en el formulario se envía en el `PUT` como `number` y no como `string` [IMPLEMENTADO]. Maneja feedback de carga, éxito (`var(--color-success)`), advertencia en modo lectura para no administradores y errores. TI3-675 conserva sin cambios la edición ADMIN/SUPER_ADMIN, el bloqueo durante carga/guardado y el feedback de éxito/error existente.
 
-**Contrato de acceso TI3-672 [IMPLEMENTADO]:** `AppLayout` y la guarda de `/admin/*` consumen `esAdmin` desde `useTenantStore`, que reconoce los claims `active_role`/`roles` con valor `ADMIN` o `SUPER_ADMIN`. Estos roles ven el enlace y acceden al panel para listar y crear usuarios. CAJERO no ve el enlace **Administración** y el acceso directo a `/admin/*` redirige a `/pos`; MS-1 mantiene `403` como defensa. La prueba Node `ADMIN y SUPER_ADMIN acceden a Administración y CAJERO no` cubre la regla compartida, sin navegador.
+**Contrato de acceso TI3-672 / TI3-675 [IMPLEMENTADO]:** `AppLayout` y `AdminRoute` consumen `esAdmin` desde `useTenantStore`, que reconoce los claims `active_role`/`roles` con valor `ADMIN` o `SUPER_ADMIN`. La misma guarda protege `/admin/*` y `/admin/productos`. ADMIN/SUPER_ADMIN acceden a las funciones administrativas; CAJERO no recibe su contenido y ve el mensaje **Acceso denegado** después de resolver la sesión, sin falso rechazo durante la carga. MS-1 mantiene `403` como defensa. La prueba Node `ADMIN y SUPER_ADMIN acceden a Administración y CAJERO no` cubre la regla compartida, sin navegador.
 
-La UI aún no expone edición, baja lógica ni reactivación. MS-1 ya dispone de PUT y DELETE lógico. Su contrato actual contempla `400` por datos inválidos o autodesactivación según la operación, `401` sin autenticación, `403` para rol no autorizado, `404` para usuario inexistente o de otro tenant y `409` por email duplicado en edición.
+La UI expone edición de email y baja lógica; todavía no expone reactivación. MS-1 dispone de PUT y DELETE lógico. Su contrato actual contempla `400` por datos inválidos o autodesactivación según la operación, `401` sin autenticación, `403` para rol no autorizado, `404` para usuario inexistente o de otro tenant y `409` por email duplicado en edición.
 
-Usa los tokens de color de la [[guia-estilo]] definidos en `index.css`. No hay edición ni desactivación individual de usuarios en UI todavía.
+**Dependencia pendiente TI3-673:** `GET /users` no entrega `sucursalId` y no existe `GET /users/{id}`. Por ello el modal no muestra ni inventa ese campo y el payload frontend contiene solo `email`. El contrato actual de MS-1 interpreta `sucursalId` omitido como `null` y puede borrar una asignación existente; resolver la lectura/preservación segura de `sucursalId` requiere un cambio posterior del contrato backend [NO VERIFICADO en integración frontend-backend].
+
+**Dependencia pendiente TI3-674:** tras un DELETE 204, la pantalla no llama `recargar()`: actualiza la colección local y conserva la fila con `activo=false`, mostrando el badge **Inactivo**. Una recarga posterior ejecuta `GET /users`, que filtra `Activo=true`, por lo que no puede garantizar que el usuario inactivo siga visible. Tampoco existe una vista/API de auditoría consultable; solo está confirmada la conservación física de la fila en el backend.
+
+Usa los tokens de color de la [[guia-estilo]] definidos en `index.css`. No hay reactivación individual de usuarios en UI todavía.
 
 ## ProductosPage.tsx — baja lógica TI3-642 / S2-011 [IMPLEMENTADO]
 
-Ruta `/admin/productos`. La pantalla usa Axios directamente contra MS-3 y muestra productos activos e inactivos. La acción visible **Desactivar** confirma que el producto será **DESACTIVADO** y se conservará en el catálogo; ya no anuncia eliminación permanente.
+Ruta `/admin/productos`, protegida por `AdminRoute` para ADMIN/SUPER_ADMIN. La pantalla usa Axios directamente contra MS-3 y muestra productos activos e inactivos. La acción visible **Desactivar** confirma que el producto será **DESACTIVADO** y se conservará en el catálogo; ya no anuncia eliminación permanente.
 
 Mantiene `axios.delete` a `DELETE /products/{id}` con Bearer y `fetchDatos()` para recargar tras una respuesta exitosa, incluido 204 sin body. El producto permanece con el indicador **Inactivo**, salvo que el toggle **solo activos** lo oculte. Los errores visibles hablan de desactivación.
 

@@ -27,6 +27,15 @@ public class VentaService : IVentaService
     public Task<Venta?> GetByIdAsync(Guid ventaId)
         => _ventaRepository.GetByIdAsync(ventaId);
 
+    public async Task<Venta> CambiarMetodoPagoAsync(Guid ventaId, MetodoPagoVenta metodoPago)
+    {
+        var venta = await _ventaRepository.GetByIdAsync(ventaId)
+            ?? throw new KeyNotFoundException($"Venta {ventaId} no encontrada.");
+        if (venta.Estado != EstadoVenta.PENDIENTE || venta.Pagos.Count != 0)
+            throw new InvalidOperationException("Solo se puede cambiar el método de una venta pendiente sin pagos.");
+        return await _ventaRepository.CambiarMetodoPagoPendienteAsync(ventaId, metodoPago);
+    }
+
     /// <inheritdoc/>
     public Task<IReadOnlyList<Venta>> GetByTurnoAsync(Guid turnoId)
         => _ventaRepository.GetByTurnoAsync(turnoId);
@@ -280,11 +289,12 @@ public class VentaService : IVentaService
 
         var pago = new Pago
         {
-            Id      = Guid.NewGuid(),
-            VentaId = venta.Id,
-            Metodo  = MetodoPago.TARJETA,
-            Monto   = venta.Total,
-            Vuelto  = 0m
+            Id         = Guid.NewGuid(),
+            VentaId    = venta.Id,
+            Metodo     = MetodoPago.TARJETA,
+            Monto      = venta.Total,
+            Vuelto     = 0m,
+            Referencia = intentoPago.Referencia
         };
 
         var eventId = Guid.NewGuid();
@@ -338,6 +348,15 @@ public class VentaService : IVentaService
     /// <inheritdoc/>
     public Task RegistrarIntentoPagoAsync(IntentoPago intentoPago)
         => _ventaRepository.RegistrarIntentoPagoAsync(intentoPago);
+
+    public Task<IntentoPago> IniciarIntentoPagoAsync(Guid ventaId, Guid requestId)
+        => _ventaRepository.IniciarIntentoPagoAsync(ventaId, requestId);
+
+    public Task<IntentoPago?> GetUltimoIntentoPagoAsync(Guid ventaId)
+        => _ventaRepository.GetUltimoIntentoPagoAsync(ventaId);
+
+    public Task ActualizarIntentoPagoAsync(IntentoPago intentoPago)
+        => _ventaRepository.ActualizarIntentoPagoAsync(intentoPago);
 }
 
 

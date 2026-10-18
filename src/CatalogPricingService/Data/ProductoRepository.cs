@@ -30,7 +30,8 @@ namespace CatalogPricingService.Data
         public async Task<(IEnumerable<Producto> Productos, int TotalCount)> SearchByNameAsync(Guid tenantId, string query, int page, int pageSize)
         {
             var q = _context.Productos
-                .Where(p => p.TenantId == tenantId && p.Nombre.Contains(query));
+                .Where(p => p.TenantId == tenantId && p.IsActive &&
+                    (p.Nombre.ToLower().Contains(query.ToLower()) || p.CodigoBarras.Contains(query)));
 
             var totalCount = await q.CountAsync();
 
@@ -60,7 +61,7 @@ namespace CatalogPricingService.Data
             // BÃºsqueda exacta por Ã­ndice Ãºnico (tenant_id, codigo_barras)
             return await _context.Productos
                 .AsNoTracking()
-                .FirstOrDefaultAsync(p => p.CodigoBarras == barcode && p.TenantId == tenantId);
+                .FirstOrDefaultAsync(p => p.CodigoBarras == barcode && p.TenantId == tenantId && p.IsActive);
         }
 
         public async Task<Producto> CreateAsync(Producto producto)

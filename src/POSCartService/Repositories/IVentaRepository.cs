@@ -35,6 +35,8 @@ public interface IVentaRepository
     /// </summary>
     Task<Venta> ActualizarAsync(Venta venta);
 
+    Task<Venta> CambiarMetodoPagoPendienteAsync(Guid ventaId, MetodoPagoVenta metodoPago);
+
     /// <summary>
     /// Completa una venta y guarda su pago y evento outbox en una sola transacción.
     /// </summary>
@@ -64,4 +66,8 @@ public interface IVentaRepository
     /// Se usa ante rechazo o timeout de la pasarela.
     /// </summary>
     Task RegistrarIntentoPagoAsync(IntentoPago intentoPago);
+
+    Task<IntentoPago> IniciarIntentoPagoAsync(Guid ventaId, Guid requestId);
+    Task<IntentoPago?> GetUltimoIntentoPagoAsync(Guid ventaId);
+    Task ActualizarIntentoPagoAsync(IntentoPago intentoPago);
 }

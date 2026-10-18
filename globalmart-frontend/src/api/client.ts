@@ -81,6 +81,10 @@ export const catalogApi = {
     const response = await catalog.get<CatalogProduct>('/products/lookup', { params: { barcode } });
     return response.data;
   },
+  searchProducts: async (query: string): Promise<ProductPage> => {
+    const response = await catalog.get<ProductPage>('/products/search', { params: { q: query, page: 1, pageSize: 15 } });
+    return response.data;
+  },
 };
 
 export interface TurnoActivo {
@@ -124,6 +128,27 @@ export interface CrearVentaItem {
   cantidad: number;
 }
 
+export interface CobrarEfectivoResponse {
+  venta: VentaPendiente;
+  montoRecibido: number;
+  vuelto: number;
+}
+
+export interface CobrarTarjetaResponse {
+  venta: VentaPendiente;
+  status: string;
+  gateway_reference: string | null;
+  message: string | null;
+}
+
+export interface EstadoIntentoTarjeta {
+  status: 'NONE' | 'UNCERTAIN' | 'APPROVED' | 'DECLINED';
+  venta: VentaPendiente;
+  gateway_reference?: string | null;
+  message?: string | null;
+  request_id?: string;
+}
+
 export const posApi = {
   activeShift: async (): Promise<TurnoActivo> => {
     const response = await pos.get<TurnoActivo>('/api/turnos/activo');
@@ -162,11 +187,31 @@ export const posApi = {
   deleteSaleItem: async (saleId: string, itemId: string): Promise<void> => {
     await pos.delete(`/ventas/${saleId}/items/${itemId}`);
   },
-  createSale: async (items: CrearVentaItem[]): Promise<VentaPendiente> => {
+  createSale: async (items: CrearVentaItem[], method: 'EFECTIVO' | 'TARJETA'): Promise<VentaPendiente> => {
     const response = await pos.post<VentaPendiente>('/ventas', {
       items,
-      metodo_pago: 'EFECTIVO',
+      metodo_pago: method,
     });
+    return response.data;
+  },
+  chargeCash: async (saleId: string, amountReceived: number): Promise<CobrarEfectivoResponse> => {
+    const response = await pos.post<CobrarEfectivoResponse>(`/ventas/${saleId}/cobrar`, {
+      monto_recibido: amountReceived,
+    });
+    return response.data;
+  },
+  chargeCard: async (saleId: string, idempotencyKey: string): Promise<CobrarTarjetaResponse> => {
+    const response = await pos.post<CobrarTarjetaResponse>(`/ventas/${saleId}/cobrar-tarjeta`, {
+      idempotency_key: idempotencyKey,
+    });
+    return response.data;
+  },
+  cardAttemptStatus: async (saleId: string): Promise<EstadoIntentoTarjeta> => {
+    const response = await pos.get<EstadoIntentoTarjeta>(`/ventas/${saleId}/intento-tarjeta`);
+    return response.data;
+  },
+  changeSaleMethod: async (saleId: string, method: 'EFECTIVO' | 'TARJETA'): Promise<VentaPendiente> => {
+    const response = await pos.patch<VentaPendiente>(`/ventas/${saleId}/metodo-pago`, { metodo_pago: method });
     return response.data;
   },
 };

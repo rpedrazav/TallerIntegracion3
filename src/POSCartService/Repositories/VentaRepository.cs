@@ -99,6 +99,61 @@ public class VentaRepository : IVentaRepository
         return tracked;
     }
 
+    public async Task<Venta> CambiarMetodoPagoPendienteAsync(Guid ventaId, MetodoPagoVenta metodoPago)
+    {
+        var updated = await _context.Ventas
+            .Where(v => v.Id == ventaId && _context.CurrentTenantId.HasValue
+                && v.TenantId == _context.CurrentTenantId && v.Estado == EstadoVenta.PENDIENTE
+                && !v.Pagos.Any()
+                && !v.IntentosPago.Any(i => i.Estado != EstadoIntentoPago.RECHAZADO))
+            .ExecuteUpdateAsync(setters => setters.SetProperty(v => v.MetodoPago, metodoPago));
+        if (updated != 1)
+            throw new InvalidOperationException("Solo se puede cambiar el método de una venta pendiente sin pagos.");
+        return (await GetByIdAsync(ventaId))!;
+    }
+
+    public async Task<IntentoPago> IniciarIntentoPagoAsync(Guid ventaId, Guid requestId)
+    {
+        var tenantId = _context.CurrentTenantId
+            ?? throw new KeyNotFoundException($"Venta {ventaId} no encontrada.");
+        var venta = await GetByIdAsync(ventaId)
+            ?? throw new KeyNotFoundException($"Venta {ventaId} no encontrada.");
+        var intento = new IntentoPago
+        {
+            TenantId = tenantId, VentaId = ventaId, IdempotencyKey = requestId.ToString(),
+            Estado = EstadoIntentoPago.PENDIENTE, Monto = venta.Total, Moneda = "CLP"
+        };
+        if (!await ReservarIntentoPagoAsync(intento))
+            throw new InvalidOperationException("La clave ya existe o la venta tiene un cobro en curso o incierto.");
+        return intento;
+    }
+
+    public Task<IntentoPago?> GetUltimoIntentoPagoAsync(Guid ventaId)
+        => _context.IntentosPago.AsNoTracking()
+            .Where(i => i.VentaId == ventaId && _context.CurrentTenantId.HasValue && i.TenantId == _context.CurrentTenantId)
+            .OrderByDescending(i => i.CreatedAt)
+            .ThenByDescending(i => i.Id)
+            .FirstOrDefaultAsync();
+
+    public async Task ActualizarIntentoPagoAsync(IntentoPago intentoPago)
+    {
+        var updated = await _context.IntentosPago
+            .Where(i => i.Id == intentoPago.Id && i.VentaId == intentoPago.VentaId &&
+                _context.CurrentTenantId.HasValue && i.TenantId == _context.CurrentTenantId &&
+                i.TenantId == intentoPago.TenantId && i.IdempotencyKey == intentoPago.IdempotencyKey &&
+                i.Monto == intentoPago.Monto && i.Moneda == intentoPago.Moneda &&
+                (i.Estado == EstadoIntentoPago.PENDIENTE || i.Estado == EstadoIntentoPago.FALLIDO))
+            .ExecuteUpdateAsync(setters => setters
+                .SetProperty(i => i.Estado, intentoPago.Estado)
+                .SetProperty(i => i.Referencia, intentoPago.Referencia)
+                .SetProperty(i => i.AuthorizationCode, intentoPago.AuthorizationCode)
+                .SetProperty(i => i.DeclineCode, intentoPago.DeclineCode)
+                .SetProperty(i => i.Mensaje, intentoPago.Mensaje)
+                .SetProperty(i => i.UpdatedAt, DateTime.UtcNow));
+        if (updated != 1)
+            throw new InvalidOperationException("El intento de pago ya cambió de estado.");
+    }
+
     /// <inheritdoc/>
     public async Task<Venta> CompletarConOutboxAsync(
         Guid ventaId,
@@ -170,15 +225,16 @@ public class VentaRepository : IVentaRepository
             throw new InvalidOperationException(
                 $"Solo se puede completar una venta PENDIENTE. Estado actual: {tracked.Estado}.");
         }
+        if (tracked.MetodoPago == MetodoPagoVenta.EFECTIVO)
+            throw new InvalidOperationException("La venta ya no admite cobro con tarjeta.");
 
         tracked.Estado = EstadoVenta.COMPLETADA;
         pago.VentaId = tracked.Id;
         intentoPago.VentaId = tracked.Id;
-        intentoPago.Estado = EstadoIntentoPago.APROBADO;
-        intentoPago.UpdatedAt = DateTime.UtcNow;
 
         _context.Pagos.Add(pago);
-        await ActualizarIntentoReservadoAsync(intentoPago);
+        intentoPago.Estado = EstadoIntentoPago.APROBADO;
+        await ActualizarIntentoPagoAsync(intentoPago);
         _context.OutboxMessages.Add(outboxMessage);
 
         await _context.SaveChangesAsync();
@@ -203,7 +259,8 @@ public class VentaRepository : IVentaRepository
             .AsNoTracking().ToListAsync();
         var venta = ventas.SingleOrDefault();
         if (venta is null || venta.Estado != EstadoVenta.PENDIENTE
-            || venta.Total != intentoPago.Monto || venta.MetodoPago == MetodoPagoVenta.EFECTIVO)
+            || venta.Total != intentoPago.Monto || venta.MetodoPago == MetodoPagoVenta.EFECTIVO
+            || await _context.Pagos.AnyAsync(p => p.VentaId == venta.Id))
             return false;
 
         if (await _context.IntentosPago.AnyAsync(i => i.TenantId == tenantId
@@ -216,6 +273,9 @@ public class VentaRepository : IVentaRepository
         {
             await _context.SaveChangesAsync();
             await transaction.CommitAsync();
+            // Los resultados se actualizan condicionalmente en DB; no conservar una
+            // entidad rastreada que pueda sobrescribir una reconciliación concurrente.
+            _context.Entry(intentoPago).State = EntityState.Detached;
             return true;
         }
         catch (DbUpdateException ex) when (ex.InnerException is PostgresException
@@ -229,24 +289,6 @@ public class VentaRepository : IVentaRepository
     }
 
     /// <inheritdoc/>
-    public async Task RegistrarIntentoPagoAsync(IntentoPago intentoPago)
-    {
-        await ActualizarIntentoReservadoAsync(intentoPago);
-        await _context.SaveChangesAsync();
-    }
-
-    private async Task ActualizarIntentoReservadoAsync(IntentoPago intentoPago)
-    {
-        var reservado = await _context.IntentosPago.AsNoTracking().SingleOrDefaultAsync(i =>
-            _context.CurrentTenantId.HasValue && i.TenantId == _context.CurrentTenantId
-            && i.Id == intentoPago.Id && i.VentaId == intentoPago.VentaId
-            && i.IdempotencyKey == intentoPago.IdempotencyKey && i.Estado == EstadoIntentoPago.PENDIENTE);
-        if (reservado is null || reservado.TenantId != intentoPago.TenantId
-            || reservado.Monto != intentoPago.Monto || reservado.Moneda != intentoPago.Moneda)
-            throw new InvalidOperationException("No existe una reserva pendiente compatible para este cobro.");
-
-        intentoPago.CreatedAt = reservado.CreatedAt;
-        intentoPago.UpdatedAt = DateTime.UtcNow;
-        _context.Entry(intentoPago).State = EntityState.Modified;
-    }
+    public Task RegistrarIntentoPagoAsync(IntentoPago intentoPago)
+        => ActualizarIntentoPagoAsync(intentoPago);
 }

@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
 
 interface BarcodeInputProps {
-  onSearch: (query: string) => void;
+  onSearch: (query: string) => Promise<boolean>;
   onTyping?: (query: string) => void;
+  clearSignal?: number;
 }
 
-export default function BarcodeInput({ onSearch, onTyping }: BarcodeInputProps) {
+export default function BarcodeInput({ onSearch, onTyping, clearSignal }: BarcodeInputProps) {
   const [value, setValue] = useState('');
+
+  useEffect(() => { if (clearSignal) setValue(''); }, [clearSignal]);
 
   // Debounce solo para el onTyping (búsqueda visual)
   useEffect(() => {
@@ -20,8 +23,7 @@ export default function BarcodeInput({ onSearch, onTyping }: BarcodeInputProps) 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       if (value.trim()) {
-        onSearch(value);
-        setValue('');
+        void onSearch(value);
       }
     }
   };

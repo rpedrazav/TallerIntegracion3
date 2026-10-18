@@ -3,7 +3,7 @@ id: pasarela-pago
 tipo: integracion
 titulo: Integración con Pasarela de Pago
 estado: parcial
-fuentes: [GlobalMart_ContextMaster.md#sec12, src/POSCartService/Services/IPaymentGatewayClient.cs, src/POSCartService/Services/PaymentGatewayClient.cs, src/POSCartService/Exceptions/PaymentAuthorizationUncertainException.cs, src/POSCartService/DTOs/PaymentGatewayDtos.cs, src/POSCartService/Program.cs, Docker/simulator/server.js, tests/GlobalMart.IntegrationTests/PaymentGatewayClientTests.cs, tests/GlobalMart.IntegrationTests/PaymentSimulatorIntegrationTests.cs, tests/GlobalMart.IntegrationTests/PaymentRetrySafetyTests.cs, tareas/sprint2_youtrack_resultado.json, Docker/env.example, .env.example, src/POSCartService/appsettings.json, tests/GlobalMart.IntegrationTests/CobroSeguroIntegrationTests.cs, docs/qa/S2-035/reporte.md]
+fuentes: [GlobalMart_ContextMaster.md#sec12, src/POSCartService/Services/IPaymentGatewayClient.cs, src/POSCartService/Services/PaymentGatewayClient.cs, src/POSCartService/Exceptions/PaymentAuthorizationUncertainException.cs, src/POSCartService/DTOs/PaymentGatewayDtos.cs, src/POSCartService/Program.cs, Docker/simulator/server.js, tests/GlobalMart.IntegrationTests/PaymentGatewayClientTests.cs, tests/GlobalMart.IntegrationTests/PaymentSimulatorIntegrationTests.cs, tests/GlobalMart.IntegrationTests/PaymentRetrySafetyTests.cs, tareas/sprint2_youtrack_resultado.json, Docker/env.example, .env.example, src/POSCartService/appsettings.json, tests/GlobalMart.IntegrationTests/CobroSeguroIntegrationTests.cs, docs/qa/S2-035/reporte.md, src/POSCartService/Services/VentaService.cs, src/POSCartService/Repositories/VentaRepository.cs, src/POSCartService/Controllers/VentasController.cs, src/POSCartService/Models/Pago.cs, src/POSCartService/DTOs/CobrarTarjetaDTOs.cs, tests/GlobalMart.IntegrationTests/CobrarTarjetaIntegrationTests.cs, tests/GlobalMart.IntegrationTests/PaymentEventSequenceContractTests.cs]
 verificado_contra_codigo: true
 ultima_revision: 2026-10-18
 depende_de: [ms5-pos]
@@ -13,7 +13,7 @@ reglas: [RN-02, RF-07, PC-17, PC-27, PC-28]
 ---
 # Integración con Pasarela de Pago
 
-> Toda transacción con tarjeta DEBE ir por una pasarela externa (RN-02). **Estado: PARCIAL** — MS-5 orquesta cobro simulado con tarjeta en `POST /ventas/{id}/cobrar-tarjeta`, probado en S2-035. `/cobrar` sigue siendo exclusivo de efectivo. La reconciliación posterior de intentos inciertos queda pendiente.
+> Toda transacción con tarjeta DEBE ir por una pasarela externa (RN-02). **Estado: PARCIAL** — MS-5 orquesta cobro simulado con tarjeta en `POST /ventas/{id}/cobrar-tarjeta`, probado en S2-035. `/cobrar` sigue siendo exclusivo de efectivo. La consulta `GET /ventas/{id}/intento-tarjeta` recupera el resultado incierto sin repetir la autorización.
 
 ## Estado: [PARCIAL]
 
@@ -24,6 +24,10 @@ La [matriz S2-051](../../../diagramas/matriz/S2-051-matriz-rn02-pagos.md) define
 S2-031 / TI3-662 define el contrato de pasarela simulada (`IPaymentGatewayClient` y DTOs seguros). S2-036 / TI3-667 define los escenarios reproducibles. S2-037 / TI3-668 implementa `IPaymentGatewayClient` y su adaptador HTTP. S2-038 / TI3-669 completa el endpoint local de autorización. S2-039 / TI3-670 impide reautorizar automáticamente tras un timeout y consulta primero el estado por la misma clave. S2-033/S2-034 conectan el cobro en el controller y S2-035 verifica el flujo integrado.
 
 ## S2-031 / TI3-662 — Contrato de pasarela simulada [IMPLEMENTADO]
+
+### S2-049 — Recuperación de intento incierto
+
+MS-5 registra el intento `PENDIENTE` antes de llamar a la pasarela. El índice único `(TenantId, IdempotencyKey)` y una transacción serializable impiden reutilizar la clave o abrir dos intentos sin resultado definitivo para la misma venta. Tras timeout, el intento continúa pendiente. `GET /ventas/{id}/intento-tarjeta` consulta `GetPaymentStatusAsync` con el `request_id` original: `APPROVED` completa venta, pago y outbox; `DECLINED` permite reintento manual; ausencia de estado o fallo de consulta conserva `UNCERTAIN`. Nunca se reenvía automáticamente el POST. La integración HTTP con PostgreSQL queda [NO VERIFICADA] por falta de base local el 2026-10-18.
 
 Define la interfaz de comunicación y los objetos de transferencia de datos en MS-5 para interactuar con pasarelas de pago externas o su simulador de pruebas, asegurando estricto cumplimiento de **RN-02** y normativas PCI DSS:
 
@@ -73,9 +77,9 @@ En `POST /ventas/{id}/cobrar-tarjeta`, la respuesta de la pasarela persiste de m
   - Retorna **HTTP 422 Unprocessable Entity**.
 - **Timeout, error de red o estado no definitivo:**
   - La venta permanece en `PENDIENTE`.
-  - Se actualiza la reserva `IntentoPago` a `Estado = FALLIDO`; se bloquean nuevas autorizaciones para esa venta, incluso con otra clave.
+  - Se conserva la reserva `IntentoPago` en `Estado = PENDIENTE` para reconciliar; se bloquean nuevas autorizaciones para esa venta, incluso con otra clave.
   - Retorna **HTTP 504 Gateway Timeout** (en timeout) o **HTTP 502 Bad Gateway** (en fallo de transporte/500).
-- **Pruebas:** 10/10 en `CobrarTarjetaIntegrationTests` (incluye 4 pruebas `S2-034` verificando DB, pagos, outbox e intentos).
+- **Pruebas:** las 10 pruebas previas de `CobrarTarjetaIntegrationTests` se actualizaron para el nuevo flujo; su ejecución actual requiere PostgreSQL y está [NO VERIFICADA] en este entorno.
 
 ## S2-036 — Escenarios controlables del simulador [CONTRATO DEFINIDO]
 
@@ -179,7 +183,7 @@ El adaptador envía `POST simulator/payments`, serializa exclusivamente `request
 
 Las trazas estructuradas contienen únicamente identificadores de correlación, escenario, estado, referencia simulada y tiempo transcurrido. No se registra el cuerpo de solicitud o respuesta. La cancelación solicitada por el llamador conserva `OperationCanceledException`; fallos HTTP o payloads inconsistentes se exponen como `ExternalServiceException` sin incluir el cuerpo remoto. Desde S2-039, un timeout inicia la consulta de estado y, si no puede resolverse, produce `PaymentAuthorizationUncertainException`, derivada de `TimeoutException`.
 
-[PaymentGatewayClientTests](../../../tests/GlobalMart.IntegrationTests/PaymentGatewayClientTests.cs) aprobó **4/4 casos** el 2026-10-16: URL configurada, propagación de idempotencia, conjunto exacto de campos seguros, respuesta rechazada, timeout explícito y rechazo local de `request_id` vacío sin invocar la red. [Evidencia TRX](../../qa/S2-037/S2-037.trx). La integración con el endpoint de cobro permanece [PLANIFICADO].
+[PaymentGatewayClientTests](../../../tests/GlobalMart.IntegrationTests/PaymentGatewayClientTests.cs) aprobó **4/4 casos** el 2026-10-16: URL configurada, propagación de idempotencia, conjunto exacto de campos seguros, respuesta rechazada, timeout explícito y rechazo local de `request_id` vacío sin invocar la red. [Evidencia TRX](../../qa/S2-037/S2-037.trx). La integración con el endpoint de cobro está [IMPLEMENTADA] y validada con PostgreSQL temporal al resolver el merge; ver evidencia al final.
 
 ## S2-038 / TI3-669 — Servicio simulador de autorizaciones [IMPLEMENTADO]
 
@@ -196,6 +200,14 @@ Las trazas son JSON estructurado y contienen solo fecha UTC, identificadores de 
 La consulta devuelve la respuesta ya almacenada cuando la pasarela alcanzó a procesar la autorización. Si responde 404 o la consulta falla, MS-5 lanza `PaymentAuthorizationUncertainException` con `tenant_id` y `request_id`. Ese estado exige reconciliar la misma clave y evita iniciar otro cargo con un identificador nuevo. El almacenamiento del simulador es en memoria: tras reiniciar el proceso, un estado no encontrado continúa siendo incierto y no habilita un reintento automático.
 
 [PaymentRetrySafetyTests](../../../tests/GlobalMart.IntegrationTests/PaymentRetrySafetyTests.cs) y la prueba contra el proceso Node real validaron **4/4 casos** el 2026-10-17: timeout desconocido, timeout con aprobación recuperable, rechazo sin consulta y recuperación del payload almacenado. En ambos casos de timeout hubo exactamente un `POST` y una consulta `GET`. [Evidencia TRX](../../qa/S2-039/S2-039.trx).
+
+## S2-040 / TI3-671 — Secuencia de pago y evento [IMPLEMENTADO]
+
+La migración `20261018040621_AddPagoGatewayReference` agrega `Pago.Referencia` nullable de 100 caracteres. En una aprobación, `CompletarTarjetaAsync` copia allí la misma referencia opaca que guarda `IntentoPago.Referencia` y que `CobrarTarjetaResponse.gateway_reference` devuelve al cliente; venta, `Pago TARJETA`, intento aprobado y `sale.completed` pendiente se conservan en la transacción existente.
+
+La suite con trait `S2-040` cubre contrato seguro, propagación servicio-pago-outbox, aprobación, rechazo y timeout. Las pruebas sin infraestructura aprobaron **2/2** el 2026-10-18 y EF confirmó que no existen cambios de modelo pendientes después de la migración. Las tres pruebas PostgreSQL están implementadas y compiladas, pero su ejecución quedó [NO VERIFICADA] porque `localhost:5436` no estaba disponible y el usuario del entorno no pudo acceder al socket Docker. [Reporte y reproducción](../../qa/S2-040/reporte.md).
+
+Validación posterior del merge, 2026-10-18: **5/5 casos S2-040 aprobados** dentro de las 54 pruebas backend. Las tres integraciones PostgreSQL anteriormente pendientes están verificadas; se conserva la migración y la referencia opaca en pago/intento/respuesta.
 
 ## S2-056 / TI3-687 — Configuración segura del simulador [IMPLEMENTADO]
 
@@ -297,6 +309,7 @@ Al anular una venta cobrada con tarjeta:
 - `tareas/sprint2_youtrack_resultado.json` (`S2-037` → `TI3-668`)
 - `tareas/sprint2_youtrack_resultado.json` (`S2-038` → `TI3-669`)
 - `tareas/sprint2_youtrack_resultado.json` (`S2-039` → `TI3-670`)
+- `tareas/sprint2_youtrack_resultado.json` (`S2-040` → `TI3-671`)
 - `src/POSCartService/Program.cs` (HttpClient `PasarelaPago` y timeout vigente)
 - `src/POSCartService/Services/IPaymentGatewayClient.cs`
 - `src/POSCartService/Services/PaymentGatewayClient.cs`
@@ -308,7 +321,11 @@ Al anular una venta cobrada con tarjeta:
 - `docs/qa/S2-038/S2-038.trx`
 - `tests/GlobalMart.IntegrationTests/PaymentRetrySafetyTests.cs`
 - `docs/qa/S2-039/S2-039.trx`
-- `src/POSCartService/Controllers/VentasController.cs` (cobro vigente solo en efectivo)
+- `src/POSCartService/Controllers/VentasController.cs`
+- `src/POSCartService/Models/Pago.cs`
+- `tests/GlobalMart.IntegrationTests/PaymentEventSequenceContractTests.cs`
+- `tests/GlobalMart.IntegrationTests/CobrarTarjetaIntegrationTests.cs`
+- `docs/qa/S2-040/reporte.md`
 - `src/POSCartService/Services/VentaService.cs` (AnularAsync sin reembolso)
 - `Docker/env.example`
 - `.env.example`
@@ -318,6 +335,12 @@ Al anular una venta cobrada con tarjeta:
 
 [IMPLEMENTADO] `CobroSeguroIntegrationTests` conecta el endpoint HTTP de MS-5 y JWT real con PostgreSQL migrado y el proceso Node del simulador. La reserva de `IntentoPago` se confirma antes de contactar la pasarela, con lock breve por venta y unicidad por tenant/clave. Repeticiones y cobros pendientes/inciertos retornan 409 sin otra autorización; claves inválidas o contradictorias retornan 400. Solo un rechazo definitivo permite otro intento con clave nueva. Aprobación actualiza la reserva y confirma venta, pago y outbox en una transacción.
 
-La consulta inmediata tras timeout puede recuperar una aprobación; si no confirma el resultado, no se completa la venta. Si falla el commit local tras aprobación externa, la reserva permanece pendiente y bloquea otro cargo. La reconciliación posterior administrativa no está implementada. No acredita Electron, un banco real ni entrega Kafka.
+La consulta inmediata tras timeout puede recuperar una aprobación; si no confirma el resultado, no se completa la venta. Si falla el commit local tras aprobación externa, la reserva permanece pendiente y bloquea otro cargo. Tras integrar S2-049, `GET /ventas/{id}/intento-tarjeta` reconcilia el mismo intento sin repetir la autorización (ver validación del merge al final). No acredita Electron, un banco real ni entrega Kafka.
 
 Validación Release el 2026-10-18: **17/17 pruebas aprobadas**, más **35/35 de regresión** (tarjeta, adaptador/simulador, intentos, efectivo y transacción outbox), sin fallos ni omisiones. [Diagnóstico, alcance y reproducción](../../qa/S2-035/reporte.md).
+
+## Integración de S2-035 con S2-040 y S2-049 — 2026-10-18
+
+[IMPLEMENTADO] Se unificó la reserva previa de S2-035 con `IniciarIntentoPagoAsync`, preservando el bloqueo por venta y tenant, la validación de clave y la referencia en `Pago`. Timeout/error/estado desconocido conserva `IntentoPago.PENDIENTE` (incierto), compatible con la consulta de S2-049. La actualización condicional solo admite reservas pendientes/fallidas del mismo tenant, venta, clave, monto y moneda; una aprobación no inserta un intento nuevo. La reserva se separa del seguimiento EF para no sobrescribir una reconciliación concurrente.
+
+Validación: **54/54 pruebas backend**, incluidas **17 S2-035** y **5 S2-040**, más typecheck, **2/2 archivos de pruebas de usuarios** y **7/7 pruebas de interfaz de cobro/búsqueda**. El caso de fallo de commit local verifica ahora recuperación mediante GET, segunda consulta estable y un solo POST externo. Las pruebas de navegador usan APIs controladas; no acreditan E2E contra un despliegue. [Resolución y evidencia](../../qa/S2-035/merge.md).

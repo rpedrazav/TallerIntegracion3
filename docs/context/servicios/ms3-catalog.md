@@ -5,7 +5,7 @@ titulo: MS-3 · Catalog & Pricing Service
 estado: parcial
 fuentes: [src/CatalogPricingService/]
 verificado_contra_codigo: true
-ultima_revision: 2026-10-16
+ultima_revision: 2026-10-18
 depende_de: [ms1-identity]
 publica: []
 consume: []
@@ -46,7 +46,7 @@ reglas: [RN-01, RN-11, RF-04, RF-11, CP-01, CP-04, CP-05]
 - PUT compara el estado solicitado con el persistido y rechaza con 403 cambios de `IsActive` de usuarios no ADMIN. Conserva las ediciones de otros campos; un PUT no administrativo excluye `IsActive` de su escritura para no sobrescribir una baja concurrente.
 - PUT devuelve el mismo 404 con `{ "message": "Producto no encontrado." }` ante producto inexistente o de otro tenant. El servicio distingue `KeyNotFoundException` de `UnauthorizedAccessException`, que conserva 403 para cambios de estado sin ADMIN.
 
-La baja conserva el producto y sus referencias lógicas. MS-5 conserva nombre y precio en `ItemVenta`, e impuestos/totales en `Venta`; consultar ventas históricas no requiere consultar catálogo. MS-5 no fue modificado. Listado, search y lookup siguen incluyendo inactivos; no se agregó un filtro global por estado.
+La baja conserva el producto y sus referencias lógicas. MS-5 conserva nombre y precio en `ItemVenta`, e impuestos/totales en `Venta`; consultar ventas históricas no requiere consultar catálogo. El listado administrativo sigue incluyendo inactivos. `GET /products/search` y `GET /products/lookup`, usados por el POS, devuelven solo productos activos del tenant. Search admite nombre sin distinguir mayúsculas y código de barras parcial; lookup exige código exacto.
 
 TI3-643 / S2-012: `GET /products/{id}`, utilizado por el POS para resolver productos, consulta `GetActiveByIdAsync` y solo devuelve productos del tenant con `IsActive=true`. Un producto desactivado o de otro tenant retorna 404. `GetByIdAsync` permanece sin filtro de estado para que PUT pueda localizar y reactivar productos inactivos mediante ADMIN. El test `GetById_ProductoDesactivado_Retorna404YConservaFila` fue aprobado el 2026-10-14 (1/1): verifica 200 activo, DELETE 204, GET posterior 404 y fila conservada con `IsActive=false`.
 

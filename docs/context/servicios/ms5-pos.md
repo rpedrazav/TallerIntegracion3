@@ -3,7 +3,7 @@ id: ms5-pos
 tipo: microservicio
 titulo: MS-5 · POS & Cart Service
 estado: parcial
-fuentes: [src/POSCartService/, Docker/simulator/server.js, tests/GlobalMart.IntegrationTests/PaymentSimulatorIntegrationTests.cs, tests/GlobalMart.IntegrationTests/PaymentRetrySafetyTests.cs, tests/GlobalMart.IntegrationTests/CobroSeguroIntegrationTests.cs, docs/qa/S2-035/reporte.md]
+fuentes: [src/POSCartService/, Docker/simulator/server.js, tests/GlobalMart.IntegrationTests/PaymentSimulatorIntegrationTests.cs, tests/GlobalMart.IntegrationTests/PaymentRetrySafetyTests.cs, tests/GlobalMart.IntegrationTests/CobroSeguroIntegrationTests.cs, docs/qa/S2-035/reporte.md, tests/GlobalMart.IntegrationTests/CobrarTarjetaIntegrationTests.cs, tests/GlobalMart.IntegrationTests/PaymentEventSequenceContractTests.cs]
 verificado_contra_codigo: true
 ultima_revision: 2026-10-18
 depende_de: [ms1-identity, ms2-tax, ms3-catalog]
@@ -13,7 +13,7 @@ reglas: [RN-01, RN-02, RN-03, RN-06, RF-02, RF-03, RF-04, RF-05, RF-06, RF-07]
 ---
 # MS-5 · POS & Cart Service
 
-> Servicio central del punto de venta. Gestiona turnos de caja y el ciclo completo de una venta (carrito, ítems, cobro, anulación). Integrado con MS-2 (IVA) y MS-3 (productos). Persiste y publica `sale.completed` mediante outbox; dispone del adaptador HTTP y del simulador local de pasarela, pero faltan la orquestación del cobro con tarjeta y el hardware.
+> Servicio central del punto de venta. Gestiona turnos de caja y el ciclo completo de una venta (carrito, ítems, cobro, anulación). Integrado con MS-2 (IVA) y MS-3 (productos). Persiste y publica `sale.completed` mediante outbox; el frontend usa los cobros en efectivo y tarjeta simulada. El hardware físico sigue pendiente.
 
 ## Contrato Oficial de Creación de Venta (POST /ventas) — S2-001 / S2-002 / S2-003
 
@@ -59,6 +59,10 @@ reglas: [RN-01, RN-02, RN-03, RN-06, RF-02, RF-03, RF-04, RF-05, RF-06, RF-07]
 
 > Ver [[matriz-rutas]] para la comparativa exhaustiva de rutas Kong, controladores y puertos de host.
 
+### S2-049 — Timeout sin doble cobro
+
+Antes de autorizar tarjeta, MS-5 persiste un `IntentoPago PENDIENTE` con clave de idempotencia bajo una transacción serializable. Una venta con intento sin resultado definitivo rechaza un nuevo POST con 409, incluso si llega con otra clave. Timeout, error de red o estado desconocido conservan el intento pendiente. `GET /ventas/{id}/intento-tarjeta` consulta la pasarela con la misma clave sin reenviar la autorización: una aprobación completa la venta y una denegación marca el intento como rechazado; `UNKNOWN` mantiene bloqueado otro cobro. La consulta exige JWT, tenant y cajero de la venta. La verificación de integración HTTP con PostgreSQL está [NO VERIFICADA] en este entorno; el build y las pruebas del adaptador sin base de datos pasaron el 2026-10-18.
+
 ## Flujo de venta (implementado)
 
 ```
@@ -97,7 +101,8 @@ reglas: [RN-01, RN-02, RN-03, RN-06, RF-02, RF-03, RF-04, RF-05, RF-06, RF-07]
    → Llama a IPaymentGatewayClient.ProcessPaymentAsync
    → Si APPROVED: CompletarTarjetaAsync completa venta, crea Pago TARJETA, actualiza IntentoPago a APROBADO y OutboxMessage sale.completed (200 OK)
    → Si DECLINED: IntentoPago RECHAZADO, venta sigue PENDIENTE, 0 pagos y 0 outbox (422 Unprocessable Entity)
-   → Si Timeout/Error: IntentoPago FALLIDO, venta sigue PENDIENTE, 0 pagos y 0 outbox (504 / 502)
+   → Si Timeout/Error: IntentoPago sigue PENDIENTE, venta sigue PENDIENTE, 0 pagos y 0 outbox (504 / 502)
+   → GET /ventas/{id}/intento-tarjeta reconcilia el mismo intento sin repetir el POST
 
 6. POST /ventas/{id}/anular  { motivo }
    → VentaService.AnularAsync: estado → ANULADA
@@ -325,6 +330,18 @@ Defensa adicional en [PosRepositoryTenantIsolationTests.cs](../../../tests/Globa
 
 [IMPLEMENTADO] `CobroSeguroIntegrationTests` conecta el endpoint HTTP de MS-5 y JWT real con PostgreSQL migrado y el proceso Node del simulador. La reserva de `IntentoPago` se confirma antes de contactar la pasarela, con lock breve por venta y unicidad por tenant/clave. Repeticiones y cobros pendientes/inciertos retornan 409 sin otra autorización; claves inválidas o contradictorias retornan 400. Solo un rechazo definitivo permite otro intento con clave nueva. Aprobación actualiza la reserva y confirma venta, pago y outbox en una transacción.
 
-La consulta inmediata tras timeout puede recuperar una aprobación; si no confirma el resultado, no se completa la venta. Si falla el commit local tras aprobación externa, la reserva permanece pendiente y bloquea otro cargo. La reconciliación posterior administrativa no está implementada. No acredita Electron, un banco real ni entrega Kafka.
+La consulta inmediata tras timeout puede recuperar una aprobación; si no confirma el resultado, no se completa la venta. Si falla el commit local tras aprobación externa, la reserva permanece pendiente y bloquea otro cargo. Tras integrar S2-049, `GET /ventas/{id}/intento-tarjeta` reconcilia el mismo intento sin repetir la autorización (ver validación del merge al final). No acredita Electron, un banco real ni entrega Kafka.
 
 Validación Release el 2026-10-18: **17/17 pruebas aprobadas**, más **35/35 de regresión** (tarjeta, adaptador/simulador, intentos, efectivo y transacción outbox), sin fallos ni omisiones. [Diagnóstico, alcance y reproducción](../../qa/S2-035/reporte.md).
+
+## S2-040 — Probar secuencia de pago y evento
+
+[PARCIAL] `Pago` persiste la misma referencia opaca expuesta por `CobrarTarjetaResponse` y guardada en `IntentoPago`; la aprobación conserva venta, pago, intento y outbox en una transacción. Las pruebas de contrato y servicio aprobaron **2/2** y la migración EF no deja cambios pendientes. Las pruebas de aprobación, rechazo y timeout están implementadas y compiladas, pero [NO VERIFICADAS] porque PostgreSQL `localhost:5436` no estaba disponible y Docker no fue accesible en el entorno. [Reporte](../../qa/S2-040/reporte.md).
+
+Validación posterior del merge, 2026-10-18: **5/5 casos S2-040 aprobados** dentro de las 54 pruebas backend. Las tres integraciones PostgreSQL anteriormente pendientes están verificadas; se conserva la migración y la referencia opaca en pago/intento/respuesta.
+
+## Integración de S2-035 con S2-040 y S2-049 — 2026-10-18
+
+[IMPLEMENTADO] Se unificó la reserva previa de S2-035 con `IniciarIntentoPagoAsync`, preservando el bloqueo por venta y tenant, la validación de clave y la referencia en `Pago`. Timeout/error/estado desconocido conserva `IntentoPago.PENDIENTE` (incierto), compatible con la consulta de S2-049. La actualización condicional solo admite reservas pendientes/fallidas del mismo tenant, venta, clave, monto y moneda; una aprobación no inserta un intento nuevo. La reserva se separa del seguimiento EF para no sobrescribir una reconciliación concurrente.
+
+Validación: **54/54 pruebas backend**, incluidas **17 S2-035** y **5 S2-040**, más typecheck, **2/2 archivos de pruebas de usuarios** y **7/7 pruebas de interfaz de cobro/búsqueda**. El caso de fallo de commit local verifica ahora recuperación mediante GET, segunda consulta estable y un solo POST externo. Las pruebas de navegador usan APIs controladas; no acreditan E2E contra un despliegue. [Resolución y evidencia](../../qa/S2-035/merge.md).

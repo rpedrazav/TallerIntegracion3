@@ -23,6 +23,12 @@ public class Pago
     /// <summary>Solo aplica a pagos en efectivo.</summary>
     public decimal Vuelto { get; set; } = 0;
 
+    /// <summary>
+    /// Referencia opaca devuelta por la pasarela. Solo aplica a pagos con tarjeta;
+    /// nunca contiene PAN, CVV ni otros datos bancarios.
+    /// </summary>
+    public string? Referencia { get; set; }
+
     // Relación de navegación (misma base de datos: MS-5)
     public Venta Venta { get; set; } = null!;
 }

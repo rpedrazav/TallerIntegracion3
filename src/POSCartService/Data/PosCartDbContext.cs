@@ -107,6 +107,7 @@ public class PosCartDbContext : DbContext
             e.HasKey(p => p.Id);
             e.Property(p => p.Monto).HasPrecision(18, 2);
             e.Property(p => p.Vuelto).HasPrecision(18, 2);
+            e.Property(p => p.Referencia).HasMaxLength(100);
 
             // FILTRO GLOBAL MULTI-TENANT: heredado vía navegación (no tiene tenant_id propio)
             e.HasQueryFilter(p => p.Venta.TenantId == CurrentTenantId);

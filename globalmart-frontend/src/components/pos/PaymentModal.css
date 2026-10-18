@@ -1,0 +1,46 @@
+.payment-modal {
+  width: min(480px, calc(100vw - 32px));
+  max-height: calc(100vh - 32px);
+  padding: 24px;
+  border: 1px solid var(--color-line);
+  border-radius: 12px;
+  background: var(--color-surface);
+  color: var(--color-ink);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, .25);
+  box-sizing: border-box;
+}
+
+.payment-modal::backdrop { background: rgba(20, 13, 24, .68); }
+.payment-modal__header, .payment-modal__total, .payment-modal__actions { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+.payment-modal__header h2 { margin: 2px 0 0; font-size: 1.5rem; }
+.payment-modal__eyebrow { margin: 0; color: var(--color-ink-soft); font-size: .875rem; }
+.payment-modal__close { border: 0; background: transparent; color: var(--color-ink); font-size: 2rem; cursor: pointer; }
+.payment-modal__total { margin: 24px 0; padding: 16px; border-radius: 8px; background: var(--color-primary-bg); }
+.payment-modal__total strong { font-size: 1.5rem; font-variant-numeric: tabular-nums; }
+.payment-modal__description { color: var(--color-ink-soft); }
+.payment-modal__methods { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.payment-modal__methods button { padding: 12px; border: 1px solid var(--color-line); border-radius: 8px; background: var(--color-surface); color: var(--color-ink); font: inherit; cursor: pointer; }
+.payment-modal__methods button.is-selected { border-color: var(--color-primary); background: var(--color-primary-bg); font-weight: 700; }
+.payment-modal__fields, .payment-modal__card-info { margin-top: 18px; min-height: 110px; }
+.payment-modal__fields label { display: block; margin-bottom: 8px; font-weight: 600; }
+.payment-modal__fields input { width: 100%; box-sizing: border-box; padding: 12px; border: 1px solid var(--color-line); border-radius: 8px; background: var(--color-surface); color: var(--color-ink); font: inherit; }
+.payment-modal__fields p, .payment-modal__card-info p { color: var(--color-ink-soft); line-height: 1.5; }
+.payment-modal__fields .payment-modal__error { color: var(--color-danger-text); }
+.payment-modal__error { color: var(--color-danger-text); font-weight: 600; line-height: 1.5; }
+.payment-modal__change { font-size: 1.125rem; font-variant-numeric: tabular-nums; }
+.payment-modal__card-info { padding: 16px; box-sizing: border-box; border-radius: 8px; background: var(--color-info-bg); }
+.payment-modal__card-info p { margin-bottom: 0; }
+.payment-modal__notice { padding: 12px; border-radius: 8px; background: var(--color-warning-bg); color: var(--color-warning-text); line-height: 1.4; }
+.payment-modal__result { margin: 20px 0; padding: 20px; border-radius: 8px; line-height: 1.5; }
+.payment-modal__result--processing, .payment-modal__result--uncertain { background: var(--color-warning-bg); color: var(--color-warning-text); }
+.payment-modal__result--approved { background: var(--color-success-bg); color: var(--color-success-text); }
+.payment-modal__result--declined { background: var(--color-danger-bg); color: var(--color-danger-text); }
+.payment-modal__symbol { font-size: 2rem; font-weight: 700; }
+.payment-modal__reference { overflow-wrap: anywhere; }
+.payment-modal__reference code { font-family: var(--font-mono); }
+.payment-modal__actions { justify-content: flex-end; margin-top: 24px; flex-wrap: wrap; }
+.payment-modal__actions button { padding: 12px 16px; border-radius: 8px; font: inherit; font-weight: 700; cursor: pointer; }
+.payment-modal__secondary { border: 1px solid var(--color-line); background: var(--color-surface); color: var(--color-ink); }
+.payment-modal__primary { border: 0; background: var(--color-success); color: var(--color-on-success); }
+.payment-modal__primary:disabled { background: var(--color-muted); color: var(--color-ink); cursor: not-allowed; }
+.payment-modal__waiting { color: var(--color-warning-text); font-weight: 700; }

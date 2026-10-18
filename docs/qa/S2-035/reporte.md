@@ -76,3 +76,7 @@ docker stop globalmart-s2035-postgres
 ```
 
 La contraseña del ejemplo es desechable y exclusiva de pruebas. Para las suites antiguas de cobro, definir también `ConnectionStrings__DefaultConnection` con la misma base **temporal**; esas suites no crean esquemas exclusivos.
+
+## Integración posterior con el trabajo del equipo
+
+La descripción de `FALLIDO` y de reconciliación pendiente en este reporte corresponde al commit original de S2-035. Al integrar S2-049, los resultados inciertos conservan `PENDIENTE` y pueden reconciliarse mediante `GET /ventas/{id}/intento-tarjeta`, manteniendo el bloqueo de otro POST. Se conservan las garantías de idempotencia y las evidencias originales. Ver [resolución del merge](merge.md) y [54 pruebas backend aprobadas](merge-pagos.trx).

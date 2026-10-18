@@ -121,7 +121,7 @@ public sealed class CobroSeguroIntegrationTests : IAsyncLifetime
         var attempt = await db.IntentosPago.SingleAsync();
         Assert.Equal(approved ? Pos.Models.EstadoIntentoPago.APROBADO
             : scenario == "sim-declined-v1" ? Pos.Models.EstadoIntentoPago.RECHAZADO
-            : Pos.Models.EstadoIntentoPago.FALLIDO, attempt.Estado);
+            : Pos.Models.EstadoIntentoPago.PENDIENTE, attempt.Estado);
         var result = await GatewayStatus(_tenant, key);
         if (approved) Assert.Equal(result!.GatewayReference, attempt.Referencia);
         Assert.Equal(approved ? "APPROVED" : scenario == "sim-declined-v1" ? "DECLINED" : null, result?.Status);
@@ -267,6 +267,17 @@ public sealed class CobroSeguroIntegrationTests : IAsyncLifetime
         Assert.Equal("APPROVED", (await GatewayStatus(_tenant, key))!.Status);
         using var retry = await Charge(_sale, key, "sim-approved-v1");
         Assert.Equal(HttpStatusCode.Conflict, retry.StatusCode);
+        Assert.Equal(1, _traffic.Posts);
+        await using (var db = Db(_tenant))
+            await db.Database.ExecuteSqlRawAsync("DROP TRIGGER fail_outbox ON \"OutboxMessages\";");
+        using var recovered = await _client.GetAsync($"/ventas/{_sale}/intento-tarjeta");
+        Assert.Equal(HttpStatusCode.OK, recovered.StatusCode);
+        var body = await recovered.Content.ReadFromJsonAsync<System.Text.Json.JsonElement>();
+        Assert.Equal("APPROVED", body.GetProperty("status").GetString());
+        await Verify(_tenant, _sale, true, 1);
+        using var repeatedQuery = await _client.GetAsync($"/ventas/{_sale}/intento-tarjeta");
+        Assert.Equal(HttpStatusCode.OK, repeatedQuery.StatusCode);
+        await Verify(_tenant, _sale, true, 1);
         Assert.Equal(1, _traffic.Posts);
     }
 

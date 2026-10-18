@@ -3,7 +3,7 @@ id: estado-actual
 tipo: indice
 titulo: Estado Real de Implementación — GlobalMart OS
 estado: vigente
-fuentes: [docs/context/_reports/inventario.md, src/, globalmart-frontend/src/api/client.ts, git log, docs/context/_reports/preguntas-abiertas.md, tests/GlobalMart.IntegrationTests/CobroSeguroIntegrationTests.cs, docs/qa/S2-035/reporte.md]
+fuentes: [docs/context/_reports/inventario.md, src/, globalmart-frontend/src/api/client.ts, git log, docs/context/_reports/preguntas-abiertas.md, tests/GlobalMart.IntegrationTests/CobroSeguroIntegrationTests.cs, docs/qa/S2-035/reporte.md, new-ingresses.yaml]
 verificado_contra_codigo: true
 ultima_revision: 2026-10-18
 depende_de: []
@@ -30,7 +30,7 @@ reglas: []
 | MS-2 Tax | ✅ 1 controller | ❌ No Kafka | ✅ ManualTest | **PARCIAL** |
 | MS-3 Catalog | ✅ 2 controllers | ❌ No Kafka | ✅ Manual .http + baja/PUT TI3-642 + 9 casos RN-01 S2-023 | **PARCIAL** |
 | MS-4 Warehouse | ✅ 1 controller | ✅ Consumer sale.completed | ❌ No tests | **PARCIAL** |
-| MS-5 POS | ✅ 2 controllers | ✅ OutboxPublisherWorker sale.completed | ✅ AgregarItemTest + CobroCuadreTest + S2-008/S2-009/S2-010/S2-037/S2-038/S2-039 + 10 HTTP y 13 directos RN-01 S2-023 | **PARCIAL** |
+| MS-5 POS | ✅ 2 controllers | ✅ OutboxPublisherWorker sale.completed | ✅ AgregarItemTest + CobroCuadreTest + S2-008/S2-009/S2-010/S2-037/S2-038/S2-039 + contrato S2-040 + 10 HTTP y 13 directos RN-01 S2-023 | **PARCIAL** |
 | MS-6 SupplyChain | ❌ Sin controllers | ❌ Sin Kafka | ❌ Sin tests | **PLANIFICADO** |
 | MS-7 Analytics | ❌ Sin controllers | ❌ Sin consumers | ❌ Sin tests | **PLANIFICADO** |
 | MS-8 Loyalty | ❌ Sin controllers | ⚠️ Registrado en DI sin consumer loop | ❌ Sin tests | **PLANIFICADO** |
@@ -148,7 +148,6 @@ reglas: []
 
 **No implementado / CRÍTICO:**
 - Endpoint HTTP `POST /ventas/{id}/anular` aún no está expuesto en `VentasController.cs`
-- Reconciliación posterior de intentos de tarjeta inciertos o con aprobación externa cuyo commit local falló; se bloquean nuevas autorizaciones hasta resolverlos
 - Integración con hardware (balanza, impresora, cajón de dinero)
 
 ---
@@ -180,7 +179,6 @@ reglas: []
 |---|---------------|----------------|----------|
 | 1 | Exponer endpoint `POST /ventas/{id}/anular` en `VentasController.cs` | RF-22 | 🔴 Crítica |
 | 2 | Emisión simulada de DTE (boleta/factura) en MS-2 | RN-03, RF-08, TC-08/09 | 🔴 Crítica |
-| 3 | Reconciliación posterior de cobros inciertos o con aprobación externa y fallo de commit local | RN-02, RF-07, PC-27/28 | 🔴 Crítica |
 | 4 | FEFO en recepción e inventario en MS-4 | RN-05, RF-10, WI-04/05 | 🟠 Alta |
 | 5 | Integrar frontend `Pos.tsx` con backend real | RF-04, RF-05 | 🟠 Alta |
 | 6 | Endpoint POST /auth/refresh | RF-01 | 🟠 Alta |
@@ -190,7 +188,11 @@ reglas: []
 
 ## Estado del Frontend
 
-El frontend usa `src/api/client.ts` para Login (MS-1), catálogo del POS (MS-3) y turnos y ventas (MS-5): URL por servicio, métodos tipados, JWT y timeout de 15 s centralizados, con cierre de sesión ante 401 en llamadas protegidas [IMPLEMENTADO]. POS consulta el turno activo al entrar, muestra carga y solo habilita el carrito tras confirmarlo; ante 404 redirige a apertura y ante otros errores ofrece reintentar [IMPLEMENTADO]. El borrador previo a la venta sigue local; al iniciar, POS envía solo producto y cantidad a `POST /ventas` y usa la respuesta de MS-5 para ID, ítems y totales. Al recargar, identifica la venta PENDIENTE con `GET /ventas/turno/{turnoId}` y recupera ítems y totales con `GET /ventas/{id}`, sin tomar el borrador local como autoridad [IMPLEMENTADO]. En esa venta, escaneo, búsqueda, cambio de cantidad y eliminación usan los endpoints de ítems de MS-5; después de cada operación, `GET /ventas/{id}` renueva ítems, subtotal, impuestos y total [IMPLEMENTADO]. El cobro en la interfaz sigue pendiente [PARCIAL].
+S2-049 [IMPLEMENTADO en código]: MS-5 guarda el intento de tarjeta antes de autorizar y bloquea otra autorización de la misma venta mientras el resultado siga pendiente. `GET /ventas/{id}/intento-tarjeta` consulta el estado del mismo intento y reconcilia aprobación o rechazo sin repetir el POST. El POS muestra resultado incierto tras timeout, recupera el intento al recargar y solo ofrece reintento manual tras un rechazo definitivo. La prueba dirigida de interfaz y las pruebas del adaptador sin base pasaron el 2026-10-18; la integración HTTP con PostgreSQL temporal y simulador real fue verificada al resolver el merge (54/54 casos backend, incluida recuperación posterior sin otro POST).
+
+El frontend usa `src/api/client.ts` para Login (MS-1), catálogo del POS (MS-3) y turnos y ventas (MS-5): URL por servicio, métodos tipados, JWT y timeout de 15 s centralizados, con cierre de sesión ante 401 en llamadas protegidas [IMPLEMENTADO]. POS consulta el turno activo al entrar, muestra carga y solo habilita el carrito tras confirmarlo; ante 404 redirige a apertura y ante otros errores ofrece reintentar [IMPLEMENTADO]. El borrador previo a la venta sigue local; al iniciar, POS envía solo producto y cantidad a `POST /ventas` y usa la respuesta de MS-5 para ID, ítems y totales. Al recargar, identifica la venta PENDIENTE con `GET /ventas/turno/{turnoId}` y recupera ítems y totales con `GET /ventas/{id}`, sin tomar el borrador local como autoridad [IMPLEMENTADO]. En esa venta, escaneo, búsqueda, cambio de cantidad y eliminación usan los endpoints de ítems de MS-5; después de cada operación, `GET /ventas/{id}` renueva ítems, subtotal, impuestos y total [IMPLEMENTADO]. El botón Cobrar abre `PaymentModal`; para efectivo llama `POST /ventas/{id}/cobrar`, muestra el vuelto devuelto por MS-5 o la diferencia del error 400 sin completar la venta, y bloquea reintentos automáticos ante resultado incierto [IMPLEMENTADO]. El POS permite elegir EFECTIVO o TARJETA al iniciar una venta; el modal llama al cobro simulado de MS-5 con clave UUID de idempotencia, muestra aprobación con referencia opaca o rechazo y permite cambiar el método de una venta pendiente mediante PATCH /ventas/{id}/metodo-pago. El resultado incierto exige verificar la venta antes de otro cobro [IMPLEMENTADO]. La búsqueda del POS consulta MS-3 por nombre/código activo y muestra errores de catálogo, mientras /admin/productos sigue reservado a ADMIN/SUPER_ADMIN [IMPLEMENTADO]. Pruebas Playwright dirigidas 4/4 aprobadas en Edge el 2026-10-18; E2E con pasarela desplegada [NO VERIFICADA].
+
+El 2026-10-18, los tres destinos remotos del frontend (MS-1, MS-3 y MS-5) respondieron `GET /health` con HTTP 200 y certificado HTTPS válido de Let's Encrypt. Los Ingress usan `globalmart-dev-tls` [IMPLEMENTADO]. La renovación no está automatizada en el clúster actual; el certificado vence el 2027-01-16. Ver [[matriz-rutas]].
 
 ### Guía visual aprobada
 
@@ -203,8 +205,8 @@ Ver el nodo [[guia-estilo]] para el resumen y las reglas aplicables.
 | Login | [IMPLEMENTADO] | Llama directo a auth service con manejo de errores específicos por HTTP status/red, timeout de 15s y spinner de carga en botón (TI3-471) |
 | Abrir Turno (`AbrirTurnoPage`) | [IMPLEMENTADO] | Llama a MS-5 `/api/turnos/activo` y `POST /api/turnos/abrir` (spinner de carga en botón, redirección con confirmación a POS y manejo 409) (TI3-471) |
 | Cerrar Turno (`CerrarTurnoPage`) | [IMPLEMENTADO] | Tabla de denominaciones (billetes/monedas) con conteo y subtotales automáticos. Llama a MS-5 `POST /api/turnos/cuadre` para obtener efectivo esperado. Muestra resultado: efectivo esperado vs declarado, diferencia en **verde** si es $0, en **rojo** si hay discrepancia (sobrante o faltante). Botón `POST /api/turnos/cerrar` con confirmación. |
-| Productos Admin (`ProductosPage`) | [IMPLEMENTADO] | `GET /products?page=1&pageSize=500` + `GET /categories` en MS-3 (puerto 5203). Tabla con nombre, código de barras, categoría, precio base, tipo (peso variable/unidad) y estado. Filtro instantáneo en frontend por texto (nombre, código, descripción, categoría), filtro por categoría dropdown y toggle "solo activos". Accesible desde `/admin/productos`. |
-| Admin | [PARCIAL] | TI3-672: el enlace **Administración** y `/admin/*` usan `esAdmin`; solo `ADMIN`/`SUPER_ADMIN` acceden y CAJERO es redirigido a `/pos`, mientras MS-1 conserva `403` como defensa. Panel con lista (`GET /users`) y creación (`POST /users` + roles). MS-1 dispone de PUT y DELETE lógico, aún sin acciones de edición/desactivación en UI. Pestaña `TenantConfig` para configuración regional/fiscal. |
+| Productos Admin (`ProductosPage`) | [IMPLEMENTADO] | `GET /products?page=1&pageSize=500` + `GET /categories` en MS-3 (puerto 5203). Tabla con filtros, estado y acciones de catálogo. TI3-675 protege `/admin/productos` con la misma regla ADMIN/SUPER_ADMIN aplicada al resto de Administración; CAJERO recibe **Acceso denegado**. |
+| Admin | [PARCIAL] | TI3-675: `/admin/*` y `/admin/productos` comparten `AdminRoute`; ADMIN/SUPER_ADMIN acceden y CAJERO ve **Acceso denegado** una vez sincronizado el token [IMPLEMENTADO]. `TenantConfig` conserva edición exclusiva de administradores, estado de carga, controles bloqueados durante guardado y feedback de éxito/error; IVA numérico ya cubierto por TI3-645. Lista, creación, edición de email y baja lógica de usuarios disponibles. Persisten las dependencias de `sucursalId`, listado de inactivos y auditoría; sin reactivación UI. |
 
 **Nota de integración Electron:** `preload.ts` expone únicamente funciones de autenticación y sesión (`ping`, `getToken`, `setToken`, `logout`). No expone hardware serial ni actualización automática por ahora.
 
@@ -273,8 +275,8 @@ Refuerzo posterior [IMPLEMENTADO]: `VentaRepository.ActualizarAsync` y `ItemVent
 [IMPLEMENTADO] El endpoint `POST /ventas/{id}/cobrar-tarjeta` ahora persiste el resultado de cada llamada a la pasarela en un `IntentoPago` y ramifica el flujo según el status devuelto:
 - **APPROVED** → llama a `IVentaService.CompletarTarjetaAsync` (atómico con `CompletarTarjetaConOutboxAsync`): marca la venta `COMPLETADA`, crea un `Pago` con `MetodoPago.TARJETA` y publica `sale.completed` en el outbox. Devuelve **HTTP 200**.
 - **DECLINED** → persiste `IntentoPago` con `EstadoIntentoPago.RECHAZADO` y `DeclineCode`, la venta se mantiene `PENDIENTE`, no hay `Pago` ni `OutboxMessage`. Devuelve **HTTP 422 Unprocessable Entity**.
-- **TimeoutException** → persiste `IntentoPago` con `EstadoIntentoPago.FALLIDO`, venta `PENDIENTE`, sin `Pago` ni `OutboxMessage`. Devuelve **HTTP 504 Gateway Timeout**.
-- **Exception genérica** → persiste `IntentoPago` con `EstadoIntentoPago.FALLIDO`. Devuelve **HTTP 502 Bad Gateway**.
+- **TimeoutException** → conserva el `IntentoPago PENDIENTE` creado antes de la autorización, venta `PENDIENTE`, sin `Pago` ni `OutboxMessage`. Devuelve **HTTP 504 Gateway Timeout**.
+- **Exception genérica** → conserva el intento `PENDIENTE` y devuelve **HTTP 502 Bad Gateway**; la consulta posterior determina si hubo autorización.
 
 Cumple criterio de aceptación: el rechazo no genera `sale.completed` ni un `Pago` aprobado. Nuevas pruebas de integración **4/4 aprobadas** en `CobrarTarjetaIntegrationTests` (trait `S2-034`), verificando DB post-llamada: venta COMPLETADA/PENDIENTE, presencia/ausencia de Pagos, OutboxMessages e IntentosPago con estado correcto. [Diseño](integraciones/pasarela-pago.md).
 
@@ -284,7 +286,7 @@ Cumple criterio de aceptación: el rechazo no genera `sale.completed` ni un `Pag
 
 ## S2-037 — Adaptador HTTP de pasarela
 
-[IMPLEMENTADO] `PaymentGatewayClient` implementa `IPaymentGatewayClient` y queda registrado en DI con `PasarelaPago:BaseUrl` y `PasarelaPago:TimeoutSeconds`. Envía únicamente referencias de negocio y el escenario simulado, propaga `request_id` en `Idempotency-Key` y produce trazas estructuradas sin cuerpos, JWT ni datos de tarjeta. Pruebas enfocadas **4/4 aprobadas** el 2026-10-16; su uso desde el cobro sigue planificado. [Contrato y evidencia](integraciones/pasarela-pago.md).
+[IMPLEMENTADO] `PaymentGatewayClient` implementa `IPaymentGatewayClient` y queda registrado en DI con `PasarelaPago:BaseUrl` y `PasarelaPago:TimeoutSeconds`. Envía únicamente referencias de negocio y el escenario simulado, propaga `request_id` en `Idempotency-Key` y produce trazas estructuradas sin cuerpos, JWT ni datos de tarjeta. Pruebas enfocadas **4/4 aprobadas** el 2026-10-16; su uso desde `cobrar-tarjeta` está implementado. [Contrato y evidencia](integraciones/pasarela-pago.md).
 
 ## S2-038 — Servicio simulador de autorizaciones
 
@@ -334,6 +336,18 @@ Cumple criterio de aceptación: el rechazo no genera `sale.completed` ni un `Pag
 
 [IMPLEMENTADO] `CobroSeguroIntegrationTests` conecta el endpoint HTTP de MS-5 y JWT real con PostgreSQL migrado y el proceso Node del simulador. La reserva de `IntentoPago` se confirma antes de contactar la pasarela, con lock breve por venta y unicidad por tenant/clave. Repeticiones y cobros pendientes/inciertos retornan 409 sin otra autorización; claves inválidas o contradictorias retornan 400. Solo un rechazo definitivo permite otro intento con clave nueva. Aprobación actualiza la reserva y confirma venta, pago y outbox en una transacción.
 
-La consulta inmediata tras timeout puede recuperar una aprobación; si no confirma el resultado, no se completa la venta. Si falla el commit local tras aprobación externa, la reserva permanece pendiente y bloquea otro cargo. La reconciliación posterior administrativa no está implementada. No acredita Electron, un banco real ni entrega Kafka.
+La consulta inmediata tras timeout puede recuperar una aprobación; si no confirma el resultado, no se completa la venta. Si falla el commit local tras aprobación externa, la reserva permanece pendiente y bloquea otro cargo. Tras integrar S2-049, `GET /ventas/{id}/intento-tarjeta` reconcilia el mismo intento sin repetir la autorización (ver validación del merge al final). No acredita Electron, un banco real ni entrega Kafka.
 
 Validación Release el 2026-10-18: **17/17 pruebas aprobadas**, más **35/35 de regresión** (tarjeta, adaptador/simulador, intentos, efectivo y transacción outbox), sin fallos ni omisiones. [Diagnóstico, alcance y reproducción](../qa/S2-035/reporte.md).
+
+## S2-040 / TI3-671 — Probar secuencia de pago y evento
+
+[PARCIAL] La aprobación copia la referencia opaca de pasarela a `IntentoPago`, `Pago` y respuesta HTTP, y conserva venta completada, `Pago TARJETA` y `sale.completed` pendiente dentro de la transacción existente. La migración `20261018040621_AddPagoGatewayReference` agrega la columna nullable sin modificar datos existentes. Pruebas de contrato y servicio **2/2 aprobadas** el 2026-10-18; tres integraciones PostgreSQL implementadas y compiladas, pero [NO VERIFICADAS] porque `localhost:5436` no estaba disponible y Docker no fue accesible. [Reporte](../qa/S2-040/reporte.md).
+
+Validación posterior del merge, 2026-10-18: **5/5 casos S2-040 aprobados** dentro de las 54 pruebas backend. Las tres integraciones PostgreSQL anteriormente pendientes están verificadas; se conserva la migración y la referencia opaca en pago/intento/respuesta.
+
+## Integración de S2-035 con S2-040 y S2-049 — 2026-10-18
+
+[IMPLEMENTADO] Se unificó la reserva previa de S2-035 con `IniciarIntentoPagoAsync`, preservando el bloqueo por venta y tenant, la validación de clave y la referencia en `Pago`. Timeout/error/estado desconocido conserva `IntentoPago.PENDIENTE` (incierto), compatible con la consulta de S2-049. La actualización condicional solo admite reservas pendientes/fallidas del mismo tenant, venta, clave, monto y moneda; una aprobación no inserta un intento nuevo. La reserva se separa del seguimiento EF para no sobrescribir una reconciliación concurrente.
+
+Validación: **54/54 pruebas backend**, incluidas **17 S2-035** y **5 S2-040**, más typecheck, **2/2 archivos de pruebas de usuarios** y **7/7 pruebas de interfaz de cobro/búsqueda**. El caso de fallo de commit local verifica ahora recuperación mediante GET, segunda consulta estable y un solo POST externo. Las pruebas de navegador usan APIs controladas; no acreditan E2E contra un despliegue. [Resolución y evidencia](../qa/S2-035/merge.md).
