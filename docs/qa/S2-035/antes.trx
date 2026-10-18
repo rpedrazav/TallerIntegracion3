@@ -1,0 +1,481 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="a52022f8-5ed3-4955-abac-fe6864f2cab2" name="@sebacachyos 2026-10-18 20:26:57" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2026-10-18T20:26:57.3595132-03:00" queuing="2026-10-18T20:26:57.3595132-03:00" start="2026-10-18T20:26:48.8452080-03:00" finish="2026-10-18T20:27:37.2218759-03:00" />
+  <TestSettings name="default" id="13c7b29f-16db-4bab-97b8-c42d2059a4ae">
+    <Deployment runDeploymentRoot="_sebacachyos_2026-10-18_20_26_57" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="bf3554dd-3034-49c7-a61d-674bfd098f13" testId="75301ecd-3149-7357-2ce0-4b1492e67f33" testName="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests.RepetirClave_NoReautorizaNiDuplica(scenario: &quot;sim-declined-v1&quot;, firstStatus: 422, approved: False)" computerName="sebacachyos" duration="00:00:00.0578190" startTime="2026-10-18T20:27:07.0562278-03:00" endTime="2026-10-18T20:27:07.0562279-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="bf3554dd-3034-49c7-a61d-674bfd098f13">
+      <Output>
+        <ErrorInfo>
+          <Message>Microsoft.EntityFrameworkCore.DbUpdateException : An error occurred while saving the entity changes. See the inner exception for details.
+---- Npgsql.PostgresException : 23505: duplicate key value violates unique constraint "IX_IntentosPago_TenantId_IdempotencyKey"
+
+DETAIL: Detail redacted as it may contain sensitive data. Specify 'Include Error Detail' in the connection string to include this information.</Message>
+          <StackTrace>   at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(IList`1 entriesToSave, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(StateManager stateManager, Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+   at Npgsql.EntityFrameworkCore.PostgreSQL.Storage.Internal.NpgsqlExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+   at POSCartService.Repositories.VentaRepository.RegistrarIntentoPagoAsync(IntentoPago intentoPago) in /home/sebacachyos/Documentos/Informatica/Semestre6/TallerIntegracion3/NewRepo/TallerIntegracion3/src/POSCartService/Repositories/VentaRepository.cs:line 194
+   at POSCartService.Controllers.VentasController.CobrarTarjeta(Guid id, CobrarTarjetaRequest request, CancellationToken cancellationToken) in /home/sebacachyos/Documentos/Informatica/Semestre6/TallerIntegracion3/NewRepo/TallerIntegracion3/src/POSCartService/Controllers/VentasController.cs:line 956
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ActionMethodExecutor.TaskOfIActionResultExecutor.Execute(ActionContext actionContext, IActionResultTypeMapper mapper, ObjectMethodExecutor executor, Object controller, Object[] arguments)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.&lt;InvokeActionMethodAsync&gt;g__Awaited|12_0(ControllerActionInvoker invoker, ValueTask`1 actionResultValueTask)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.&lt;InvokeNextActionFilterAsync&gt;g__Awaited|10_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Rethrow(ActionExecutedContextSealed context)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State&amp; next, Scope&amp; scope, Object&amp; state, Boolean&amp; isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.&lt;InvokeInnerFilterAsync&gt;g__Awaited|13_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.&lt;InvokeFilterPipelineAsync&gt;g__Awaited|20_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.&lt;InvokeAsync&gt;g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.&lt;InvokeAsync&gt;g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at POSCartService.Middleware.TenantMiddleware.InvokeAsync(HttpContext context, PosCartDbContext db) in /home/sebacachyos/Documentos/Informatica/Semestre6/TallerIntegracion3/NewRepo/TallerIntegracion3/src/POSCartService/Middleware/TenantMiddleware.cs:line 33
+   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.TestHost.HttpContextBuilder.&lt;&gt;c__DisplayClass23_0.&lt;&lt;SendAsync&gt;g__RunRequestAsync|0&gt;d.MoveNext()
+--- End of stack trace from previous location ---
+   at Microsoft.AspNetCore.TestHost.ClientHandler.SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Mvc.Testing.Handlers.CookieContainerHandler.SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Mvc.Testing.Handlers.RedirectHandler.SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+   at System.Net.Http.HttpClient.&lt;SendAsync&gt;g__Core|83_0(HttpRequestMessage request, HttpCompletionOption completionOption, CancellationTokenSource cts, Boolean disposeCts, CancellationTokenSource pendingRequestsCts, CancellationToken originalCancellationToken)
+   at GlobalMart.IntegrationTests.CobroSeguroIntegrationTests.RepetirClave_NoReautorizaNiDuplica(String scenario, Int32 firstStatus, Boolean approved) in /home/sebacachyos/Documentos/Informatica/Semestre6/TallerIntegracion3/NewRepo/TallerIntegracion3/tests/GlobalMart.IntegrationTests/CobroSeguroIntegrationTests.cs:line 134
+--- End of stack trace from previous location ---
+----- Inner Stack Trace -----
+   at Npgsql.Internal.NpgsqlConnector.ReadMessageLong(Boolean async, DataRowLoadingMode dataRowLoadingMode, Boolean readingNotifications, Boolean isReadingPrependedMessage)
+   at System.Runtime.CompilerServices.PoolingAsyncValueTaskMethodBuilder`1.StateMachineBox`1.System.Threading.Tasks.Sources.IValueTaskSource&lt;TResult&gt;.GetResult(Int16 token)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="7c63f3c4-300b-43a2-97af-f9ad99c5627a" testId="2ca98594-1cc7-abca-d955-44c7199405eb" testName="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests.MismaClaveEnDosTenants_NoColisiona" computerName="sebacachyos" duration="00:00:00.1319105" startTime="2026-10-18T20:27:19.8182151-03:00" endTime="2026-10-18T20:27:19.8182152-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="7c63f3c4-300b-43a2-97af-f9ad99c5627a" />
+    <UnitTestResult executionId="26cd3334-75f8-4e23-8714-e6d95fa18ee5" testId="ba9cb53b-c4da-622b-f5f1-dff7e185de05" testName="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests.SolicitudesSimultaneas_ReservanAntesDeContactarPasarela" computerName="sebacachyos" duration="00:00:00.0637714" startTime="2026-10-18T20:27:37.1337833-03:00" endTime="2026-10-18T20:27:37.1337834-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="26cd3334-75f8-4e23-8714-e6d95fa18ee5">
+      <Output>
+        <ErrorInfo>
+          <Message>Assert.Equal() Failure: Values differ
+Expected: Conflict
+Actual:   OK</Message>
+          <StackTrace>   at GlobalMart.IntegrationTests.CobroSeguroIntegrationTests.SolicitudesSimultaneas_ReservanAntesDeContactarPasarela() in /home/sebacachyos/Documentos/Informatica/Semestre6/TallerIntegracion3/NewRepo/TallerIntegracion3/tests/GlobalMart.IntegrationTests/CobroSeguroIntegrationTests.cs:line 152
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="7ecb6664-3183-461e-8bd5-525fa9010d75" testId="942ec7de-e947-904c-353d-415c733f3efb" testName="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests.Timeout_NoPermiteOtraClaveMientrasResultadoEsIncierto" computerName="sebacachyos" duration="00:00:02.0736055" startTime="2026-10-18T20:27:34.0494736-03:00" endTime="2026-10-18T20:27:34.0494737-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="7ecb6664-3183-461e-8bd5-525fa9010d75">
+      <Output>
+        <ErrorInfo>
+          <Message>Assert.Equal() Failure: Values differ
+Expected: Conflict
+Actual:   OK</Message>
+          <StackTrace>   at GlobalMart.IntegrationTests.CobroSeguroIntegrationTests.Timeout_NoPermiteOtraClaveMientrasResultadoEsIncierto() in /home/sebacachyos/Documentos/Informatica/Semestre6/TallerIntegracion3/NewRepo/TallerIntegracion3/tests/GlobalMart.IntegrationTests/CobroSeguroIntegrationTests.cs:line 167
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="f65d8297-3172-4abc-b0c5-13193a71d0bd" testId="e1cb5da5-a5c9-6419-bb18-14c0ef1443be" testName="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests.RepetirClave_NoReautorizaNiDuplica(scenario: &quot;sim-approved-v1&quot;, firstStatus: 200, approved: True)" computerName="sebacachyos" duration="00:00:00.0841045" startTime="2026-10-18T20:27:16.7976238-03:00" endTime="2026-10-18T20:27:16.7976239-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="f65d8297-3172-4abc-b0c5-13193a71d0bd" />
+    <UnitTestResult executionId="60154b59-49df-4248-be4c-a03c96e3abc8" testId="242f5b15-555f-be89-ef78-d0d6933d7b44" testName="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests.ClaveDeOtraVentaDelTenant_NoLlamaPasarela" computerName="sebacachyos" duration="00:00:00.0705928" startTime="2026-10-18T20:27:29.1526479-03:00" endTime="2026-10-18T20:27:29.1526480-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="60154b59-49df-4248-be4c-a03c96e3abc8">
+      <Output>
+        <ErrorInfo>
+          <Message>Microsoft.EntityFrameworkCore.DbUpdateException : An error occurred while saving the entity changes. See the inner exception for details.
+---- Npgsql.PostgresException : 23505: duplicate key value violates unique constraint "IX_IntentosPago_TenantId_IdempotencyKey"
+
+DETAIL: Detail redacted as it may contain sensitive data. Specify 'Include Error Detail' in the connection string to include this information.</Message>
+          <StackTrace>   at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(IList`1 entriesToSave, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(StateManager stateManager, Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+   at Npgsql.EntityFrameworkCore.PostgreSQL.Storage.Internal.NpgsqlExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+   at POSCartService.Repositories.VentaRepository.RegistrarIntentoPagoAsync(IntentoPago intentoPago) in /home/sebacachyos/Documentos/Informatica/Semestre6/TallerIntegracion3/NewRepo/TallerIntegracion3/src/POSCartService/Repositories/VentaRepository.cs:line 194
+   at POSCartService.Controllers.VentasController.CobrarTarjeta(Guid id, CobrarTarjetaRequest request, CancellationToken cancellationToken) in /home/sebacachyos/Documentos/Informatica/Semestre6/TallerIntegracion3/NewRepo/TallerIntegracion3/src/POSCartService/Controllers/VentasController.cs:line 894
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ActionMethodExecutor.TaskOfIActionResultExecutor.Execute(ActionContext actionContext, IActionResultTypeMapper mapper, ObjectMethodExecutor executor, Object controller, Object[] arguments)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.&lt;InvokeActionMethodAsync&gt;g__Awaited|12_0(ControllerActionInvoker invoker, ValueTask`1 actionResultValueTask)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.&lt;InvokeNextActionFilterAsync&gt;g__Awaited|10_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Rethrow(ActionExecutedContextSealed context)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State&amp; next, Scope&amp; scope, Object&amp; state, Boolean&amp; isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.&lt;InvokeInnerFilterAsync&gt;g__Awaited|13_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.&lt;InvokeFilterPipelineAsync&gt;g__Awaited|20_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.&lt;InvokeAsync&gt;g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.&lt;InvokeAsync&gt;g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at POSCartService.Middleware.TenantMiddleware.InvokeAsync(HttpContext context, PosCartDbContext db) in /home/sebacachyos/Documentos/Informatica/Semestre6/TallerIntegracion3/NewRepo/TallerIntegracion3/src/POSCartService/Middleware/TenantMiddleware.cs:line 33
+   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.TestHost.HttpContextBuilder.&lt;&gt;c__DisplayClass23_0.&lt;&lt;SendAsync&gt;g__RunRequestAsync|0&gt;d.MoveNext()
+--- End of stack trace from previous location ---
+   at Microsoft.AspNetCore.TestHost.ClientHandler.SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Mvc.Testing.Handlers.CookieContainerHandler.SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Mvc.Testing.Handlers.RedirectHandler.SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+   at System.Net.Http.HttpClient.&lt;SendAsync&gt;g__Core|83_0(HttpRequestMessage request, HttpCompletionOption completionOption, CancellationTokenSource cts, Boolean disposeCts, CancellationTokenSource pendingRequestsCts, CancellationToken originalCancellationToken)
+   at GlobalMart.IntegrationTests.CobroSeguroIntegrationTests.ClaveDeOtraVentaDelTenant_NoLlamaPasarela() in /home/sebacachyos/Documentos/Informatica/Semestre6/TallerIntegracion3/NewRepo/TallerIntegracion3/tests/GlobalMart.IntegrationTests/CobroSeguroIntegrationTests.cs:line 179
+--- End of stack trace from previous location ---
+----- Inner Stack Trace -----
+   at Npgsql.Internal.NpgsqlConnector.ReadMessageLong(Boolean async, DataRowLoadingMode dataRowLoadingMode, Boolean readingNotifications, Boolean isReadingPrependedMessage)
+   at System.Runtime.CompilerServices.PoolingAsyncValueTaskMethodBuilder`1.StateMachineBox`1.System.Threading.Tasks.Sources.IValueTaskSource&lt;TResult&gt;.GetResult(Int16 token)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="b75625a3-47b0-43df-8bd8-d47542d60108" testId="4da8c96d-fa85-ae55-67af-aea838abcb38" testName="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests.ResultadoReal_PersisteSoloCuandoHayAprobacion(scenario: &quot;sim-timeout-v1&quot;, status: 504, approved: False)" computerName="sebacachyos" duration="00:00:02.6220713" startTime="2026-10-18T20:26:57.3286418-03:00" endTime="2026-10-18T20:26:57.3286622-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="b75625a3-47b0-43df-8bd8-d47542d60108" />
+    <UnitTestResult executionId="3dc9dc4e-5e87-4e6c-a4e1-69994aaed65b" testId="3313a5f8-ac97-2470-4822-9f245b969071" testName="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests.ResultadoReal_PersisteSoloCuandoHayAprobacion(scenario: &quot;sim-declined-v1&quot;, status: 422, approved: False)" computerName="sebacachyos" duration="00:00:00.0671728" startTime="2026-10-18T20:27:04.0123664-03:00" endTime="2026-10-18T20:27:04.0123665-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="3dc9dc4e-5e87-4e6c-a4e1-69994aaed65b" />
+    <UnitTestResult executionId="49316b24-5ab2-414b-8e61-77911a5509cc" testId="030e24b7-352e-8ef7-c332-11eaa01d70df" testName="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests.ResultadoReal_PersisteSoloCuandoHayAprobacion(scenario: &quot;sim-approved-v1&quot;, status: 200, approved: True)" computerName="sebacachyos" duration="00:00:00.2227240" startTime="2026-10-18T20:27:00.6922493-03:00" endTime="2026-10-18T20:27:00.6922495-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="49316b24-5ab2-414b-8e61-77911a5509cc" />
+    <UnitTestResult executionId="f5cbe020-7b03-4409-9fd9-e897a7ac992c" testId="98305b0a-9153-baf9-59e5-18b325095749" testName="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests.ClaveInvalida_NoGeneraUnaNuevaAutorizacion(key: &quot;00000000-0000-0000-0000-000000000000&quot;)" computerName="sebacachyos" duration="00:00:00.0438024" startTime="2026-10-18T20:27:22.9185214-03:00" endTime="2026-10-18T20:27:22.9185215-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="f5cbe020-7b03-4409-9fd9-e897a7ac992c">
+      <Output>
+        <ErrorInfo>
+          <Message>Assert.Equal() Failure: Values differ
+Expected: BadRequest
+Actual:   BadGateway</Message>
+          <StackTrace>   at GlobalMart.IntegrationTests.CobroSeguroIntegrationTests.ClaveInvalida_NoGeneraUnaNuevaAutorizacion(String key) in /home/sebacachyos/Documentos/Informatica/Semestre6/TallerIntegracion3/NewRepo/TallerIntegracion3/tests/GlobalMart.IntegrationTests/CobroSeguroIntegrationTests.cs:line 210
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="91bdb101-24fe-4673-867a-9fa4729aaee8" testId="7aaa1a50-57f6-97ba-93ff-32d4aa5692c6" testName="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests.ClaveInvalida_NoGeneraUnaNuevaAutorizacion(key: &quot;clave-invalida&quot;)" computerName="sebacachyos" duration="00:00:00.0455312" startTime="2026-10-18T20:27:26.1999476-03:00" endTime="2026-10-18T20:27:26.1999477-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="91bdb101-24fe-4673-867a-9fa4729aaee8">
+      <Output>
+        <ErrorInfo>
+          <Message>Assert.Equal() Failure: Values differ
+Expected: BadRequest
+Actual:   OK</Message>
+          <StackTrace>   at GlobalMart.IntegrationTests.CobroSeguroIntegrationTests.ClaveInvalida_NoGeneraUnaNuevaAutorizacion(String key) in /home/sebacachyos/Documentos/Informatica/Semestre6/TallerIntegracion3/NewRepo/TallerIntegracion3/tests/GlobalMart.IntegrationTests/CobroSeguroIntegrationTests.cs:line 210
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="0bef5641-5851-41b7-8029-c28a417669f3" testId="4fe74671-0cf3-043a-7964-2382f6fbb1f5" testName="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests.RepetirClave_NoReautorizaNiDuplica(scenario: &quot;sim-timeout-v1&quot;, firstStatus: 504, approved: False)" computerName="sebacachyos" duration="00:00:04.0657991" startTime="2026-10-18T20:27:13.8974330-03:00" endTime="2026-10-18T20:27:13.8974330-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="0bef5641-5851-41b7-8029-c28a417669f3">
+      <Output>
+        <ErrorInfo>
+          <Message>Microsoft.EntityFrameworkCore.DbUpdateException : An error occurred while saving the entity changes. See the inner exception for details.
+---- Npgsql.PostgresException : 23505: duplicate key value violates unique constraint "IX_IntentosPago_TenantId_IdempotencyKey"
+
+DETAIL: Detail redacted as it may contain sensitive data. Specify 'Include Error Detail' in the connection string to include this information.</Message>
+          <StackTrace>   at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(IList`1 entriesToSave, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(StateManager stateManager, Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+   at Npgsql.EntityFrameworkCore.PostgreSQL.Storage.Internal.NpgsqlExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+   at POSCartService.Repositories.VentaRepository.RegistrarIntentoPagoAsync(IntentoPago intentoPago) in /home/sebacachyos/Documentos/Informatica/Semestre6/TallerIntegracion3/NewRepo/TallerIntegracion3/src/POSCartService/Repositories/VentaRepository.cs:line 194
+   at POSCartService.Controllers.VentasController.CobrarTarjeta(Guid id, CobrarTarjetaRequest request, CancellationToken cancellationToken) in /home/sebacachyos/Documentos/Informatica/Semestre6/TallerIntegracion3/NewRepo/TallerIntegracion3/src/POSCartService/Controllers/VentasController.cs:line 868
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ActionMethodExecutor.TaskOfIActionResultExecutor.Execute(ActionContext actionContext, IActionResultTypeMapper mapper, ObjectMethodExecutor executor, Object controller, Object[] arguments)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.&lt;InvokeActionMethodAsync&gt;g__Awaited|12_0(ControllerActionInvoker invoker, ValueTask`1 actionResultValueTask)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.&lt;InvokeNextActionFilterAsync&gt;g__Awaited|10_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Rethrow(ActionExecutedContextSealed context)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State&amp; next, Scope&amp; scope, Object&amp; state, Boolean&amp; isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.&lt;InvokeInnerFilterAsync&gt;g__Awaited|13_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.&lt;InvokeFilterPipelineAsync&gt;g__Awaited|20_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.&lt;InvokeAsync&gt;g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.&lt;InvokeAsync&gt;g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at POSCartService.Middleware.TenantMiddleware.InvokeAsync(HttpContext context, PosCartDbContext db) in /home/sebacachyos/Documentos/Informatica/Semestre6/TallerIntegracion3/NewRepo/TallerIntegracion3/src/POSCartService/Middleware/TenantMiddleware.cs:line 33
+   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.TestHost.HttpContextBuilder.&lt;&gt;c__DisplayClass23_0.&lt;&lt;SendAsync&gt;g__RunRequestAsync|0&gt;d.MoveNext()
+--- End of stack trace from previous location ---
+   at Microsoft.AspNetCore.TestHost.ClientHandler.SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Mvc.Testing.Handlers.CookieContainerHandler.SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Mvc.Testing.Handlers.RedirectHandler.SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+   at System.Net.Http.HttpClient.&lt;SendAsync&gt;g__Core|83_0(HttpRequestMessage request, HttpCompletionOption completionOption, CancellationTokenSource cts, Boolean disposeCts, CancellationTokenSource pendingRequestsCts, CancellationToken originalCancellationToken)
+   at GlobalMart.IntegrationTests.CobroSeguroIntegrationTests.RepetirClave_NoReautorizaNiDuplica(String scenario, Int32 firstStatus, Boolean approved) in /home/sebacachyos/Documentos/Informatica/Semestre6/TallerIntegracion3/NewRepo/TallerIntegracion3/tests/GlobalMart.IntegrationTests/CobroSeguroIntegrationTests.cs:line 134
+--- End of stack trace from previous location ---
+----- Inner Stack Trace -----
+   at Npgsql.Internal.NpgsqlConnector.ReadMessageLong(Boolean async, DataRowLoadingMode dataRowLoadingMode, Boolean readingNotifications, Boolean isReadingPrependedMessage)
+   at System.Runtime.CompilerServices.PoolingAsyncValueTaskMethodBuilder`1.StateMachineBox`1.System.Threading.Tasks.Sources.IValueTaskSource&lt;TResult&gt;.GetResult(Int16 token)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests.ResultadoReal_PersisteSoloCuandoHayAprobacion(scenario: &quot;sim-declined-v1&quot;, status: 422, approved: False)" storage="/home/sebacachyos/documentos/informatica/semestre6/tallerintegracion3/newrepo/tallerintegracion3/tests/globalmart.integrationtests/bin/release/net8.0/globalmart.integrationtests.dll" id="3313a5f8-ac97-2470-4822-9f245b969071">
+      <Execution id="3dc9dc4e-5e87-4e6c-a4e1-69994aaed65b" />
+      <TestMethod codeBase="/home/sebacachyos/Documentos/Informatica/Semestre6/TallerIntegracion3/NewRepo/TallerIntegracion3/tests/GlobalMart.IntegrationTests/bin/Release/net8.0/GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests" name="ResultadoReal_PersisteSoloCuandoHayAprobacion" />
+    </UnitTest>
+    <UnitTest name="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests.MismaClaveEnDosTenants_NoColisiona" storage="/home/sebacachyos/documentos/informatica/semestre6/tallerintegracion3/newrepo/tallerintegracion3/tests/globalmart.integrationtests/bin/release/net8.0/globalmart.integrationtests.dll" id="2ca98594-1cc7-abca-d955-44c7199405eb">
+      <Execution id="7c63f3c4-300b-43a2-97af-f9ad99c5627a" />
+      <TestMethod codeBase="/home/sebacachyos/Documentos/Informatica/Semestre6/TallerIntegracion3/NewRepo/TallerIntegracion3/tests/GlobalMart.IntegrationTests/bin/Release/net8.0/GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests" name="MismaClaveEnDosTenants_NoColisiona" />
+    </UnitTest>
+    <UnitTest name="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests.RepetirClave_NoReautorizaNiDuplica(scenario: &quot;sim-declined-v1&quot;, firstStatus: 422, approved: False)" storage="/home/sebacachyos/documentos/informatica/semestre6/tallerintegracion3/newrepo/tallerintegracion3/tests/globalmart.integrationtests/bin/release/net8.0/globalmart.integrationtests.dll" id="75301ecd-3149-7357-2ce0-4b1492e67f33">
+      <Execution id="bf3554dd-3034-49c7-a61d-674bfd098f13" />
+      <TestMethod codeBase="/home/sebacachyos/Documentos/Informatica/Semestre6/TallerIntegracion3/NewRepo/TallerIntegracion3/tests/GlobalMart.IntegrationTests/bin/Release/net8.0/GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests" name="RepetirClave_NoReautorizaNiDuplica" />
+    </UnitTest>
+    <UnitTest name="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests.ResultadoReal_PersisteSoloCuandoHayAprobacion(scenario: &quot;sim-approved-v1&quot;, status: 200, approved: True)" storage="/home/sebacachyos/documentos/informatica/semestre6/tallerintegracion3/newrepo/tallerintegracion3/tests/globalmart.integrationtests/bin/release/net8.0/globalmart.integrationtests.dll" id="030e24b7-352e-8ef7-c332-11eaa01d70df">
+      <Execution id="49316b24-5ab2-414b-8e61-77911a5509cc" />
+      <TestMethod codeBase="/home/sebacachyos/Documentos/Informatica/Semestre6/TallerIntegracion3/NewRepo/TallerIntegracion3/tests/GlobalMart.IntegrationTests/bin/Release/net8.0/GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests" name="ResultadoReal_PersisteSoloCuandoHayAprobacion" />
+    </UnitTest>
+    <UnitTest name="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests.RepetirClave_NoReautorizaNiDuplica(scenario: &quot;sim-timeout-v1&quot;, firstStatus: 504, approved: False)" storage="/home/sebacachyos/documentos/informatica/semestre6/tallerintegracion3/newrepo/tallerintegracion3/tests/globalmart.integrationtests/bin/release/net8.0/globalmart.integrationtests.dll" id="4fe74671-0cf3-043a-7964-2382f6fbb1f5">
+      <Execution id="0bef5641-5851-41b7-8029-c28a417669f3" />
+      <TestMethod codeBase="/home/sebacachyos/Documentos/Informatica/Semestre6/TallerIntegracion3/NewRepo/TallerIntegracion3/tests/GlobalMart.IntegrationTests/bin/Release/net8.0/GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests" name="RepetirClave_NoReautorizaNiDuplica" />
+    </UnitTest>
+    <UnitTest name="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests.ClaveInvalida_NoGeneraUnaNuevaAutorizacion(key: &quot;clave-invalida&quot;)" storage="/home/sebacachyos/documentos/informatica/semestre6/tallerintegracion3/newrepo/tallerintegracion3/tests/globalmart.integrationtests/bin/release/net8.0/globalmart.integrationtests.dll" id="7aaa1a50-57f6-97ba-93ff-32d4aa5692c6">
+      <Execution id="91bdb101-24fe-4673-867a-9fa4729aaee8" />
+      <TestMethod codeBase="/home/sebacachyos/Documentos/Informatica/Semestre6/TallerIntegracion3/NewRepo/TallerIntegracion3/tests/GlobalMart.IntegrationTests/bin/Release/net8.0/GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests" name="ClaveInvalida_NoGeneraUnaNuevaAutorizacion" />
+    </UnitTest>
+    <UnitTest name="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests.ResultadoReal_PersisteSoloCuandoHayAprobacion(scenario: &quot;sim-timeout-v1&quot;, status: 504, approved: False)" storage="/home/sebacachyos/documentos/informatica/semestre6/tallerintegracion3/newrepo/tallerintegracion3/tests/globalmart.integrationtests/bin/release/net8.0/globalmart.integrationtests.dll" id="4da8c96d-fa85-ae55-67af-aea838abcb38">
+      <Execution id="b75625a3-47b0-43df-8bd8-d47542d60108" />
+      <TestMethod codeBase="/home/sebacachyos/Documentos/Informatica/Semestre6/TallerIntegracion3/NewRepo/TallerIntegracion3/tests/GlobalMart.IntegrationTests/bin/Release/net8.0/GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests" name="ResultadoReal_PersisteSoloCuandoHayAprobacion" />
+    </UnitTest>
+    <UnitTest name="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests.Timeout_NoPermiteOtraClaveMientrasResultadoEsIncierto" storage="/home/sebacachyos/documentos/informatica/semestre6/tallerintegracion3/newrepo/tallerintegracion3/tests/globalmart.integrationtests/bin/release/net8.0/globalmart.integrationtests.dll" id="942ec7de-e947-904c-353d-415c733f3efb">
+      <Execution id="7ecb6664-3183-461e-8bd5-525fa9010d75" />
+      <TestMethod codeBase="/home/sebacachyos/Documentos/Informatica/Semestre6/TallerIntegracion3/NewRepo/TallerIntegracion3/tests/GlobalMart.IntegrationTests/bin/Release/net8.0/GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests" name="Timeout_NoPermiteOtraClaveMientrasResultadoEsIncierto" />
+    </UnitTest>
+    <UnitTest name="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests.ClaveDeOtraVentaDelTenant_NoLlamaPasarela" storage="/home/sebacachyos/documentos/informatica/semestre6/tallerintegracion3/newrepo/tallerintegracion3/tests/globalmart.integrationtests/bin/release/net8.0/globalmart.integrationtests.dll" id="242f5b15-555f-be89-ef78-d0d6933d7b44">
+      <Execution id="60154b59-49df-4248-be4c-a03c96e3abc8" />
+      <TestMethod codeBase="/home/sebacachyos/Documentos/Informatica/Semestre6/TallerIntegracion3/NewRepo/TallerIntegracion3/tests/GlobalMart.IntegrationTests/bin/Release/net8.0/GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests" name="ClaveDeOtraVentaDelTenant_NoLlamaPasarela" />
+    </UnitTest>
+    <UnitTest name="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests.SolicitudesSimultaneas_ReservanAntesDeContactarPasarela" storage="/home/sebacachyos/documentos/informatica/semestre6/tallerintegracion3/newrepo/tallerintegracion3/tests/globalmart.integrationtests/bin/release/net8.0/globalmart.integrationtests.dll" id="ba9cb53b-c4da-622b-f5f1-dff7e185de05">
+      <Execution id="26cd3334-75f8-4e23-8714-e6d95fa18ee5" />
+      <TestMethod codeBase="/home/sebacachyos/Documentos/Informatica/Semestre6/TallerIntegracion3/NewRepo/TallerIntegracion3/tests/GlobalMart.IntegrationTests/bin/Release/net8.0/GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests" name="SolicitudesSimultaneas_ReservanAntesDeContactarPasarela" />
+    </UnitTest>
+    <UnitTest name="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests.ClaveInvalida_NoGeneraUnaNuevaAutorizacion(key: &quot;00000000-0000-0000-0000-000000000000&quot;)" storage="/home/sebacachyos/documentos/informatica/semestre6/tallerintegracion3/newrepo/tallerintegracion3/tests/globalmart.integrationtests/bin/release/net8.0/globalmart.integrationtests.dll" id="98305b0a-9153-baf9-59e5-18b325095749">
+      <Execution id="f5cbe020-7b03-4409-9fd9-e897a7ac992c" />
+      <TestMethod codeBase="/home/sebacachyos/Documentos/Informatica/Semestre6/TallerIntegracion3/NewRepo/TallerIntegracion3/tests/GlobalMart.IntegrationTests/bin/Release/net8.0/GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests" name="ClaveInvalida_NoGeneraUnaNuevaAutorizacion" />
+    </UnitTest>
+    <UnitTest name="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests.RepetirClave_NoReautorizaNiDuplica(scenario: &quot;sim-approved-v1&quot;, firstStatus: 200, approved: True)" storage="/home/sebacachyos/documentos/informatica/semestre6/tallerintegracion3/newrepo/tallerintegracion3/tests/globalmart.integrationtests/bin/release/net8.0/globalmart.integrationtests.dll" id="e1cb5da5-a5c9-6419-bb18-14c0ef1443be">
+      <Execution id="f65d8297-3172-4abc-b0c5-13193a71d0bd" />
+      <TestMethod codeBase="/home/sebacachyos/Documentos/Informatica/Semestre6/TallerIntegracion3/NewRepo/TallerIntegracion3/tests/GlobalMart.IntegrationTests/bin/Release/net8.0/GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests" name="RepetirClave_NoReautorizaNiDuplica" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="75301ecd-3149-7357-2ce0-4b1492e67f33" executionId="bf3554dd-3034-49c7-a61d-674bfd098f13" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="2ca98594-1cc7-abca-d955-44c7199405eb" executionId="7c63f3c4-300b-43a2-97af-f9ad99c5627a" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="ba9cb53b-c4da-622b-f5f1-dff7e185de05" executionId="26cd3334-75f8-4e23-8714-e6d95fa18ee5" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="942ec7de-e947-904c-353d-415c733f3efb" executionId="7ecb6664-3183-461e-8bd5-525fa9010d75" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="e1cb5da5-a5c9-6419-bb18-14c0ef1443be" executionId="f65d8297-3172-4abc-b0c5-13193a71d0bd" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="242f5b15-555f-be89-ef78-d0d6933d7b44" executionId="60154b59-49df-4248-be4c-a03c96e3abc8" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="4da8c96d-fa85-ae55-67af-aea838abcb38" executionId="b75625a3-47b0-43df-8bd8-d47542d60108" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="3313a5f8-ac97-2470-4822-9f245b969071" executionId="3dc9dc4e-5e87-4e6c-a4e1-69994aaed65b" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="030e24b7-352e-8ef7-c332-11eaa01d70df" executionId="49316b24-5ab2-414b-8e61-77911a5509cc" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="98305b0a-9153-baf9-59e5-18b325095749" executionId="f5cbe020-7b03-4409-9fd9-e897a7ac992c" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="7aaa1a50-57f6-97ba-93ff-32d4aa5692c6" executionId="91bdb101-24fe-4673-867a-9fa4729aaee8" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="4fe74671-0cf3-043a-7964-2382f6fbb1f5" executionId="0bef5641-5851-41b7-8029-c28a417669f3" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="Results Not in a List" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="All Loaded Results" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Failed">
+    <Counters total="12" executed="12" passed="5" failed="7" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Output>
+      <StdOut>[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v2.8.2+699d445a1a (64-bit .NET 8.0.31)
+[xUnit.net 00:00:00.11]   Discovering: GlobalMart.IntegrationTests
+[xUnit.net 00:00:00.24]   Discovered:  GlobalMart.IntegrationTests
+[xUnit.net 00:00:00.25]   Starting:    GlobalMart.IntegrationTests
+[xUnit.net 00:00:17.81]       Microsoft.EntityFrameworkCore.DbUpdateException : An error occurred while saving the entity changes. See the inner exception for details.
+[xUnit.net 00:00:17.81]       ---- Npgsql.PostgresException : 23505: duplicate key value violates unique constraint "IX_IntentosPago_TenantId_IdempotencyKey"
+[xUnit.net 00:00:17.81]       
+[xUnit.net 00:00:17.81]       DETAIL: Detail redacted as it may contain sensitive data. Specify 'Include Error Detail' in the connection string to include this information.
+[xUnit.net 00:00:17.81]       Stack Trace:
+[xUnit.net 00:00:17.82]            at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+[xUnit.net 00:00:17.82]            at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+[xUnit.net 00:00:17.82]            at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+[xUnit.net 00:00:17.82]            at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+[xUnit.net 00:00:17.82]            at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(IList`1 entriesToSave, CancellationToken cancellationToken)
+[xUnit.net 00:00:17.82]            at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(StateManager stateManager, Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+[xUnit.net 00:00:17.82]            at Npgsql.EntityFrameworkCore.PostgreSQL.Storage.Internal.NpgsqlExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+[xUnit.net 00:00:17.82]            at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+[xUnit.net 00:00:17.82]            at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+[xUnit.net 00:00:17.82]         /home/sebacachyos/Documentos/Informatica/Semestre6/TallerIntegracion3/NewRepo/TallerIntegracion3/src/POSCartService/Repositories/VentaRepository.cs(194,0): at POSCartService.Repositories.VentaRepository.RegistrarIntentoPagoAsync(IntentoPago intentoPago)
+[xUnit.net 00:00:17.82]         /home/sebacachyos/Documentos/Informatica/Semestre6/TallerIntegracion3/NewRepo/TallerIntegracion3/src/POSCartService/Controllers/VentasController.cs(956,0): at POSCartService.Controllers.VentasController.CobrarTarjeta(Guid id, CobrarTarjetaRequest request, CancellationToken cancellationToken)
+[xUnit.net 00:00:17.82]            at Microsoft.AspNetCore.Mvc.Infrastructure.ActionMethodExecutor.TaskOfIActionResultExecutor.Execute(ActionContext actionContext, IActionResultTypeMapper mapper, ObjectMethodExecutor executor, Object controller, Object[] arguments)
+[xUnit.net 00:00:17.82]            at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.&lt;InvokeActionMethodAsync&gt;g__Awaited|12_0(ControllerActionInvoker invoker, ValueTask`1 actionResultValueTask)
+[xUnit.net 00:00:17.82]            at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.&lt;InvokeNextActionFilterAsync&gt;g__Awaited|10_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+[xUnit.net 00:00:17.82]            at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Rethrow(ActionExecutedContextSealed context)
+[xUnit.net 00:00:17.82]            at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State&amp; next, Scope&amp; scope, Object&amp; state, Boolean&amp; isCompleted)
+[xUnit.net 00:00:17.82]            at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.&lt;InvokeInnerFilterAsync&gt;g__Awaited|13_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+[xUnit.net 00:00:17.82]            at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.&lt;InvokeFilterPipelineAsync&gt;g__Awaited|20_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+[xUnit.net 00:00:17.82]            at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.&lt;InvokeAsync&gt;g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+[xUnit.net 00:00:17.82]            at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.&lt;InvokeAsync&gt;g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+[xUnit.net 00:00:17.82]         /home/sebacachyos/Documentos/Informatica/Semestre6/TallerIntegracion3/NewRepo/TallerIntegracion3/src/POSCartService/Middleware/TenantMiddleware.cs(33,0): at POSCartService.Middleware.TenantMiddleware.InvokeAsync(HttpContext context, PosCartDbContext db)
+[xUnit.net 00:00:17.82]            at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+[xUnit.net 00:00:17.82]            at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+[xUnit.net 00:00:17.82]            at Microsoft.AspNetCore.TestHost.HttpContextBuilder.&lt;&gt;c__DisplayClass23_0.&lt;&lt;SendAsync&gt;g__RunRequestAsync|0&gt;d.MoveNext()
+[xUnit.net 00:00:17.82]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:17.82]            at Microsoft.AspNetCore.TestHost.ClientHandler.SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+[xUnit.net 00:00:17.82]            at Microsoft.AspNetCore.Mvc.Testing.Handlers.CookieContainerHandler.SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+[xUnit.net 00:00:17.82]            at Microsoft.AspNetCore.Mvc.Testing.Handlers.RedirectHandler.SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+[xUnit.net 00:00:17.82]            at System.Net.Http.HttpClient.&lt;SendAsync&gt;g__Core|83_0(HttpRequestMessage request, HttpCompletionOption completionOption, CancellationTokenSource cts, Boolean disposeCts, CancellationTokenSource pendingRequestsCts, CancellationToken originalCancellationToken)
+[xUnit.net 00:00:17.82]         /home/sebacachyos/Documentos/Informatica/Semestre6/TallerIntegracion3/NewRepo/TallerIntegracion3/tests/GlobalMart.IntegrationTests/CobroSeguroIntegrationTests.cs(134,0): at GlobalMart.IntegrationTests.CobroSeguroIntegrationTests.RepetirClave_NoReautorizaNiDuplica(String scenario, Int32 firstStatus, Boolean approved)
+[xUnit.net 00:00:17.82]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:17.82]         ----- Inner Stack Trace -----
+[xUnit.net 00:00:17.82]            at Npgsql.Internal.NpgsqlConnector.ReadMessageLong(Boolean async, DataRowLoadingMode dataRowLoadingMode, Boolean readingNotifications, Boolean isReadingPrependedMessage)
+[xUnit.net 00:00:17.82]            at System.Runtime.CompilerServices.PoolingAsyncValueTaskMethodBuilder`1.StateMachineBox`1.System.Threading.Tasks.Sources.IValueTaskSource&lt;TResult&gt;.GetResult(Int16 token)
+[xUnit.net 00:00:17.82]            at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+[xUnit.net 00:00:17.82]            at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+[xUnit.net 00:00:17.82]            at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+[xUnit.net 00:00:17.82]            at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+[xUnit.net 00:00:17.82]            at Npgsql.NpgsqlCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+[xUnit.net 00:00:17.82]            at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+[xUnit.net 00:00:17.82]            at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+[xUnit.net 00:00:17.82]            at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+[xUnit.net 00:00:24.66]       Microsoft.EntityFrameworkCore.DbUpdateException : An error occurred while saving the entity changes. See the inner exception for details.
+[xUnit.net 00:00:24.66]       ---- Npgsql.PostgresException : 23505: duplicate key value violates unique constraint "IX_IntentosPago_TenantId_IdempotencyKey"
+[xUnit.net 00:00:24.66]       
+[xUnit.net 00:00:24.66]       DETAIL: Detail redacted as it may contain sensitive data. Specify 'Include Error Detail' in the connection string to include this information.
+[xUnit.net 00:00:24.66]       Stack Trace:
+[xUnit.net 00:00:24.66]            at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+[xUnit.net 00:00:24.66]            at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+[xUnit.net 00:00:24.66]            at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+[xUnit.net 00:00:24.66]            at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+[xUnit.net 00:00:24.66]            at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(IList`1 entriesToSave, CancellationToken cancellationToken)
+[xUnit.net 00:00:24.66]            at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(StateManager stateManager, Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+[xUnit.net 00:00:24.66]            at Npgsql.EntityFrameworkCore.PostgreSQL.Storage.Internal.NpgsqlExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+[xUnit.net 00:00:24.66]            at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+[xUnit.net 00:00:24.66]            at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+[xUnit.net 00:00:24.66]         /home/sebacachyos/Documentos/Informatica/Semestre6/TallerIntegracion3/NewRepo/TallerIntegracion3/src/POSCartService/Repositories/VentaRepository.cs(194,0): at POSCartService.Repositories.VentaRepository.RegistrarIntentoPagoAsync(IntentoPago intentoPago)
+[xUnit.net 00:00:24.66]         /home/sebacachyos/Documentos/Informatica/Semestre6/TallerIntegracion3/NewRepo/TallerIntegracion3/src/POSCartService/Controllers/VentasController.cs(868,0): at POSCartService.Controllers.VentasController.CobrarTarjeta(Guid id, CobrarTarjetaRequest request, CancellationToken cancellationToken)
+[xUnit.net 00:00:24.66]            at Microsoft.AspNetCore.Mvc.Infrastructure.ActionMethodExecutor.TaskOfIActionResultExecutor.Execute(ActionContext actionContext, IActionResultTypeMapper mapper, ObjectMethodExecutor executor, Object controller, Object[] arguments)
+[xUnit.net 00:00:24.66]            at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.&lt;InvokeActionMethodAsync&gt;g__Awaited|12_0(ControllerActionInvoker invoker, ValueTask`1 actionResultValueTask)
+[xUnit.net 00:00:24.66]            at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.&lt;InvokeNextActionFilterAsync&gt;g__Awaited|10_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+[xUnit.net 00:00:24.66]            at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Rethrow(ActionExecutedContextSealed context)
+[xUnit.net 00:00:24.66]            at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State&amp; next, Scope&amp; scope, Object&amp; state, Boolean&amp; isCompleted)
+[xUnit.net 00:00:24.66]            at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.&lt;InvokeInnerFilterAsync&gt;g__Awaited|13_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+[xUnit.net 00:00:24.66]            at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.&lt;InvokeFilterPipelineAsync&gt;g__Awaited|20_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+[xUnit.net 00:00:24.66]            at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.&lt;InvokeAsync&gt;g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+[xUnit.net 00:00:24.66]            at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.&lt;InvokeAsync&gt;g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+[xUnit.net 00:00:24.66]         /home/sebacachyos/Documentos/Informatica/Semestre6/TallerIntegracion3/NewRepo/TallerIntegracion3/src/POSCartService/Middleware/TenantMiddleware.cs(33,0): at POSCartService.Middleware.TenantMiddleware.InvokeAsync(HttpContext context, PosCartDbContext db)
+[xUnit.net 00:00:24.66]            at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+[xUnit.net 00:00:24.66]            at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+[xUnit.net 00:00:24.66]            at Microsoft.AspNetCore.TestHost.HttpContextBuilder.&lt;&gt;c__DisplayClass23_0.&lt;&lt;SendAsync&gt;g__RunRequestAsync|0&gt;d.MoveNext()
+[xUnit.net 00:00:24.66]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:24.66]            at Microsoft.AspNetCore.TestHost.ClientHandler.SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+[xUnit.net 00:00:24.66]            at Microsoft.AspNetCore.Mvc.Testing.Handlers.CookieContainerHandler.SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+[xUnit.net 00:00:24.66]            at Microsoft.AspNetCore.Mvc.Testing.Handlers.RedirectHandler.SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+[xUnit.net 00:00:24.66]            at System.Net.Http.HttpClient.&lt;SendAsync&gt;g__Core|83_0(HttpRequestMessage request, HttpCompletionOption completionOption, CancellationTokenSource cts, Boolean disposeCts, CancellationTokenSource pendingRequestsCts, CancellationToken originalCancellationToken)
+[xUnit.net 00:00:24.66]         /home/sebacachyos/Documentos/Informatica/Semestre6/TallerIntegracion3/NewRepo/TallerIntegracion3/tests/GlobalMart.IntegrationTests/CobroSeguroIntegrationTests.cs(134,0): at GlobalMart.IntegrationTests.CobroSeguroIntegrationTests.RepetirClave_NoReautorizaNiDuplica(String scenario, Int32 firstStatus, Boolean approved)
+[xUnit.net 00:00:24.66]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:24.66]         ----- Inner Stack Trace -----
+[xUnit.net 00:00:24.66]            at Npgsql.Internal.NpgsqlConnector.ReadMessageLong(Boolean async, DataRowLoadingMode dataRowLoadingMode, Boolean readingNotifications, Boolean isReadingPrependedMessage)
+[xUnit.net 00:00:24.66]            at System.Runtime.CompilerServices.PoolingAsyncValueTaskMethodBuilder`1.StateMachineBox`1.System.Threading.Tasks.Sources.IValueTaskSource&lt;TResult&gt;.GetResult(Int16 token)
+[xUnit.net 00:00:24.66]            at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+[xUnit.net 00:00:24.66]            at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+[xUnit.net 00:00:24.66]            at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+[xUnit.net 00:00:24.66]            at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+[xUnit.net 00:00:24.66]            at Npgsql.NpgsqlCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+[xUnit.net 00:00:24.66]            at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+[xUnit.net 00:00:24.66]            at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+[xUnit.net 00:00:24.66]            at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+[xUnit.net 00:00:33.68]       Assert.Equal() Failure: Values differ
+[xUnit.net 00:00:33.68]       Expected: BadRequest
+[xUnit.net 00:00:33.68]       Actual:   BadGateway
+[xUnit.net 00:00:33.68]       Stack Trace:
+[xUnit.net 00:00:33.68]         /home/sebacachyos/Documentos/Informatica/Semestre6/TallerIntegracion3/NewRepo/TallerIntegracion3/tests/GlobalMart.IntegrationTests/CobroSeguroIntegrationTests.cs(210,0): at GlobalMart.IntegrationTests.CobroSeguroIntegrationTests.ClaveInvalida_NoGeneraUnaNuevaAutorizacion(String key)
+[xUnit.net 00:00:33.68]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:36.96]       Assert.Equal() Failure: Values differ
+[xUnit.net 00:00:36.96]       Expected: BadRequest
+[xUnit.net 00:00:36.96]       Actual:   OK
+[xUnit.net 00:00:36.96]       Stack Trace:
+[xUnit.net 00:00:36.96]         /home/sebacachyos/Documentos/Informatica/Semestre6/TallerIntegracion3/NewRepo/TallerIntegracion3/tests/GlobalMart.IntegrationTests/CobroSeguroIntegrationTests.cs(210,0): at GlobalMart.IntegrationTests.CobroSeguroIntegrationTests.ClaveInvalida_NoGeneraUnaNuevaAutorizacion(String key)
+[xUnit.net 00:00:36.96]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:39.91]       Microsoft.EntityFrameworkCore.DbUpdateException : An error occurred while saving the entity changes. See the inner exception for details.
+[xUnit.net 00:00:39.91]       ---- Npgsql.PostgresException : 23505: duplicate key value violates unique constraint "IX_IntentosPago_TenantId_IdempotencyKey"
+[xUnit.net 00:00:39.91]       
+[xUnit.net 00:00:39.91]       DETAIL: Detail redacted as it may contain sensitive data. Specify 'Include Error Detail' in the connection string to include this information.
+[xUnit.net 00:00:39.91]       Stack Trace:
+[xUnit.net 00:00:39.91]            at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+[xUnit.net 00:00:39.91]            at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+[xUnit.net 00:00:39.91]            at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+[xUnit.net 00:00:39.91]            at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+[xUnit.net 00:00:39.91]            at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(IList`1 entriesToSave, CancellationToken cancellationToken)
+[xUnit.net 00:00:39.91]            at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(StateManager stateManager, Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+[xUnit.net 00:00:39.91]            at Npgsql.EntityFrameworkCore.PostgreSQL.Storage.Internal.NpgsqlExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+[xUnit.net 00:00:39.91]            at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+[xUnit.net 00:00:39.91]            at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+[xUnit.net 00:00:39.91]         /home/sebacachyos/Documentos/Informatica/Semestre6/TallerIntegracion3/NewRepo/TallerIntegracion3/src/POSCartService/Repositories/VentaRepository.cs(194,0): at POSCartService.Repositories.VentaRepository.RegistrarIntentoPagoAsync(IntentoPago intentoPago)
+[xUnit.net 00:00:39.91]         /home/sebacachyos/Documentos/Informatica/Semestre6/TallerIntegracion3/NewRepo/TallerIntegracion3/src/POSCartService/Controllers/VentasController.cs(894,0): at POSCartService.Controllers.VentasController.CobrarTarjeta(Guid id, CobrarTarjetaRequest request, CancellationToken cancellationToken)
+[xUnit.net 00:00:39.91]            at Microsoft.AspNetCore.Mvc.Infrastructure.ActionMethodExecutor.TaskOfIActionResultExecutor.Execute(ActionContext actionContext, IActionResultTypeMapper mapper, ObjectMethodExecutor executor, Object controller, Object[] arguments)
+[xUnit.net 00:00:39.91]            at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.&lt;InvokeActionMethodAsync&gt;g__Awaited|12_0(ControllerActionInvoker invoker, ValueTask`1 actionResultValueTask)
+[xUnit.net 00:00:39.91]            at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.&lt;InvokeNextActionFilterAsync&gt;g__Awaited|10_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+[xUnit.net 00:00:39.91]            at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Rethrow(ActionExecutedContextSealed context)
+[xUnit.net 00:00:39.91]            at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State&amp; next, Scope&amp; scope, Object&amp; state, Boolean&amp; isCompleted)
+[xUnit.net 00:00:39.91]            at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.&lt;InvokeInnerFilterAsync&gt;g__Awaited|13_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+[xUnit.net 00:00:39.91]            at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.&lt;InvokeFilterPipelineAsync&gt;g__Awaited|20_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+[xUnit.net 00:00:39.91]            at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.&lt;InvokeAsync&gt;g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+[xUnit.net 00:00:39.91]            at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.&lt;InvokeAsync&gt;g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+[xUnit.net 00:00:39.91]         /home/sebacachyos/Documentos/Informatica/Semestre6/TallerIntegracion3/NewRepo/TallerIntegracion3/src/POSCartService/Middleware/TenantMiddleware.cs(33,0): at POSCartService.Middleware.TenantMiddleware.InvokeAsync(HttpContext context, PosCartDbContext db)
+[xUnit.net 00:00:39.91]            at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+[xUnit.net 00:00:39.91]            at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+[xUnit.net 00:00:39.91]            at Microsoft.AspNetCore.TestHost.HttpContextBuilder.&lt;&gt;c__DisplayClass23_0.&lt;&lt;SendAsync&gt;g__RunRequestAsync|0&gt;d.MoveNext()
+[xUnit.net 00:00:39.91]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:39.91]            at Microsoft.AspNetCore.TestHost.ClientHandler.SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+[xUnit.net 00:00:39.91]            at Microsoft.AspNetCore.Mvc.Testing.Handlers.CookieContainerHandler.SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+[xUnit.net 00:00:39.91]            at Microsoft.AspNetCore.Mvc.Testing.Handlers.RedirectHandler.SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+[xUnit.net 00:00:39.91]            at System.Net.Http.HttpClient.&lt;SendAsync&gt;g__Core|83_0(HttpRequestMessage request, HttpCompletionOption completionOption, CancellationTokenSource cts, Boolean disposeCts, CancellationTokenSource pendingRequestsCts, CancellationToken originalCancellationToken)
+[xUnit.net 00:00:39.91]         /home/sebacachyos/Documentos/Informatica/Semestre6/TallerIntegracion3/NewRepo/TallerIntegracion3/tests/GlobalMart.IntegrationTests/CobroSeguroIntegrationTests.cs(179,0): at GlobalMart.IntegrationTests.CobroSeguroIntegrationTests.ClaveDeOtraVentaDelTenant_NoLlamaPasarela()
+[xUnit.net 00:00:39.91]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:39.91]         ----- Inner Stack Trace -----
+[xUnit.net 00:00:39.91]            at Npgsql.Internal.NpgsqlConnector.ReadMessageLong(Boolean async, DataRowLoadingMode dataRowLoadingMode, Boolean readingNotifications, Boolean isReadingPrependedMessage)
+[xUnit.net 00:00:39.91]            at System.Runtime.CompilerServices.PoolingAsyncValueTaskMethodBuilder`1.StateMachineBox`1.System.Threading.Tasks.Sources.IValueTaskSource&lt;TResult&gt;.GetResult(Int16 token)
+[xUnit.net 00:00:39.91]            at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+[xUnit.net 00:00:39.91]            at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+[xUnit.net 00:00:39.91]            at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+[xUnit.net 00:00:39.91]            at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+[xUnit.net 00:00:39.91]            at Npgsql.NpgsqlCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+[xUnit.net 00:00:39.91]            at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+[xUnit.net 00:00:39.91]            at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+[xUnit.net 00:00:39.91]            at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+[xUnit.net 00:00:44.81]       Assert.Equal() Failure: Values differ
+[xUnit.net 00:00:44.81]       Expected: Conflict
+[xUnit.net 00:00:44.81]       Actual:   OK
+[xUnit.net 00:00:44.81]       Stack Trace:
+[xUnit.net 00:00:44.81]         /home/sebacachyos/Documentos/Informatica/Semestre6/TallerIntegracion3/NewRepo/TallerIntegracion3/tests/GlobalMart.IntegrationTests/CobroSeguroIntegrationTests.cs(167,0): at GlobalMart.IntegrationTests.CobroSeguroIntegrationTests.Timeout_NoPermiteOtraClaveMientrasResultadoEsIncierto()
+[xUnit.net 00:00:44.81]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:47.89]       Assert.Equal() Failure: Values differ
+[xUnit.net 00:00:47.89]       Expected: Conflict
+[xUnit.net 00:00:47.89]       Actual:   OK
+[xUnit.net 00:00:47.89]       Stack Trace:
+[xUnit.net 00:00:47.90]         /home/sebacachyos/Documentos/Informatica/Semestre6/TallerIntegracion3/NewRepo/TallerIntegracion3/tests/GlobalMart.IntegrationTests/CobroSeguroIntegrationTests.cs(152,0): at GlobalMart.IntegrationTests.CobroSeguroIntegrationTests.SolicitudesSimultaneas_ReservanAntesDeContactarPasarela()
+[xUnit.net 00:00:47.90]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:47.91]   Finished:    GlobalMart.IntegrationTests
+</StdOut>
+    </Output>
+    <RunInfos>
+      <RunInfo computerName="sebacachyos" outcome="Error" timestamp="2026-10-18T20:27:07.0520419-03:00">
+        <Text>[xUnit.net 00:00:17.81]     GlobalMart.IntegrationTests.CobroSeguroIntegrationTests.RepetirClave_NoReautorizaNiDuplica(scenario: "sim-declined-v1", firstStatus: 422, approved: False) [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="sebacachyos" outcome="Error" timestamp="2026-10-18T20:27:13.8963187-03:00">
+        <Text>[xUnit.net 00:00:24.66]     GlobalMart.IntegrationTests.CobroSeguroIntegrationTests.RepetirClave_NoReautorizaNiDuplica(scenario: "sim-timeout-v1", firstStatus: 504, approved: False) [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="sebacachyos" outcome="Error" timestamp="2026-10-18T20:27:22.9179667-03:00">
+        <Text>[xUnit.net 00:00:33.68]     GlobalMart.IntegrationTests.CobroSeguroIntegrationTests.ClaveInvalida_NoGeneraUnaNuevaAutorizacion(key: "00000000-0000-0000-0000-000000000000") [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="sebacachyos" outcome="Error" timestamp="2026-10-18T20:27:26.1997649-03:00">
+        <Text>[xUnit.net 00:00:36.96]     GlobalMart.IntegrationTests.CobroSeguroIntegrationTests.ClaveInvalida_NoGeneraUnaNuevaAutorizacion(key: "clave-invalida") [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="sebacachyos" outcome="Error" timestamp="2026-10-18T20:27:29.1510590-03:00">
+        <Text>[xUnit.net 00:00:39.91]     GlobalMart.IntegrationTests.CobroSeguroIntegrationTests.ClaveDeOtraVentaDelTenant_NoLlamaPasarela [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="sebacachyos" outcome="Error" timestamp="2026-10-18T20:27:34.0493355-03:00">
+        <Text>[xUnit.net 00:00:44.81]     GlobalMart.IntegrationTests.CobroSeguroIntegrationTests.Timeout_NoPermiteOtraClaveMientrasResultadoEsIncierto [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="sebacachyos" outcome="Error" timestamp="2026-10-18T20:27:37.1334911-03:00">
+        <Text>[xUnit.net 00:00:47.89]     GlobalMart.IntegrationTests.CobroSeguroIntegrationTests.SolicitudesSimultaneas_ReservanAntesDeContactarPasarela [FAIL]</Text>
+      </RunInfo>
+    </RunInfos>
+  </ResultSummary>
+</TestRun>

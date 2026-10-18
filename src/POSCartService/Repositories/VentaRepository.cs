@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 using POSCartService.Data;
 using POSCartService.Models;
 
@@ -177,7 +178,7 @@ public class VentaRepository : IVentaRepository
         intentoPago.UpdatedAt = DateTime.UtcNow;
 
         _context.Pagos.Add(pago);
-        _context.IntentosPago.Add(intentoPago);
+        await ActualizarIntentoReservadoAsync(intentoPago);
         _context.OutboxMessages.Add(outboxMessage);
 
         await _context.SaveChangesAsync();
@@ -187,10 +188,65 @@ public class VentaRepository : IVentaRepository
     }
 
     /// <inheritdoc/>
+    public async Task<bool> ReservarIntentoPagoAsync(IntentoPago intentoPago)
+    {
+        var tenantId = _context.CurrentTenantId
+            ?? throw new KeyNotFoundException("Tenant requerido para reservar un cobro.");
+        if (intentoPago.TenantId != tenantId || intentoPago.Estado != EstadoIntentoPago.PENDIENTE)
+            throw new InvalidOperationException("El intento no pertenece al tenant o no está pendiente.");
+
+        // El lock dura solo la reserva local, nunca la llamada HTTP. Coordina también
+        // instancias distintas de MS-5 y solicitudes con claves distintas para una venta.
+        await using var transaction = await _context.Database.BeginTransactionAsync();
+        var ventas = await _context.Ventas.FromSqlInterpolated(
+            $"SELECT * FROM \"Ventas\" WHERE \"Id\" = {intentoPago.VentaId} AND \"TenantId\" = {tenantId} FOR UPDATE")
+            .AsNoTracking().ToListAsync();
+        var venta = ventas.SingleOrDefault();
+        if (venta is null || venta.Estado != EstadoVenta.PENDIENTE
+            || venta.Total != intentoPago.Monto || venta.MetodoPago == MetodoPagoVenta.EFECTIVO)
+            return false;
+
+        if (await _context.IntentosPago.AnyAsync(i => i.TenantId == tenantId
+            && (i.IdempotencyKey == intentoPago.IdempotencyKey
+                || (i.VentaId == intentoPago.VentaId && i.Estado != EstadoIntentoPago.RECHAZADO))))
+            return false;
+
+        _context.IntentosPago.Add(intentoPago);
+        try
+        {
+            await _context.SaveChangesAsync();
+            await transaction.CommitAsync();
+            return true;
+        }
+        catch (DbUpdateException ex) when (ex.InnerException is PostgresException
+            { SqlState: PostgresErrorCodes.UniqueViolation, ConstraintName: "IX_IntentosPago_TenantId_IdempotencyKey" })
+        {
+            // Dos ventas distintas pueden competir por la misma clave del tenant.
+            await transaction.RollbackAsync();
+            _context.Entry(intentoPago).State = EntityState.Detached;
+            return false;
+        }
+    }
+
+    /// <inheritdoc/>
     public async Task RegistrarIntentoPagoAsync(IntentoPago intentoPago)
     {
-        intentoPago.UpdatedAt = DateTime.UtcNow;
-        _context.IntentosPago.Add(intentoPago);
+        await ActualizarIntentoReservadoAsync(intentoPago);
         await _context.SaveChangesAsync();
+    }
+
+    private async Task ActualizarIntentoReservadoAsync(IntentoPago intentoPago)
+    {
+        var reservado = await _context.IntentosPago.AsNoTracking().SingleOrDefaultAsync(i =>
+            _context.CurrentTenantId.HasValue && i.TenantId == _context.CurrentTenantId
+            && i.Id == intentoPago.Id && i.VentaId == intentoPago.VentaId
+            && i.IdempotencyKey == intentoPago.IdempotencyKey && i.Estado == EstadoIntentoPago.PENDIENTE);
+        if (reservado is null || reservado.TenantId != intentoPago.TenantId
+            || reservado.Monto != intentoPago.Monto || reservado.Moneda != intentoPago.Moneda)
+            throw new InvalidOperationException("No existe una reserva pendiente compatible para este cobro.");
+
+        intentoPago.CreatedAt = reservado.CreatedAt;
+        intentoPago.UpdatedAt = DateTime.UtcNow;
+        _context.Entry(intentoPago).State = EntityState.Modified;
     }
 }

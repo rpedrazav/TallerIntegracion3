@@ -25,8 +25,9 @@ public enum EstadoIntentoPago
 /// Solo persiste referencias opacas devueltas por la pasarela.
 /// </para>
 /// <para>
-/// La unicidad del índice (TenantId, IdempotencyKey) en base de datos garantiza
-/// que reintentar con la misma clave no crea un segundo cargo (criterio de aceptación S2-032).
+/// El índice único (TenantId, IdempotencyKey) evita reservas duplicadas.
+/// La reserva se confirma antes de llamar a la pasarela (S2-035); el índice por
+/// sí solo no garantiza ausencia de cargos externos duplicados.
 /// </para>
 /// </summary>
 public class IntentoPago

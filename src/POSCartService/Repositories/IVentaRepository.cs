@@ -54,7 +54,13 @@ public interface IVentaRepository
         OutboxMessage outboxMessage);
 
     /// <summary>
-    /// Persiste un IntentoPago sin modificar el estado de la venta.
+    /// Reserva y confirma el intento antes de autorizar en la pasarela. Devuelve false
+    /// si la clave ya existe o la venta tiene un cobro aprobado/en curso/incierto.
+    /// </summary>
+    Task<bool> ReservarIntentoPagoAsync(IntentoPago intentoPago);
+
+    /// <summary>
+    /// Actualiza un intento previamente reservado sin modificar el estado de la venta.
     /// Se usa ante rechazo o timeout de la pasarela.
     /// </summary>
     Task RegistrarIntentoPagoAsync(IntentoPago intentoPago);

@@ -12,7 +12,9 @@ public sealed record CobrarTarjetaRequest
     /// <summary>
     /// Clave de idempotencia única para este intento de cobro.
     /// Si no se especifica en el cuerpo, puede tomarse del header HTTP 'Idempotency-Key'
-    /// o generarse automáticamente como un nuevo GUID.
+    /// o generarse automáticamente como un nuevo GUID. Si se proporciona debe ser
+    /// un UUID no vacío; cuerpo y encabezado deben coincidir cuando están presentes.
+    /// La repetición retorna 409 sin volver a autorizar en la pasarela.
     /// </summary>
     [JsonPropertyName("idempotency_key")]
     public string? IdempotencyKey { get; init; }

@@ -3,9 +3,9 @@ id: ms5-pos
 tipo: microservicio
 titulo: MS-5 · POS & Cart Service
 estado: parcial
-fuentes: [src/POSCartService/, Docker/simulator/server.js, tests/GlobalMart.IntegrationTests/PaymentSimulatorIntegrationTests.cs, tests/GlobalMart.IntegrationTests/PaymentRetrySafetyTests.cs]
+fuentes: [src/POSCartService/, Docker/simulator/server.js, tests/GlobalMart.IntegrationTests/PaymentSimulatorIntegrationTests.cs, tests/GlobalMart.IntegrationTests/PaymentRetrySafetyTests.cs, tests/GlobalMart.IntegrationTests/CobroSeguroIntegrationTests.cs, docs/qa/S2-035/reporte.md]
 verificado_contra_codigo: true
-ultima_revision: 2026-10-17
+ultima_revision: 2026-10-18
 depende_de: [ms1-identity, ms2-tax, ms3-catalog]
 publica: [sale.completed]
 consume: []
@@ -53,6 +53,7 @@ reglas: [RN-01, RN-02, RN-03, RN-06, RF-02, RF-03, RF-04, RF-05, RF-06, RF-07]
 | GET | `/ventas/{id}` (alias `/api/ventas/{id}`) | JWT | [IMPLEMENTADO] |
 | GET | `/ventas/turno/{turnoId}` (alias `/api/ventas/turno/{turnoId}`) | JWT | [IMPLEMENTADO] |
 | POST | `/ventas/{id}/cobrar` (alias `/api/ventas/{id}/cobrar`) | JWT | [IMPLEMENTADO — valida monto_recibido ≥ total, calcula vuelto y persiste venta, pago y sale.completed pendiente en una transacción] |
+| POST | `/ventas/{id}/cobrar-tarjeta` (alias `/api/ventas/{id}/cobrar-tarjeta`) | JWT | [IMPLEMENTADO — reserva previa, aprobación/rechazo/timeout y bloqueo de repetición; S2-035] |
 | POST | `/ventas/{id}/anular` (alias `/api/ventas/{id}/anular`) | JWT | [PLANIFICADO en controller — implementado en VentaService.AnularAsync] |
 | GET | `/health` | Público | [IMPLEMENTADO] |
 
@@ -92,8 +93,9 @@ reglas: [RN-01, RN-02, RN-03, RN-06, RF-02, RF-03, RF-04, RF-05, RF-06, RF-07]
 
 5. POST /ventas/{id}/cobrar-tarjeta  { scenario_id?, idempotency_key?, monto? }
    → S2-033 / S2-034: Valida JWT, turno ABIERTO, venta PENDIENTE y MetodoPago != EFECTIVO
+   → Reserva IntentoPago PENDIENTE en PostgreSQL antes de autorizar; clave repetida o cobro incierto → 409 sin POST externo
    → Llama a IPaymentGatewayClient.ProcessPaymentAsync
-   → Si APPROVED: CompletarTarjetaAsync completa venta, crea Pago TARJETA, IntentoPago APROBADO y OutboxMessage sale.completed (200 OK)
+   → Si APPROVED: CompletarTarjetaAsync completa venta, crea Pago TARJETA, actualiza IntentoPago a APROBADO y OutboxMessage sale.completed (200 OK)
    → Si DECLINED: IntentoPago RECHAZADO, venta sigue PENDIENTE, 0 pagos y 0 outbox (422 Unprocessable Entity)
    → Si Timeout/Error: IntentoPago FALLIDO, venta sigue PENDIENTE, 0 pagos y 0 outbox (504 / 502)
 
@@ -216,7 +218,7 @@ await _ventaRepository.CompletarConOutboxAsync(venta.Id, pago, outboxMessage);
 | PC-14 | Calcular Total con Impuestos | [IMPLEMENTADO] |
 | PC-15 | Cobrar en Efectivo | [IMPLEMENTADO — endpoint expuesto, valida monto ≥ total, calcula vuelto y persiste sale.completed pendiente] |
 | PC-16 | Calcular Vuelto | [PLANIFICADO] |
-| PC-17 | Cobrar con Tarjeta | [PARCIAL — adaptador disponible, sin orquestación] |
+| PC-17 | Cobrar con Tarjeta | [IMPLEMENTADO — cobro backend con simulador; S2-035] |
 | PC-18 | Pago Mixto (efectivo + tarjeta) | [PLANIFICADO] |
 | PC-19 | Emitir Recibo / Comprobante | [PLANIFICADO] |
 | PC-20 | Anular Venta (Devolución) | [PARCIAL — implementado en VentaService.AnularAsync] |
@@ -226,9 +228,9 @@ await _ventaRepository.CompletarConOutboxAsync(venta.Id, pago, outboxMessage);
 | PC-24 | Publicar sale.completed | [IMPLEMENTADO — outbox, worker y reintentos automáticos] |
 | PC-25 | Publicar sale.reversed | [PLANIFICADO] |
 | PC-26 | Leer Tarjeta en Terminal (NFC/chip/mag) | [PLANIFICADO] |
-| PC-27 | Enviar Solicitud a Pasarela | [PARCIAL — adaptador implementado, aún no invocado] |
-| PC-28 | Recibir Respuesta de Pasarela | [PARCIAL — DTO, errores y simulador implementados, sin flujo de cobro] |
-| PC-29 | Manejar Rechazo de Pago | [PLANIFICADO] |
+| PC-27 | Enviar Solicitud a Pasarela | [IMPLEMENTADO — invocado desde cobrar-tarjeta] |
+| PC-28 | Recibir Respuesta de Pasarela | [IMPLEMENTADO — aprobación, rechazo y timeout; S2-035] |
+| PC-29 | Manejar Rechazo de Pago | [IMPLEMENTADO — rechazo definitivo sin pago/outbox; S2-035] |
 | PC-30 | Solicitar Reembolso a Pasarela | [PLANIFICADO] |
 | PC-31 | Confirmar Reembolso | [PLANIFICADO] |
 | PC-32 | Abrir Cajón de Dinero | [PLANIFICADO] |
@@ -305,11 +307,11 @@ Defensa adicional en [PosRepositoryTenantIsolationTests.cs](../../../tests/Globa
 
 ## S2-038 — Servicio simulador de autorizaciones
 
-[IMPLEMENTADO] El simulador Node existente implementa aprobación, rechazo y timeout sin conexión bancaria. Exige la misma identidad en `Idempotency-Key` y `request_id`, conserva la respuesta por tenant y genera referencias opacas. La integración real con `PaymentGatewayClient` aprobó **7/7 pruebas** el 2026-10-17. El controller de cobro aún no invoca el adaptador. [Contrato y evidencia](../integraciones/pasarela-pago.md).
+[IMPLEMENTADO] El simulador Node existente implementa aprobación, rechazo y timeout sin conexión bancaria. Exige la misma identidad en `Idempotency-Key` y `request_id`, conserva la respuesta por tenant y genera referencias opacas. La integración real con `PaymentGatewayClient` aprobó **7/7 pruebas** el 2026-10-17. El endpoint `cobrar-tarjeta` invoca el adaptador; ver S2-035 para pruebas del flujo integrado. [Contrato y evidencia](../integraciones/pasarela-pago.md).
 
 ## S2-039 — Evitar reintento inseguro de cobro
 
-[IMPLEMENTADO] Ante timeout de autorización, `PaymentGatewayClient` consulta una vez el estado con el mismo `tenant_id`, `request_id` e `Idempotency-Key`, sin repetir el `POST`. Si recupera un resultado lo devuelve; si el estado no existe o no puede consultarse, lanza `PaymentAuthorizationUncertainException`. Un rechazo `DECLINED` sigue siendo un resultado definitivo y no activa la consulta. Pruebas enfocadas y simulador real: **4/4 aprobadas** el 2026-10-17. La orquestación desde el controller de cobro continúa pendiente. [Política y evidencia](../integraciones/pasarela-pago.md).
+[IMPLEMENTADO] Ante timeout de autorización, `PaymentGatewayClient` consulta una vez el estado con el mismo `tenant_id`, `request_id` e `Idempotency-Key`, sin repetir el `POST`. Si recupera un resultado lo devuelve; si el estado no existe o no puede consultarse, lanza `PaymentAuthorizationUncertainException`. Un rechazo `DECLINED` sigue siendo un resultado definitivo y no activa la consulta. Pruebas enfocadas y simulador real: **4/4 aprobadas** el 2026-10-17. La orquestación está conectada en `cobrar-tarjeta`; ver S2-035. [Política y evidencia](../integraciones/pasarela-pago.md).
 
 ## S2-056 — Configuración segura del simulador
 
@@ -319,4 +321,10 @@ Defensa adicional en [PosRepositoryTenantIsolationTests.cs](../../../tests/Globa
 
 [IMPLEMENTADO] El simulador de pasarela se ejecuta localmente en Docker (`payment-simulator:5050`) y en host, y queda expuesto en Kong (`/simulator/payments`, `/simulator/health`). MS-5 (`PaymentGatewayClient`) puede alcanzarlo por Gateway (:8000) o directo (:5050). Se validó con 7 pruebas de integración en `PaymentSimulatorIntegrationTests`. [Detalles](../integraciones/pasarela-pago.md).
 
+## S2-035 — Pruebas de cobro seguro e idempotente
 
+[IMPLEMENTADO] `CobroSeguroIntegrationTests` conecta el endpoint HTTP de MS-5 y JWT real con PostgreSQL migrado y el proceso Node del simulador. La reserva de `IntentoPago` se confirma antes de contactar la pasarela, con lock breve por venta y unicidad por tenant/clave. Repeticiones y cobros pendientes/inciertos retornan 409 sin otra autorización; claves inválidas o contradictorias retornan 400. Solo un rechazo definitivo permite otro intento con clave nueva. Aprobación actualiza la reserva y confirma venta, pago y outbox en una transacción.
+
+La consulta inmediata tras timeout puede recuperar una aprobación; si no confirma el resultado, no se completa la venta. Si falla el commit local tras aprobación externa, la reserva permanece pendiente y bloquea otro cargo. La reconciliación posterior administrativa no está implementada. No acredita Electron, un banco real ni entrega Kafka.
+
+Validación Release el 2026-10-18: **17/17 pruebas aprobadas**, más **35/35 de regresión** (tarjeta, adaptador/simulador, intentos, efectivo y transacción outbox), sin fallos ni omisiones. [Diagnóstico, alcance y reproducción](../../qa/S2-035/reporte.md).

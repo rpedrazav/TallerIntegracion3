@@ -3,9 +3,9 @@ id: estado-actual
 tipo: indice
 titulo: Estado Real de Implementación — GlobalMart OS
 estado: vigente
-fuentes: [docs/context/_reports/inventario.md, src/, globalmart-frontend/src/api/client.ts, git log, docs/context/_reports/preguntas-abiertas.md]
+fuentes: [docs/context/_reports/inventario.md, src/, globalmart-frontend/src/api/client.ts, git log, docs/context/_reports/preguntas-abiertas.md, tests/GlobalMart.IntegrationTests/CobroSeguroIntegrationTests.cs, docs/qa/S2-035/reporte.md]
 verificado_contra_codigo: true
-ultima_revision: 2026-10-17
+ultima_revision: 2026-10-18
 depende_de: []
 publica: []
 consume: []
@@ -135,7 +135,8 @@ reglas: []
 - `POST /ventas/{id}/cobrar` — valida que la venta tenga método de pago EFECTIVO (rechaza TARJETA o MIXTO con 400 Bad Request según S2-004), valida `monto_recibido` ≥ total, y confirma venta, pago y `sale.completed` pendiente en una transacción [IMPLEMENTADO]
 - VentaService con métodos `CompletarAsync` y `AnularAsync` [IMPLEMENTADO en service]
 - OutboxPublisherWorker y KafkaProducerService — publicación automática con lease, reintento y cancelación limpia [IMPLEMENTADO]
-- PaymentGatewayClient — adaptador HTTP con URL/timeout configurables, idempotencia, payload seguro y consulta de estado tras timeout sin repetir la autorización; todavía no conectado al endpoint de cobro [IMPLEMENTADO]
+- PaymentGatewayClient — adaptador HTTP con URL/timeout configurables, idempotencia, payload seguro y consulta de estado tras timeout sin repetir la autorización; conectado a `POST /ventas/{id}/cobrar-tarjeta` [IMPLEMENTADO]
+- `POST /ventas/{id}/cobrar-tarjeta` — reserva durable antes de autorizar, aprobación atómica con pago/outbox, rechazo y timeout sin completar; 409 sin reautorizar ante repetición o cobro incierto. [IMPLEMENTADO; S2-035]
 - PaymentGatewaySimulator — proceso Node local con aprobación, rechazo, timeout, idempotencia y referencias opacas [IMPLEMENTADO]
 - test de integración abre turno con JWT de cajero y verifica persistencia en estado `ABIERTO` [IMPLEMENTADO]
 - tests de integración en `VentaIntegrationTests` validan creación de venta con resolución autoritativa en MS-3 e IVA en MS-2, agregado de ítems, y rechazo de productos inexistentes (404) e inactivos (400) sin persistir venta ni ítems [IMPLEMENTADO]
@@ -147,7 +148,7 @@ reglas: []
 
 **No implementado / CRÍTICO:**
 - Endpoint HTTP `POST /ventas/{id}/anular` aún no está expuesto en `VentasController.cs`
-- Orquestación del cobro con tarjeta; el adaptador HTTP y el simulador local ya están implementados
+- Reconciliación posterior de intentos de tarjeta inciertos o con aprobación externa cuyo commit local falló; se bloquean nuevas autorizaciones hasta resolverlos
 - Integración con hardware (balanza, impresora, cajón de dinero)
 
 ---
@@ -179,7 +180,7 @@ reglas: []
 |---|---------------|----------------|----------|
 | 1 | Exponer endpoint `POST /ventas/{id}/anular` en `VentasController.cs` | RF-22 | 🔴 Crítica |
 | 2 | Emisión simulada de DTE (boleta/factura) en MS-2 | RN-03, RF-08, TC-08/09 | 🔴 Crítica |
-| 3 | Orquestar el cobro con tarjeta usando el adaptador y simulador ya implementados | RN-02, RF-07, PC-27/28 | 🔴 Crítica |
+| 3 | Reconciliación posterior de cobros inciertos o con aprobación externa y fallo de commit local | RN-02, RF-07, PC-27/28 | 🔴 Crítica |
 | 4 | FEFO en recepción e inventario en MS-4 | RN-05, RF-10, WI-04/05 | 🟠 Alta |
 | 5 | Integrar frontend `Pos.tsx` con backend real | RF-04, RF-05 | 🟠 Alta |
 | 6 | Endpoint POST /auth/refresh | RF-01 | 🟠 Alta |
@@ -279,7 +280,7 @@ Cumple criterio de aceptación: el rechazo no genera `sale.completed` ni un `Pag
 
 ## S2-036 — Escenarios del simulador de pagos
 
-[IMPLEMENTADO] Se especificaron y materializaron los escenarios no sensibles `sim-approved-v1`, `sim-declined-v1` y `sim-timeout-v1`, con solicitudes y respuestas reproducibles, idempotencia por `request_id`, timeout controlado y campos mínimos de auditoría. Ningún escenario usa PAN, CVV ni otra credencial bancaria. El cobro con tarjeta en MS-5 todavía no está implementado. [Contrato S2-036](integraciones/pasarela-pago.md).
+[IMPLEMENTADO] Se especificaron y materializaron los escenarios no sensibles `sim-approved-v1`, `sim-declined-v1` y `sim-timeout-v1`, con solicitudes y respuestas reproducibles, idempotencia por `request_id`, timeout controlado y campos mínimos de auditoría. Ningún escenario usa PAN, CVV ni otra credencial bancaria. El cobro con tarjeta está implementado en `cobrar-tarjeta`; ver S2-035. [Contrato S2-036](integraciones/pasarela-pago.md).
 
 ## S2-037 — Adaptador HTTP de pasarela
 
@@ -291,11 +292,11 @@ Cumple criterio de aceptación: el rechazo no genera `sale.completed` ni un `Pag
 
 ## S2-039 / TI3-670 — Evitar reintento inseguro de cobro
 
-[IMPLEMENTADO] Un timeout del `POST` de autorización ahora provoca una única consulta de estado con el mismo `tenant_id`, `request_id` e `Idempotency-Key`; el adaptador no repite automáticamente el cargo. Un resultado almacenado se recupera, mientras que un 404 o una consulta fallida produce `PaymentAuthorizationUncertainException`. Los rechazos son resultados definitivos y no activan reconciliación. Pruebas enfocadas y simulador Node real: **4/4 aprobadas** el 2026-10-17. El controller de cobro aún no invoca el adaptador. [Política y evidencia](integraciones/pasarela-pago.md).
+[IMPLEMENTADO] Un timeout del `POST` de autorización ahora provoca una única consulta de estado con el mismo `tenant_id`, `request_id` e `Idempotency-Key`; el adaptador no repite automáticamente el cargo. Un resultado almacenado se recupera, mientras que un 404 o una consulta fallida produce `PaymentAuthorizationUncertainException`. Los rechazos son resultados definitivos y no activan reconciliación. Pruebas enfocadas y simulador Node real: **4/4 aprobadas** el 2026-10-17. El endpoint `cobrar-tarjeta` invoca el adaptador; ver S2-035 para pruebas del flujo integrado. [Política y evidencia](integraciones/pasarela-pago.md).
 
 ## S2-051 / TI3-682 — Matriz RN-02 de pagos
 
-[CONTRATO DEFINIDO] Se documentaron [18 casos de aceptación](../../diagramas/matriz/S2-051-matriz-rn02-pagos.md) por método, resultado, idempotencia y logs permitidos, con prohibición explícita de captura local de PAN/CVV. La matriz distingue cobertura parcial del adaptador/simulador de la aceptación E2E pendiente. No se ejecutaron estos casos como parte de la definición ni se implementó el cobro con tarjeta; aceptación E2E [NO VERIFICADO], bloqueada por la orquestación pendiente.
+[CONTRATO DEFINIDO] Se documentaron [18 casos de aceptación](../../diagramas/matriz/S2-051-matriz-rn02-pagos.md) por método, resultado, idempotencia y logs permitidos, con prohibición explícita de captura local de PAN/CVV. La matriz distingue cobertura parcial del adaptador/simulador de la aceptación E2E pendiente. La definición de la matriz no ejecutó estos casos ni implementó código; aceptación E2E de los 18 casos [NO VERIFICADO]. S2-035 verifica ahora el flujo backend de tarjeta con simulador, sin acreditar esa matriz completa.
 
 ## S2-026 / TI3-657 — Inventario y matriz de rutas y puertos reales
 
@@ -329,4 +330,10 @@ Cumple criterio de aceptación: el rechazo no genera `sale.completed` ni un `Pag
 
 [IMPLEMENTADO] Se incorporó el servicio `payment-simulator-service` (`http://payment-simulator:5050`) en Kong API Gateway (`Docker/config/kong.yaml`) con las rutas `/simulator/payments` y `/simulator/health` (admitiendo variantes `/api/*` y preservando paths con `strip_path: false`). Permite a MS-5 alcanzar el simulador vía Gateway (`:8000`) o de forma directa (`:5050`). Se validó el contrato de red impidiendo que el frontend Electron transmita datos bancarios. Validado en `scripts/smoke-test.sh` y documentado en `docs/context/infraestructura/matriz-rutas.md` y `docs/context/integraciones/pasarela-pago.md`.
 
+## S2-035 — Pruebas de cobro seguro e idempotente
 
+[IMPLEMENTADO] `CobroSeguroIntegrationTests` conecta el endpoint HTTP de MS-5 y JWT real con PostgreSQL migrado y el proceso Node del simulador. La reserva de `IntentoPago` se confirma antes de contactar la pasarela, con lock breve por venta y unicidad por tenant/clave. Repeticiones y cobros pendientes/inciertos retornan 409 sin otra autorización; claves inválidas o contradictorias retornan 400. Solo un rechazo definitivo permite otro intento con clave nueva. Aprobación actualiza la reserva y confirma venta, pago y outbox en una transacción.
+
+La consulta inmediata tras timeout puede recuperar una aprobación; si no confirma el resultado, no se completa la venta. Si falla el commit local tras aprobación externa, la reserva permanece pendiente y bloquea otro cargo. La reconciliación posterior administrativa no está implementada. No acredita Electron, un banco real ni entrega Kafka.
+
+Validación Release el 2026-10-18: **17/17 pruebas aprobadas**, más **35/35 de regresión** (tarjeta, adaptador/simulador, intentos, efectivo y transacción outbox), sin fallos ni omisiones. [Diagnóstico, alcance y reproducción](../qa/S2-035/reporte.md).

@@ -825,7 +825,13 @@ public sealed class VentasController : ControllerBase
         // Resolver requestId e IdempotencyKey
         var headerKey = Request.Headers["Idempotency-Key"].FirstOrDefault();
         var rawKey = !string.IsNullOrWhiteSpace(request?.IdempotencyKey) ? request.IdempotencyKey : headerKey;
-        var requestId = Guid.TryParse(rawKey, out var parsedGuid) ? parsedGuid : Guid.NewGuid();
+        if (!string.IsNullOrWhiteSpace(rawKey)
+            && (!Guid.TryParse(rawKey, out var key) || key == Guid.Empty))
+            return BadRequest(new { error = "La clave de idempotencia debe ser un UUID no vacío." });
+        if (!string.IsNullOrWhiteSpace(headerKey) && !string.IsNullOrWhiteSpace(request?.IdempotencyKey)
+            && (!Guid.TryParse(headerKey, out var headerId) || headerId != Guid.Parse(request.IdempotencyKey)))
+            return BadRequest(new { error = "Las claves de idempotencia del cuerpo y encabezado deben coincidir." });
+        var requestId = string.IsNullOrWhiteSpace(rawKey) ? Guid.NewGuid() : Guid.Parse(rawKey);
 
         var scenarioId = string.IsNullOrWhiteSpace(request?.ScenarioId)
             ? "sim-approved-v1"
@@ -842,7 +848,19 @@ public sealed class VentasController : ControllerBase
         };
 
         var timestamp = DateTime.UtcNow;
-        IntentoPago intentoPago;
+        var intentoPago = new IntentoPago
+        {
+            TenantId = tenantId, VentaId = venta.Id, IdempotencyKey = requestId.ToString(),
+            Estado = EstadoIntentoPago.PENDIENTE, Monto = venta.Total, Moneda = "CLP",
+            CreatedAt = timestamp, UpdatedAt = timestamp
+        };
+        if (!await _ventaService.ReservarIntentoPagoAsync(intentoPago))
+            return Conflict(new
+            {
+                error = "La clave ya fue utilizada o la venta tiene un cobro en curso o incierto. No se enviará otra autorización.",
+                sale_id = venta.Id, request_id = requestId
+            });
+
         PaymentGatewayResponse gatewayResponse;
         try
         {
@@ -852,19 +870,8 @@ public sealed class VentasController : ControllerBase
         {
             _logger?.LogWarning(ex, "Timeout al comunicarse con la pasarela para venta {VentaId}", venta.Id);
 
-            intentoPago = new IntentoPago
-            {
-                Id             = Guid.NewGuid(),
-                TenantId       = tenantId,
-                VentaId        = venta.Id,
-                IdempotencyKey = requestId.ToString(),
-                Estado         = EstadoIntentoPago.FALLIDO,
-                Monto          = venta.Total,
-                Moneda         = "CLP",
-                Mensaje        = "Timeout: la pasarela no respondió dentro del tiempo límite.",
-                CreatedAt      = timestamp,
-                UpdatedAt      = timestamp
-            };
+            intentoPago.Estado = EstadoIntentoPago.FALLIDO;
+            intentoPago.Mensaje = "Resultado incierto: la pasarela no confirmó el cobro dentro del plazo.";
             await _ventaService.RegistrarIntentoPagoAsync(intentoPago);
 
             return StatusCode(StatusCodes.Status504GatewayTimeout, new
@@ -878,19 +885,8 @@ public sealed class VentasController : ControllerBase
         {
             _logger?.LogError(ex, "Error al comunicarse con la pasarela para venta {VentaId}", venta.Id);
 
-            intentoPago = new IntentoPago
-            {
-                Id             = Guid.NewGuid(),
-                TenantId       = tenantId,
-                VentaId        = venta.Id,
-                IdempotencyKey = requestId.ToString(),
-                Estado         = EstadoIntentoPago.FALLIDO,
-                Monto          = venta.Total,
-                Moneda         = "CLP",
-                Mensaje        = $"Error de comunicación: {ex.Message}",
-                CreatedAt      = timestamp,
-                UpdatedAt      = timestamp
-            };
+            intentoPago.Estado = EstadoIntentoPago.FALLIDO;
+            intentoPago.Mensaje = "Resultado incierto por error de comunicación con la pasarela.";
             await _ventaService.RegistrarIntentoPagoAsync(intentoPago);
 
             return StatusCode(StatusCodes.Status502BadGateway, new
@@ -900,25 +896,25 @@ public sealed class VentasController : ControllerBase
             });
         }
 
+        if (gatewayResponse.Status != "APPROVED" && gatewayResponse.Status != "DECLINED")
+        {
+            intentoPago.Estado = EstadoIntentoPago.FALLIDO;
+            intentoPago.Mensaje = "La pasarela devolvió un estado no definitivo.";
+            await _ventaService.RegistrarIntentoPagoAsync(intentoPago);
+            return StatusCode(StatusCodes.Status502BadGateway, new
+            {
+                error = "Resultado de pago incierto.", sale_id = venta.Id, request_id = requestId
+            });
+        }
+
         // ── Ramificar según resultado de pasarela ──────────────────────────────
 
         if (gatewayResponse.Status == "APPROVED")
         {
-            intentoPago = new IntentoPago
-            {
-                Id                = Guid.NewGuid(),
-                TenantId          = tenantId,
-                VentaId           = venta.Id,
-                IdempotencyKey    = requestId.ToString(),
-                Estado            = EstadoIntentoPago.APROBADO,
-                Monto             = venta.Total,
-                Moneda            = "CLP",
-                Referencia        = gatewayResponse.GatewayReference,
-                AuthorizationCode = gatewayResponse.AuthorizationCode,
-                Mensaje           = gatewayResponse.Message,
-                CreatedAt         = timestamp,
-                UpdatedAt         = timestamp
-            };
+            intentoPago.Estado = EstadoIntentoPago.APROBADO;
+            intentoPago.Referencia = gatewayResponse.GatewayReference;
+            intentoPago.AuthorizationCode = gatewayResponse.AuthorizationCode;
+            intentoPago.Mensaje = gatewayResponse.Message;
 
             var ventaCompletada = await _ventaService.CompletarTarjetaAsync(venta.Id, intentoPago);
 
@@ -937,22 +933,11 @@ public sealed class VentasController : ControllerBase
         }
         else
         {
-            // DECLINED u otro estado no aprobado
-            intentoPago = new IntentoPago
-            {
-                Id             = Guid.NewGuid(),
-                TenantId       = tenantId,
-                VentaId        = venta.Id,
-                IdempotencyKey = requestId.ToString(),
-                Estado         = EstadoIntentoPago.RECHAZADO,
-                Monto          = venta.Total,
-                Moneda         = "CLP",
-                Referencia     = gatewayResponse.GatewayReference,
-                DeclineCode    = gatewayResponse.DeclineCode,
-                Mensaje        = gatewayResponse.Message,
-                CreatedAt      = timestamp,
-                UpdatedAt      = timestamp
-            };
+            // Rechazo definitivo DECLINED
+            intentoPago.Estado = EstadoIntentoPago.RECHAZADO;
+            intentoPago.Referencia = gatewayResponse.GatewayReference;
+            intentoPago.DeclineCode = gatewayResponse.DeclineCode;
+            intentoPago.Mensaje = gatewayResponse.Message;
             await _ventaService.RegistrarIntentoPagoAsync(intentoPago);
 
             _logger?.LogWarning(

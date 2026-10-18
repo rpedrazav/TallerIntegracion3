@@ -332,6 +332,10 @@ public class VentaService : IVentaService
     }
 
     /// <inheritdoc/>
+    public Task<bool> ReservarIntentoPagoAsync(IntentoPago intentoPago)
+        => _ventaRepository.ReservarIntentoPagoAsync(intentoPago);
+
+    /// <inheritdoc/>
     public Task RegistrarIntentoPagoAsync(IntentoPago intentoPago)
         => _ventaRepository.RegistrarIntentoPagoAsync(intentoPago);
 }

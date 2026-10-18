@@ -3,9 +3,9 @@ id: pasarela-pago
 tipo: integracion
 titulo: Integración con Pasarela de Pago
 estado: parcial
-fuentes: [GlobalMart_ContextMaster.md#sec12, src/POSCartService/Services/IPaymentGatewayClient.cs, src/POSCartService/Services/PaymentGatewayClient.cs, src/POSCartService/Exceptions/PaymentAuthorizationUncertainException.cs, src/POSCartService/DTOs/PaymentGatewayDtos.cs, src/POSCartService/Program.cs, Docker/simulator/server.js, tests/GlobalMart.IntegrationTests/PaymentGatewayClientTests.cs, tests/GlobalMart.IntegrationTests/PaymentSimulatorIntegrationTests.cs, tests/GlobalMart.IntegrationTests/PaymentRetrySafetyTests.cs, tareas/sprint2_youtrack_resultado.json, Docker/env.example, .env.example, src/POSCartService/appsettings.json]
+fuentes: [GlobalMart_ContextMaster.md#sec12, src/POSCartService/Services/IPaymentGatewayClient.cs, src/POSCartService/Services/PaymentGatewayClient.cs, src/POSCartService/Exceptions/PaymentAuthorizationUncertainException.cs, src/POSCartService/DTOs/PaymentGatewayDtos.cs, src/POSCartService/Program.cs, Docker/simulator/server.js, tests/GlobalMart.IntegrationTests/PaymentGatewayClientTests.cs, tests/GlobalMart.IntegrationTests/PaymentSimulatorIntegrationTests.cs, tests/GlobalMart.IntegrationTests/PaymentRetrySafetyTests.cs, tareas/sprint2_youtrack_resultado.json, Docker/env.example, .env.example, src/POSCartService/appsettings.json, tests/GlobalMart.IntegrationTests/CobroSeguroIntegrationTests.cs, docs/qa/S2-035/reporte.md]
 verificado_contra_codigo: true
-ultima_revision: 2026-10-17
+ultima_revision: 2026-10-18
 depende_de: [ms5-pos]
 publica: []
 consume: []
@@ -13,15 +13,15 @@ reglas: [RN-02, RF-07, PC-17, PC-27, PC-28]
 ---
 # Integración con Pasarela de Pago
 
-> Toda transacción con tarjeta DEBE ir por una pasarela externa (RN-02). **Estado: PARCIAL** — MS-5 dispone de contratos, adaptador HTTP y simulador local, pero todavía no orquesta el cobro con tarjeta en `POST /ventas/{id}/cobrar` (solo admite efectivo y rechaza `TARJETA` o `MIXTO`).
+> Toda transacción con tarjeta DEBE ir por una pasarela externa (RN-02). **Estado: PARCIAL** — MS-5 orquesta cobro simulado con tarjeta en `POST /ventas/{id}/cobrar-tarjeta`, probado en S2-035. `/cobrar` sigue siendo exclusivo de efectivo. La reconciliación posterior de intentos inciertos queda pendiente.
 
 ## Estado: [PARCIAL]
 
 ### S2-051 — Matriz RN-02 de pagos [CONTRATO DEFINIDO]
 
-La [matriz S2-051](../../../diagramas/matriz/S2-051-matriz-rn02-pagos.md) define 18 casos de aceptación por método, resultado, idempotencia y datos permitidos en logs. Prohíbe explícitamente captura local, almacenamiento y transmisión de PAN/CVV, incluso de prueba. Incluye aprobación, rechazo, incertidumbre, concurrencia, recuperación, aislamiento y controles de efectivo/MIXTO. Su ejecución está pendiente y no acredita E2E: falta conectar el cobro de tarjeta. La unicidad local de intentos no demuestra por sí sola ausencia de doble autorización externa; la sanitización integral de errores/logs queda [NO VERIFICADO].
+La [matriz S2-051](../../../diagramas/matriz/S2-051-matriz-rn02-pagos.md) define 18 casos de aceptación por método, resultado, idempotencia y datos permitidos en logs. Prohíbe explícitamente captura local, almacenamiento y transmisión de PAN/CVV, incluso de prueba. Incluye aprobación, rechazo, incertidumbre, concurrencia, recuperación, aislamiento y controles de efectivo/MIXTO. Su ejecución completa está pendiente y no acredita E2E de Electron. S2-035 sí verifica el cobro backend con el simulador real. La unicidad local de intentos no demuestra por sí sola ausencia de doble autorización externa; la sanitización integral de errores/logs queda [NO VERIFICADO].
 
-S2-031 / TI3-662 define el contrato de pasarela simulada (`IPaymentGatewayClient` y DTOs seguros). S2-036 / TI3-667 define los escenarios reproducibles. S2-037 / TI3-668 implementa `IPaymentGatewayClient` y su adaptador HTTP. S2-038 / TI3-669 completa el endpoint local de autorización. S2-039 / TI3-670 impide reautorizar automáticamente tras un timeout y consulta primero el estado por la misma clave. El cobro con tarjeta aún no está implementado en el controller de ventas.
+S2-031 / TI3-662 define el contrato de pasarela simulada (`IPaymentGatewayClient` y DTOs seguros). S2-036 / TI3-667 define los escenarios reproducibles. S2-037 / TI3-668 implementa `IPaymentGatewayClient` y su adaptador HTTP. S2-038 / TI3-669 completa el endpoint local de autorización. S2-039 / TI3-670 impide reautorizar automáticamente tras un timeout y consulta primero el estado por la misma clave. S2-033/S2-034 conectan el cobro en el controller y S2-035 verifica el flujo integrado.
 
 ## S2-031 / TI3-662 — Contrato de pasarela simulada [IMPLEMENTADO]
 
@@ -41,7 +41,7 @@ Define la interfaz de comunicación y los objetos de transferencia de datos en M
 Para cumplir el criterio P03 de la matriz de aceptación (evitar doble cargo por doble clic, reintentos de red o recarga de página), MS-5 persiste cada intento de cobro con tarjeta en la tabla `IntentosPago` (`IntentoPago.cs`):
 
 - **Campos almacenados**: `Id`, `TenantId`, `VentaId`, `IdempotencyKey` (string max 100), `Estado` (`EstadoIntentoPago`: `PENDIENTE`, `APROBADO`, `RECHAZADO`, `FALLIDO`), `Monto` (18,2), `Moneda` (3), `Referencia` opaca (100), `AuthorizationCode` (100), `DeclineCode` (100), `Mensaje` (500), `CreatedAt` y `UpdatedAt`.
-- **Garantía de idempotencia (Criterio de Aceptación)**: Se impone mediante el índice único compuesto `IX_IntentosPago_TenantId_IdempotencyKey`. Si un cliente reenvía la misma clave para el mismo tenant, la base de datos rechaza la inserción duplicada evitando la creación de un segundo cobro o cargo.
+- **Garantía de idempotencia (Criterio de Aceptación)**: Se impone mediante el índice único compuesto `IX_IntentosPago_TenantId_IdempotencyKey`. Este índice impide duplicados locales, pero por sí solo no evita cargos externos. S2-035 confirma la reserva antes de enviar el POST y responde 409 a repeticiones sin reautorizar.
 - **Aislamiento Multi-Tenant (RN-01)**: Filtro global `CurrentTenantId` en `PosCartDbContext`. Claves de idempotencia iguales pertenecientes a distintos tenants no colisionan.
 - **Migración**: `20261017163020_AddIntentoPago.cs`. Pruebas en `IntentoPagoPersistenceTests` (trait `S2-032`).
 
@@ -66,14 +66,14 @@ En `POST /ventas/{id}/cobrar-tarjeta`, la respuesta de la pasarela persiste de m
   - Se registra `IntentoPago` con `Estado = APROBADO`, `AuthorizationCode`, `Referencia` y `Mensaje`.
   - Se publica el evento `sale.completed` mediante el `OutboxMessage` en la misma transacción atómica de EF Core (`CompletarTarjetaConOutboxAsync`).
   - Retorna **HTTP 200 OK**.
-- **Rechazado (`status == DECLINED` o diferente de APPROVED):**
+- **Rechazado (`status == DECLINED`):**
   - La venta permanece en estado `PENDIENTE`.
   - Se registra `IntentoPago` con `Estado = RECHAZADO`, `DeclineCode` y `Mensaje`.
   - **No** se genera registro `Pago` ni evento outbox `sale.completed`.
   - Retorna **HTTP 422 Unprocessable Entity**.
-- **Timeout o error de red:**
+- **Timeout, error de red o estado no definitivo:**
   - La venta permanece en `PENDIENTE`.
-  - Se registra `IntentoPago` con `Estado = FALLIDO`.
+  - Se actualiza la reserva `IntentoPago` a `Estado = FALLIDO`; se bloquean nuevas autorizaciones para esa venta, incluso con otra clave.
   - Retorna **HTTP 504 Gateway Timeout** (en timeout) o **HTTP 502 Bad Gateway** (en fallo de transporte/500).
 - **Pruebas:** 10/10 en `CobrarTarjetaIntegrationTests` (incluye 4 pruebas `S2-034` verificando DB, pagos, outbox e intentos).
 
@@ -281,10 +281,10 @@ Al anular una venta cobrada con tarjeta:
 
 | ID | Caso de Uso | Estado |
 |----|-------------|--------|
-| PC-17 | Cobrar con Tarjeta (débito/crédito) | [PARCIAL — adaptador disponible, sin orquestación] |
+| PC-17 | Cobrar con Tarjeta (débito/crédito) | [IMPLEMENTADO — cobro backend con simulador; S2-035] |
 | PC-18 | Cobrar Mixto (efectivo + tarjeta) | [PLANIFICADO] |
-| PC-27 | Procesar Pago en Pasarela | [PARCIAL — cliente HTTP implementado, aún no invocado] |
-| PC-28 | Manejar Respuesta de Pasarela | [PARCIAL — DTO, errores y simulador implementados, sin flujo de cobro] |
+| PC-27 | Procesar Pago en Pasarela | [IMPLEMENTADO — invocado desde cobrar-tarjeta] |
+| PC-28 | Manejar Respuesta de Pasarela | [IMPLEMENTADO — aprobación, rechazo y timeout; S2-035] |
 
 ## Conexiones
 - POS: [[ms5-pos]]
@@ -313,3 +313,11 @@ Al anular una venta cobrada con tarjeta:
 - `Docker/env.example`
 - `.env.example`
 - `src/POSCartService/appsettings.json`
+
+## S2-035 — Pruebas de cobro seguro e idempotente
+
+[IMPLEMENTADO] `CobroSeguroIntegrationTests` conecta el endpoint HTTP de MS-5 y JWT real con PostgreSQL migrado y el proceso Node del simulador. La reserva de `IntentoPago` se confirma antes de contactar la pasarela, con lock breve por venta y unicidad por tenant/clave. Repeticiones y cobros pendientes/inciertos retornan 409 sin otra autorización; claves inválidas o contradictorias retornan 400. Solo un rechazo definitivo permite otro intento con clave nueva. Aprobación actualiza la reserva y confirma venta, pago y outbox en una transacción.
+
+La consulta inmediata tras timeout puede recuperar una aprobación; si no confirma el resultado, no se completa la venta. Si falla el commit local tras aprobación externa, la reserva permanece pendiente y bloquea otro cargo. La reconciliación posterior administrativa no está implementada. No acredita Electron, un banco real ni entrega Kafka.
+
+Validación Release el 2026-10-18: **17/17 pruebas aprobadas**, más **35/35 de regresión** (tarjeta, adaptador/simulador, intentos, efectivo y transacción outbox), sin fallos ni omisiones. [Diagnóstico, alcance y reproducción](../../qa/S2-035/reporte.md).
