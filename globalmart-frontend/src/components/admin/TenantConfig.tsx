@@ -162,10 +162,16 @@ export default function TenantConfig({ token: tokenProp }: TenantConfigProps) {
     } catch (err: unknown) {
       let msg = 'No se pudo actualizar la configuración del tenant.';
       if (isAxiosError(err)) {
-        if (err.response?.status === 403) {
+        const data = err.response?.data;
+        if (err.response?.status === 400 && data?.errors && typeof data.errors === 'object') {
+          const validationErrors = Object.values(data.errors).flat();
+          if (validationErrors.length > 0) {
+            msg = validationErrors.map(String).join(' ');
+          }
+        } else if (err.response?.status === 403) {
           msg = 'No tienes permisos de Administrador para modificar la configuración.';
-        } else if (err.response?.data?.message) {
-          msg = err.response.data.message;
+        } else if (data?.message) {
+          msg = data.message;
         }
       }
       setErrorMsg(msg);

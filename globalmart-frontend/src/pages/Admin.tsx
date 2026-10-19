@@ -79,7 +79,9 @@ export default function Admin() {
       let msg: string | undefined;
       if (isAxiosError(err)) {
         const data = err.response?.data;
-        if (data?.message) {
+        if (err.response?.status === 403) {
+          msg = data?.message ?? 'No tienes permisos para crear usuarios.';
+        } else if (data?.message) {
           msg = data.message;
         } else if (data?.errors && typeof data.errors === 'object') {
           const list = Object.values(data.errors).flat();
