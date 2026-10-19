@@ -5,13 +5,17 @@ titulo: Estado Real de Implementación — GlobalMart OS
 estado: vigente
 fuentes: [docs/context/_reports/inventario.md, src/, globalmart-frontend/src/api/client.ts, git log, docs/context/_reports/preguntas-abiertas.md, tests/GlobalMart.IntegrationTests/CobroSeguroIntegrationTests.cs, docs/qa/S2-035/reporte.md, new-ingresses.yaml]
 verificado_contra_codigo: true
-ultima_revision: 2026-10-18
+ultima_revision: 2026-10-19
 depende_de: []
 publica: []
 consume: []
 reglas: []
 ---
 # Estado Real de Implementación — GlobalMart OS
+
+## S2-055 / TI3-686 — E2E tarjeta desde Electron
+
+[IMPLEMENTADO, alcance acotado] Dos escenarios automatizados desde Electron real: login con identidad de fixture → apertura de turno → producto → venta TARJETA → cobro aprobado/rechazado. MS-5, validación JWT, PostgreSQL migrado y simulador Node son reales. Se verifica concordancia de solicitud/respuesta de pasarela, venta, intento, pago y `sale.completed` durable: aprobación produce COMPLETADA + 1 pago + 1 evento; rechazo conserva PENDIENTE + 0 pagos + 0 eventos. Catálogo e IVA son fixtures; publicación Kafka deshabilitada, entrega al broker [NO VERIFICADA] por esta suite. Validación Windows 2026-10-19: **2/2 aprobadas, sin omisiones**, con capturas. Ejecutar `npm run test:e2e:card` con PostgreSQL de pruebas; los E2E gráficos son opt-in. [Reporte y evidencias](../qa/S2-055/reporte.md).
 
 > Nodo más importante para cualquier IA nueva. Refleja el estado REAL del código al 29-09-2026, validado contra el repositorio y las aclaraciones del equipo de desarrollo.
 

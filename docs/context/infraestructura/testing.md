@@ -5,7 +5,7 @@ titulo: Estrategia de Testing — GlobalMart OS
 estado: parcial
 fuentes: [src/POSCartService/tests/, src/TaxComplianceService/tests/, .github/workflows/ci.yml]
 verificado_contra_codigo: true
-ultima_revision: 2026-10-18
+ultima_revision: 2026-10-19
 depende_de: [stack]
 publica: []
 consume: []
@@ -16,6 +16,10 @@ reglas: [RNF-07]
 > Estado real de los tests. La cobertura actual es muy baja respecto al objetivo RNF-07 (≥80%).
 
 ## Tests existentes (verificados en código)
+
+### S2-055 / TI3-686 — Cobro tarjeta desde Electron [IMPLEMENTADO, alcance acotado]
+
+`ElectronCardE2ETests` y `e2e/electron/card-backend.cjs` automatizan apertura, creación de venta y cobro aprobado/rechazado desde main/preload/renderer reales. MS-5 con JWT validado, PostgreSQL migrado y proceso Node del simulador son reales; identidad, catálogo e IVA son fixtures. Comprueba venta, intento, pago, referencia opaca, autorización única y payload outbox. No acredita entrega Kafka (worker deshabilitado), Kong ni integración desplegada MS-1/MS-2/MS-3. Windows 2026-10-19: **2/2 aprobadas, 0 omitidas**, con capturas de apertura, venta y resultado. Comando `npm run test:e2e:card`; requiere `GLOBALMART_TEST_POSTGRES` y sesión gráfica. El comando habilita `GLOBALMART_ELECTRON_E2E=1`; la suite backend ordinaria omite estos E2E para no exigir escritorio. [Reproducción](../../../globalmart-frontend/e2e/electron/README.md) y [evidencias](../../qa/S2-055/reporte.md).
 
 ### S2-024 / TI3-655 — Esqueleto E2E de Electron [IMPLEMENTADO]
 

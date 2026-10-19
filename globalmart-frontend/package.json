@@ -14,6 +14,7 @@
     "lint": "eslint --ext .ts,.tsx .",
     "test:e2e": "playwright test",
     "test:e2e:electron": "node e2e/electron/build.cjs && playwright test --config playwright.electron.config.ts",
+    "test:e2e:card": "node e2e/electron/run-card.cjs",
     "ci:local": "npm run typecheck && npm run test:e2e:electron",
     "test:e2e:report": "playwright show-report"
   },

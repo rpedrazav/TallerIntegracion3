@@ -1,0 +1,38 @@
+{
+  "sale": {
+    "id": "ff1e0e1e-d7c6-4ddb-b261-be47a988da23",
+    "turno_id": "fa6fb20b-98c9-42c8-b231-cef82cf1771a",
+    "cajero_id": "358d66a2-2e99-470f-bb77-750e7dac5873",
+    "sucursal_id": "3aa1f5c4-068a-43b1-8554-7e4860964ede",
+    "tenant_id": "fa72bb46-7833-4e93-853d-f1a05b8a516f",
+    "subtotal": 100,
+    "impuestos": 19,
+    "total": 119,
+    "metodo_pago": "TARJETA",
+    "estado": "PENDIENTE",
+    "created_at": "2026-10-19T15:21:14.2533708Z",
+    "items": [
+      {
+        "id": "0a57fbc8-2da5-49ce-b2b5-e663ee260bf6",
+        "producto_id": "35c6a281-c234-4084-abd2-3edabfb105c1",
+        "nombre_producto": "Leche S2-055",
+        "cantidad": 1,
+        "peso_kg": null,
+        "precio_unitario": 100,
+        "subtotal": 100
+      }
+    ]
+  },
+  "status": 422,
+  "body": {
+    "error": "La pasarela rechazó el pago.",
+    "status": "DECLINED",
+    "decline_code": "DO_NOT_HONOR",
+    "mensaje": "Pago rechazado por escenario de prueba.",
+    "sale_id": "ff1e0e1e-d7c6-4ddb-b261-be47a988da23",
+    "request_id": "7374d256-1027-463f-aeb5-b4d3273d409c"
+  },
+  "request": {
+    "idempotency_key": "7374d256-1027-463f-aeb5-b4d3273d409c"
+  }
+}
