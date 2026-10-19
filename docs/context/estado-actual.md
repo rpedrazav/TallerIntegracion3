@@ -5,7 +5,7 @@ titulo: Estado Real de Implementación — GlobalMart OS
 estado: vigente
 fuentes: [docs/context/_reports/inventario.md, src/, globalmart-frontend/src/api/client.ts, git log, docs/context/_reports/preguntas-abiertas.md, tests/GlobalMart.IntegrationTests/CobroSeguroIntegrationTests.cs, docs/qa/S2-035/reporte.md, new-ingresses.yaml]
 verificado_contra_codigo: true
-ultima_revision: 2026-10-18
+ultima_revision: 2026-10-19
 depende_de: []
 publica: []
 consume: []
@@ -23,6 +23,8 @@ reglas: []
 ---
 
 ## Matriz de Estado por Microservicio
+
+S2-052 — 2026-10-19: **2/2 pruebas de integración HTTP locales aprobadas** para rechazo y timeout de tarjeta con PostgreSQL temporal y simulador real. La venta conserva PENDIENTE, sin Pago ni evento outbox, incluso tras la respuesta tardía y reintentos bloqueados. Publicación Kafka no ejercitada. Intento contra despliegue remoto bloqueado antes del cobro: `POST /ventas` devuelve 502 por conexión a MS-3 en `localhost:5203`; aceptación remota [NO VERIFICADO]. No se cambiaron destinos del clúster. [Reporte](../qa/S2-052/reporte.md).
 
 | Microservicio | Controllers | Kafka | Tests | Estado General |
 |---------------|-------------|-------|-------|----------------|

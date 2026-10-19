@@ -106,6 +106,63 @@ public sealed class CobroSeguroIntegrationTests : IAsyncLifetime
     }
 
     [Theory]
+    [Trait("Plan", "S2-052")]
+    [InlineData("sim-declined-v1", 422, "DECLINED")]
+    [InlineData("sim-timeout-v1", 504, "UNCERTAIN")]
+    public async Task RechazoOTimeoutHttp_NoCompletaNiGeneraPagoOEvento(
+        string scenario, int expectedCode, string expectedStatus)
+    {
+        var key = Guid.NewGuid();
+        using var response = await Charge(_sale, key, scenario);
+        Assert.Equal(expectedCode, (int)response.StatusCode);
+        var body = await response.Content.ReadFromJsonAsync<System.Text.Json.JsonElement>();
+        Assert.Equal(_sale, body.GetProperty("sale_id").GetGuid());
+        Assert.Equal(key, body.GetProperty("request_id").GetGuid());
+        if (expectedStatus == "DECLINED")
+        {
+            Assert.Equal("DECLINED", body.GetProperty("status").GetString());
+            Assert.Equal("DO_NOT_HONOR", body.GetProperty("decline_code").GetString());
+        }
+        Assert.Equal(1, _traffic.Posts);
+        Assert.Equal(expectedStatus == "UNCERTAIN" ? 1 : 0, _traffic.Gets);
+
+        for (var observation = 0; observation < 2; observation++)
+        {
+            // Supera el retardo real de 35 s del simulador; verifica que su respuesta
+            // tardía no complete la venta. El primer chequeo es inmediato.
+            if (observation == 1 && expectedStatus == "UNCERTAIN")
+                await Task.Delay(TimeSpan.FromSeconds(36));
+            using var read = await _client.GetAsync($"/ventas/{_sale}");
+            Assert.Equal(HttpStatusCode.OK, read.StatusCode);
+            var sale = await read.Content.ReadFromJsonAsync<System.Text.Json.JsonElement>();
+            Assert.Equal("PENDIENTE", sale.GetProperty("estado").GetString());
+            Assert.Equal(119m, sale.GetProperty("total").GetDecimal());
+            using var status = await _client.GetAsync($"/ventas/{_sale}/intento-tarjeta");
+            Assert.Equal(HttpStatusCode.OK, status.StatusCode);
+            var attemptBody = await status.Content.ReadFromJsonAsync<System.Text.Json.JsonElement>();
+            Assert.Equal(expectedStatus, attemptBody.GetProperty("status").GetString());
+            Assert.Equal(key.ToString(), attemptBody.GetProperty("request_id").GetString());
+            await Verify(_tenant, _sale, false, 1);
+            await using var db = Db(_tenant);
+            var attempt = await db.IntentosPago.SingleAsync(i => i.VentaId == _sale);
+            Assert.Equal(expectedStatus == "DECLINED" ? Pos.Models.EstadoIntentoPago.RECHAZADO
+                : Pos.Models.EstadoIntentoPago.PENDIENTE, attempt.Estado);
+            Assert.Equal(key.ToString(), attempt.IdempotencyKey);
+            Assert.Null(attempt.AuthorizationCode);
+        }
+
+        using var repeated = await Charge(_sale, key, scenario);
+        Assert.Equal(HttpStatusCode.Conflict, repeated.StatusCode);
+        if (expectedStatus == "UNCERTAIN")
+        {
+            using var newKey = await Charge(_sale, Guid.NewGuid(), "sim-approved-v1");
+            Assert.Equal(HttpStatusCode.Conflict, newKey.StatusCode);
+        }
+        Assert.Equal(1, _traffic.Posts);
+        await Verify(_tenant, _sale, false, 1);
+    }
+
+    [Theory]
     [InlineData("sim-approved-v1", 200, true)]
     [InlineData("sim-declined-v1", 422, false)]
     [InlineData("sim-timeout-v1", 504, false)]

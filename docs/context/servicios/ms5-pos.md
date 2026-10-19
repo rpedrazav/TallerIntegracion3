@@ -5,7 +5,7 @@ titulo: MS-5 · POS & Cart Service
 estado: parcial
 fuentes: [src/POSCartService/, Docker/simulator/server.js, tests/GlobalMart.IntegrationTests/PaymentSimulatorIntegrationTests.cs, tests/GlobalMart.IntegrationTests/PaymentRetrySafetyTests.cs, tests/GlobalMart.IntegrationTests/CobroSeguroIntegrationTests.cs, docs/qa/S2-035/reporte.md, tests/GlobalMart.IntegrationTests/CobrarTarjetaIntegrationTests.cs, tests/GlobalMart.IntegrationTests/PaymentEventSequenceContractTests.cs]
 verificado_contra_codigo: true
-ultima_revision: 2026-10-18
+ultima_revision: 2026-10-19
 depende_de: [ms1-identity, ms2-tax, ms3-catalog]
 publica: [sale.completed]
 consume: []
@@ -191,6 +191,8 @@ await _ventaRepository.CompletarConOutboxAsync(venta.Id, pago, outboxMessage);
 `KafkaProducerService` permanece como adaptador registrado, pero el cobro no lo invoca directamente. `OutboxPublisherWorker` reserva filas elegibles con lease, publica el JSON persistido y marca `PUBLICADO`; ante un fallo conserva la fila y programa el siguiente intento según [[sale-completed-outbox]].
 
 ## Tests de integración
+
+- S2-052: dos casos `RechazoOTimeoutHttp_NoCompletaNiGeneraPagoOEvento` en `CobroSeguroIntegrationTests`, **2/2 aprobados** el 2026-10-19 con PostgreSQL temporal y simulador Node real. Verifican 422/504, venta PENDIENTE, intento RECHAZADO/PENDIENTE, cero pagos/outbox, lectura tras 36 s para timeout y bloqueo de reintentos sin otro POST externo. [Evidencia y límites](../../qa/S2-052/reporte.md). El despliegue remoto no alcanzó cobro: creación de venta retornó 502 por conexión de MS-5 a catálogo en `localhost:5203`; aceptación remota [NO VERIFICADO].
 
 - `TurnoIntegrationTests`: abre un turno con JWT de cajero y verifica que se persiste en estado `ABIERTO`.
 - `VentaIntegrationTests`: cubre creación de venta con resolución autoritativa en MS-3 e IVA real en MS-2, agregado de ítems, rechazo de productos inexistentes (404) e inactivos (400). Incluye los escenarios S2-005: (1) `CrearVenta_SinTurnoAbierto_Retorna409SinPersistir` — sin turno ABIERTO la venta no se crea; (2) `CrearVenta_PrecioFalsificadoEsIgnorado_UsaPrecioDeMS3` — el `precio_unitario` del request es ignorado y el precio persistido viene de MS-3.
