@@ -1,0 +1,32 @@
+name: Electron POS E2E (S2-024)
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+    branches: [main, dev]
+  workflow_dispatch:
+jobs:
+  electron-pos:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: globalmart-frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: globalmart-frontend/package-lock.json
+      - run: npm ci
+      - run: npm run ci:local
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: electron-e2e-report
+          path: |
+            globalmart-frontend/playwright-report/electron
+            globalmart-frontend/test-results/electron/**/trace.zip
+            globalmart-frontend/test-results/electron/**/failure.png
+          retention-days: 7

@@ -5,7 +5,7 @@ titulo: Estrategia de Testing — GlobalMart OS
 estado: parcial
 fuentes: [src/POSCartService/tests/, src/TaxComplianceService/tests/, .github/workflows/ci.yml]
 verificado_contra_codigo: true
-ultima_revision: 2026-10-14
+ultima_revision: 2026-10-18
 depende_de: [stack]
 publica: []
 consume: []
@@ -16,6 +16,10 @@ reglas: [RNF-07]
 > Estado real de los tests. La cobertura actual es muy baja respecto al objetivo RNF-07 (≥80%).
 
 ## Tests existentes (verificados en código)
+
+### S2-024 / TI3-655 — Esqueleto E2E de Electron [IMPLEMENTADO]
+
+`globalmart-frontend/playwright.electron.config.ts` ejecuta el main, preload y renderer reales con perfil independiente por caso, login ficticio y APIs interceptadas de MS-1/MS-3/MS-5. Cubre login → 404 sin turno → apertura → POS vacío, persistencia IPC tras recarga y rechazo 401 sin sesión. `npm run ci:local` compila y verifica TypeScript antes de ejecutar la suite. Validación Windows del 2026-10-18: **2/2 aprobadas**. No certifica venta/cobro ni aislamiento RN-01 del backend; los mocks no validan firmas JWT. [Guía](../../../globalmart-frontend/e2e/electron/README.md) y [evidencia](../../qa/S2-024/reporte.md).
 
 | Proyecto | Tipo | Estado |
 |---------|------|--------|

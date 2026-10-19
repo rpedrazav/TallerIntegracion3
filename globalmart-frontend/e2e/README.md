@@ -1,5 +1,7 @@
 # Regresión de carrito — S2-025
 
+Para login, apertura de turno y entrada al POS en **Electron real**, ver [S2-024](electron/README.md) y ejecutar `npm run ci:local`. Esa suite tiene configuración independiente y no necesita Chrome ni cuentas personales.
+
 Desde `globalmart-frontend`: `npm ci`, luego `npm run test:e2e`.
 Requiere Chrome instalado (channel `chrome`) y puerto 4175 libre.
 `npm run test:e2e:report` abre el reporte HTML. Playwright genera JSON,

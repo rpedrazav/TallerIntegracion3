@@ -5,7 +5,7 @@ titulo: CI/CD — GitHub Actions
 estado: implementado
 fuentes: [.github/workflows/ci.yml]
 verificado_contra_codigo: true
-ultima_revision: 2026-10-16
+ultima_revision: 2026-10-18
 depende_de: [docker-compose, testing]
 publica: []
 consume: []
@@ -26,6 +26,10 @@ on:
 ```
 
 ## Jobs del pipeline
+
+### Workflow independiente `electron-e2e.yml` — S2-024
+
+`.github/workflows/electron-e2e.yml` ejecuta en Windows, Node 22, `npm ci` y `npm run ci:local`, sin secretos, Docker ni datos personales. Arranca Electron real con perfil aislado por prueba y APIs simuladas. Publica HTML, capturas y trazas de fallo durante siete días, excluyendo perfiles. Tiene límite de 15 minutos y triggers push/PR a main/dev y manual. El mismo comando local aprobó typecheck y **2/2 E2E** el 2026-10-18; ejecución hospedada GitHub Actions [NO VERIFICADO]. [Guía reproducible](../../../globalmart-frontend/e2e/electron/README.md).
 
 ### 1. `frontend-typecheck` (Gate TypeScript — S2-029 / TI3-660)
 - Checkout del código
@@ -56,7 +60,7 @@ env:
 
 ## Lo que NO corre en CI
 
-- Frontend Electron (requiere display/GUI)
+- Electron contra APIs desplegadas (el workflow S2-024 usa APIs simuladas)
 - Prometheus/Grafana (no necesarios para tests)
 - Kafdrop (UI, no necesaria en CI)
 
