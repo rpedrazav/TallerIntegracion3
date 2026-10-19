@@ -106,6 +106,64 @@ public sealed class CobroSeguroIntegrationTests : IAsyncLifetime
     }
 
     [Theory]
+    [Trait("Plan", "S2-053")]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task DuplicarAprobacionHttp_UnaAutorizacionYUnPagoTarjeta(bool responsePending)
+    {
+        var key = Guid.NewGuid();
+        _traffic.HoldFirstResponse = responsePending;
+        var firstTask = Charge(_sale, key, "sim-approved-v1");
+        Pos.DTOs.PaymentGatewayResponse? original;
+        try
+        {
+            if (responsePending)
+                await _traffic.ResponseArrived.Task.WaitAsync(TimeSpan.FromSeconds(5));
+            else
+                await firstTask;
+
+            original = await GatewayStatus(_tenant, key);
+            Assert.NotNull(original);
+            Assert.Equal("APPROVED", original.Status);
+            Assert.Equal(key, original.RequestId);
+            Assert.False(string.IsNullOrWhiteSpace(original.TransactionId));
+            Assert.False(string.IsNullOrWhiteSpace(original.GatewayReference));
+            Assert.False(string.IsNullOrWhiteSpace(original.AuthorizationCode));
+
+            using var repeated = await Charge(_sale, key, "sim-approved-v1");
+            Assert.Equal(HttpStatusCode.Conflict, repeated.StatusCode);
+            Assert.Equal(1, _traffic.Posts);
+            // Mientras la respuesta está retenida solo existe la reserva durable.
+            await Verify(_tenant, _sale, !responsePending, 1);
+        }
+        finally { _traffic.Release.TrySetResult(); }
+
+        using var first = await firstTask;
+        Assert.Equal(HttpStatusCode.OK, first.StatusCode);
+        var body = await first.Content.ReadFromJsonAsync<System.Text.Json.JsonElement>();
+        Assert.Equal("APPROVED", body.GetProperty("status").GetString());
+        Assert.Equal(_sale, body.GetProperty("venta").GetProperty("id").GetGuid());
+        Assert.Equal(original.TransactionId, body.GetProperty("transaction_id").GetString());
+        Assert.Equal(original.AuthorizationCode, body.GetProperty("authorization_code").GetString());
+        Assert.Equal(original.GatewayReference, body.GetProperty("gateway_reference").GetString());
+        await Verify(_tenant, _sale, true, 1);
+
+        await using var db = Db(_tenant);
+        var attempt = await db.IntentosPago.SingleAsync(i => i.VentaId == _sale);
+        var payment = await db.Pagos.SingleAsync(p => p.VentaId == _sale);
+        Assert.Equal(key.ToString(), attempt.IdempotencyKey);
+        Assert.Equal(Pos.Models.EstadoIntentoPago.APROBADO, attempt.Estado);
+        Assert.Equal(119m, attempt.Monto);
+        Assert.Equal("CLP", attempt.Moneda);
+        Assert.Equal(original.AuthorizationCode, attempt.AuthorizationCode);
+        Assert.Equal(original.GatewayReference, attempt.Referencia);
+        Assert.Equal(original.GatewayReference, payment.Referencia);
+        // Incluye identidad, referencia y processed_at: la autorización no se recreó.
+        Assert.Equal(original, await GatewayStatus(_tenant, key));
+        Assert.Equal(1, _traffic.Posts);
+    }
+
+    [Theory]
     [Trait("Plan", "S2-052")]
     [InlineData("sim-declined-v1", 422, "DECLINED")]
     [InlineData("sim-timeout-v1", 504, "UNCERTAIN")]

@@ -208,6 +208,7 @@ public sealed class PaymentSimulatorIntegrationTests : IAsyncLifetime
     }
 
     [Fact]
+    [Trait("Plan", "S2-053")]
     public async Task Simulator_SameLogicalRequest_ReturnsExactlySameResult()
     {
         var client = CreatePaymentClient(_baseUrl);
@@ -216,6 +217,10 @@ public sealed class PaymentSimulatorIntegrationTests : IAsyncLifetime
         var first = await client.ProcessPaymentAsync(request);
         var second = await client.ProcessPaymentAsync(request);
 
+        Assert.Equal("APPROVED", first.Status);
+        Assert.Equal(request.RequestId, first.RequestId);
+        Assert.False(string.IsNullOrWhiteSpace(first.TransactionId));
+        Assert.False(string.IsNullOrWhiteSpace(first.GatewayReference));
         Assert.Equal(first, second);
     }
 
