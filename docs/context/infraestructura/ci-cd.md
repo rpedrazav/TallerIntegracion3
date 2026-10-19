@@ -3,7 +3,7 @@ id: ci-cd
 tipo: infra
 titulo: CI/CD — GitHub Actions
 estado: implementado
-fuentes: [.github/workflows/ci.yml]
+fuentes: [.github/workflows/ci.yml, .github/workflows/electron-e2e.yml]
 verificado_contra_codigo: true
 ultima_revision: 2026-10-18
 depende_de: [docker-compose, testing]
@@ -29,7 +29,7 @@ on:
 
 ### Workflow independiente `electron-e2e.yml` — S2-024
 
-`.github/workflows/electron-e2e.yml` ejecuta en Windows, Node 22, `npm ci` y `npm run ci:local`, sin secretos, Docker ni datos personales. Arranca Electron real con perfil aislado por prueba y APIs simuladas. Publica HTML, capturas y trazas de fallo durante siete días, excluyendo perfiles. Tiene límite de 15 minutos y triggers push/PR a main/dev y manual. El mismo comando local aprobó typecheck y **2/2 E2E** el 2026-10-18; ejecución hospedada GitHub Actions [NO VERIFICADO]. [Guía reproducible](../../../globalmart-frontend/e2e/electron/README.md).
+`.github/workflows/electron-e2e.yml` ejecuta en Windows, Node 22, `npm ci` y `npm run ci:local`, sin secretos, Docker ni datos personales. Arranca Electron real con perfil aislado por prueba y APIs simuladas. Publica HTML, capturas y trazas de fallo durante siete días, excluyendo perfiles. Tiene límite de 15 minutos y se activa con push a `main`, `dev` o `local`, PR hacia esas ramas y ejecución manual. El mismo comando local aprobó typecheck y **2/2 E2E** el 2026-10-18; ejecución hospedada GitHub Actions [NO VERIFICADO]. [Guía reproducible](../../../globalmart-frontend/e2e/electron/README.md).
 
 ### 1. `frontend-typecheck` (Gate TypeScript — S2-029 / TI3-660)
 - Checkout del código

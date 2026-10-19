@@ -1,9 +1,9 @@
 name: Electron POS E2E (S2-024)
 on:
   push:
-    branches: [main, dev]
+    branches: [main, dev, local]
   pull_request:
-    branches: [main, dev]
+    branches: [main, dev, local]
   workflow_dispatch:
 jobs:
   electron-pos:
