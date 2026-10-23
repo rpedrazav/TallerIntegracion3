@@ -5,7 +5,7 @@ titulo: MS-3 · Catalog & Pricing Service
 estado: parcial
 fuentes: [src/CatalogPricingService/]
 verificado_contra_codigo: true
-ultima_revision: 2026-10-18
+ultima_revision: 2026-10-23
 depende_de: [ms1-identity]
 publica: []
 consume: []
@@ -144,3 +144,7 @@ PUT ajeno e inexistente retornan el mismo 404 y body; GET por ID, lookup y DELET
 - `src/CatalogPricingService/Controllers/CategoriaController.cs`
 - `src/CatalogPricingService/Data/Migrations/20260927164215_AddProductoNombreTrgmIndex.cs`
 - `src/CatalogPricingService/Data/Migrations/20260925154800_AddCategoriaHierarchy.cs`
+
+## S2-061 — Unidad y precio de productos pesables
+
+[CONTRATO DEFINIDO] Para `EsPesoVariable`, el [contrato de peso variable](../dominio/peso-variable.md) exige kg como unidad base y `PrecioBase` por kg. La correspondencia de `UomBaseId` con kg está [NO VERIFICADO]; MS-5 todavía no recibe esa unidad en `ProductoCatalogDto`. Validación entre servicios y conservación de los cuatro decimales del precio en MS-5: pendientes.

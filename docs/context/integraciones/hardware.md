@@ -5,7 +5,7 @@ titulo: Integración con Hardware — Balanza y Terminal POS
 estado: planificado
 fuentes: [GlobalMart_ContextMaster.md#sec12, diagramas/rodrigo/]
 verificado_contra_codigo: false
-ultima_revision: 2026-09-28
+ultima_revision: 2026-10-23
 depende_de: [ms5-pos, electron-ipc]
 publica: []
 consume: []
@@ -23,16 +23,18 @@ reglas: [RF-15]
 ```
 1. Cajero escanea producto de peso variable (frutas, carnes)
 2. Coloca el producto en la balanza
-3. La balanza transmite peso en gramos cuando se estabiliza
-4. Electron captura vía Node.js SerialPort
-5. IPC envía peso al renderer (React)
-6. Renderer calcula: precio = peso_kg × precio_por_kg
-7. Ítem se agrega al carrito con peso y precio calculado
+3. El dispositivo o simulador entrega valor y unidad explícita (g o kg)
+4. El adaptador convierte g / 1000 a kg; kg se conserva sin reconvertir
+5. Se validan mínimo y precisión; IPC entrega peso canónico al renderer
+6. Renderer envía peso_kg a MS-5; solo muestra una estimación del precio
+7. MS-5 valida el ítem y calcula con precio autoritativo por kg de MS-3
 ```
 
 **En el modelo de datos:** `ItemVenta.PesoKg` (decimal?) ya existe en MS-5 para este caso.
 
 **Si balanza no responde:** el cajero ingresa el peso manualmente (fallback de UI).
+
+El [contrato S2-061](../dominio/peso-variable.md) define mínimo de 0.010 kg, precisión de 0.001 kg y rechazo de lecturas sin unidad. Estas son reglas del simulador; la integración física y la conversión del adaptador siguen pendientes.
 
 ## Terminal POS
 
