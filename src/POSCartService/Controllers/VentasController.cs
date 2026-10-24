@@ -291,17 +291,30 @@ public sealed class VentasController : ControllerBase
             return BadRequest(new { error = $"El producto '{producto.Nombre}' está inactivo y no se puede vender." });
         }
 
-        // 6. Determinar cantidad y peso
-        decimal cantidad = request.Cantidad;
+        // 6. Validar S2-061 antes de calcular impuestos o mutar el carrito.
+        // La clasificación proviene del catálogo, nunca del cliente.
+        decimal cantidad = request.Cantidad ?? 1m;
         decimal? pesoKg = request.PesoKg;
 
-        if (producto.EsPesoVariable && pesoKg.HasValue && pesoKg.Value > 0)
+        if (producto.EsPesoVariable)
         {
+            if (!pesoKg.HasValue)
+                return BadRequest(new { error = "peso_kg es obligatorio para productos de peso variable." });
+            if (pesoKg.Value < 0.010m)
+                return BadRequest(new { error = "peso_kg debe ser mayor o igual a 0.010 kg (10 gramos)." });
+            if (pesoKg.Value % 0.001m != 0)
+                return BadRequest(new { error = "peso_kg debe expresarse en incrementos de 0.001 kg (1 gramo), sin redondeo." });
+            if (request.Cantidad.HasValue && request.Cantidad.Value != pesoKg.Value)
+                return BadRequest(new { error = "cantidad debe coincidir con peso_kg para productos de peso variable." });
+
             cantidad = pesoKg.Value;
         }
-        else if (cantidad <= 0)
+        else
         {
-            cantidad = 1;
+            if (pesoKg.HasValue)
+                return BadRequest(new { error = "peso_kg no corresponde a un producto que no es de peso variable." });
+            if (cantidad <= 0)
+                return BadRequest(new { error = "cantidad debe ser mayor a 0." });
         }
 
         decimal precioUnitario = producto.PrecioBase;

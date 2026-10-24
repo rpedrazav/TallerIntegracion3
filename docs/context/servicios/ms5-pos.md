@@ -5,7 +5,7 @@ titulo: MS-5 · POS & Cart Service
 estado: parcial
 fuentes: [src/POSCartService/, Docker/simulator/server.js, tests/GlobalMart.IntegrationTests/PaymentSimulatorIntegrationTests.cs, tests/GlobalMart.IntegrationTests/PaymentRetrySafetyTests.cs, tests/GlobalMart.IntegrationTests/CobroSeguroIntegrationTests.cs, docs/qa/S2-035/reporte.md, tests/GlobalMart.IntegrationTests/CobrarTarjetaIntegrationTests.cs, tests/GlobalMart.IntegrationTests/PaymentEventSequenceContractTests.cs]
 verificado_contra_codigo: true
-ultima_revision: 2026-10-23
+ultima_revision: 2026-10-24
 depende_de: [ms1-identity, ms2-tax, ms3-catalog]
 publica: [sale.completed]
 consume: []
@@ -79,7 +79,7 @@ Antes de autorizar tarjeta, MS-5 persiste un `IntentoPago PENDIENTE` con clave d
    → Crea Venta con subtotal, impuestos (IVA) y total de MS-2
    → Estado: PENDIENTE
 
-3. POST /ventas/{id}/items  { productoId, cantidad, pesoKg? }
+3. POST /ventas/{id}/items  { producto_id, cantidad?, peso_kg? }
    → Llama CatalogClient→MS-3 para obtener nombre y precio del producto
    → Llama TaxClient→MS-2 para recalcular IVA con todos los ítems
    → Actualiza Venta.Subtotal / .Impuestos / .Total
@@ -354,4 +354,10 @@ Validación: **54/54 pruebas backend**, incluidas **17 S2-035** y **5 S2-040**, 
 
 ## S2-061 — Contrato de peso variable
 
-[CONTRATO DEFINIDO] El [contrato de ítem pesable](../dominio/peso-variable.md) fija kg, precisión de 0.001 kg, mínimo de 0.010 kg y `Cantidad = PesoKg`, con conversión explícita desde gramos y ejemplos de aceptación/rechazo. Especifica precio por kg autoritativo y snapshot con cuatro decimales. **La tabla S2-001 anterior describe el comportamiento actual; no acredita estas nuevas validaciones.** Implementación pendiente: distinguir cantidad omitida, validar tipo/unidad, mínimo y precisión en crear/agregar/modificar, y alinear persistencia del precio.
+[CONTRATO DEFINIDO] El [contrato de ítem pesable](../dominio/peso-variable.md) fija kg, precisión de 0.001 kg, mínimo de 0.010 kg y `Cantidad = PesoKg`, con conversión explícita desde gramos y ejemplos de aceptación/rechazo. Especifica precio por kg autoritativo y snapshot con cuatro decimales. **La tabla S2-001 anterior describe el comportamiento actual; no acredita estas nuevas validaciones.** S2-062 implementa tipo, mínimo, precisión y coherencia cantidad/peso al agregar. Siguen pendientes las reglas completas en crear/modificar, la unidad de catálogo y la precisión persistida del precio.
+
+## S2-062 — Validar peso al agregar ítem
+
+[IMPLEMENTADO] `POST /ventas/{id}/items` y su alias `/api` usan `EsPesoVariable` consultado en MS-3. Un pesable exige `peso_kg >= 0.010`, múltiplo de `0.001`, y cantidad coincidente si se envía. Peso ausente/null, cero, negativo, insuficiente, con fracción de gramo o cantidad contradictoria devuelve 400 antes de MS-2 y de la persistencia. No pesables rechazan peso no nulo. `AgregarItemRequest.Cantidad` es nullable; omisión/null deriva del peso para pesables o conserva default 1 para no pesables. No se modifican crear venta, modificar ítem, migraciones ni el simulador.
+
+Validación local del 2026-10-24: **32/32 pruebas Release aprobadas**, 20 de S2-062 y 12 de regresión, con JWT, HTTP y PostgreSQL 16 temporal. MS-3/MS-2 simulados mediante handlers HTTP. Rechazos sin cambios en ítems, estado o totales y sin llamada fiscal adicional. [Evidencia y reproducción](../../qa/S2-062/reporte.md).

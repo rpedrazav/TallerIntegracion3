@@ -5,7 +5,7 @@ titulo: Contrato de ítem pesable — S2-061
 estado: contrato_definido
 fuentes: [src/POSCartService/Controllers/VentasController.cs, src/POSCartService/DTOs/AgregarItemDTOs.cs, src/POSCartService/DTOs/CrearVentaRequest.cs, src/CatalogPricingService/Models/Producto.cs]
 verificado_contra_codigo: false
-ultima_revision: 2026-10-23
+ultima_revision: 2026-10-24
 depende_de: [ms3-catalog, ms5-pos, hardware]
 publica: []
 consume: []
@@ -13,7 +13,7 @@ reglas: [RN-01, RN-06, RN-07]
 ---
 # Contrato de ítem pesable — S2-061
 
-**Entrega: CONTRATO DEFINIDO, versión 1. Aplicación integral en ejecución: PENDIENTE.** Este documento especifica las reglas que deberán compartir catálogo, simulador, POS y MS-5. No certifica pruebas de integración ni una balanza implementada.
+**Entrega: CONTRATO DEFINIDO, versión 1. Aplicación integral en ejecución: PARCIAL (S2-062: validación de peso al agregar ítems).** Este documento especifica las reglas que deberán compartir catálogo, simulador, POS y MS-5. No certifica pruebas de integración ni una balanza implementada.
 
 El mínimo de 10 g y la precisión de 1 g son decisiones de diseño de esta tarea para el simulador, no especificaciones verificadas de hardware. Capacidad máxima y resolución de una balanza física: [NO VERIFICADO].
 
@@ -119,14 +119,16 @@ Para acreditar implementación posteriormente:
 
 ## 7. Estado real y trabajo de implementación pendiente
 
-Inspección de código, 2026-10-23:
+Inspección de código, 2026-10-24:
 
 - [IMPLEMENTADO] Los DTOs admiten `peso_kg`; crear/agregar copia un peso positivo a cantidad cuando catálogo indica `EsPesoVariable`. MS-5 obtiene precio de catálogo y calcula subtotal.
-- [PARCIAL] Los validadores verifican positividad, pero no el mínimo de 10 g, precisión, coherencia de ambos campos ni toda la compatibilidad con el tipo del catálogo. Modificar cantidad usa un peso positivo sin resolver allí `EsPesoVariable`.
-- [PENDIENTE] Distinguir cantidad omitida de cantidad explícita: los DTOs actuales usan `decimal` y crear/agregar tienen default 1. Se necesita presencia de campo o un valor nullable para aplicar este contrato sin rechazar la omisión legítima.
+- [IMPLEMENTADO — S2-062] Agregar ítem consulta `EsPesoVariable` en catálogo y rechaza peso ausente, inferior a 0.010 kg, fracciones de gramo, cantidad contradictoria y peso en productos no pesables antes de calcular impuestos o persistir. Crear venta y modificar ítem todavía no aplican estas reglas completas; modificar usa un peso positivo sin resolver allí `EsPesoVariable`.
+- [PARCIAL — S2-062] `AgregarItemRequest.Cantidad` es nullable: para pesables se deriva del peso cuando se omite o es null; si tiene valor debe coincidir. Para no pesables, omisión/null conserva default 1. Los DTOs de crear/modificar aún necesitan adaptación.
 - [PENDIENTE] Exponer/resolver unidad del catálogo: `ProductoCatalogDto` no incluye `UomBaseId`. Definir la correspondencia real y validar precio por kg.
 - [PENDIENTE] Preservar precisión del precio persistido, aplicar las reglas comunes en las tres operaciones y probarlas mediante HTTP/persistencia.
 - [PENDIENTE] Implementar y probar conversión explícita en el simulador/adaptador. Este documento no acredita aceptación E2E.
+
+Validación S2-062 del 2026-10-24: **20/20 casos nuevos aprobados** más 12 de regresión, limitados a agregar ítems. [Reporte y evidencia](../../qa/S2-062/reporte.md).
 
 ## Fuentes de código y conexiones
 

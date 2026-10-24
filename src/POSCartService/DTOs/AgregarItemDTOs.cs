@@ -14,12 +14,17 @@ public sealed record AgregarItemRequest
     [JsonPropertyName("producto_id")]
     public Guid ProductoId { get; init; }
 
+    /// <summary>
+    /// Opcional: para pesables se deriva de peso_kg; si se envía, debe coincidir.
+    /// Para no pesables, null u omisión conserva el valor por defecto de 1.
+    /// </summary>
     [JsonPropertyName("cantidad")]
-    public decimal Cantidad { get; init; } = 1;
+    public decimal? Cantidad { get; init; }
 
     /// <summary>
     /// Peso en kilogramos para productos de peso variable (balanza).
-    /// Si se especifica, se toma como la cantidad a facturar.
+    /// Obligatorio para pesables: mínimo 0.010 kg e incrementos de 0.001 kg.
+    /// No se admite para productos no pesables.
     /// </summary>
     [JsonPropertyName("peso_kg")]
     public decimal? PesoKg { get; init; }

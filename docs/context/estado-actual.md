@@ -5,7 +5,7 @@ titulo: Estado Real de Implementación — GlobalMart OS
 estado: vigente
 fuentes: [docs/context/_reports/inventario.md, src/, globalmart-frontend/src/api/client.ts, git log, docs/context/_reports/preguntas-abiertas.md, tests/GlobalMart.IntegrationTests/CobroSeguroIntegrationTests.cs, docs/qa/S2-035/reporte.md, new-ingresses.yaml]
 verificado_contra_codigo: true
-ultima_revision: 2026-10-23
+ultima_revision: 2026-10-24
 depende_de: []
 publica: []
 consume: []
@@ -361,3 +361,9 @@ Validación: **54/54 pruebas backend**, incluidas **17 S2-035** y **5 S2-040**, 
 ## S2-061 — Definir contrato de peso variable
 
 [CONTRATO DEFINIDO] Se documentó el [contrato de ítem pesable](dominio/peso-variable.md): kg, precisión de 1 g, mínimo de 10 g, igualdad `Cantidad = PesoKg`, precio por kg y conversión explícita de gramos. Incluye ejemplos válidos/rechazados y brechas verificadas en DTOs, validación y precisión del precio persistido. Es una entrega documental; no modifica el backend ni implementa balanza/simulador. Cumplimiento integral en ejecución: PENDIENTE, aceptación E2E [NO VERIFICADO].
+
+## S2-062 — Validar peso en agregar ítem
+
+[IMPLEMENTADO] MS-5 consulta `EsPesoVariable` en catálogo al agregar, exige peso válido para pesables (mínimo 10 g, incrementos de 1 g), rechaza contradicciones con cantidad y peso en no pesables. Validación previa al cálculo fiscal y persistencia. Cantidad omitida/null se deriva del peso, o usa 1 en no pesables. El contrato S2-061 permanece parcial: crear/modificar, unidad de catálogo, precisión persistida del precio y conversión del simulador siguen pendientes.
+
+Validación local del 2026-10-24: **32/32 pruebas Release aprobadas**, 20 de S2-062 y 12 de regresión, con JWT, HTTP y PostgreSQL 16 temporal. MS-3/MS-2 simulados mediante handlers HTTP. Rechazos sin cambios en ítems, estado o totales y sin llamada fiscal adicional. [Evidencia y reproducción](../qa/S2-062/reporte.md).

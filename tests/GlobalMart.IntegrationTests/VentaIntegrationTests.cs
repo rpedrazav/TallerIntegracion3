@@ -438,6 +438,122 @@ public class VentaIntegrationTests : IClassFixture<Ms5WebApplicationFactory>
         Assert.Equal(119m, venta.Total);
     }
 
+    [Theory]
+    [Trait("Plan", "S2-062")]
+    [InlineData(true, "{}", false, "peso_kg")]
+    [InlineData(true, "{\"peso_kg\":null,\"cantidad\":1}", false, "peso_kg")]
+    [InlineData(true, "{\"peso_kg\":0}", false, "peso_kg")]
+    [InlineData(true, "{\"peso_kg\":-0.500}", false, "peso_kg")]
+    [InlineData(true, "{\"peso_kg\":0.009}", false, "peso_kg")]
+    [InlineData(true, "{\"peso_kg\":0.7505}", false, "peso_kg")]
+    [InlineData(true, "{\"peso_kg\":0.750,\"cantidad\":1}", false, "cantidad")]
+    [InlineData(true, "{\"peso_kg\":0.750,\"cantidad\":0}", false, "cantidad")]
+    [InlineData(true, "{\"peso_kg\":0.750,\"cantidad\":-1}", false, "cantidad")]
+    [InlineData(false, "{\"peso_kg\":0.750,\"cantidad\":2}", false, "peso_kg")]
+    [InlineData(false, "{\"cantidad\":0}", false, "cantidad")]
+    [InlineData(false, "{\"cantidad\":-1}", false, "cantidad")]
+    [InlineData(true, "{\"peso_kg\":0.010}", true, null)]
+    [InlineData(true, "{\"peso_kg\":0.750}", true, null)]
+    [InlineData(true, "{\"peso_kg\":0.750,\"cantidad\":0.750}", true, null)]
+    [InlineData(true, "{\"peso_kg\":0.7500}", true, null)]
+    [InlineData(true, "{\"peso_kg\":1.234}", true, null)]
+    [InlineData(false, "{\"cantidad\":2}", true, null)]
+    [InlineData(false, "{}", true, null)]
+    [InlineData(false, "{\"cantidad\":2,\"peso_kg\":null}", true, null)]
+    public async Task AgregarItem_ValidaPesoDeCatalogo_SinMutacionAnteRechazo(
+        bool pesable, string entrada, bool valido, string? campoError)
+    {
+        var tenantId = Guid.NewGuid();
+        var cajeroId = Guid.NewGuid();
+        var taxHandler = new TaxStubHandler();
+        using var configuredFactory = _factory.WithWebHostBuilder(builder =>
+        {
+            builder.ConfigureTestServices(services =>
+            {
+                services.AddControllers().AddControllersAsServices();
+                services.AddTransient<VentasController>(sp => new VentasController(
+                    sp.GetRequiredService<IVentaService>(), sp.GetRequiredService<ITurnoService>(),
+                    sp.GetRequiredService<ICatalogClient>(), sp.GetRequiredService<ITaxClient>(),
+                    sp.GetRequiredService<ILogger<VentasController>>()));
+                services.AddHttpClient(CatalogClient.HttpClientName)
+                    .ConfigurePrimaryHttpMessageHandler(() => new CatalogStubHandler(
+                        ProductOneId, ProductTwoId, productTwoPesable: pesable));
+                services.AddHttpClient(TaxClient.HttpClientName)
+                    .ConfigurePrimaryHttpMessageHandler(() => taxHandler);
+            });
+        });
+        using (var migrationScope = configuredFactory.Services.CreateScope())
+            await migrationScope.ServiceProvider.GetRequiredService<PosCartDbContext>().Database.MigrateAsync();
+
+        using var client = configuredFactory.CreateClient();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer",
+            CreateCajeroToken(configuredFactory.Services.GetRequiredService<IConfiguration>(), tenantId, cajeroId));
+        var turno = await client.PostAsJsonAsync("/turnos/abrir", new
+        {
+            sucursal_id = Guid.NewGuid(), monto_fondo_inicial = 50000m
+        });
+        Assert.Equal(HttpStatusCode.OK, turno.StatusCode);
+        var crear = await client.PostAsJsonAsync("/ventas", new
+        {
+            items = new[] { new { producto_id = ProductOneId, cantidad = 2m } },
+            metodo_pago = "EFECTIVO"
+        });
+        Assert.Equal(HttpStatusCode.Created, crear.StatusCode);
+        var ventaId = await ReadGuidPropertyAsync(crear, "id");
+
+        // Contextos nuevos y AsNoTracking: se compara persistencia, no objetos en memoria.
+        async Task<Venta> LeerVenta()
+        {
+            using var scope = configuredFactory.Services.CreateScope();
+            return await scope.ServiceProvider.GetRequiredService<PosCartDbContext>().Ventas
+                .IgnoreQueryFilters().AsNoTracking().Include(v => v.Items)
+                .SingleAsync(v => v.Id == ventaId && v.TenantId == tenantId);
+        }
+        static string Snapshot(Venta venta) => JsonSerializer.Serialize(new
+        {
+            venta.Id, venta.TenantId, venta.Estado, venta.Subtotal, venta.Impuestos, venta.Total,
+            Items = venta.Items.OrderBy(i => i.Id).Select(i => new
+            {
+                i.Id, i.VentaId, i.ProductoId, i.NombreProducto,
+                i.Cantidad, i.PesoKg, i.PrecioUnitario, i.Subtotal
+            })
+        });
+        var antes = await LeerVenta();
+        var llamadasTax = taxHandler.Calls;
+        var payload = JsonSerializer.Deserialize<Dictionary<string, object?>>(entrada)!;
+        payload["producto_id"] = ProductTwoId;
+        // Intentos de falsificar clasificación y precio no deben reemplazar al catálogo.
+        payload["es_peso_variable"] = !pesable;
+        payload["precio_unitario"] = 99999m;
+        var response = await client.PostAsJsonAsync($"/api/ventas/{ventaId}/items", payload);
+        var despues = await LeerVenta();
+        if (!valido)
+        {
+            Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+            Assert.Contains(campoError!, (await response.Content.ReadAsStringAsync()).ToLowerInvariant());
+            Assert.Equal(Snapshot(antes), Snapshot(despues));
+            Assert.Equal(llamadasTax, taxHandler.Calls);
+            return;
+        }
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        using var input = JsonDocument.Parse(entrada);
+        var cantidad = pesable ? input.RootElement.GetProperty("peso_kg").GetDecimal()
+            : input.RootElement.TryGetProperty("cantidad", out var c) ? c.GetDecimal() : 1m;
+        Assert.Equal(2, despues.Items.Count);
+        var agregado = Assert.Single(despues.Items.Where(i => i.ProductoId == ProductTwoId));
+        Assert.Equal(cantidad, agregado.Cantidad);
+        Assert.Equal(pesable ? (decimal?)cantidad : null, agregado.PesoKg);
+        Assert.Equal(50m, agregado.PrecioUnitario);
+        Assert.Equal(Math.Round(50m * cantidad, 2), agregado.Subtotal);
+        Assert.Equal(200m + agregado.Subtotal, despues.Subtotal);
+        Assert.Equal(Math.Round(despues.Subtotal * 0.19m, 2), despues.Impuestos);
+        Assert.Equal(despues.Subtotal + despues.Impuestos, despues.Total);
+        Assert.Equal(llamadasTax + 1, taxHandler.Calls);
+        using var body = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        Assert.Equal(cantidad, body.RootElement.GetProperty("cantidad").GetDecimal());
+    }
+
     private static async Task<Guid> ReadGuidPropertyAsync(HttpResponseMessage response, string propertyName)
     {
         using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
@@ -480,12 +596,14 @@ public class VentaIntegrationTests : IClassFixture<Ms5WebApplicationFactory>
         private readonly Guid _productOneId;
         private readonly Guid _productTwoId;
         private readonly Guid? _productInactiveId;
+        private readonly bool _productTwoPesable;
 
-        public CatalogStubHandler(Guid productOneId, Guid productTwoId, Guid? productInactiveId = null)
+        public CatalogStubHandler(Guid productOneId, Guid productTwoId, Guid? productInactiveId = null, bool productTwoPesable = false)
         {
             _productOneId = productOneId;
             _productTwoId = productTwoId;
             _productInactiveId = productInactiveId;
+            _productTwoPesable = productTwoPesable;
         }
 
         protected override Task<HttpResponseMessage> SendAsync(
@@ -496,7 +614,7 @@ public class VentaIntegrationTests : IClassFixture<Ms5WebApplicationFactory>
             var response = productId == _productOneId
                 ? new { id = _productOneId, nombre = "Producto uno", precioBase = 100m, esPesoVariable = false, isActive = true }
                 : productId == _productTwoId
-                    ? new { id = _productTwoId, nombre = "Producto dos", precioBase = 50m, esPesoVariable = false, isActive = true }
+                    ? new { id = _productTwoId, nombre = "Producto dos", precioBase = 50m, esPesoVariable = _productTwoPesable, isActive = true }
                     : (_productInactiveId.HasValue && productId == _productInactiveId.Value)
                         ? new { id = _productInactiveId.Value, nombre = "Producto inactivo", precioBase = 20m, esPesoVariable = false, isActive = false }
                         : null;
@@ -512,10 +630,12 @@ public class VentaIntegrationTests : IClassFixture<Ms5WebApplicationFactory>
 
     private sealed class TaxStubHandler : HttpMessageHandler
     {
+        public int Calls { get; private set; }
         protected override async Task<HttpResponseMessage> SendAsync(
             HttpRequestMessage request,
             CancellationToken cancellationToken)
         {
+            Calls++;
             using var doc = JsonDocument.Parse(await request.Content!.ReadAsStringAsync(cancellationToken));
             var itemsElement = doc.RootElement.GetProperty("items");
 
