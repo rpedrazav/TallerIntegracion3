@@ -5,7 +5,11 @@ titulo: Integración con Hardware — Balanza y Terminal POS
 estado: planificado
 fuentes: [GlobalMart_ContextMaster.md#sec12, diagramas/rodrigo/]
 verificado_contra_codigo: false
+<<<<<<< Updated upstream
 ultima_revision: 2026-09-28
+=======
+ultima_revision: 2026-10-24
+>>>>>>> Stashed changes
 depende_de: [ms5-pos, electron-ipc]
 publica: []
 consume: []
@@ -34,6 +38,13 @@ reglas: [RF-15]
 
 **Si balanza no responde:** el cajero ingresa el peso manualmente (fallback de UI).
 
+<<<<<<< Updated upstream
+=======
+El [contrato S2-061](../dominio/peso-variable.md) define mínimo de 0.010 kg, precisión de 0.001 kg y rechazo de lecturas sin unidad. Estas son reglas del simulador; la integración física y la conversión del adaptador siguen pendientes.
+
+**Protocolo de prueba física — S2-085 (CONDICIONADA, pendiente de modelo real):** [protocolo y checklist](../../qa/S2-085/protocolo-balanza-fisica.md) con identificación de puerto (COM/VID-PID), parámetros serie, comandos y formato de trama, estabilidad, tolerancia (≤ 1 `e` de placa), robustez de conexión, conversión S2-061 y flujo POS. Incluye la herramienta de captura [capturar-balanza.ps1](../../qa/S2-085/capturar-balanza.ps1). Ningún paso se ha ejecutado con hardware: [NO VERIFICADO].
+
+>>>>>>> Stashed changes
 ## Terminal POS
 
 Dispositivo compuesto que agrupa varios periféricos:

@@ -357,3 +357,30 @@ Validación posterior del merge, 2026-10-18: **5/5 casos S2-040 aprobados** dent
 [IMPLEMENTADO] Se unificó la reserva previa de S2-035 con `IniciarIntentoPagoAsync`, preservando el bloqueo por venta y tenant, la validación de clave y la referencia en `Pago`. Timeout/error/estado desconocido conserva `IntentoPago.PENDIENTE` (incierto), compatible con la consulta de S2-049. La actualización condicional solo admite reservas pendientes/fallidas del mismo tenant, venta, clave, monto y moneda; una aprobación no inserta un intento nuevo. La reserva se separa del seguimiento EF para no sobrescribir una reconciliación concurrente.
 
 Validación: **54/54 pruebas backend**, incluidas **17 S2-035** y **5 S2-040**, más typecheck, **2/2 archivos de pruebas de usuarios** y **7/7 pruebas de interfaz de cobro/búsqueda**. El caso de fallo de commit local verifica ahora recuperación mediante GET, segunda consulta estable y un solo POST externo. Las pruebas de navegador usan APIs controladas; no acreditan E2E contra un despliegue. [Resolución y evidencia](../qa/S2-035/merge.md).
+<<<<<<< Updated upstream
+=======
+
+## S2-053 / TI3-684 — Autorización e idempotencia
+
+[IMPLEMENTADO y VERIFICADO localmente] Tres casos con filtro `Plan=S2-053` aprobados en Release el 2026-10-19 con simulador Node real; los dos casos HTTP de MS-5 usan JWT y PostgreSQL 16 temporal. Repetir la misma clave tras aprobación o con respuesta pendiente devuelve 409 sin otro POST externo: una autorización lógica, un intento APROBADO, un Pago TARJETA de 119 CLP con referencia coincidente y un outbox pendiente. Dos POST idénticos directos al simulador conservan transacción, referencia y fecha de procesamiento. No acredita Electron, entrega Kafka ni despliegue remoto; el bloqueo remoto descrito en S2-052 no fue reevaluado. [Evidencia y reproducción](../qa/S2-053/reporte.md).
+
+## S2-061 — Definir contrato de peso variable
+
+[CONTRATO DEFINIDO] Se documentó el [contrato de ítem pesable](dominio/peso-variable.md): kg, precisión de 1 g, mínimo de 10 g, igualdad `Cantidad = PesoKg`, precio por kg y conversión explícita de gramos. Incluye ejemplos válidos/rechazados y brechas verificadas en DTOs, validación y precisión del precio persistido. Es una entrega documental; no modifica el backend ni implementa balanza/simulador. Cumplimiento integral en ejecución: PENDIENTE, aceptación E2E [NO VERIFICADO].
+
+## S2-062 — Validar peso en agregar ítem
+
+[IMPLEMENTADO] MS-5 consulta `EsPesoVariable` en catálogo al agregar, exige peso válido para pesables (mínimo 10 g, incrementos de 1 g), rechaza contradicciones con cantidad y peso en no pesables. Validación previa al cálculo fiscal y persistencia. Cantidad omitida/null se deriva del peso, o usa 1 en no pesables. El contrato S2-061 permanece parcial: crear/modificar, unidad de catálogo, precisión persistida del precio y conversión del simulador siguen pendientes.
+
+Validación local del 2026-10-24: **32/32 pruebas Release aprobadas**, 20 de S2-062 y 12 de regresión, con JWT, HTTP y PostgreSQL 16 temporal. MS-3/MS-2 simulados mediante handlers HTTP. Rechazos sin cambios en ítems, estado o totales y sin llamada fiscal adicional. [Evidencia y reproducción](../qa/S2-062/reporte.md).
+
+## S2-063 — Calcular total pesable en servidor
+
+[IMPLEMENTADO] El peso validado al agregar y el precio de MS-3 determinan el subtotal. Se conserva el precio con cuatro decimales en `ItemsVenta.PrecioUnitario` (migración a `numeric(20,4)`). MS-2 redondea subtotal e IVA por línea con ToEven y suma para obtener importes reproducibles; no usa importes del renderer. La validación de unidad UUID del catálogo sigue [NO VERIFICADO]; el uso de precio por kg se basa en la convención del contrato para `EsPesoVariable`.
+
+Validación S2-063 del 2026-10-24: **42/42 pruebas Release aprobadas** (10 nuevas, 32 de regresión), con PostgreSQL temporal, HTTP MS-5 y calculador productivo MS-2 a través de handler HTTP. Regresión manual TC-01 aprobada. [Evidencia y límites](../qa/S2-063/reporte.md).
+
+## S2-085 - Protocolo de prueba física de balanza
+
+[CONDICIONADA — pendiente de modelo real] Se preparó el [protocolo y checklist ejecutable](../qa/S2-085/protocolo-balanza-fisica.md) para cuando llegue el equipo: identificación de puerto (COM, VID/PID, reconexión), parámetros serie, comandos y formato de trama, estabilidad (rango ≤ 1 `e`, asentamiento), exactitud/tolerancia con masas patrón (≤ 1 `e` de placa), robustez de conexión, conversión al contrato S2-061 y flujo POS con turno abierto y JWT. Incluye [capturar-balanza.ps1](../qa/S2-085/capturar-balanza.ps1) para listar puertos y registrar tramas crudas en CSV. Entrega documental: no implementa adaptador, IPC ni simulador de balanza. Script probado solo sin hardware (listado y puerto inexistente); lectura física y aceptación E2E [NO VERIFICADO].
+>>>>>>> Stashed changes
