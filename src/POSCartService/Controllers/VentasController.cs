@@ -410,6 +410,7 @@ public sealed class VentasController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
+    [ProducesResponseType(StatusCodes.Status502BadGateway)]
     [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
     public async Task<IActionResult> ModificarCantidadItem(
         [FromRoute] Guid id,
@@ -442,17 +443,44 @@ public sealed class VentasController : ControllerBase
             return NotFound(new { error = $"Ítem {itemId} no encontrado en la venta {id}." });
         }
 
-        // 5. Determinar nueva cantidad y peso
-        decimal nuevaCantidad = request.Cantidad;
-        decimal? nuevoPesoKg = request.PesoKg;
-
-        if (nuevoPesoKg.HasValue && nuevoPesoKg.Value > 0)
+        // El catálogo determina el tipo; el precio sigue siendo el snapshot del ítem.
+        var authHeader = Request.Headers.Authorization.ToString();
+        ProductoCatalogDto? producto;
+        try
         {
+            producto = await _catalogClient.GetProductAsync(item.ProductoId, authHeader, cancellationToken);
+        }
+        catch (ExternalServiceException ex)
+        {
+            _logger?.LogError(ex, "MS-3 no responde al consultar el tipo del ítem");
+            return StatusCode(StatusCodes.Status502BadGateway, new { error = ex.Message });
+        }
+        if (producto is null)
+            return NotFound(new { error = "Producto del ítem no encontrado en el catálogo." });
+        if (!producto.IsActive)
+            return BadRequest(new { error = "El producto del ítem está inactivo." });
+
+        decimal nuevaCantidad;
+        decimal? nuevoPesoKg = request.PesoKg;
+        if (producto.EsPesoVariable)
+        {
+            if (!nuevoPesoKg.HasValue)
+                return BadRequest(new { error = "peso_kg es obligatorio para productos de peso variable." });
+            if (nuevoPesoKg.Value < 0.010m)
+                return BadRequest(new { error = "peso_kg debe ser mayor o igual a 0.010 kg (10 gramos)." });
+            if (nuevoPesoKg.Value % 0.001m != 0)
+                return BadRequest(new { error = "peso_kg debe expresarse en incrementos de 0.001 kg (1 gramo), sin redondeo." });
+            if (request.Cantidad.HasValue && request.Cantidad.Value != nuevoPesoKg.Value)
+                return BadRequest(new { error = "cantidad debe coincidir con peso_kg para productos de peso variable." });
             nuevaCantidad = nuevoPesoKg.Value;
         }
-        else if (nuevaCantidad <= 0)
+        else
         {
-            return BadRequest(new { error = "La cantidad debe ser mayor a 0." });
+            if (nuevoPesoKg.HasValue)
+                return BadRequest(new { error = "peso_kg no corresponde a un producto que no es de peso variable." });
+            if (!request.Cantidad.HasValue || request.Cantidad.Value <= 0)
+                return BadRequest(new { error = "cantidad debe ser mayor a 0." });
+            nuevaCantidad = request.Cantidad.Value;
         }
 
         decimal nuevoSubtotalItem = Math.Round(item.PrecioUnitario * nuevaCantidad, 2, MidpointRounding.ToEven);
@@ -465,7 +493,6 @@ public sealed class VentasController : ControllerBase
             Cantidad = (i.Id == itemId) ? nuevaCantidad : i.Cantidad
         }).ToList();
 
-        var authHeader = Request.Headers.Authorization.ToString();
         TaxCalculationResult? taxResult;
         try
         {

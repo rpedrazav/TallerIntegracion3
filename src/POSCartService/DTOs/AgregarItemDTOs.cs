@@ -37,8 +37,9 @@ public sealed record AgregarItemRequest
 /// </summary>
 public sealed record ModificarCantidadItemRequest
 {
+    /// <summary>Obligatoria para no pesables; si se envía para pesables debe coincidir con peso_kg.</summary>
     [JsonPropertyName("cantidad")]
-    public decimal Cantidad { get; init; }
+    public decimal? Cantidad { get; init; }
 
     [JsonPropertyName("peso_kg")]
     public decimal? PesoKg { get; init; }

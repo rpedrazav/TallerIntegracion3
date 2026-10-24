@@ -373,3 +373,11 @@ Validación local del 2026-10-24: **32/32 pruebas Release aprobadas**, 20 de S2-
 [IMPLEMENTADO] El peso validado al agregar y el precio de MS-3 determinan el subtotal. Se conserva el precio con cuatro decimales en `ItemsVenta.PrecioUnitario` (migración a `numeric(20,4)`). MS-2 redondea subtotal e IVA por línea con ToEven y suma para obtener importes reproducibles; no usa importes del renderer. La validación de unidad UUID del catálogo sigue [NO VERIFICADO]; el uso de precio por kg se basa en la convención del contrato para `EsPesoVariable`.
 
 Validación S2-063 del 2026-10-24: **42/42 pruebas Release aprobadas** (10 nuevas, 32 de regresión), con PostgreSQL temporal, HTTP MS-5 y calculador productivo MS-2 a través de handler HTTP. Regresión manual TC-01 aprobada. [Evidencia y límites](../qa/S2-063/reporte.md).
+
+## S2-064 — Actualizar cantidad pesable con recálculo
+
+[IMPLEMENTADO] El PUT de ítems valida por tipo consultado en MS-3: peso obligatorio y válido para pesables, cantidad positiva sin peso para no pesables. Conserva precio snapshot, recalcula con MS-2 e identidad del ítem. Los rechazos y fallos de dependencias previos a persistir no alteran el carrito. Sin migraciones nuevas; crear venta aún no aplica el contrato completo de peso. [Reporte y reproducción](../qa/S2-064/reporte.md).
+
+Validación S2-064 del 2026-10-24: **75/75 pruebas Release aprobadas**, incluidas 23 nuevas de edición y 10 de aislamiento de ventas entre tenants, con HTTP/JWT y PostgreSQL temporal. [Evidencia](../qa/S2-064/reporte.md).
+
+Verificación final S2-064: recompilación Release y **33/33 casos S2-064/S2-063 aprobados**, sin fallos ni omisiones; evidencia adicional en el reporte S2-064.

@@ -354,7 +354,7 @@ Validación: **54/54 pruebas backend**, incluidas **17 S2-035** y **5 S2-040**, 
 
 ## S2-061 — Contrato de peso variable
 
-[CONTRATO DEFINIDO] El [contrato de ítem pesable](../dominio/peso-variable.md) fija kg, precisión de 0.001 kg, mínimo de 0.010 kg y `Cantidad = PesoKg`, con conversión explícita desde gramos y ejemplos de aceptación/rechazo. Especifica precio por kg autoritativo y snapshot con cuatro decimales. **La tabla S2-001 anterior describe el comportamiento actual; no acredita estas nuevas validaciones.** S2-062 implementa tipo, mínimo, precisión y coherencia cantidad/peso al agregar. Siguen pendientes las reglas completas en crear/modificar y la unidad de catálogo; S2-063 resuelve la precisión persistida del precio.
+[CONTRATO DEFINIDO] El [contrato de ítem pesable](../dominio/peso-variable.md) fija kg, precisión de 0.001 kg, mínimo de 0.010 kg y `Cantidad = PesoKg`, con conversión explícita desde gramos y ejemplos de aceptación/rechazo. Especifica precio por kg autoritativo y snapshot con cuatro decimales. **La tabla S2-001 anterior describe el comportamiento actual; no acredita estas nuevas validaciones.** S2-062 implementa tipo, mínimo, precisión y coherencia cantidad/peso al agregar. S2-064 completa las reglas al modificar. Siguen pendientes las reglas completas en crear y la unidad de catálogo; S2-063 resuelve la precisión persistida del precio.
 
 ## S2-062 — Validar peso al agregar ítem
 
@@ -367,3 +367,11 @@ Validación local del 2026-10-24: **32/32 pruebas Release aprobadas**, 20 de S2-
 [IMPLEMENTADO] Agregar usa el peso validado de S2-062 como cantidad y `PrecioBase` de MS-3 como precio por kg según S2-061; el request no controla precio, subtotal ni IVA. El snapshot `PrecioUnitario` pasa a `numeric(20,4)` mediante `20261024142752_PreserveItemPricePrecision`, conservando los 16 dígitos enteros anteriores. MS-5 redondea subtotal a dos decimales ToEven y MS-2 aplica el mismo redondeo por línea a subtotal e IVA, sumando las líneas para la venta. Crear/agregar rechazan precio de catálogo negativo. La unidad UUID de catálogo sigue sin correspondencia verificable; se aplica la convención `EsPesoVariable => precio por kg`, sin acreditar validación de `UomBaseId`.
 
 Validación S2-063 del 2026-10-24: **42/42 pruebas Release aprobadas** (10 nuevas, 32 de regresión), con PostgreSQL temporal, HTTP MS-5 y calculador productivo MS-2 a través de handler HTTP. Regresión manual TC-01 aprobada. [Evidencia y límites](../../qa/S2-063/reporte.md).
+
+## S2-064 — Editar peso o cantidad por tipo
+
+[IMPLEMENTADO] PUT `/ventas/{id}/items/{itemId}` y alias `/api` consultan `EsPesoVariable` de MS-3. Pesables exigen peso mínimo de 0.010 kg, incrementos de 0.001 y cantidad coincidente si tiene valor; no pesables exigen cantidad positiva y rechazan peso no nulo. El DTO de edición usa cantidad nullable. Conserva precio snapshot e identidad del ítem y recalcula con MS-2 antes de modificar el carrito. Validación 400, producto ausente 404, fallo de catálogo 502 o fiscal 503 no modifican ítems ni totales. El tipo proviene del catálogo actual; el precio actualizado del catálogo no reemplaza al histórico. [Reporte](../../qa/S2-064/reporte.md).
+
+Validación S2-064 del 2026-10-24: **75/75 pruebas Release aprobadas**, incluidas 23 nuevas de edición y 10 de aislamiento de ventas entre tenants, con HTTP/JWT y PostgreSQL temporal. [Evidencia](../../qa/S2-064/reporte.md).
+
+Verificación final S2-064: recompilación Release y **33/33 casos S2-064/S2-063 aprobados**, sin fallos ni omisiones; evidencia adicional en el reporte S2-064.

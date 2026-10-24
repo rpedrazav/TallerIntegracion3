@@ -29,7 +29,7 @@ using Xunit;
 
 namespace GlobalMart.IntegrationTests;
 
-public class VentaIntegrationTests : IClassFixture<Ms5WebApplicationFactory>
+public partial class VentaIntegrationTests : IClassFixture<Ms5WebApplicationFactory>
 {
     private static readonly Guid ProductOneId = Guid.Parse("11111111-1111-1111-1111-111111111111");
     private static readonly Guid ProductTwoId = Guid.Parse("22222222-2222-2222-2222-222222222222");
