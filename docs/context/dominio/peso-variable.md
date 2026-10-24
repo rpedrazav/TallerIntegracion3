@@ -13,7 +13,7 @@ reglas: [RN-01, RN-06, RN-07]
 ---
 # Contrato de ítem pesable — S2-061
 
-**Entrega: CONTRATO DEFINIDO, versión 1. Aplicación integral en ejecución: PARCIAL (S2-062: validación de peso al agregar ítems).** Este documento especifica las reglas que deberán compartir catálogo, simulador, POS y MS-5. No certifica pruebas de integración ni una balanza implementada.
+**Entrega: CONTRATO DEFINIDO, versión 1. Aplicación integral en ejecución: PARCIAL (S2-062: validación al agregar; S2-063: cálculo y precisión del precio).** Este documento especifica las reglas que deberán compartir catálogo, simulador, POS y MS-5. No certifica pruebas de integración ni una balanza implementada.
 
 El mínimo de 10 g y la precisión de 1 g son decisiones de diseño de esta tarea para el simulador, no especificaciones verificadas de hardware. Capacidad máxima y resolución de una balanza física: [NO VERIFICADO].
 
@@ -63,12 +63,12 @@ Una venta puede contener una lectura de 250 g y otra de 1 kg si se representan c
 - `UomBaseId` debe corresponder a kg para el producto pesable. La correspondencia concreta de UUID a kg está [NO VERIFICADO]; este contrato no inventa un identificador. Una unidad de catálogo desconocida o incompatible debe impedir agregar el producto hasta corregir su configuración.
 - Nombre, tipo y precio se resuelven en el servidor. El precio enviado por el cliente nunca es autoridad; el renderer puede mostrar una estimación.
 - Se conserva el precio de catálogo como snapshot con sus hasta cuatro decimales, sin redondearlo antes de multiplicar. Al modificar peso se usa ese mismo snapshot.
-- `Subtotal = redondear(PrecioUnitario × PesoKg, 2, ToEven)`: dos decimales y empate al par, como el cálculo actual de MS-5. Impuestos y total fiscal siguen siendo responsabilidad de MS-2; este contrato no cambia tasas ni reglas fiscales.
+- `Subtotal = redondear(PrecioUnitario × PesoKg, 2, ToEven)`: dos decimales y empate al par, como el cálculo actual de MS-5. MS-2 calcula el IVA de cada línea sobre su subtotal redondeado, redondea el IVA a dos decimales con `ToEven` y suma los subtotales e IVA de las líneas para la venta (S2-063). No cambia las tasas ni la selección de exenciones.
 - Precio negativo o no representable: rechazar. Precio cero es admisible en el ítem; no modifica las restricciones existentes del cobro.
 
 Ejemplo: precio por kg `2000`, peso `0.750` → subtotal `1500.00`, antes de impuestos. No calcular `precio × cantidad × peso`.
 
-**Brecha de persistencia:** catálogo declara `decimal(12,4)`, pero `ItemVenta.PrecioUnitario` usa precisión `(18,2)`. Será necesario preservar los cuatro decimales del snapshot al implementar el contrato para que editar peso no cambie la base del cálculo. Esta tarea no aplica migraciones.
+**Persistencia — S2-063:** catálogo declara `decimal(12,4)` y `ItemVenta.PrecioUnitario` ahora usa `(20,4)`. La migración `20261024142752_PreserveItemPricePrecision` conserva cuatro decimales y los 16 dígitos enteros admitidos anteriormente. Los precios históricos ya redondeados no pueden recuperar decimales perdidos. El rollback a `(18,2)` puede redondear precios nuevos.
 
 ## 5. Ejemplos válidos y rechazados
 
@@ -125,7 +125,8 @@ Inspección de código, 2026-10-24:
 - [IMPLEMENTADO — S2-062] Agregar ítem consulta `EsPesoVariable` en catálogo y rechaza peso ausente, inferior a 0.010 kg, fracciones de gramo, cantidad contradictoria y peso en productos no pesables antes de calcular impuestos o persistir. Crear venta y modificar ítem todavía no aplican estas reglas completas; modificar usa un peso positivo sin resolver allí `EsPesoVariable`.
 - [PARCIAL — S2-062] `AgregarItemRequest.Cantidad` es nullable: para pesables se deriva del peso cuando se omite o es null; si tiene valor debe coincidir. Para no pesables, omisión/null conserva default 1. Los DTOs de crear/modificar aún necesitan adaptación.
 - [PENDIENTE] Exponer/resolver unidad del catálogo: `ProductoCatalogDto` no incluye `UomBaseId`. Definir la correspondencia real y validar precio por kg.
-- [PENDIENTE] Preservar precisión del precio persistido, aplicar las reglas comunes en las tres operaciones y probarlas mediante HTTP/persistencia.
+- [IMPLEMENTADO — S2-063] Se conserva la precisión del precio persistido y MS-2 redondea subtotal e IVA por línea antes de sumar la venta.
+- [PENDIENTE] Aplicar las validaciones completas de peso en crear/modificar y probarlas mediante HTTP/persistencia.
 - [PENDIENTE] Implementar y probar conversión explícita en el simulador/adaptador. Este documento no acredita aceptación E2E.
 
 Validación S2-062 del 2026-10-24: **20/20 casos nuevos aprobados** más 12 de regresión, limitados a agregar ítems. [Reporte y evidencia](../../qa/S2-062/reporte.md).
@@ -138,3 +139,5 @@ Validación S2-062 del 2026-10-24: **20/20 casos nuevos aprobados** más 12 de r
 - [Modelo de catálogo](../../../src/CatalogPricingService/Models/Producto.cs)
 - [Persistencia MS-5](../../../src/POSCartService/Data/PosCartDbContext.cs)
 - [MS-5](../servicios/ms5-pos.md), [MS-3](../servicios/ms3-catalog.md), [hardware](../integraciones/hardware.md)
+
+Validación S2-063 del 2026-10-24: **42/42 pruebas Release aprobadas** (10 nuevas, 32 de regresión), con PostgreSQL temporal, HTTP MS-5 y calculador productivo MS-2 a través de handler HTTP. Regresión manual TC-01 aprobada. [Evidencia y límites](../../qa/S2-063/reporte.md).

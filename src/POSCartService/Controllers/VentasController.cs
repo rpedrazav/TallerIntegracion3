@@ -154,8 +154,11 @@ public sealed class VentasController : ControllerBase
                 cantidad = 1;
             }
 
+            if (producto.PrecioBase < 0)
+                return BadRequest(new { error = "El precio de catálogo no puede ser negativo." });
+
             decimal precioUnitario = producto.PrecioBase;
-            decimal subtotalItem = Math.Round(precioUnitario * cantidad, 2);
+            decimal subtotalItem = Math.Round(precioUnitario * cantidad, 2, MidpointRounding.ToEven);
 
             itemsDominio.Add(new ItemVenta
             {
@@ -317,8 +320,11 @@ public sealed class VentasController : ControllerBase
                 return BadRequest(new { error = "cantidad debe ser mayor a 0." });
         }
 
+        if (producto.PrecioBase < 0)
+            return BadRequest(new { error = "El precio de catálogo no puede ser negativo." });
+
         decimal precioUnitario = producto.PrecioBase;
-        decimal subtotalItem = Math.Round(precioUnitario * cantidad, 2);
+        decimal subtotalItem = Math.Round(precioUnitario * cantidad, 2, MidpointRounding.ToEven);
 
         var nuevoItem = new ItemVenta
         {
@@ -449,7 +455,7 @@ public sealed class VentasController : ControllerBase
             return BadRequest(new { error = "La cantidad debe ser mayor a 0." });
         }
 
-        decimal nuevoSubtotalItem = Math.Round(item.PrecioUnitario * nuevaCantidad, 2);
+        decimal nuevoSubtotalItem = Math.Round(item.PrecioUnitario * nuevaCantidad, 2, MidpointRounding.ToEven);
 
         // 6. Recalcular IVA y totales consolidados de la venta consultando MS-2
         var itemsParaCalculo = venta.Items.Select(i => new TaxItemDto

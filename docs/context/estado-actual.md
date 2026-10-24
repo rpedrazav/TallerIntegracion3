@@ -367,3 +367,9 @@ Validación: **54/54 pruebas backend**, incluidas **17 S2-035** y **5 S2-040**, 
 [IMPLEMENTADO] MS-5 consulta `EsPesoVariable` en catálogo al agregar, exige peso válido para pesables (mínimo 10 g, incrementos de 1 g), rechaza contradicciones con cantidad y peso en no pesables. Validación previa al cálculo fiscal y persistencia. Cantidad omitida/null se deriva del peso, o usa 1 en no pesables. El contrato S2-061 permanece parcial: crear/modificar, unidad de catálogo, precisión persistida del precio y conversión del simulador siguen pendientes.
 
 Validación local del 2026-10-24: **32/32 pruebas Release aprobadas**, 20 de S2-062 y 12 de regresión, con JWT, HTTP y PostgreSQL 16 temporal. MS-3/MS-2 simulados mediante handlers HTTP. Rechazos sin cambios en ítems, estado o totales y sin llamada fiscal adicional. [Evidencia y reproducción](../qa/S2-062/reporte.md).
+
+## S2-063 — Calcular total pesable en servidor
+
+[IMPLEMENTADO] El peso validado al agregar y el precio de MS-3 determinan el subtotal. Se conserva el precio con cuatro decimales en `ItemsVenta.PrecioUnitario` (migración a `numeric(20,4)`). MS-2 redondea subtotal e IVA por línea con ToEven y suma para obtener importes reproducibles; no usa importes del renderer. La validación de unidad UUID del catálogo sigue [NO VERIFICADO]; el uso de precio por kg se basa en la convención del contrato para `EsPesoVariable`.
+
+Validación S2-063 del 2026-10-24: **42/42 pruebas Release aprobadas** (10 nuevas, 32 de regresión), con PostgreSQL temporal, HTTP MS-5 y calculador productivo MS-2 a través de handler HTTP. Regresión manual TC-01 aprobada. [Evidencia y límites](../qa/S2-063/reporte.md).

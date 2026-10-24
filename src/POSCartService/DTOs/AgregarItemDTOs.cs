@@ -58,6 +58,7 @@ public sealed record ProductoCatalogDto
     [JsonPropertyName("nombre")]
     public string Nombre { get; init; } = string.Empty;
 
+    /// <summary>Precio de MS-3 por kg cuando EsPesoVariable; hasta cuatro decimales (S2-061).</summary>
     [JsonPropertyName("precioBase")]
     public decimal PrecioBase { get; init; }
 
