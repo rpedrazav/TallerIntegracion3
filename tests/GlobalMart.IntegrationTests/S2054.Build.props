@@ -1,0 +1,6 @@
+<Project>
+  <PropertyGroup>
+    <!-- Override the repository's hard-coded obj paths for this QA invocation only. -->
+    <DefaultItemExcludes>$(DefaultItemExcludes);**/bin/**;**/obj/**;**/.artifacts-s2054/**;**/TestResults/**</DefaultItemExcludes>
+  </PropertyGroup>
+</Project>

@@ -412,6 +412,75 @@ public sealed class CobroSeguroIntegrationTests : IAsyncLifetime
         Assert.Equal("APPROVED", (await GatewayStatus(_tenant, key))!.Status);
     }
 
+    [Theory]
+    [Trait("Plan", "S2-054")]
+    [InlineData("otro-tenant", 404)]
+    [InlineData("sin-turno", 409)]
+    [InlineData("turno-cerrado", 409)]
+    public async Task AislamientoCobro_RechazaSinTraficoNiMutaciones(string scenario, int expectedStatus)
+    {
+        var requestTenant = _tenant;
+        var requestCashier = _cashier;
+        if (scenario == "otro-tenant")
+        {
+            requestTenant = Guid.NewGuid();
+            requestCashier = Guid.NewGuid();
+            await SeedSale(requestTenant, requestCashier); // Turno propio abierto: alcanza RN-01.
+        }
+        else if (scenario == "sin-turno")
+            requestCashier = Guid.NewGuid(); // La venta y el turno del dueño sí existen.
+        else
+        {
+            await using var db = Db(_tenant);
+            var shift = await db.Turnos.SingleAsync(t => t.CajeroId == _cashier);
+            shift.Estado = Pos.Models.EstadoTurno.CERRADO;
+            await db.SaveChangesAsync();
+        }
+
+        Authorize(requestTenant, requestCashier);
+        var before = await SnapshotPaymentState();
+        using var response = await Charge(_sale, Guid.NewGuid(), "sim-approved-v1");
+        Assert.Equal(expectedStatus, (int)response.StatusCode);
+        var body = await response.Content.ReadFromJsonAsync<System.Text.Json.JsonElement>();
+        Assert.Equal(scenario == "otro-tenant"
+            ? $"Venta {_sale} no encontrada."
+            : "El cajero no tiene un turno abierto. Debe abrir un turno antes de cobrar ventas.",
+            body.GetProperty("error").GetString());
+        Assert.Equal(0, _traffic.Posts);
+        Assert.Equal(0, _traffic.Gets);
+        Assert.Equal(before, await SnapshotPaymentState());
+        await Verify(_tenant, _sale, false, 0);
+    }
+
+    [Fact]
+    [Trait("Plan", "S2-054")]
+    public async Task AislamientoCobro_ControlAutorizado_ObservaSimuladorYPersistencia()
+    {
+        using var response = await Charge(_sale, Guid.NewGuid(), "sim-approved-v1");
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var body = await response.Content.ReadFromJsonAsync<System.Text.Json.JsonElement>();
+        Assert.Equal("APPROVED", body.GetProperty("status").GetString());
+        Assert.Equal(1, _traffic.Posts);
+        Assert.Equal(0, _traffic.Gets);
+        await Verify(_tenant, _sale, true, 1);
+    }
+
+    // Lectura independiente de todas las columnas y tenants del esquema exclusivo del caso.
+    // Evita que los filtros del atacante oculten una escritura sobre la venta víctima.
+    private async Task<string> SnapshotPaymentState()
+    {
+        await using var connection = new NpgsqlConnection(_connection);
+        await connection.OpenAsync();
+        var snapshot = new StringBuilder();
+        foreach (var table in new[] { "Ventas", "ItemsVenta", "Turnos", "Pagos", "IntentosPago", "OutboxMessages", "Anulaciones" })
+        {
+            await using var command = new NpgsqlCommand(
+                $"SELECT COALESCE(jsonb_agg(row_data ORDER BY row_data::text), '[]'::jsonb)::text FROM (SELECT to_jsonb(t) AS row_data FROM \"{table}\" t) rows", connection);
+            snapshot.Append(table).Append(':').Append(await command.ExecuteScalarAsync()).AppendLine();
+        }
+        return snapshot.ToString();
+    }
+
     private Task<HttpResponseMessage> Charge(Guid sale, Guid key, string scenario) =>
         _client.PostAsJsonAsync($"/ventas/{sale}/cobrar-tarjeta",
             new { idempotency_key = key, scenario_id = scenario });

@@ -1,0 +1,975 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="14a553e0-a063-49b0-a34b-a6ea465240ea" name="dp877@DANI 2026-10-24 14:27:29" runUser="DANI\dp877" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2026-10-24T14:27:29.0209396-03:00" queuing="2026-10-24T14:27:29.0209400-03:00" start="2026-10-24T14:27:24.5138469-03:00" finish="2026-10-24T14:28:39.6771284-03:00" />
+  <TestSettings name="default" id="410ebb97-1886-4c4c-a4cd-7ba8e0f695f3">
+    <Deployment runDeploymentRoot="dp877_DANI_2026-10-24_14_27_29" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="1a002cf5-a580-4020-9327-3f61c2d6cedc" testId="795cc2c5-7893-6d00-580c-14101d2625c7" testName="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests.AislamientoCobro_ControlAutorizado_ObservaSimuladorYPersistencia" computerName="DANI" duration="00:00:00.1287991" startTime="2026-10-24T14:28:27.6469806-03:00" endTime="2026-10-24T14:28:27.6469807-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="1a002cf5-a580-4020-9327-3f61c2d6cedc" />
+    <UnitTestResult executionId="4ac9583c-38aa-436f-82fd-2dea4798fd6d" testId="4da8c96d-fa85-ae55-67af-aea838abcb38" testName="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests.ResultadoReal_PersisteSoloCuandoHayAprobacion(scenario: &quot;sim-timeout-v1&quot;, status: 504, approved: False)" computerName="DANI" duration="00:00:02.0953439" startTime="2026-10-24T14:28:19.8644157-03:00" endTime="2026-10-24T14:28:19.8644161-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="4ac9583c-38aa-436f-82fd-2dea4798fd6d" />
+    <UnitTestResult executionId="40ad38ef-c1c0-4fad-92de-6ce9bad57012" testId="7cd31476-c1bc-e4db-b459-52acef656a99" testName="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests.DuplicarAprobacionHttp_UnaAutorizacionYUnPagoTarjeta(responsePending: True)" computerName="DANI" duration="00:00:00.3440582" startTime="2026-10-24T14:27:30.3522145-03:00" endTime="2026-10-24T14:27:30.3522151-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="40ad38ef-c1c0-4fad-92de-6ce9bad57012" />
+    <UnitTestResult executionId="78f0c303-e23f-43b3-a4ee-09f42b07e21b" testId="75301ecd-3149-7357-2ce0-4b1492e67f33" testName="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests.RepetirClave_NoReautorizaNiDuplica(scenario: &quot;sim-declined-v1&quot;, firstStatus: 422, approved: False)" computerName="DANI" duration="00:00:00.1383074" startTime="2026-10-24T14:28:22.7037836-03:00" endTime="2026-10-24T14:28:22.7037838-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="78f0c303-e23f-43b3-a4ee-09f42b07e21b" />
+    <UnitTestResult executionId="0108fe1b-8ab7-43b0-a0c0-d4e003496356" testId="7aaa1a50-57f6-97ba-93ff-32d4aa5692c6" testName="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests.ClaveInvalida_NoGeneraUnaNuevaAutorizacion(key: &quot;clave-invalida&quot;)" computerName="DANI" duration="00:00:00.0576503" startTime="2026-10-24T14:28:31.6767063-03:00" endTime="2026-10-24T14:28:31.6767065-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="0108fe1b-8ab7-43b0-a0c0-d4e003496356" />
+    <UnitTestResult executionId="01ca8b22-bdcb-4373-9954-8f64b774f367" testId="7672f0fb-d903-3986-318e-ea7b37fea9a1" testName="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests.SolicitudesSimultaneas_ReservanAntesDeContactarPasarela(differentKey: True)" computerName="DANI" duration="00:00:00.1584311" startTime="2026-10-24T14:28:16.9557197-03:00" endTime="2026-10-24T14:28:16.9557198-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="01ca8b22-bdcb-4373-9954-8f64b774f367" />
+    <UnitTestResult executionId="4dcf1973-791d-4e71-acf7-64ecb38917f7" testId="4fe74671-0cf3-043a-7964-2382f6fbb1f5" testName="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests.RepetirClave_NoReautorizaNiDuplica(scenario: &quot;sim-timeout-v1&quot;, firstStatus: 504, approved: False)" computerName="DANI" duration="00:00:02.1483723" startTime="2026-10-24T14:28:25.6614033-03:00" endTime="2026-10-24T14:28:25.6614034-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="4dcf1973-791d-4e71-acf7-64ecb38917f7" />
+    <UnitTestResult executionId="7f44c1b4-6c3d-4ce1-bfac-80c81eb33e8f" testId="e1cb5da5-a5c9-6419-bb18-14c0ef1443be" testName="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests.RepetirClave_NoReautorizaNiDuplica(scenario: &quot;sim-approved-v1&quot;, firstStatus: 200, approved: True)" computerName="DANI" duration="00:00:00.1410192" startTime="2026-10-24T14:28:26.6710407-03:00" endTime="2026-10-24T14:28:26.6710411-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="7f44c1b4-6c3d-4ce1-bfac-80c81eb33e8f" />
+    <UnitTestResult executionId="4c1dedf3-fbe1-4b3a-ba9d-2ab8176b2b71" testId="1c00f78a-ed2e-c4f4-b945-5dea195a7a5f" testName="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests.RechazoDefinitivo_PermiteNuevoIntentoConOtraClave" computerName="DANI" duration="00:00:00.2028285" startTime="2026-10-24T14:28:39.6130357-03:00" endTime="2026-10-24T14:28:39.6130359-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="4c1dedf3-fbe1-4b3a-ba9d-2ab8176b2b71" />
+    <UnitTestResult executionId="ce1d48bf-7818-4875-86ca-3bcf2e65938c" testId="3313a5f8-ac97-2470-4822-9f245b969071" testName="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests.ResultadoReal_PersisteSoloCuandoHayAprobacion(scenario: &quot;sim-declined-v1&quot;, status: 422, approved: False)" computerName="DANI" duration="00:00:00.0991081" startTime="2026-10-24T14:28:21.6772179-03:00" endTime="2026-10-24T14:28:21.6772180-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="ce1d48bf-7818-4875-86ca-3bcf2e65938c" />
+    <UnitTestResult executionId="596ccdae-6181-45fe-99c2-0ecb9e2a5d1f" testId="2ca98594-1cc7-abca-d955-44c7199405eb" testName="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests.MismaClaveEnDosTenants_NoColisiona" computerName="DANI" duration="00:00:00.2486993" startTime="2026-10-24T14:28:28.7100934-03:00" endTime="2026-10-24T14:28:28.7100937-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="596ccdae-6181-45fe-99c2-0ecb9e2a5d1f" />
+    <UnitTestResult executionId="a4be95ad-84d7-4561-bb16-9b30987b9454" testId="030e24b7-352e-8ef7-c332-11eaa01d70df" testName="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests.ResultadoReal_PersisteSoloCuandoHayAprobacion(scenario: &quot;sim-approved-v1&quot;, status: 200, approved: True)" computerName="DANI" duration="00:00:00.1179873" startTime="2026-10-24T14:28:20.7851002-03:00" endTime="2026-10-24T14:28:20.7851004-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="a4be95ad-84d7-4561-bb16-9b30987b9454" />
+    <UnitTestResult executionId="33cb5b1d-c01f-4916-930b-72cebc057ae0" testId="828b0959-ef43-5187-268e-054958f894cf" testName="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests.RechazoOTimeoutHttp_NoCompletaNiGeneraPagoOEvento(scenario: &quot;sim-timeout-v1&quot;, expectedCode: 504, expectedStatus: &quot;UNCERTAIN&quot;)" computerName="DANI" duration="00:00:38.4009223" startTime="2026-10-24T14:28:11.7329201-03:00" endTime="2026-10-24T14:28:11.7329204-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="33cb5b1d-c01f-4916-930b-72cebc057ae0" />
+    <UnitTestResult executionId="41779bd0-605c-4dfd-81c8-3a2c238377d8" testId="4b5eea66-abe9-f682-b856-10a443098f66" testName="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests.DuplicarAprobacionHttp_UnaAutorizacionYUnPagoTarjeta(responsePending: False)" computerName="DANI" duration="00:00:00.1921505" startTime="2026-10-24T14:27:31.3754652-03:00" endTime="2026-10-24T14:27:31.3754654-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="41779bd0-605c-4dfd-81c8-3a2c238377d8" />
+    <UnitTestResult executionId="1ba3d336-ff51-433e-a328-da823b1e9999" testId="a399f0d0-1443-2a5d-e52c-a8a5169006c7" testName="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests.AislamientoCobro_RechazaSinTraficoNiMutaciones(scenario: &quot;otro-tenant&quot;, expectedStatus: 404)" computerName="DANI" duration="00:00:00.1130263" startTime="2026-10-24T14:28:14.6797896-03:00" endTime="2026-10-24T14:28:14.6797902-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="1ba3d336-ff51-433e-a328-da823b1e9999" />
+    <UnitTestResult executionId="6663a920-b11c-4037-b59a-70657e477d6d" testId="242f5b15-555f-be89-ef78-d0d6933d7b44" testName="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests.ClaveDeOtraVentaDelTenant_NoLlamaPasarela" computerName="DANI" duration="00:00:00.1811650" startTime="2026-10-24T14:28:32.6839419-03:00" endTime="2026-10-24T14:28:32.6839421-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="6663a920-b11c-4037-b59a-70657e477d6d" />
+    <UnitTestResult executionId="a3e0cb45-9ee2-4372-b3f8-64bf00de0a4b" testId="942ec7de-e947-904c-353d-415c733f3efb" testName="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests.Timeout_NoPermiteOtraClaveMientrasResultadoEsIncierto" computerName="DANI" duration="00:00:02.1517271" startTime="2026-10-24T14:28:35.6520806-03:00" endTime="2026-10-24T14:28:35.6520808-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="a3e0cb45-9ee2-4372-b3f8-64bf00de0a4b" />
+    <UnitTestResult executionId="7d18df72-097c-49b4-a35b-839b576c3d58" testId="049314e8-35a9-3b31-4003-9da7f57982c1" testName="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests.RespuestaPerdida_ConsultaAprobacionSinReautorizar" computerName="DANI" duration="00:00:02.1104192" startTime="2026-10-24T14:28:38.5974608-03:00" endTime="2026-10-24T14:28:38.5974609-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="7d18df72-097c-49b4-a35b-839b576c3d58" />
+    <UnitTestResult executionId="86198cef-b130-4ef1-82ac-cc9669aaf845" testId="98305b0a-9153-baf9-59e5-18b325095749" testName="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests.ClaveInvalida_NoGeneraUnaNuevaAutorizacion(key: &quot;00000000-0000-0000-0000-000000000000&quot;)" computerName="DANI" duration="00:00:00.0631314" startTime="2026-10-24T14:28:30.7503154-03:00" endTime="2026-10-24T14:28:30.7503157-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="86198cef-b130-4ef1-82ac-cc9669aaf845" />
+    <UnitTestResult executionId="0c7bc89d-0403-411e-999b-9f1000057cf4" testId="e3deca28-23e8-0259-ab78-9f391e7e4cc4" testName="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests.ErrorAlPersistirAprobacion_NoPierdeReservaNiReautoriza" computerName="DANI" duration="00:00:00.3091062" startTime="2026-10-24T14:28:29.8429639-03:00" endTime="2026-10-24T14:28:29.8429641-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="0c7bc89d-0403-411e-999b-9f1000057cf4" />
+    <UnitTestResult executionId="700c1ed3-ccdf-4d59-ac85-a8d602e0cb27" testId="d3ec4c3d-8790-c032-9bd2-3bc7edbc7d53" testName="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests.SolicitudesSimultaneas_ReservanAntesDeContactarPasarela(differentKey: False)" computerName="DANI" duration="00:00:00.1742032" startTime="2026-10-24T14:28:15.6586755-03:00" endTime="2026-10-24T14:28:15.6586761-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="700c1ed3-ccdf-4d59-ac85-a8d602e0cb27" />
+    <UnitTestResult executionId="062145e9-4c4c-4c87-b5be-33c207411e7c" testId="c9cc6cda-70b7-eaa9-3c3e-ed67259d367c" testName="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests.AislamientoCobro_RechazaSinTraficoNiMutaciones(scenario: &quot;sin-turno&quot;, expectedStatus: 409)" computerName="DANI" duration="00:00:00.0718315" startTime="2026-10-24T14:28:13.7223051-03:00" endTime="2026-10-24T14:28:13.7223052-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="062145e9-4c4c-4c87-b5be-33c207411e7c" />
+    <UnitTestResult executionId="2e7d7bbe-6330-43b4-977e-97da11d74859" testId="413ec17d-1f9f-84c9-f479-64d2ad863d76" testName="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests.AislamientoCobro_RechazaSinTraficoNiMutaciones(scenario: &quot;turno-cerrado&quot;, expectedStatus: 409)" computerName="DANI" duration="00:00:00.1170669" startTime="2026-10-24T14:28:12.6967530-03:00" endTime="2026-10-24T14:28:12.6967533-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="2e7d7bbe-6330-43b4-977e-97da11d74859" />
+    <UnitTestResult executionId="7b80e32b-98cb-45c4-a4df-9dc337d59420" testId="e7d587de-7f32-6b2f-0041-08f8bafa82c5" testName="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests.RechazoOTimeoutHttp_NoCompletaNiGeneraPagoOEvento(scenario: &quot;sim-declined-v1&quot;, expectedCode: 422, expectedStatus: &quot;DECLINED&quot;)" computerName="DANI" duration="00:00:00.2977755" startTime="2026-10-24T14:27:32.5174981-03:00" endTime="2026-10-24T14:27:32.5174983-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="7b80e32b-98cb-45c4-a4df-9dc337d59420" />
+    <UnitTestResult executionId="a56ca108-7a24-412b-8e44-66d117d53d22" testId="b65cbd29-5c15-b87b-c2d8-0059b46a7700" testName="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests.ClaveEnHeader_SeRespetaYRechazaConflictoConBody" computerName="DANI" duration="00:00:00.6286183" startTime="2026-10-24T14:27:28.9973368-03:00" endTime="2026-10-24T14:27:28.9973467-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="a56ca108-7a24-412b-8e44-66d117d53d22" />
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests.MismaClaveEnDosTenants_NoColisiona" storage="c:\users\dp877\desktop\universidad\semestre 6\tallerintegra3\tallerintegracion3\tests\globalmart.integrationtests\.artifacts-s2054\bin\globalmart.integrationtests\release\globalmart.integrationtests.dll" id="2ca98594-1cc7-abca-d955-44c7199405eb">
+      <Execution id="596ccdae-6181-45fe-99c2-0ecb9e2a5d1f" />
+      <TestMethod codeBase="C:\Users\dp877\Desktop\Universidad\Semestre 6\TallerIntegra3\TallerIntegracion3\tests\GlobalMart.IntegrationTests\.artifacts-s2054\bin\GlobalMart.IntegrationTests\release\GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests" name="MismaClaveEnDosTenants_NoColisiona" />
+    </UnitTest>
+    <UnitTest name="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests.AislamientoCobro_RechazaSinTraficoNiMutaciones(scenario: &quot;turno-cerrado&quot;, expectedStatus: 409)" storage="c:\users\dp877\desktop\universidad\semestre 6\tallerintegra3\tallerintegracion3\tests\globalmart.integrationtests\.artifacts-s2054\bin\globalmart.integrationtests\release\globalmart.integrationtests.dll" id="413ec17d-1f9f-84c9-f479-64d2ad863d76">
+      <Execution id="2e7d7bbe-6330-43b4-977e-97da11d74859" />
+      <TestMethod codeBase="C:\Users\dp877\Desktop\Universidad\Semestre 6\TallerIntegra3\TallerIntegracion3\tests\GlobalMart.IntegrationTests\.artifacts-s2054\bin\GlobalMart.IntegrationTests\release\GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests" name="AislamientoCobro_RechazaSinTraficoNiMutaciones" />
+    </UnitTest>
+    <UnitTest name="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests.AislamientoCobro_RechazaSinTraficoNiMutaciones(scenario: &quot;otro-tenant&quot;, expectedStatus: 404)" storage="c:\users\dp877\desktop\universidad\semestre 6\tallerintegra3\tallerintegracion3\tests\globalmart.integrationtests\.artifacts-s2054\bin\globalmart.integrationtests\release\globalmart.integrationtests.dll" id="a399f0d0-1443-2a5d-e52c-a8a5169006c7">
+      <Execution id="1ba3d336-ff51-433e-a328-da823b1e9999" />
+      <TestMethod codeBase="C:\Users\dp877\Desktop\Universidad\Semestre 6\TallerIntegra3\TallerIntegracion3\tests\GlobalMart.IntegrationTests\.artifacts-s2054\bin\GlobalMart.IntegrationTests\release\GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests" name="AislamientoCobro_RechazaSinTraficoNiMutaciones" />
+    </UnitTest>
+    <UnitTest name="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests.RechazoOTimeoutHttp_NoCompletaNiGeneraPagoOEvento(scenario: &quot;sim-timeout-v1&quot;, expectedCode: 504, expectedStatus: &quot;UNCERTAIN&quot;)" storage="c:\users\dp877\desktop\universidad\semestre 6\tallerintegra3\tallerintegracion3\tests\globalmart.integrationtests\.artifacts-s2054\bin\globalmart.integrationtests\release\globalmart.integrationtests.dll" id="828b0959-ef43-5187-268e-054958f894cf">
+      <Execution id="33cb5b1d-c01f-4916-930b-72cebc057ae0" />
+      <TestMethod codeBase="C:\Users\dp877\Desktop\Universidad\Semestre 6\TallerIntegra3\TallerIntegracion3\tests\GlobalMart.IntegrationTests\.artifacts-s2054\bin\GlobalMart.IntegrationTests\release\GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests" name="RechazoOTimeoutHttp_NoCompletaNiGeneraPagoOEvento" />
+    </UnitTest>
+    <UnitTest name="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests.DuplicarAprobacionHttp_UnaAutorizacionYUnPagoTarjeta(responsePending: False)" storage="c:\users\dp877\desktop\universidad\semestre 6\tallerintegra3\tallerintegracion3\tests\globalmart.integrationtests\.artifacts-s2054\bin\globalmart.integrationtests\release\globalmart.integrationtests.dll" id="4b5eea66-abe9-f682-b856-10a443098f66">
+      <Execution id="41779bd0-605c-4dfd-81c8-3a2c238377d8" />
+      <TestMethod codeBase="C:\Users\dp877\Desktop\Universidad\Semestre 6\TallerIntegra3\TallerIntegracion3\tests\GlobalMart.IntegrationTests\.artifacts-s2054\bin\GlobalMart.IntegrationTests\release\GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests" name="DuplicarAprobacionHttp_UnaAutorizacionYUnPagoTarjeta" />
+    </UnitTest>
+    <UnitTest name="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests.AislamientoCobro_ControlAutorizado_ObservaSimuladorYPersistencia" storage="c:\users\dp877\desktop\universidad\semestre 6\tallerintegra3\tallerintegracion3\tests\globalmart.integrationtests\.artifacts-s2054\bin\globalmart.integrationtests\release\globalmart.integrationtests.dll" id="795cc2c5-7893-6d00-580c-14101d2625c7">
+      <Execution id="1a002cf5-a580-4020-9327-3f61c2d6cedc" />
+      <TestMethod codeBase="C:\Users\dp877\Desktop\Universidad\Semestre 6\TallerIntegra3\TallerIntegracion3\tests\GlobalMart.IntegrationTests\.artifacts-s2054\bin\GlobalMart.IntegrationTests\release\GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests" name="AislamientoCobro_ControlAutorizado_ObservaSimuladorYPersistencia" />
+    </UnitTest>
+    <UnitTest name="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests.ClaveEnHeader_SeRespetaYRechazaConflictoConBody" storage="c:\users\dp877\desktop\universidad\semestre 6\tallerintegra3\tallerintegracion3\tests\globalmart.integrationtests\.artifacts-s2054\bin\globalmart.integrationtests\release\globalmart.integrationtests.dll" id="b65cbd29-5c15-b87b-c2d8-0059b46a7700">
+      <Execution id="a56ca108-7a24-412b-8e44-66d117d53d22" />
+      <TestMethod codeBase="C:\Users\dp877\Desktop\Universidad\Semestre 6\TallerIntegra3\TallerIntegracion3\tests\GlobalMart.IntegrationTests\.artifacts-s2054\bin\GlobalMart.IntegrationTests\release\GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests" name="ClaveEnHeader_SeRespetaYRechazaConflictoConBody" />
+    </UnitTest>
+    <UnitTest name="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests.RepetirClave_NoReautorizaNiDuplica(scenario: &quot;sim-approved-v1&quot;, firstStatus: 200, approved: True)" storage="c:\users\dp877\desktop\universidad\semestre 6\tallerintegra3\tallerintegracion3\tests\globalmart.integrationtests\.artifacts-s2054\bin\globalmart.integrationtests\release\globalmart.integrationtests.dll" id="e1cb5da5-a5c9-6419-bb18-14c0ef1443be">
+      <Execution id="7f44c1b4-6c3d-4ce1-bfac-80c81eb33e8f" />
+      <TestMethod codeBase="C:\Users\dp877\Desktop\Universidad\Semestre 6\TallerIntegra3\TallerIntegracion3\tests\GlobalMart.IntegrationTests\.artifacts-s2054\bin\GlobalMart.IntegrationTests\release\GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests" name="RepetirClave_NoReautorizaNiDuplica" />
+    </UnitTest>
+    <UnitTest name="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests.SolicitudesSimultaneas_ReservanAntesDeContactarPasarela(differentKey: False)" storage="c:\users\dp877\desktop\universidad\semestre 6\tallerintegra3\tallerintegracion3\tests\globalmart.integrationtests\.artifacts-s2054\bin\globalmart.integrationtests\release\globalmart.integrationtests.dll" id="d3ec4c3d-8790-c032-9bd2-3bc7edbc7d53">
+      <Execution id="700c1ed3-ccdf-4d59-ac85-a8d602e0cb27" />
+      <TestMethod codeBase="C:\Users\dp877\Desktop\Universidad\Semestre 6\TallerIntegra3\TallerIntegracion3\tests\GlobalMart.IntegrationTests\.artifacts-s2054\bin\GlobalMart.IntegrationTests\release\GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests" name="SolicitudesSimultaneas_ReservanAntesDeContactarPasarela" />
+    </UnitTest>
+    <UnitTest name="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests.ErrorAlPersistirAprobacion_NoPierdeReservaNiReautoriza" storage="c:\users\dp877\desktop\universidad\semestre 6\tallerintegra3\tallerintegracion3\tests\globalmart.integrationtests\.artifacts-s2054\bin\globalmart.integrationtests\release\globalmart.integrationtests.dll" id="e3deca28-23e8-0259-ab78-9f391e7e4cc4">
+      <Execution id="0c7bc89d-0403-411e-999b-9f1000057cf4" />
+      <TestMethod codeBase="C:\Users\dp877\Desktop\Universidad\Semestre 6\TallerIntegra3\TallerIntegracion3\tests\GlobalMart.IntegrationTests\.artifacts-s2054\bin\GlobalMart.IntegrationTests\release\GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests" name="ErrorAlPersistirAprobacion_NoPierdeReservaNiReautoriza" />
+    </UnitTest>
+    <UnitTest name="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests.ClaveInvalida_NoGeneraUnaNuevaAutorizacion(key: &quot;00000000-0000-0000-0000-000000000000&quot;)" storage="c:\users\dp877\desktop\universidad\semestre 6\tallerintegra3\tallerintegracion3\tests\globalmart.integrationtests\.artifacts-s2054\bin\globalmart.integrationtests\release\globalmart.integrationtests.dll" id="98305b0a-9153-baf9-59e5-18b325095749">
+      <Execution id="86198cef-b130-4ef1-82ac-cc9669aaf845" />
+      <TestMethod codeBase="C:\Users\dp877\Desktop\Universidad\Semestre 6\TallerIntegra3\TallerIntegracion3\tests\GlobalMart.IntegrationTests\.artifacts-s2054\bin\GlobalMart.IntegrationTests\release\GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests" name="ClaveInvalida_NoGeneraUnaNuevaAutorizacion" />
+    </UnitTest>
+    <UnitTest name="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests.ResultadoReal_PersisteSoloCuandoHayAprobacion(scenario: &quot;sim-timeout-v1&quot;, status: 504, approved: False)" storage="c:\users\dp877\desktop\universidad\semestre 6\tallerintegra3\tallerintegracion3\tests\globalmart.integrationtests\.artifacts-s2054\bin\globalmart.integrationtests\release\globalmart.integrationtests.dll" id="4da8c96d-fa85-ae55-67af-aea838abcb38">
+      <Execution id="4ac9583c-38aa-436f-82fd-2dea4798fd6d" />
+      <TestMethod codeBase="C:\Users\dp877\Desktop\Universidad\Semestre 6\TallerIntegra3\TallerIntegracion3\tests\GlobalMart.IntegrationTests\.artifacts-s2054\bin\GlobalMart.IntegrationTests\release\GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests" name="ResultadoReal_PersisteSoloCuandoHayAprobacion" />
+    </UnitTest>
+    <UnitTest name="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests.RespuestaPerdida_ConsultaAprobacionSinReautorizar" storage="c:\users\dp877\desktop\universidad\semestre 6\tallerintegra3\tallerintegracion3\tests\globalmart.integrationtests\.artifacts-s2054\bin\globalmart.integrationtests\release\globalmart.integrationtests.dll" id="049314e8-35a9-3b31-4003-9da7f57982c1">
+      <Execution id="7d18df72-097c-49b4-a35b-839b576c3d58" />
+      <TestMethod codeBase="C:\Users\dp877\Desktop\Universidad\Semestre 6\TallerIntegra3\TallerIntegracion3\tests\GlobalMart.IntegrationTests\.artifacts-s2054\bin\GlobalMart.IntegrationTests\release\GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests" name="RespuestaPerdida_ConsultaAprobacionSinReautorizar" />
+    </UnitTest>
+    <UnitTest name="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests.Timeout_NoPermiteOtraClaveMientrasResultadoEsIncierto" storage="c:\users\dp877\desktop\universidad\semestre 6\tallerintegra3\tallerintegracion3\tests\globalmart.integrationtests\.artifacts-s2054\bin\globalmart.integrationtests\release\globalmart.integrationtests.dll" id="942ec7de-e947-904c-353d-415c733f3efb">
+      <Execution id="a3e0cb45-9ee2-4372-b3f8-64bf00de0a4b" />
+      <TestMethod codeBase="C:\Users\dp877\Desktop\Universidad\Semestre 6\TallerIntegra3\TallerIntegracion3\tests\GlobalMart.IntegrationTests\.artifacts-s2054\bin\GlobalMart.IntegrationTests\release\GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests" name="Timeout_NoPermiteOtraClaveMientrasResultadoEsIncierto" />
+    </UnitTest>
+    <UnitTest name="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests.ClaveDeOtraVentaDelTenant_NoLlamaPasarela" storage="c:\users\dp877\desktop\universidad\semestre 6\tallerintegra3\tallerintegracion3\tests\globalmart.integrationtests\.artifacts-s2054\bin\globalmart.integrationtests\release\globalmart.integrationtests.dll" id="242f5b15-555f-be89-ef78-d0d6933d7b44">
+      <Execution id="6663a920-b11c-4037-b59a-70657e477d6d" />
+      <TestMethod codeBase="C:\Users\dp877\Desktop\Universidad\Semestre 6\TallerIntegra3\TallerIntegracion3\tests\GlobalMart.IntegrationTests\.artifacts-s2054\bin\GlobalMart.IntegrationTests\release\GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests" name="ClaveDeOtraVentaDelTenant_NoLlamaPasarela" />
+    </UnitTest>
+    <UnitTest name="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests.ResultadoReal_PersisteSoloCuandoHayAprobacion(scenario: &quot;sim-approved-v1&quot;, status: 200, approved: True)" storage="c:\users\dp877\desktop\universidad\semestre 6\tallerintegra3\tallerintegracion3\tests\globalmart.integrationtests\.artifacts-s2054\bin\globalmart.integrationtests\release\globalmart.integrationtests.dll" id="030e24b7-352e-8ef7-c332-11eaa01d70df">
+      <Execution id="a4be95ad-84d7-4561-bb16-9b30987b9454" />
+      <TestMethod codeBase="C:\Users\dp877\Desktop\Universidad\Semestre 6\TallerIntegra3\TallerIntegracion3\tests\GlobalMart.IntegrationTests\.artifacts-s2054\bin\GlobalMart.IntegrationTests\release\GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests" name="ResultadoReal_PersisteSoloCuandoHayAprobacion" />
+    </UnitTest>
+    <UnitTest name="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests.RepetirClave_NoReautorizaNiDuplica(scenario: &quot;sim-timeout-v1&quot;, firstStatus: 504, approved: False)" storage="c:\users\dp877\desktop\universidad\semestre 6\tallerintegra3\tallerintegracion3\tests\globalmart.integrationtests\.artifacts-s2054\bin\globalmart.integrationtests\release\globalmart.integrationtests.dll" id="4fe74671-0cf3-043a-7964-2382f6fbb1f5">
+      <Execution id="4dcf1973-791d-4e71-acf7-64ecb38917f7" />
+      <TestMethod codeBase="C:\Users\dp877\Desktop\Universidad\Semestre 6\TallerIntegra3\TallerIntegracion3\tests\GlobalMart.IntegrationTests\.artifacts-s2054\bin\GlobalMart.IntegrationTests\release\GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests" name="RepetirClave_NoReautorizaNiDuplica" />
+    </UnitTest>
+    <UnitTest name="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests.RepetirClave_NoReautorizaNiDuplica(scenario: &quot;sim-declined-v1&quot;, firstStatus: 422, approved: False)" storage="c:\users\dp877\desktop\universidad\semestre 6\tallerintegra3\tallerintegracion3\tests\globalmart.integrationtests\.artifacts-s2054\bin\globalmart.integrationtests\release\globalmart.integrationtests.dll" id="75301ecd-3149-7357-2ce0-4b1492e67f33">
+      <Execution id="78f0c303-e23f-43b3-a4ee-09f42b07e21b" />
+      <TestMethod codeBase="C:\Users\dp877\Desktop\Universidad\Semestre 6\TallerIntegra3\TallerIntegracion3\tests\GlobalMart.IntegrationTests\.artifacts-s2054\bin\GlobalMart.IntegrationTests\release\GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests" name="RepetirClave_NoReautorizaNiDuplica" />
+    </UnitTest>
+    <UnitTest name="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests.ResultadoReal_PersisteSoloCuandoHayAprobacion(scenario: &quot;sim-declined-v1&quot;, status: 422, approved: False)" storage="c:\users\dp877\desktop\universidad\semestre 6\tallerintegra3\tallerintegracion3\tests\globalmart.integrationtests\.artifacts-s2054\bin\globalmart.integrationtests\release\globalmart.integrationtests.dll" id="3313a5f8-ac97-2470-4822-9f245b969071">
+      <Execution id="ce1d48bf-7818-4875-86ca-3bcf2e65938c" />
+      <TestMethod codeBase="C:\Users\dp877\Desktop\Universidad\Semestre 6\TallerIntegra3\TallerIntegracion3\tests\GlobalMart.IntegrationTests\.artifacts-s2054\bin\GlobalMart.IntegrationTests\release\GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests" name="ResultadoReal_PersisteSoloCuandoHayAprobacion" />
+    </UnitTest>
+    <UnitTest name="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests.RechazoOTimeoutHttp_NoCompletaNiGeneraPagoOEvento(scenario: &quot;sim-declined-v1&quot;, expectedCode: 422, expectedStatus: &quot;DECLINED&quot;)" storage="c:\users\dp877\desktop\universidad\semestre 6\tallerintegra3\tallerintegracion3\tests\globalmart.integrationtests\.artifacts-s2054\bin\globalmart.integrationtests\release\globalmart.integrationtests.dll" id="e7d587de-7f32-6b2f-0041-08f8bafa82c5">
+      <Execution id="7b80e32b-98cb-45c4-a4df-9dc337d59420" />
+      <TestMethod codeBase="C:\Users\dp877\Desktop\Universidad\Semestre 6\TallerIntegra3\TallerIntegracion3\tests\GlobalMart.IntegrationTests\.artifacts-s2054\bin\GlobalMart.IntegrationTests\release\GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests" name="RechazoOTimeoutHttp_NoCompletaNiGeneraPagoOEvento" />
+    </UnitTest>
+    <UnitTest name="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests.DuplicarAprobacionHttp_UnaAutorizacionYUnPagoTarjeta(responsePending: True)" storage="c:\users\dp877\desktop\universidad\semestre 6\tallerintegra3\tallerintegracion3\tests\globalmart.integrationtests\.artifacts-s2054\bin\globalmart.integrationtests\release\globalmart.integrationtests.dll" id="7cd31476-c1bc-e4db-b459-52acef656a99">
+      <Execution id="40ad38ef-c1c0-4fad-92de-6ce9bad57012" />
+      <TestMethod codeBase="C:\Users\dp877\Desktop\Universidad\Semestre 6\TallerIntegra3\TallerIntegracion3\tests\GlobalMart.IntegrationTests\.artifacts-s2054\bin\GlobalMart.IntegrationTests\release\GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests" name="DuplicarAprobacionHttp_UnaAutorizacionYUnPagoTarjeta" />
+    </UnitTest>
+    <UnitTest name="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests.ClaveInvalida_NoGeneraUnaNuevaAutorizacion(key: &quot;clave-invalida&quot;)" storage="c:\users\dp877\desktop\universidad\semestre 6\tallerintegra3\tallerintegracion3\tests\globalmart.integrationtests\.artifacts-s2054\bin\globalmart.integrationtests\release\globalmart.integrationtests.dll" id="7aaa1a50-57f6-97ba-93ff-32d4aa5692c6">
+      <Execution id="0108fe1b-8ab7-43b0-a0c0-d4e003496356" />
+      <TestMethod codeBase="C:\Users\dp877\Desktop\Universidad\Semestre 6\TallerIntegra3\TallerIntegracion3\tests\GlobalMart.IntegrationTests\.artifacts-s2054\bin\GlobalMart.IntegrationTests\release\GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests" name="ClaveInvalida_NoGeneraUnaNuevaAutorizacion" />
+    </UnitTest>
+    <UnitTest name="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests.AislamientoCobro_RechazaSinTraficoNiMutaciones(scenario: &quot;sin-turno&quot;, expectedStatus: 409)" storage="c:\users\dp877\desktop\universidad\semestre 6\tallerintegra3\tallerintegracion3\tests\globalmart.integrationtests\.artifacts-s2054\bin\globalmart.integrationtests\release\globalmart.integrationtests.dll" id="c9cc6cda-70b7-eaa9-3c3e-ed67259d367c">
+      <Execution id="062145e9-4c4c-4c87-b5be-33c207411e7c" />
+      <TestMethod codeBase="C:\Users\dp877\Desktop\Universidad\Semestre 6\TallerIntegra3\TallerIntegracion3\tests\GlobalMart.IntegrationTests\.artifacts-s2054\bin\GlobalMart.IntegrationTests\release\GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests" name="AislamientoCobro_RechazaSinTraficoNiMutaciones" />
+    </UnitTest>
+    <UnitTest name="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests.SolicitudesSimultaneas_ReservanAntesDeContactarPasarela(differentKey: True)" storage="c:\users\dp877\desktop\universidad\semestre 6\tallerintegra3\tallerintegracion3\tests\globalmart.integrationtests\.artifacts-s2054\bin\globalmart.integrationtests\release\globalmart.integrationtests.dll" id="7672f0fb-d903-3986-318e-ea7b37fea9a1">
+      <Execution id="01ca8b22-bdcb-4373-9954-8f64b774f367" />
+      <TestMethod codeBase="C:\Users\dp877\Desktop\Universidad\Semestre 6\TallerIntegra3\TallerIntegracion3\tests\GlobalMart.IntegrationTests\.artifacts-s2054\bin\GlobalMart.IntegrationTests\release\GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests" name="SolicitudesSimultaneas_ReservanAntesDeContactarPasarela" />
+    </UnitTest>
+    <UnitTest name="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests.RechazoDefinitivo_PermiteNuevoIntentoConOtraClave" storage="c:\users\dp877\desktop\universidad\semestre 6\tallerintegra3\tallerintegracion3\tests\globalmart.integrationtests\.artifacts-s2054\bin\globalmart.integrationtests\release\globalmart.integrationtests.dll" id="1c00f78a-ed2e-c4f4-b945-5dea195a7a5f">
+      <Execution id="4c1dedf3-fbe1-4b3a-ba9d-2ab8176b2b71" />
+      <TestMethod codeBase="C:\Users\dp877\Desktop\Universidad\Semestre 6\TallerIntegra3\TallerIntegracion3\tests\GlobalMart.IntegrationTests\.artifacts-s2054\bin\GlobalMart.IntegrationTests\release\GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests" name="RechazoDefinitivo_PermiteNuevoIntentoConOtraClave" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="795cc2c5-7893-6d00-580c-14101d2625c7" executionId="1a002cf5-a580-4020-9327-3f61c2d6cedc" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="4da8c96d-fa85-ae55-67af-aea838abcb38" executionId="4ac9583c-38aa-436f-82fd-2dea4798fd6d" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="7cd31476-c1bc-e4db-b459-52acef656a99" executionId="40ad38ef-c1c0-4fad-92de-6ce9bad57012" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="75301ecd-3149-7357-2ce0-4b1492e67f33" executionId="78f0c303-e23f-43b3-a4ee-09f42b07e21b" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="7aaa1a50-57f6-97ba-93ff-32d4aa5692c6" executionId="0108fe1b-8ab7-43b0-a0c0-d4e003496356" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="7672f0fb-d903-3986-318e-ea7b37fea9a1" executionId="01ca8b22-bdcb-4373-9954-8f64b774f367" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="4fe74671-0cf3-043a-7964-2382f6fbb1f5" executionId="4dcf1973-791d-4e71-acf7-64ecb38917f7" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="e1cb5da5-a5c9-6419-bb18-14c0ef1443be" executionId="7f44c1b4-6c3d-4ce1-bfac-80c81eb33e8f" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="1c00f78a-ed2e-c4f4-b945-5dea195a7a5f" executionId="4c1dedf3-fbe1-4b3a-ba9d-2ab8176b2b71" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="3313a5f8-ac97-2470-4822-9f245b969071" executionId="ce1d48bf-7818-4875-86ca-3bcf2e65938c" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="2ca98594-1cc7-abca-d955-44c7199405eb" executionId="596ccdae-6181-45fe-99c2-0ecb9e2a5d1f" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="030e24b7-352e-8ef7-c332-11eaa01d70df" executionId="a4be95ad-84d7-4561-bb16-9b30987b9454" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="828b0959-ef43-5187-268e-054958f894cf" executionId="33cb5b1d-c01f-4916-930b-72cebc057ae0" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="4b5eea66-abe9-f682-b856-10a443098f66" executionId="41779bd0-605c-4dfd-81c8-3a2c238377d8" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="a399f0d0-1443-2a5d-e52c-a8a5169006c7" executionId="1ba3d336-ff51-433e-a328-da823b1e9999" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="242f5b15-555f-be89-ef78-d0d6933d7b44" executionId="6663a920-b11c-4037-b59a-70657e477d6d" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="942ec7de-e947-904c-353d-415c733f3efb" executionId="a3e0cb45-9ee2-4372-b3f8-64bf00de0a4b" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="049314e8-35a9-3b31-4003-9da7f57982c1" executionId="7d18df72-097c-49b4-a35b-839b576c3d58" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="98305b0a-9153-baf9-59e5-18b325095749" executionId="86198cef-b130-4ef1-82ac-cc9669aaf845" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="e3deca28-23e8-0259-ab78-9f391e7e4cc4" executionId="0c7bc89d-0403-411e-999b-9f1000057cf4" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="d3ec4c3d-8790-c032-9bd2-3bc7edbc7d53" executionId="700c1ed3-ccdf-4d59-ac85-a8d602e0cb27" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="c9cc6cda-70b7-eaa9-3c3e-ed67259d367c" executionId="062145e9-4c4c-4c87-b5be-33c207411e7c" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="413ec17d-1f9f-84c9-f479-64d2ad863d76" executionId="2e7d7bbe-6330-43b4-977e-97da11d74859" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="e7d587de-7f32-6b2f-0041-08f8bafa82c5" executionId="7b80e32b-98cb-45c4-a4df-9dc337d59420" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="b65cbd29-5c15-b87b-c2d8-0059b46a7700" executionId="a56ca108-7a24-412b-8e44-66d117d53d22" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="Resultados sin formato de lista" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="Todos los resultados cargados" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Completed">
+    <Counters total="25" executed="25" passed="25" failed="0" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Output>
+      <StdOut>[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v2.8.2+699d445a1a (64-bit .NET 8.0.31)&#xD;
+[xUnit.net 00:00:00.84]   Discovering: GlobalMart.IntegrationTests&#xD;
+[xUnit.net 00:00:00.94]   Discovered:  GlobalMart.IntegrationTests&#xD;
+[xUnit.net 00:00:00.94]   Starting:    GlobalMart.IntegrationTests&#xD;
+info: POSCartService.Services.OutboxPublisherWorker[0]&#xD;
+      Worker de outbox deshabilitado por configuraci�n&#xD;
+info: POSCartService.Services.PaymentGatewayClient[0]&#xD;
+      Iniciando pago por pasarela RequestId=1acb5ef7-a120-4d89-b005-f50e21bd7fe1 TenantId=2b2fc6e6-3851-4860-9c55-fb17a49df8d7 SaleId=d1faa1b8-884d-4c41-954e-630f4f1d24bd ScenarioId=sim-approved-v1&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[100]&#xD;
+      Start processing HTTP request POST http://127.0.0.1:59002/simulator/payments&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[100]&#xD;
+      Sending HTTP request POST http://127.0.0.1:59002/simulator/payments&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[101]&#xD;
+      Received HTTP response headers after 7.1496ms - 200&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[101]&#xD;
+      End processing HTTP request after 15.0443ms - 200&#xD;
+info: POSCartService.Services.PaymentGatewayClient[0]&#xD;
+      Pago procesado por pasarela RequestId=1acb5ef7-a120-4d89-b005-f50e21bd7fe1 TenantId=2b2fc6e6-3851-4860-9c55-fb17a49df8d7 SaleId=d1faa1b8-884d-4c41-954e-630f4f1d24bd ScenarioId=sim-approved-v1 Status=APPROVED TransactionId=SIM-TXN-4DD2A332EBF9EB66BCD42965 ElapsedMs=16.4468&#xD;
+info: POSCartService.Controllers.VentasController[0]&#xD;
+      Venta d1faa1b8-884d-4c41-954e-630f4f1d24bd cobrada con tarjeta. Ref: SIM-REF-4DD2A332EBF9EB66BCD42965, Auth: SIM-APPROVED&#xD;
+info: POSCartService.Services.PaymentGatewayClient[0]&#xD;
+      Consultando estado de autorizaci�n RequestId=1acb5ef7-a120-4d89-b005-f50e21bd7fe1 TenantId=2b2fc6e6-3851-4860-9c55-fb17a49df8d7&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[100]&#xD;
+      Start processing HTTP request GET http://127.0.0.1:59002/simulator/payments/1acb5ef7-a120-4d89-b005-f50e21bd7fe1?tenant_id=2b2fc6e6-3851-4860-9c55-fb17a49df8d7&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[100]&#xD;
+      Sending HTTP request GET http://127.0.0.1:59002/simulator/payments/1acb5ef7-a120-4d89-b005-f50e21bd7fe1?tenant_id=2b2fc6e6-3851-4860-9c55-fb17a49df8d7&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[101]&#xD;
+      Received HTTP response headers after 2.4414ms - 200&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[101]&#xD;
+      End processing HTTP request after 2.8273ms - 200&#xD;
+info: POSCartService.Services.PaymentGatewayClient[0]&#xD;
+      Estado de autorizaci�n recuperado RequestId=1acb5ef7-a120-4d89-b005-f50e21bd7fe1 TenantId=2b2fc6e6-3851-4860-9c55-fb17a49df8d7 Status=APPROVED TransactionId=SIM-TXN-4DD2A332EBF9EB66BCD42965 ElapsedMs=3.8887&#xD;
+info: POSCartService.Services.OutboxPublisherWorker[0]&#xD;
+      Worker de outbox deshabilitado por configuraci�n&#xD;
+info: POSCartService.Services.PaymentGatewayClient[0]&#xD;
+      Iniciando pago por pasarela RequestId=796e08a8-1cd9-4afd-b6bd-ed06c71ab9f4 TenantId=f83826c1-548b-4979-b228-3e4bda5d2845 SaleId=94c762eb-e205-4658-a353-b1a6dd984d86 ScenarioId=sim-approved-v1&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[100]&#xD;
+      Start processing HTTP request POST http://127.0.0.1:59031/simulator/payments&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[100]&#xD;
+      Sending HTTP request POST http://127.0.0.1:59031/simulator/payments&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[101]&#xD;
+      Received HTTP response headers after 3.5298ms - 200&#xD;
+info: POSCartService.Services.PaymentGatewayClient[0]&#xD;
+      Consultando estado de autorizaci�n RequestId=796e08a8-1cd9-4afd-b6bd-ed06c71ab9f4 TenantId=f83826c1-548b-4979-b228-3e4bda5d2845&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[100]&#xD;
+      Start processing HTTP request GET http://127.0.0.1:59031/simulator/payments/796e08a8-1cd9-4afd-b6bd-ed06c71ab9f4?tenant_id=f83826c1-548b-4979-b228-3e4bda5d2845&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[100]&#xD;
+      Sending HTTP request GET http://127.0.0.1:59031/simulator/payments/796e08a8-1cd9-4afd-b6bd-ed06c71ab9f4?tenant_id=f83826c1-548b-4979-b228-3e4bda5d2845&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[101]&#xD;
+      Received HTTP response headers after 2.0776ms - 200&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[101]&#xD;
+      End processing HTTP request after 2.2473ms - 200&#xD;
+info: POSCartService.Services.PaymentGatewayClient[0]&#xD;
+      Estado de autorizaci�n recuperado RequestId=796e08a8-1cd9-4afd-b6bd-ed06c71ab9f4 TenantId=f83826c1-548b-4979-b228-3e4bda5d2845 Status=APPROVED TransactionId=SIM-TXN-B5D11FD78B61329A8A58FB29 ElapsedMs=2.4762&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[101]&#xD;
+      End processing HTTP request after 158.2212ms - 200&#xD;
+info: POSCartService.Services.PaymentGatewayClient[0]&#xD;
+      Pago procesado por pasarela RequestId=796e08a8-1cd9-4afd-b6bd-ed06c71ab9f4 TenantId=f83826c1-548b-4979-b228-3e4bda5d2845 SaleId=94c762eb-e205-4658-a353-b1a6dd984d86 ScenarioId=sim-approved-v1 Status=APPROVED TransactionId=SIM-TXN-B5D11FD78B61329A8A58FB29 ElapsedMs=158.4897&#xD;
+info: POSCartService.Controllers.VentasController[0]&#xD;
+      Venta 94c762eb-e205-4658-a353-b1a6dd984d86 cobrada con tarjeta. Ref: SIM-REF-B5D11FD78B61329A8A58FB29, Auth: SIM-APPROVED&#xD;
+info: POSCartService.Services.PaymentGatewayClient[0]&#xD;
+      Consultando estado de autorizaci�n RequestId=796e08a8-1cd9-4afd-b6bd-ed06c71ab9f4 TenantId=f83826c1-548b-4979-b228-3e4bda5d2845&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[100]&#xD;
+      Start processing HTTP request GET http://127.0.0.1:59031/simulator/payments/796e08a8-1cd9-4afd-b6bd-ed06c71ab9f4?tenant_id=f83826c1-548b-4979-b228-3e4bda5d2845&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[100]&#xD;
+      Sending HTTP request GET http://127.0.0.1:59031/simulator/payments/796e08a8-1cd9-4afd-b6bd-ed06c71ab9f4?tenant_id=f83826c1-548b-4979-b228-3e4bda5d2845&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[101]&#xD;
+      Received HTTP response headers after 0.863ms - 200&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[101]&#xD;
+      End processing HTTP request after 0.9822ms - 200&#xD;
+info: POSCartService.Services.PaymentGatewayClient[0]&#xD;
+      Estado de autorizaci�n recuperado RequestId=796e08a8-1cd9-4afd-b6bd-ed06c71ab9f4 TenantId=f83826c1-548b-4979-b228-3e4bda5d2845 Status=APPROVED TransactionId=SIM-TXN-B5D11FD78B61329A8A58FB29 ElapsedMs=1.1101&#xD;
+info: POSCartService.Services.OutboxPublisherWorker[0]&#xD;
+      Worker de outbox deshabilitado por configuraci�n&#xD;
+info: POSCartService.Services.PaymentGatewayClient[0]&#xD;
+      Iniciando pago por pasarela RequestId=f0cebb54-d936-4ff3-a5ac-72ace1080d68 TenantId=91cc0db9-5b09-479a-a401-1d5d72b52a64 SaleId=e793f5c1-d8c9-49ae-b785-3df0db10b652 ScenarioId=sim-approved-v1&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[100]&#xD;
+      Start processing HTTP request POST http://127.0.0.1:59072/simulator/payments&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[100]&#xD;
+      Sending HTTP request POST http://127.0.0.1:59072/simulator/payments&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[101]&#xD;
+      Received HTTP response headers after 3.4732ms - 200&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[101]&#xD;
+      End processing HTTP request after 3.5631ms - 200&#xD;
+info: POSCartService.Services.PaymentGatewayClient[0]&#xD;
+      Pago procesado por pasarela RequestId=f0cebb54-d936-4ff3-a5ac-72ace1080d68 TenantId=91cc0db9-5b09-479a-a401-1d5d72b52a64 SaleId=e793f5c1-d8c9-49ae-b785-3df0db10b652 ScenarioId=sim-approved-v1 Status=APPROVED TransactionId=SIM-TXN-6F6F7A58C2D655C3102344C6 ElapsedMs=3.6811&#xD;
+info: POSCartService.Controllers.VentasController[0]&#xD;
+      Venta e793f5c1-d8c9-49ae-b785-3df0db10b652 cobrada con tarjeta. Ref: SIM-REF-6F6F7A58C2D655C3102344C6, Auth: SIM-APPROVED&#xD;
+info: POSCartService.Services.PaymentGatewayClient[0]&#xD;
+      Consultando estado de autorizaci�n RequestId=f0cebb54-d936-4ff3-a5ac-72ace1080d68 TenantId=91cc0db9-5b09-479a-a401-1d5d72b52a64&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[100]&#xD;
+      Start processing HTTP request GET http://127.0.0.1:59072/simulator/payments/f0cebb54-d936-4ff3-a5ac-72ace1080d68?tenant_id=91cc0db9-5b09-479a-a401-1d5d72b52a64&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[100]&#xD;
+      Sending HTTP request GET http://127.0.0.1:59072/simulator/payments/f0cebb54-d936-4ff3-a5ac-72ace1080d68?tenant_id=91cc0db9-5b09-479a-a401-1d5d72b52a64&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[101]&#xD;
+      Received HTTP response headers after 1.2709ms - 200&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[101]&#xD;
+      End processing HTTP request after 1.346ms - 200&#xD;
+info: POSCartService.Services.PaymentGatewayClient[0]&#xD;
+      Estado de autorizaci�n recuperado RequestId=f0cebb54-d936-4ff3-a5ac-72ace1080d68 TenantId=91cc0db9-5b09-479a-a401-1d5d72b52a64 Status=APPROVED TransactionId=SIM-TXN-6F6F7A58C2D655C3102344C6 ElapsedMs=1.472&#xD;
+info: POSCartService.Services.PaymentGatewayClient[0]&#xD;
+      Consultando estado de autorizaci�n RequestId=f0cebb54-d936-4ff3-a5ac-72ace1080d68 TenantId=91cc0db9-5b09-479a-a401-1d5d72b52a64&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[100]&#xD;
+      Start processing HTTP request GET http://127.0.0.1:59072/simulator/payments/f0cebb54-d936-4ff3-a5ac-72ace1080d68?tenant_id=91cc0db9-5b09-479a-a401-1d5d72b52a64&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[100]&#xD;
+      Sending HTTP request GET http://127.0.0.1:59072/simulator/payments/f0cebb54-d936-4ff3-a5ac-72ace1080d68?tenant_id=91cc0db9-5b09-479a-a401-1d5d72b52a64&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[101]&#xD;
+      Received HTTP response headers after 0.7896ms - 200&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[101]&#xD;
+      End processing HTTP request after 0.8806ms - 200&#xD;
+info: POSCartService.Services.PaymentGatewayClient[0]&#xD;
+      Estado de autorizaci�n recuperado RequestId=f0cebb54-d936-4ff3-a5ac-72ace1080d68 TenantId=91cc0db9-5b09-479a-a401-1d5d72b52a64 Status=APPROVED TransactionId=SIM-TXN-6F6F7A58C2D655C3102344C6 ElapsedMs=1.0063&#xD;
+info: POSCartService.Services.OutboxPublisherWorker[0]&#xD;
+      Worker de outbox deshabilitado por configuraci�n&#xD;
+info: POSCartService.Services.PaymentGatewayClient[0]&#xD;
+      Iniciando pago por pasarela RequestId=1e45b5dc-fc90-4de3-81e4-3f017710b40f TenantId=eeef64aa-c4f4-4d53-bd22-1f03204001be SaleId=e61afa0e-6ce6-44c8-ad94-d64c37f9a0f8 ScenarioId=sim-declined-v1&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[100]&#xD;
+      Start processing HTTP request POST http://127.0.0.1:59111/simulator/payments&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[100]&#xD;
+      Sending HTTP request POST http://127.0.0.1:59111/simulator/payments&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[101]&#xD;
+      Received HTTP response headers after 3.0334ms - 200&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[101]&#xD;
+      End processing HTTP request after 3.1189ms - 200&#xD;
+info: POSCartService.Services.PaymentGatewayClient[0]&#xD;
+      Pago procesado por pasarela RequestId=1e45b5dc-fc90-4de3-81e4-3f017710b40f TenantId=eeef64aa-c4f4-4d53-bd22-1f03204001be SaleId=e61afa0e-6ce6-44c8-ad94-d64c37f9a0f8 ScenarioId=sim-declined-v1 Status=DECLINED TransactionId=SIM-TXN-5B161A03C9AE130DB06BFEC1 ElapsedMs=3.215&#xD;
+warn: POSCartService.Controllers.VentasController[0]&#xD;
+      Pago rechazado para venta e61afa0e-6ce6-44c8-ad94-d64c37f9a0f8. Status: DECLINED, Decline: DO_NOT_HONOR&#xD;
+info: POSCartService.Services.OutboxPublisherWorker[0]&#xD;
+      Worker de outbox deshabilitado por configuraci�n&#xD;
+info: POSCartService.Services.PaymentGatewayClient[0]&#xD;
+      Iniciando pago por pasarela RequestId=ea8e73df-5a87-47a4-81a0-4f710f90ee41 TenantId=c4226e43-bd86-4ca0-97b3-7f44405bc82a SaleId=c99d478e-084f-4ad8-9d43-89f202a7d8f2 ScenarioId=sim-timeout-v1&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[100]&#xD;
+      Start processing HTTP request POST http://127.0.0.1:59160/simulator/payments&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[100]&#xD;
+      Sending HTTP request POST http://127.0.0.1:59160/simulator/payments&#xD;
+%3|1792862855.342|FAIL|rdkafka#producer-5| [thrd:localhost:9092/bootstrap]: localhost:9092/bootstrap: Connect to ipv6#[::1]:9092 failed: Unknown error (after 2036ms in state CONNECT)&#xD;
+%3|1792862855.342|ERROR|rdkafka#producer-5| [thrd:localhost:9092/bootstrap]: 1/1 brokers are down&#xD;
+%3|1792862855.342|ERROR|rdkafka#producer-5| [thrd:app]: rdkafka#producer-5: localhost:9092/bootstrap: Connect to ipv6#[::1]:9092 failed: Unknown error (after 2036ms in state CONNECT)&#xD;
+warn: POSCartService.Services.PaymentGatewayClient[0]&#xD;
+      Timeout de pasarela RequestId=ea8e73df-5a87-47a4-81a0-4f710f90ee41 TenantId=c4226e43-bd86-4ca0-97b3-7f44405bc82a SaleId=c99d478e-084f-4ad8-9d43-89f202a7d8f2 ScenarioId=sim-timeout-v1 Status=TIMED_OUT ElapsedMs=2011.3543&#xD;
+info: POSCartService.Services.PaymentGatewayClient[0]&#xD;
+      Consultando estado de autorizaci�n RequestId=ea8e73df-5a87-47a4-81a0-4f710f90ee41 TenantId=c4226e43-bd86-4ca0-97b3-7f44405bc82a&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[100]&#xD;
+      Start processing HTTP request GET http://127.0.0.1:59160/simulator/payments/ea8e73df-5a87-47a4-81a0-4f710f90ee41?tenant_id=c4226e43-bd86-4ca0-97b3-7f44405bc82a&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[100]&#xD;
+      Sending HTTP request GET http://127.0.0.1:59160/simulator/payments/ea8e73df-5a87-47a4-81a0-4f710f90ee41?tenant_id=c4226e43-bd86-4ca0-97b3-7f44405bc82a&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[101]&#xD;
+      Received HTTP response headers after 1.6897ms - 404&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[101]&#xD;
+      End processing HTTP request after 1.7892ms - 404&#xD;
+warn: POSCartService.Services.PaymentGatewayClient[0]&#xD;
+      Estado de autorizaci�n desconocido RequestId=ea8e73df-5a87-47a4-81a0-4f710f90ee41 TenantId=c4226e43-bd86-4ca0-97b3-7f44405bc82a Status=UNKNOWN ElapsedMs=1.8811&#xD;
+warn: POSCartService.Controllers.VentasController[0]&#xD;
+      Timeout al comunicarse con la pasarela para venta c99d478e-084f-4ad8-9d43-89f202a7d8f2&#xD;
+      POSCartService.Exceptions.PaymentAuthorizationUncertainException: La autorizaci�n no respondi� y su estado no pudo confirmarse para RequestId=ea8e73df-5a87-47a4-81a0-4f710f90ee41. No se debe iniciar otro cobro autom�ticamente.&#xD;
+       ---&gt; System.Threading.Tasks.TaskCanceledException: The request was canceled due to the configured HttpClient.Timeout of 2 seconds elapsing.&#xD;
+       ---&gt; System.TimeoutException: The operation was canceled.&#xD;
+       ---&gt; System.Threading.Tasks.TaskCanceledException: The operation was canceled.&#xD;
+       ---&gt; System.IO.IOException: Unable to read data from the transport connection: La operaci�n de E/S se anul� por una salida de subproceso o por una solicitud de aplicaci�n..&#xD;
+       ---&gt; System.Net.Sockets.SocketException (995): La operaci�n de E/S se anul� por una salida de subproceso o por una solicitud de aplicaci�n.&#xD;
+         --- End of inner exception stack trace ---&#xD;
+         at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)&#xD;
+         at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource&lt;System.Int32&gt;.GetResult(Int16 token)&#xD;
+         at System.Net.Http.HttpConnection.InitialFillAsync(Boolean async)&#xD;
+         at System.Net.Http.HttpConnection.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)&#xD;
+         --- End of inner exception stack trace ---&#xD;
+         at System.Net.Http.HttpConnection.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)&#xD;
+         at System.Net.Http.HttpConnectionPool.SendWithVersionDetectionAndRetryAsync(HttpRequestMessage request, Boolean async, Boolean doRequestAuth, CancellationToken cancellationToken)&#xD;
+         at System.Net.Http.DiagnosticsHandler.SendAsyncCore(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)&#xD;
+         at System.Net.Http.RedirectHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)&#xD;
+         at Microsoft.Extensions.Http.Logging.LoggingHttpMessageHandler.&lt;SendCoreAsync&gt;g__Core|5_0(HttpRequestMessage request, Boolean useAsync, CancellationToken cancellationToken)&#xD;
+         at GlobalMart.IntegrationTests.CobroSeguroIntegrationTests.GatewayTraffic.SendAsync(HttpRequestMessage request, CancellationToken ct) in C:\Users\dp877\Desktop\Universidad\Semestre 6\TallerIntegra3\TallerIntegracion3\tests\GlobalMart.IntegrationTests\CobroSeguroIntegrationTests.cs:line 570&#xD;
+         at Microsoft.Extensions.Http.Logging.LoggingScopeHttpMessageHandler.&lt;SendCoreAsync&gt;g__Core|5_0(HttpRequestMessage request, Boolean useAsync, CancellationToken cancellationToken)&#xD;
+         at System.Net.Http.HttpClient.&lt;SendAsync&gt;g__Core|83_0(HttpRequestMessage request, HttpCompletionOption completionOption, CancellationTokenSource cts, Boolean disposeCts, CancellationTokenSource pendingRequestsCts, CancellationToken originalCancellationToken)&#xD;
+         --- End of inner exception stack trace ---&#xD;
+         --- End of inner exception stack trace ---&#xD;
+         at System.Net.Http.HttpClient.HandleFailure(Exception e, Boolean telemetryStarted, HttpResponseMessage response, CancellationTokenSource cts, CancellationToken cancellationToken, CancellationTokenSource pendingRequestsCts)&#xD;
+         at System.Net.Http.HttpClient.&lt;SendAsync&gt;g__Core|83_0(HttpRequestMessage request, HttpCompletionOption completionOption, CancellationTokenSource cts, Boolean disposeCts, CancellationTokenSource pendingRequestsCts, CancellationToken originalCancellationToken)&#xD;
+         at POSCartService.Services.PaymentGatewayClient.ProcessPaymentAsync(PaymentGatewayRequest request, CancellationToken cancellationToken) in C:\Users\dp877\Desktop\Universidad\Semestre 6\TallerIntegra3\TallerIntegracion3\src\POSCartService\Services\PaymentGatewayClient.cs:line 55&#xD;
+         --- End of inner exception stack trace ---&#xD;
+         at POSCartService.Services.PaymentGatewayClient.ProcessPaymentAsync(PaymentGatewayRequest request, CancellationToken cancellationToken) in C:\Users\dp877\Desktop\Universidad\Semestre 6\TallerIntegra3\TallerIntegracion3\src\POSCartService\Services\PaymentGatewayClient.cs:line 93&#xD;
+         at POSCartService.Controllers.VentasController.CobrarTarjeta(Guid id, CobrarTarjetaRequest request, CancellationToken cancellationToken) in C:\Users\dp877\Desktop\Universidad\Semestre 6\TallerIntegra3\TallerIntegracion3\src\POSCartService\Controllers\VentasController.cs:line 894&#xD;
+info: POSCartService.Services.PaymentGatewayClient[0]&#xD;
+      Consultando estado de autorizaci�n RequestId=ea8e73df-5a87-47a4-81a0-4f710f90ee41 TenantId=c4226e43-bd86-4ca0-97b3-7f44405bc82a&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[100]&#xD;
+      Start processing HTTP request GET http://127.0.0.1:59160/simulator/payments/ea8e73df-5a87-47a4-81a0-4f710f90ee41?tenant_id=c4226e43-bd86-4ca0-97b3-7f44405bc82a&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[100]&#xD;
+      Sending HTTP request GET http://127.0.0.1:59160/simulator/payments/ea8e73df-5a87-47a4-81a0-4f710f90ee41?tenant_id=c4226e43-bd86-4ca0-97b3-7f44405bc82a&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[101]&#xD;
+      Received HTTP response headers after 1.0122ms - 404&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[101]&#xD;
+      End processing HTTP request after 1.083ms - 404&#xD;
+warn: POSCartService.Services.PaymentGatewayClient[0]&#xD;
+      Estado de autorizaci�n desconocido RequestId=ea8e73df-5a87-47a4-81a0-4f710f90ee41 TenantId=c4226e43-bd86-4ca0-97b3-7f44405bc82a Status=UNKNOWN ElapsedMs=1.1916&#xD;
+%3|1792862858.340|FAIL|rdkafka#producer-5| [thrd:localhost:9092/bootstrap]: localhost:9092/bootstrap: Connect to ipv6#[::1]:9092 failed: Unknown error (after 2024ms in state CONNECT, 1 identical error(s) suppressed)&#xD;
+%3|1792862858.340|ERROR|rdkafka#producer-5| [thrd:localhost:9092/bootstrap]: 1/1 brokers are down&#xD;
+%3|1792862858.340|ERROR|rdkafka#producer-5| [thrd:app]: rdkafka#producer-5: localhost:9092/bootstrap: Connect to ipv6#[::1]:9092 failed: Unknown error (after 2024ms in state CONNECT, 1 identical error(s) suppressed)&#xD;
+%3|1792862861.350|FAIL|rdkafka#producer-5| [thrd:localhost:9092/bootstrap]: localhost:9092/bootstrap: Connect to ipv4#127.0.0.1:9092 failed: Unknown error (after 2010ms in state CONNECT)&#xD;
+%3|1792862861.350|ERROR|rdkafka#producer-5| [thrd:localhost:9092/bootstrap]: 1/1 brokers are down&#xD;
+%3|1792862861.350|ERROR|rdkafka#producer-5| [thrd:app]: rdkafka#producer-5: localhost:9092/bootstrap: Connect to ipv4#127.0.0.1:9092 failed: Unknown error (after 2010ms in state CONNECT)&#xD;
+%3|1792862864.374|ERROR|rdkafka#producer-5| [thrd:localhost:9092/bootstrap]: 1/1 brokers are down&#xD;
+%3|1792862867.409|ERROR|rdkafka#producer-5| [thrd:localhost:9092/bootstrap]: 1/1 brokers are down&#xD;
+%3|1792862870.437|FAIL|rdkafka#producer-5| [thrd:localhost:9092/bootstrap]: localhost:9092/bootstrap: Connect to ipv6#[::1]:9092 failed: Unknown error (after 2035ms in state CONNECT)&#xD;
+%3|1792862870.437|ERROR|rdkafka#producer-5| [thrd:localhost:9092/bootstrap]: 1/1 brokers are down&#xD;
+%3|1792862870.437|ERROR|rdkafka#producer-5| [thrd:app]: rdkafka#producer-5: localhost:9092/bootstrap: Connect to ipv6#[::1]:9092 failed: Unknown error (after 2035ms in state CONNECT)&#xD;
+%3|1792862873.437|FAIL|rdkafka#producer-5| [thrd:localhost:9092/bootstrap]: localhost:9092/bootstrap: Connect to ipv4#127.0.0.1:9092 failed: Unknown error (after 2028ms in state CONNECT)&#xD;
+%3|1792862873.437|ERROR|rdkafka#producer-5| [thrd:localhost:9092/bootstrap]: 1/1 brokers are down&#xD;
+%3|1792862873.437|ERROR|rdkafka#producer-5| [thrd:app]: rdkafka#producer-5: localhost:9092/bootstrap: Connect to ipv4#127.0.0.1:9092 failed: Unknown error (after 2028ms in state CONNECT)&#xD;
+%3|1792862876.463|FAIL|rdkafka#producer-5| [thrd:localhost:9092/bootstrap]: localhost:9092/bootstrap: Connect to ipv6#[::1]:9092 failed: Unknown error (after 2026ms in state CONNECT)&#xD;
+%3|1792862876.463|ERROR|rdkafka#producer-5| [thrd:localhost:9092/bootstrap]: 1/1 brokers are down&#xD;
+%3|1792862876.463|ERROR|rdkafka#producer-5| [thrd:app]: rdkafka#producer-5: localhost:9092/bootstrap: Connect to ipv6#[::1]:9092 failed: Unknown error (after 2026ms in state CONNECT)&#xD;
+%3|1792862879.478|ERROR|rdkafka#producer-5| [thrd:localhost:9092/bootstrap]: 1/1 brokers are down&#xD;
+%3|1792862882.524|FAIL|rdkafka#producer-5| [thrd:localhost:9092/bootstrap]: localhost:9092/bootstrap: Connect to ipv4#127.0.0.1:9092 failed: Unknown error (after 2045ms in state CONNECT)&#xD;
+%3|1792862882.524|ERROR|rdkafka#producer-5| [thrd:localhost:9092/bootstrap]: 1/1 brokers are down&#xD;
+%3|1792862882.524|ERROR|rdkafka#producer-5| [thrd:app]: rdkafka#producer-5: localhost:9092/bootstrap: Connect to ipv4#127.0.0.1:9092 failed: Unknown error (after 2045ms in state CONNECT)&#xD;
+%3|1792862885.526|FAIL|rdkafka#producer-5| [thrd:localhost:9092/bootstrap]: localhost:9092/bootstrap: Connect to ipv6#[::1]:9092 failed: Unknown error (after 2021ms in state CONNECT)&#xD;
+%3|1792862885.527|ERROR|rdkafka#producer-5| [thrd:localhost:9092/bootstrap]: 1/1 brokers are down&#xD;
+%3|1792862885.527|ERROR|rdkafka#producer-5| [thrd:app]: rdkafka#producer-5: localhost:9092/bootstrap: Connect to ipv6#[::1]:9092 failed: Unknown error (after 2021ms in state CONNECT)&#xD;
+%3|1792862888.568|FAIL|rdkafka#producer-5| [thrd:localhost:9092/bootstrap]: localhost:9092/bootstrap: Connect to ipv4#127.0.0.1:9092 failed: Unknown error (after 2034ms in state CONNECT)&#xD;
+%3|1792862888.568|ERROR|rdkafka#producer-5| [thrd:localhost:9092/bootstrap]: 1/1 brokers are down&#xD;
+%3|1792862888.568|ERROR|rdkafka#producer-5| [thrd:app]: rdkafka#producer-5: localhost:9092/bootstrap: Connect to ipv4#127.0.0.1:9092 failed: Unknown error (after 2034ms in state CONNECT)&#xD;
+info: POSCartService.Services.PaymentGatewayClient[0]&#xD;
+      Consultando estado de autorizaci�n RequestId=ea8e73df-5a87-47a4-81a0-4f710f90ee41 TenantId=c4226e43-bd86-4ca0-97b3-7f44405bc82a&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[100]&#xD;
+      Start processing HTTP request GET http://127.0.0.1:59160/simulator/payments/ea8e73df-5a87-47a4-81a0-4f710f90ee41?tenant_id=c4226e43-bd86-4ca0-97b3-7f44405bc82a&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[100]&#xD;
+      Sending HTTP request GET http://127.0.0.1:59160/simulator/payments/ea8e73df-5a87-47a4-81a0-4f710f90ee41?tenant_id=c4226e43-bd86-4ca0-97b3-7f44405bc82a&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[101]&#xD;
+      Received HTTP response headers after 3.1261ms - 404&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[101]&#xD;
+      End processing HTTP request after 3.2521ms - 404&#xD;
+warn: POSCartService.Services.PaymentGatewayClient[0]&#xD;
+      Estado de autorizaci�n desconocido RequestId=ea8e73df-5a87-47a4-81a0-4f710f90ee41 TenantId=c4226e43-bd86-4ca0-97b3-7f44405bc82a Status=UNKNOWN ElapsedMs=3.4484&#xD;
+%3|1792862891.563|FAIL|rdkafka#producer-5| [thrd:localhost:9092/bootstrap]: localhost:9092/bootstrap: Connect to ipv4#127.0.0.1:9092 failed: Unknown error (after 2014ms in state CONNECT, 1 identical error(s) suppressed)&#xD;
+%3|1792862891.563|ERROR|rdkafka#producer-5| [thrd:localhost:9092/bootstrap]: 1/1 brokers are down&#xD;
+%3|1792862891.563|ERROR|rdkafka#producer-5| [thrd:app]: rdkafka#producer-5: localhost:9092/bootstrap: Connect to ipv4#127.0.0.1:9092 failed: Unknown error (after 2014ms in state CONNECT, 1 identical error(s) suppressed)&#xD;
+info: POSCartService.Services.OutboxPublisherWorker[0]&#xD;
+      Worker de outbox deshabilitado por configuraci�n&#xD;
+info: POSCartService.Services.OutboxPublisherWorker[0]&#xD;
+      Worker de outbox deshabilitado por configuraci�n&#xD;
+info: POSCartService.Services.OutboxPublisherWorker[0]&#xD;
+      Worker de outbox deshabilitado por configuraci�n&#xD;
+info: POSCartService.Services.OutboxPublisherWorker[0]&#xD;
+      Worker de outbox deshabilitado por configuraci�n&#xD;
+info: POSCartService.Services.PaymentGatewayClient[0]&#xD;
+      Iniciando pago por pasarela RequestId=596c05fe-bbb9-4277-bcae-72d1d220e071 TenantId=532d60b8-afbe-4a3f-8eb2-305c13ef36af SaleId=69d0e768-197d-430c-a8f5-9c2c54370298 ScenarioId=sim-approved-v1&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[100]&#xD;
+      Start processing HTTP request POST http://127.0.0.1:59320/simulator/payments&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[100]&#xD;
+      Sending HTTP request POST http://127.0.0.1:59320/simulator/payments&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[101]&#xD;
+      Received HTTP response headers after 3.1955ms - 200&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[101]&#xD;
+      End processing HTTP request after 66.6238ms - 200&#xD;
+info: POSCartService.Services.PaymentGatewayClient[0]&#xD;
+      Pago procesado por pasarela RequestId=596c05fe-bbb9-4277-bcae-72d1d220e071 TenantId=532d60b8-afbe-4a3f-8eb2-305c13ef36af SaleId=69d0e768-197d-430c-a8f5-9c2c54370298 ScenarioId=sim-approved-v1 Status=APPROVED TransactionId=SIM-TXN-31BD05538F47E08F5976CB3A ElapsedMs=66.754&#xD;
+info: POSCartService.Controllers.VentasController[0]&#xD;
+      Venta 69d0e768-197d-430c-a8f5-9c2c54370298 cobrada con tarjeta. Ref: SIM-REF-31BD05538F47E08F5976CB3A, Auth: SIM-APPROVED&#xD;
+info: POSCartService.Services.OutboxPublisherWorker[0]&#xD;
+      Worker de outbox deshabilitado por configuraci�n&#xD;
+info: POSCartService.Services.PaymentGatewayClient[0]&#xD;
+      Iniciando pago por pasarela RequestId=879c9f1f-30c4-490b-b957-83b4da18547c TenantId=a5a1915d-2379-469d-912d-be3908b444a2 SaleId=ef74d220-4c88-4861-a476-e356b52839a4 ScenarioId=sim-approved-v1&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[100]&#xD;
+      Start processing HTTP request POST http://127.0.0.1:59355/simulator/payments&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[100]&#xD;
+      Sending HTTP request POST http://127.0.0.1:59355/simulator/payments&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[101]&#xD;
+      Received HTTP response headers after 2.9515ms - 200&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[101]&#xD;
+      End processing HTTP request after 55.6079ms - 200&#xD;
+info: POSCartService.Services.PaymentGatewayClient[0]&#xD;
+      Pago procesado por pasarela RequestId=879c9f1f-30c4-490b-b957-83b4da18547c TenantId=a5a1915d-2379-469d-912d-be3908b444a2 SaleId=ef74d220-4c88-4861-a476-e356b52839a4 ScenarioId=sim-approved-v1 Status=APPROVED TransactionId=SIM-TXN-19557A38CF80B18A9080D5F9 ElapsedMs=55.727&#xD;
+info: POSCartService.Controllers.VentasController[0]&#xD;
+      Venta ef74d220-4c88-4861-a476-e356b52839a4 cobrada con tarjeta. Ref: SIM-REF-19557A38CF80B18A9080D5F9, Auth: SIM-APPROVED&#xD;
+info: POSCartService.Services.OutboxPublisherWorker[0]&#xD;
+      Worker de outbox deshabilitado por configuraci�n&#xD;
+info: POSCartService.Services.PaymentGatewayClient[0]&#xD;
+      Iniciando pago por pasarela RequestId=dab929de-e6d0-4e74-8af0-5c8d88979378 TenantId=41aa22ca-2036-4a71-9b43-4acb5bf478de SaleId=1b14b464-057e-4545-8154-c8ef936e4c2a ScenarioId=sim-timeout-v1&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[100]&#xD;
+      Start processing HTTP request POST http://127.0.0.1:59390/simulator/payments&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[100]&#xD;
+      Sending HTTP request POST http://127.0.0.1:59390/simulator/payments&#xD;
+%3|1792862899.771|FAIL|rdkafka#producer-11| [thrd:localhost:9092/bootstrap]: localhost:9092/bootstrap: Connect to ipv4#127.0.0.1:9092 failed: Unknown error (after 2020ms in state CONNECT)&#xD;
+%3|1792862899.771|ERROR|rdkafka#producer-11| [thrd:localhost:9092/bootstrap]: 1/1 brokers are down&#xD;
+%3|1792862899.771|ERROR|rdkafka#producer-11| [thrd:app]: rdkafka#producer-11: localhost:9092/bootstrap: Connect to ipv4#127.0.0.1:9092 failed: Unknown error (after 2020ms in state CONNECT)&#xD;
+warn: POSCartService.Services.PaymentGatewayClient[0]&#xD;
+      Timeout de pasarela RequestId=dab929de-e6d0-4e74-8af0-5c8d88979378 TenantId=41aa22ca-2036-4a71-9b43-4acb5bf478de SaleId=1b14b464-057e-4545-8154-c8ef936e4c2a ScenarioId=sim-timeout-v1 Status=TIMED_OUT ElapsedMs=2007.2836&#xD;
+info: POSCartService.Services.PaymentGatewayClient[0]&#xD;
+      Consultando estado de autorizaci�n RequestId=dab929de-e6d0-4e74-8af0-5c8d88979378 TenantId=41aa22ca-2036-4a71-9b43-4acb5bf478de&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[100]&#xD;
+      Start processing HTTP request GET http://127.0.0.1:59390/simulator/payments/dab929de-e6d0-4e74-8af0-5c8d88979378?tenant_id=41aa22ca-2036-4a71-9b43-4acb5bf478de&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[100]&#xD;
+      Sending HTTP request GET http://127.0.0.1:59390/simulator/payments/dab929de-e6d0-4e74-8af0-5c8d88979378?tenant_id=41aa22ca-2036-4a71-9b43-4acb5bf478de&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[101]&#xD;
+      Received HTTP response headers after 2.0779ms - 404&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[101]&#xD;
+      End processing HTTP request after 2.1912ms - 404&#xD;
+warn: POSCartService.Services.PaymentGatewayClient[0]&#xD;
+      Estado de autorizaci�n desconocido RequestId=dab929de-e6d0-4e74-8af0-5c8d88979378 TenantId=41aa22ca-2036-4a71-9b43-4acb5bf478de Status=UNKNOWN ElapsedMs=2.3177&#xD;
+warn: POSCartService.Controllers.VentasController[0]&#xD;
+      Timeout al comunicarse con la pasarela para venta 1b14b464-057e-4545-8154-c8ef936e4c2a&#xD;
+      POSCartService.Exceptions.PaymentAuthorizationUncertainException: La autorizaci�n no respondi� y su estado no pudo confirmarse para RequestId=dab929de-e6d0-4e74-8af0-5c8d88979378. No se debe iniciar otro cobro autom�ticamente.&#xD;
+       ---&gt; System.Threading.Tasks.TaskCanceledException: The request was canceled due to the configured HttpClient.Timeout of 2 seconds elapsing.&#xD;
+       ---&gt; System.TimeoutException: The operation was canceled.&#xD;
+       ---&gt; System.Threading.Tasks.TaskCanceledException: The operation was canceled.&#xD;
+       ---&gt; System.IO.IOException: Unable to read data from the transport connection: La operaci�n de E/S se anul� por una salida de subproceso o por una solicitud de aplicaci�n..&#xD;
+       ---&gt; System.Net.Sockets.SocketException (995): La operaci�n de E/S se anul� por una salida de subproceso o por una solicitud de aplicaci�n.&#xD;
+         --- End of inner exception stack trace ---&#xD;
+         at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)&#xD;
+         at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource&lt;System.Int32&gt;.GetResult(Int16 token)&#xD;
+         at System.Net.Http.HttpConnection.InitialFillAsync(Boolean async)&#xD;
+         at System.Net.Http.HttpConnection.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)&#xD;
+         --- End of inner exception stack trace ---&#xD;
+         at System.Net.Http.HttpConnection.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)&#xD;
+         at System.Net.Http.HttpConnectionPool.SendWithVersionDetectionAndRetryAsync(HttpRequestMessage request, Boolean async, Boolean doRequestAuth, CancellationToken cancellationToken)&#xD;
+         at System.Net.Http.DiagnosticsHandler.SendAsyncCore(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)&#xD;
+         at System.Net.Http.RedirectHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)&#xD;
+         at Microsoft.Extensions.Http.Logging.LoggingHttpMessageHandler.&lt;SendCoreAsync&gt;g__Core|5_0(HttpRequestMessage request, Boolean useAsync, CancellationToken cancellationToken)&#xD;
+         at GlobalMart.IntegrationTests.CobroSeguroIntegrationTests.GatewayTraffic.SendAsync(HttpRequestMessage request, CancellationToken ct) in C:\Users\dp877\Desktop\Universidad\Semestre 6\TallerIntegra3\TallerIntegracion3\tests\GlobalMart.IntegrationTests\CobroSeguroIntegrationTests.cs:line 570&#xD;
+         at Microsoft.Extensions.Http.Logging.LoggingScopeHttpMessageHandler.&lt;SendCoreAsync&gt;g__Core|5_0(HttpRequestMessage request, Boolean useAsync, CancellationToken cancellationToken)&#xD;
+         at System.Net.Http.HttpClient.&lt;SendAsync&gt;g__Core|83_0(HttpRequestMessage request, HttpCompletionOption completionOption, CancellationTokenSource cts, Boolean disposeCts, CancellationTokenSource pendingRequestsCts, CancellationToken originalCancellationToken)&#xD;
+         --- End of inner exception stack trace ---&#xD;
+         --- End of inner exception stack trace ---&#xD;
+         at System.Net.Http.HttpClient.HandleFailure(Exception e, Boolean telemetryStarted, HttpResponseMessage response, CancellationTokenSource cts, CancellationToken cancellationToken, CancellationTokenSource pendingRequestsCts)&#xD;
+         at System.Net.Http.HttpClient.&lt;SendAsync&gt;g__Core|83_0(HttpRequestMessage request, HttpCompletionOption completionOption, CancellationTokenSource cts, Boolean disposeCts, CancellationTokenSource pendingRequestsCts, CancellationToken originalCancellationToken)&#xD;
+         at POSCartService.Services.PaymentGatewayClient.ProcessPaymentAsync(PaymentGatewayRequest request, CancellationToken cancellationToken) in C:\Users\dp877\Desktop\Universidad\Semestre 6\TallerIntegra3\TallerIntegracion3\src\POSCartService\Services\PaymentGatewayClient.cs:line 55&#xD;
+         --- End of inner exception stack trace ---&#xD;
+         at POSCartService.Services.PaymentGatewayClient.ProcessPaymentAsync(PaymentGatewayRequest request, CancellationToken cancellationToken) in C:\Users\dp877\Desktop\Universidad\Semestre 6\TallerIntegra3\TallerIntegracion3\src\POSCartService\Services\PaymentGatewayClient.cs:line 93&#xD;
+         at POSCartService.Controllers.VentasController.CobrarTarjeta(Guid id, CobrarTarjetaRequest request, CancellationToken cancellationToken) in C:\Users\dp877\Desktop\Universidad\Semestre 6\TallerIntegra3\TallerIntegracion3\src\POSCartService\Controllers\VentasController.cs:line 894&#xD;
+info: POSCartService.Services.PaymentGatewayClient[0]&#xD;
+      Consultando estado de autorizaci�n RequestId=dab929de-e6d0-4e74-8af0-5c8d88979378 TenantId=41aa22ca-2036-4a71-9b43-4acb5bf478de&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[100]&#xD;
+      Start processing HTTP request GET http://127.0.0.1:59390/simulator/payments/dab929de-e6d0-4e74-8af0-5c8d88979378?tenant_id=41aa22ca-2036-4a71-9b43-4acb5bf478de&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[100]&#xD;
+      Sending HTTP request GET http://127.0.0.1:59390/simulator/payments/dab929de-e6d0-4e74-8af0-5c8d88979378?tenant_id=41aa22ca-2036-4a71-9b43-4acb5bf478de&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[101]&#xD;
+      Received HTTP response headers after 1.1412ms - 404&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[101]&#xD;
+      End processing HTTP request after 1.2449ms - 404&#xD;
+warn: POSCartService.Services.PaymentGatewayClient[0]&#xD;
+      Estado de autorizaci�n desconocido RequestId=dab929de-e6d0-4e74-8af0-5c8d88979378 TenantId=41aa22ca-2036-4a71-9b43-4acb5bf478de Status=UNKNOWN ElapsedMs=1.3481&#xD;
+info: POSCartService.Services.OutboxPublisherWorker[0]&#xD;
+      Worker de outbox deshabilitado por configuraci�n&#xD;
+info: POSCartService.Services.PaymentGatewayClient[0]&#xD;
+      Iniciando pago por pasarela RequestId=2d64f18e-1e05-4d71-af87-6ccb7338ebd1 TenantId=07dd7e3d-b016-4103-9558-1f109805f37f SaleId=8df34eba-7908-48c3-a1c8-55da50e5e4d8 ScenarioId=sim-approved-v1&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[100]&#xD;
+      Start processing HTTP request POST http://127.0.0.1:59419/simulator/payments&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[100]&#xD;
+      Sending HTTP request POST http://127.0.0.1:59419/simulator/payments&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[101]&#xD;
+      Received HTTP response headers after 3.4406ms - 200&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[101]&#xD;
+      End processing HTTP request after 3.5082ms - 200&#xD;
+info: POSCartService.Services.PaymentGatewayClient[0]&#xD;
+      Pago procesado por pasarela RequestId=2d64f18e-1e05-4d71-af87-6ccb7338ebd1 TenantId=07dd7e3d-b016-4103-9558-1f109805f37f SaleId=8df34eba-7908-48c3-a1c8-55da50e5e4d8 ScenarioId=sim-approved-v1 Status=APPROVED TransactionId=SIM-TXN-1E7CA8DA3A103C663DC8101B ElapsedMs=3.5998&#xD;
+info: POSCartService.Controllers.VentasController[0]&#xD;
+      Venta 8df34eba-7908-48c3-a1c8-55da50e5e4d8 cobrada con tarjeta. Ref: SIM-REF-1E7CA8DA3A103C663DC8101B, Auth: SIM-APPROVED&#xD;
+info: POSCartService.Services.PaymentGatewayClient[0]&#xD;
+      Consultando estado de autorizaci�n RequestId=2d64f18e-1e05-4d71-af87-6ccb7338ebd1 TenantId=07dd7e3d-b016-4103-9558-1f109805f37f&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[100]&#xD;
+      Start processing HTTP request GET http://127.0.0.1:59419/simulator/payments/2d64f18e-1e05-4d71-af87-6ccb7338ebd1?tenant_id=07dd7e3d-b016-4103-9558-1f109805f37f&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[100]&#xD;
+      Sending HTTP request GET http://127.0.0.1:59419/simulator/payments/2d64f18e-1e05-4d71-af87-6ccb7338ebd1?tenant_id=07dd7e3d-b016-4103-9558-1f109805f37f&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[101]&#xD;
+      Received HTTP response headers after 1.0586ms - 200&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[101]&#xD;
+      End processing HTTP request after 1.1328ms - 200&#xD;
+info: POSCartService.Services.PaymentGatewayClient[0]&#xD;
+      Estado de autorizaci�n recuperado RequestId=2d64f18e-1e05-4d71-af87-6ccb7338ebd1 TenantId=07dd7e3d-b016-4103-9558-1f109805f37f Status=APPROVED TransactionId=SIM-TXN-1E7CA8DA3A103C663DC8101B ElapsedMs=1.2486&#xD;
+info: POSCartService.Services.OutboxPublisherWorker[0]&#xD;
+      Worker de outbox deshabilitado por configuraci�n&#xD;
+info: POSCartService.Services.PaymentGatewayClient[0]&#xD;
+      Iniciando pago por pasarela RequestId=4a9b77b0-8ab7-44e4-acea-4e53efc221de TenantId=e147b342-3ab7-404e-b6bf-9c98d171ed43 SaleId=e61ecf06-e6a7-459b-b5d5-4166d8be58f9 ScenarioId=sim-declined-v1&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[100]&#xD;
+      Start processing HTTP request POST http://127.0.0.1:59449/simulator/payments&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[100]&#xD;
+      Sending HTTP request POST http://127.0.0.1:59449/simulator/payments&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[101]&#xD;
+      Received HTTP response headers after 3.1941ms - 200&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[101]&#xD;
+      End processing HTTP request after 3.2627ms - 200&#xD;
+info: POSCartService.Services.PaymentGatewayClient[0]&#xD;
+      Pago procesado por pasarela RequestId=4a9b77b0-8ab7-44e4-acea-4e53efc221de TenantId=e147b342-3ab7-404e-b6bf-9c98d171ed43 SaleId=e61ecf06-e6a7-459b-b5d5-4166d8be58f9 ScenarioId=sim-declined-v1 Status=DECLINED TransactionId=SIM-TXN-C716442704BA94EFFAF94E9A ElapsedMs=3.3925&#xD;
+warn: POSCartService.Controllers.VentasController[0]&#xD;
+      Pago rechazado para venta e61ecf06-e6a7-459b-b5d5-4166d8be58f9. Status: DECLINED, Decline: DO_NOT_HONOR&#xD;
+info: POSCartService.Services.PaymentGatewayClient[0]&#xD;
+      Consultando estado de autorizaci�n RequestId=4a9b77b0-8ab7-44e4-acea-4e53efc221de TenantId=e147b342-3ab7-404e-b6bf-9c98d171ed43&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[100]&#xD;
+      Start processing HTTP request GET http://127.0.0.1:59449/simulator/payments/4a9b77b0-8ab7-44e4-acea-4e53efc221de?tenant_id=e147b342-3ab7-404e-b6bf-9c98d171ed43&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[100]&#xD;
+      Sending HTTP request GET http://127.0.0.1:59449/simulator/payments/4a9b77b0-8ab7-44e4-acea-4e53efc221de?tenant_id=e147b342-3ab7-404e-b6bf-9c98d171ed43&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[101]&#xD;
+      Received HTTP response headers after 1.2403ms - 200&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[101]&#xD;
+      End processing HTTP request after 1.3673ms - 200&#xD;
+info: POSCartService.Services.PaymentGatewayClient[0]&#xD;
+      Estado de autorizaci�n recuperado RequestId=4a9b77b0-8ab7-44e4-acea-4e53efc221de TenantId=e147b342-3ab7-404e-b6bf-9c98d171ed43 Status=DECLINED TransactionId=SIM-TXN-C716442704BA94EFFAF94E9A ElapsedMs=1.5434&#xD;
+info: POSCartService.Services.OutboxPublisherWorker[0]&#xD;
+      Worker de outbox deshabilitado por configuraci�n&#xD;
+info: POSCartService.Services.PaymentGatewayClient[0]&#xD;
+      Iniciando pago por pasarela RequestId=ec7fcb21-034c-4aae-80ba-63c33f933334 TenantId=c3a42b40-75e2-4559-8c01-93dacb73488d SaleId=9a0e73d0-35ff-4145-bd6b-6bc439d69d60 ScenarioId=sim-declined-v1&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[100]&#xD;
+      Start processing HTTP request POST http://127.0.0.1:59478/simulator/payments&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[100]&#xD;
+      Sending HTTP request POST http://127.0.0.1:59478/simulator/payments&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[101]&#xD;
+      Received HTTP response headers after 3.233ms - 200&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[101]&#xD;
+      End processing HTTP request after 3.3613ms - 200&#xD;
+info: POSCartService.Services.PaymentGatewayClient[0]&#xD;
+      Pago procesado por pasarela RequestId=ec7fcb21-034c-4aae-80ba-63c33f933334 TenantId=c3a42b40-75e2-4559-8c01-93dacb73488d SaleId=9a0e73d0-35ff-4145-bd6b-6bc439d69d60 ScenarioId=sim-declined-v1 Status=DECLINED TransactionId=SIM-TXN-7130B01F7E07D3F2E17514C5 ElapsedMs=3.4319&#xD;
+warn: POSCartService.Controllers.VentasController[0]&#xD;
+      Pago rechazado para venta 9a0e73d0-35ff-4145-bd6b-6bc439d69d60. Status: DECLINED, Decline: DO_NOT_HONOR&#xD;
+info: POSCartService.Services.PaymentGatewayClient[0]&#xD;
+      Consultando estado de autorizaci�n RequestId=ec7fcb21-034c-4aae-80ba-63c33f933334 TenantId=c3a42b40-75e2-4559-8c01-93dacb73488d&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[100]&#xD;
+      Start processing HTTP request GET http://127.0.0.1:59478/simulator/payments/ec7fcb21-034c-4aae-80ba-63c33f933334?tenant_id=c3a42b40-75e2-4559-8c01-93dacb73488d&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[100]&#xD;
+      Sending HTTP request GET http://127.0.0.1:59478/simulator/payments/ec7fcb21-034c-4aae-80ba-63c33f933334?tenant_id=c3a42b40-75e2-4559-8c01-93dacb73488d&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[101]&#xD;
+      Received HTTP response headers after 1.0845ms - 200&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[101]&#xD;
+      End processing HTTP request after 1.1529ms - 200&#xD;
+info: POSCartService.Services.PaymentGatewayClient[0]&#xD;
+      Estado de autorizaci�n recuperado RequestId=ec7fcb21-034c-4aae-80ba-63c33f933334 TenantId=c3a42b40-75e2-4559-8c01-93dacb73488d Status=DECLINED TransactionId=SIM-TXN-7130B01F7E07D3F2E17514C5 ElapsedMs=1.2232&#xD;
+info: POSCartService.Services.PaymentGatewayClient[0]&#xD;
+      Consultando estado de autorizaci�n RequestId=ec7fcb21-034c-4aae-80ba-63c33f933334 TenantId=c3a42b40-75e2-4559-8c01-93dacb73488d&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[100]&#xD;
+      Start processing HTTP request GET http://127.0.0.1:59478/simulator/payments/ec7fcb21-034c-4aae-80ba-63c33f933334?tenant_id=c3a42b40-75e2-4559-8c01-93dacb73488d&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[100]&#xD;
+      Sending HTTP request GET http://127.0.0.1:59478/simulator/payments/ec7fcb21-034c-4aae-80ba-63c33f933334?tenant_id=c3a42b40-75e2-4559-8c01-93dacb73488d&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[101]&#xD;
+      Received HTTP response headers after 0.9021ms - 200&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[101]&#xD;
+      End processing HTTP request after 0.9882ms - 200&#xD;
+info: POSCartService.Services.PaymentGatewayClient[0]&#xD;
+      Estado de autorizaci�n recuperado RequestId=ec7fcb21-034c-4aae-80ba-63c33f933334 TenantId=c3a42b40-75e2-4559-8c01-93dacb73488d Status=DECLINED TransactionId=SIM-TXN-7130B01F7E07D3F2E17514C5 ElapsedMs=1.0471&#xD;
+info: POSCartService.Services.OutboxPublisherWorker[0]&#xD;
+      Worker de outbox deshabilitado por configuraci�n&#xD;
+info: POSCartService.Services.PaymentGatewayClient[0]&#xD;
+      Iniciando pago por pasarela RequestId=9c0d6d9c-179f-4f53-bca2-807b13c29d62 TenantId=073e9dd6-f7cf-4de8-b6af-0137e5e4f76a SaleId=ad3372ba-e252-4e31-abf8-954d02e62f0e ScenarioId=sim-timeout-v1&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[100]&#xD;
+      Start processing HTTP request POST http://127.0.0.1:59512/simulator/payments&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[100]&#xD;
+      Sending HTTP request POST http://127.0.0.1:59512/simulator/payments&#xD;
+%3|1792862905.526|FAIL|rdkafka#producer-15| [thrd:localhost:9092/bootstrap]: localhost:9092/bootstrap: Connect to ipv6#[::1]:9092 failed: Unknown error (after 2031ms in state CONNECT)&#xD;
+%3|1792862905.526|ERROR|rdkafka#producer-15| [thrd:localhost:9092/bootstrap]: 1/1 brokers are down&#xD;
+%3|1792862905.526|ERROR|rdkafka#producer-15| [thrd:app]: rdkafka#producer-15: localhost:9092/bootstrap: Connect to ipv6#[::1]:9092 failed: Unknown error (after 2031ms in state CONNECT)&#xD;
+warn: POSCartService.Services.PaymentGatewayClient[0]&#xD;
+      Timeout de pasarela RequestId=9c0d6d9c-179f-4f53-bca2-807b13c29d62 TenantId=073e9dd6-f7cf-4de8-b6af-0137e5e4f76a SaleId=ad3372ba-e252-4e31-abf8-954d02e62f0e ScenarioId=sim-timeout-v1 Status=TIMED_OUT ElapsedMs=2009.9455&#xD;
+info: POSCartService.Services.PaymentGatewayClient[0]&#xD;
+      Consultando estado de autorizaci�n RequestId=9c0d6d9c-179f-4f53-bca2-807b13c29d62 TenantId=073e9dd6-f7cf-4de8-b6af-0137e5e4f76a&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[100]&#xD;
+      Start processing HTTP request GET http://127.0.0.1:59512/simulator/payments/9c0d6d9c-179f-4f53-bca2-807b13c29d62?tenant_id=073e9dd6-f7cf-4de8-b6af-0137e5e4f76a&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[100]&#xD;
+      Sending HTTP request GET http://127.0.0.1:59512/simulator/payments/9c0d6d9c-179f-4f53-bca2-807b13c29d62?tenant_id=073e9dd6-f7cf-4de8-b6af-0137e5e4f76a&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[101]&#xD;
+      Received HTTP response headers after 2.1269ms - 404&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[101]&#xD;
+      End processing HTTP request after 2.2339ms - 404&#xD;
+warn: POSCartService.Services.PaymentGatewayClient[0]&#xD;
+      Estado de autorizaci�n desconocido RequestId=9c0d6d9c-179f-4f53-bca2-807b13c29d62 TenantId=073e9dd6-f7cf-4de8-b6af-0137e5e4f76a Status=UNKNOWN ElapsedMs=2.2921&#xD;
+warn: POSCartService.Controllers.VentasController[0]&#xD;
+      Timeout al comunicarse con la pasarela para venta ad3372ba-e252-4e31-abf8-954d02e62f0e&#xD;
+      POSCartService.Exceptions.PaymentAuthorizationUncertainException: La autorizaci�n no respondi� y su estado no pudo confirmarse para RequestId=9c0d6d9c-179f-4f53-bca2-807b13c29d62. No se debe iniciar otro cobro autom�ticamente.&#xD;
+       ---&gt; System.Threading.Tasks.TaskCanceledException: The request was canceled due to the configured HttpClient.Timeout of 2 seconds elapsing.&#xD;
+       ---&gt; System.TimeoutException: The operation was canceled.&#xD;
+       ---&gt; System.Threading.Tasks.TaskCanceledException: The operation was canceled.&#xD;
+       ---&gt; System.IO.IOException: Unable to read data from the transport connection: La operaci�n de E/S se anul� por una salida de subproceso o por una solicitud de aplicaci�n..&#xD;
+       ---&gt; System.Net.Sockets.SocketException (995): La operaci�n de E/S se anul� por una salida de subproceso o por una solicitud de aplicaci�n.&#xD;
+         --- End of inner exception stack trace ---&#xD;
+         at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)&#xD;
+         at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource&lt;System.Int32&gt;.GetResult(Int16 token)&#xD;
+         at System.Net.Http.HttpConnection.InitialFillAsync(Boolean async)&#xD;
+         at System.Net.Http.HttpConnection.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)&#xD;
+         --- End of inner exception stack trace ---&#xD;
+         at System.Net.Http.HttpConnection.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)&#xD;
+         at System.Net.Http.HttpConnectionPool.SendWithVersionDetectionAndRetryAsync(HttpRequestMessage request, Boolean async, Boolean doRequestAuth, CancellationToken cancellationToken)&#xD;
+         at System.Net.Http.DiagnosticsHandler.SendAsyncCore(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)&#xD;
+         at System.Net.Http.RedirectHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)&#xD;
+         at Microsoft.Extensions.Http.Logging.LoggingHttpMessageHandler.&lt;SendCoreAsync&gt;g__Core|5_0(HttpRequestMessage request, Boolean useAsync, CancellationToken cancellationToken)&#xD;
+         at GlobalMart.IntegrationTests.CobroSeguroIntegrationTests.GatewayTraffic.SendAsync(HttpRequestMessage request, CancellationToken ct) in C:\Users\dp877\Desktop\Universidad\Semestre 6\TallerIntegra3\TallerIntegracion3\tests\GlobalMart.IntegrationTests\CobroSeguroIntegrationTests.cs:line 570&#xD;
+         at Microsoft.Extensions.Http.Logging.LoggingScopeHttpMessageHandler.&lt;SendCoreAsync&gt;g__Core|5_0(HttpRequestMessage request, Boolean useAsync, CancellationToken cancellationToken)&#xD;
+         at System.Net.Http.HttpClient.&lt;SendAsync&gt;g__Core|83_0(HttpRequestMessage request, HttpCompletionOption completionOption, CancellationTokenSource cts, Boolean disposeCts, CancellationTokenSource pendingRequestsCts, CancellationToken originalCancellationToken)&#xD;
+         --- End of inner exception stack trace ---&#xD;
+         --- End of inner exception stack trace ---&#xD;
+         at System.Net.Http.HttpClient.HandleFailure(Exception e, Boolean telemetryStarted, HttpResponseMessage response, CancellationTokenSource cts, CancellationToken cancellationToken, CancellationTokenSource pendingRequestsCts)&#xD;
+         at System.Net.Http.HttpClient.&lt;SendAsync&gt;g__Core|83_0(HttpRequestMessage request, HttpCompletionOption completionOption, CancellationTokenSource cts, Boolean disposeCts, CancellationTokenSource pendingRequestsCts, CancellationToken originalCancellationToken)&#xD;
+         at POSCartService.Services.PaymentGatewayClient.ProcessPaymentAsync(PaymentGatewayRequest request, CancellationToken cancellationToken) in C:\Users\dp877\Desktop\Universidad\Semestre 6\TallerIntegra3\TallerIntegracion3\src\POSCartService\Services\PaymentGatewayClient.cs:line 55&#xD;
+         --- End of inner exception stack trace ---&#xD;
+         at POSCartService.Services.PaymentGatewayClient.ProcessPaymentAsync(PaymentGatewayRequest request, CancellationToken cancellationToken) in C:\Users\dp877\Desktop\Universidad\Semestre 6\TallerIntegra3\TallerIntegracion3\src\POSCartService\Services\PaymentGatewayClient.cs:line 93&#xD;
+         at POSCartService.Controllers.VentasController.CobrarTarjeta(Guid id, CobrarTarjetaRequest request, CancellationToken cancellationToken) in C:\Users\dp877\Desktop\Universidad\Semestre 6\TallerIntegra3\TallerIntegracion3\src\POSCartService\Controllers\VentasController.cs:line 894&#xD;
+info: POSCartService.Services.PaymentGatewayClient[0]&#xD;
+      Consultando estado de autorizaci�n RequestId=9c0d6d9c-179f-4f53-bca2-807b13c29d62 TenantId=073e9dd6-f7cf-4de8-b6af-0137e5e4f76a&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[100]&#xD;
+      Start processing HTTP request GET http://127.0.0.1:59512/simulator/payments/9c0d6d9c-179f-4f53-bca2-807b13c29d62?tenant_id=073e9dd6-f7cf-4de8-b6af-0137e5e4f76a&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[100]&#xD;
+      Sending HTTP request GET http://127.0.0.1:59512/simulator/payments/9c0d6d9c-179f-4f53-bca2-807b13c29d62?tenant_id=073e9dd6-f7cf-4de8-b6af-0137e5e4f76a&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[101]&#xD;
+      Received HTTP response headers after 0.6328ms - 404&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[101]&#xD;
+      End processing HTTP request after 0.6816ms - 404&#xD;
+warn: POSCartService.Services.PaymentGatewayClient[0]&#xD;
+      Estado de autorizaci�n desconocido RequestId=9c0d6d9c-179f-4f53-bca2-807b13c29d62 TenantId=073e9dd6-f7cf-4de8-b6af-0137e5e4f76a Status=UNKNOWN ElapsedMs=0.7196&#xD;
+info: POSCartService.Services.PaymentGatewayClient[0]&#xD;
+      Consultando estado de autorizaci�n RequestId=9c0d6d9c-179f-4f53-bca2-807b13c29d62 TenantId=073e9dd6-f7cf-4de8-b6af-0137e5e4f76a&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[100]&#xD;
+      Start processing HTTP request GET http://127.0.0.1:59512/simulator/payments/9c0d6d9c-179f-4f53-bca2-807b13c29d62?tenant_id=073e9dd6-f7cf-4de8-b6af-0137e5e4f76a&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[100]&#xD;
+      Sending HTTP request GET http://127.0.0.1:59512/simulator/payments/9c0d6d9c-179f-4f53-bca2-807b13c29d62?tenant_id=073e9dd6-f7cf-4de8-b6af-0137e5e4f76a&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[101]&#xD;
+      Received HTTP response headers after 0.6562ms - 404&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[101]&#xD;
+      End processing HTTP request after 0.7283ms - 404&#xD;
+warn: POSCartService.Services.PaymentGatewayClient[0]&#xD;
+      Estado de autorizaci�n desconocido RequestId=9c0d6d9c-179f-4f53-bca2-807b13c29d62 TenantId=073e9dd6-f7cf-4de8-b6af-0137e5e4f76a Status=UNKNOWN ElapsedMs=0.7909&#xD;
+info: POSCartService.Services.OutboxPublisherWorker[0]&#xD;
+      Worker de outbox deshabilitado por configuraci�n&#xD;
+info: POSCartService.Services.PaymentGatewayClient[0]&#xD;
+      Iniciando pago por pasarela RequestId=b37f2bc3-f149-4c2c-aa80-65187178db25 TenantId=0ded3b08-b0e2-4ef7-8382-32d4a0092a65 SaleId=e9979712-1eae-4246-802b-440f37c59c66 ScenarioId=sim-approved-v1&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[100]&#xD;
+      Start processing HTTP request POST http://127.0.0.1:59546/simulator/payments&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[100]&#xD;
+      Sending HTTP request POST http://127.0.0.1:59546/simulator/payments&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[101]&#xD;
+      Received HTTP response headers after 3.787ms - 200&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[101]&#xD;
+      End processing HTTP request after 3.8669ms - 200&#xD;
+info: POSCartService.Services.PaymentGatewayClient[0]&#xD;
+      Pago procesado por pasarela RequestId=b37f2bc3-f149-4c2c-aa80-65187178db25 TenantId=0ded3b08-b0e2-4ef7-8382-32d4a0092a65 SaleId=e9979712-1eae-4246-802b-440f37c59c66 ScenarioId=sim-approved-v1 Status=APPROVED TransactionId=SIM-TXN-6DCDEF146E6176F12E4C7F9D ElapsedMs=3.9241&#xD;
+info: POSCartService.Controllers.VentasController[0]&#xD;
+      Venta e9979712-1eae-4246-802b-440f37c59c66 cobrada con tarjeta. Ref: SIM-REF-6DCDEF146E6176F12E4C7F9D, Auth: SIM-APPROVED&#xD;
+info: POSCartService.Services.PaymentGatewayClient[0]&#xD;
+      Consultando estado de autorizaci�n RequestId=b37f2bc3-f149-4c2c-aa80-65187178db25 TenantId=0ded3b08-b0e2-4ef7-8382-32d4a0092a65&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[100]&#xD;
+      Start processing HTTP request GET http://127.0.0.1:59546/simulator/payments/b37f2bc3-f149-4c2c-aa80-65187178db25?tenant_id=0ded3b08-b0e2-4ef7-8382-32d4a0092a65&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[100]&#xD;
+      Sending HTTP request GET http://127.0.0.1:59546/simulator/payments/b37f2bc3-f149-4c2c-aa80-65187178db25?tenant_id=0ded3b08-b0e2-4ef7-8382-32d4a0092a65&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[101]&#xD;
+      Received HTTP response headers after 1.1152ms - 200&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[101]&#xD;
+      End processing HTTP request after 1.189ms - 200&#xD;
+info: POSCartService.Services.PaymentGatewayClient[0]&#xD;
+      Estado de autorizaci�n recuperado RequestId=b37f2bc3-f149-4c2c-aa80-65187178db25 TenantId=0ded3b08-b0e2-4ef7-8382-32d4a0092a65 Status=APPROVED TransactionId=SIM-TXN-6DCDEF146E6176F12E4C7F9D ElapsedMs=1.2384&#xD;
+info: POSCartService.Services.PaymentGatewayClient[0]&#xD;
+      Consultando estado de autorizaci�n RequestId=b37f2bc3-f149-4c2c-aa80-65187178db25 TenantId=0ded3b08-b0e2-4ef7-8382-32d4a0092a65&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[100]&#xD;
+      Start processing HTTP request GET http://127.0.0.1:59546/simulator/payments/b37f2bc3-f149-4c2c-aa80-65187178db25?tenant_id=0ded3b08-b0e2-4ef7-8382-32d4a0092a65&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[100]&#xD;
+      Sending HTTP request GET http://127.0.0.1:59546/simulator/payments/b37f2bc3-f149-4c2c-aa80-65187178db25?tenant_id=0ded3b08-b0e2-4ef7-8382-32d4a0092a65&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[101]&#xD;
+      Received HTTP response headers after 0.8035ms - 200&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[101]&#xD;
+      End processing HTTP request after 0.897ms - 200&#xD;
+info: POSCartService.Services.PaymentGatewayClient[0]&#xD;
+      Estado de autorizaci�n recuperado RequestId=b37f2bc3-f149-4c2c-aa80-65187178db25 TenantId=0ded3b08-b0e2-4ef7-8382-32d4a0092a65 Status=APPROVED TransactionId=SIM-TXN-6DCDEF146E6176F12E4C7F9D ElapsedMs=1.0224&#xD;
+info: POSCartService.Services.OutboxPublisherWorker[0]&#xD;
+      Worker de outbox deshabilitado por configuraci�n&#xD;
+info: POSCartService.Services.PaymentGatewayClient[0]&#xD;
+      Iniciando pago por pasarela RequestId=5bcdf91e-7fac-4cf2-9daa-d37587dff1c2 TenantId=662d65cc-a56c-4b5d-9230-d2c15d6c3a4a SaleId=bbf5a3fb-87db-495f-b56f-5584d9187a8a ScenarioId=sim-approved-v1&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[100]&#xD;
+      Start processing HTTP request POST http://127.0.0.1:59578/simulator/payments&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[100]&#xD;
+      Sending HTTP request POST http://127.0.0.1:59578/simulator/payments&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[101]&#xD;
+      Received HTTP response headers after 3.2438ms - 200&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[101]&#xD;
+      End processing HTTP request after 3.3209ms - 200&#xD;
+info: POSCartService.Services.PaymentGatewayClient[0]&#xD;
+      Pago procesado por pasarela RequestId=5bcdf91e-7fac-4cf2-9daa-d37587dff1c2 TenantId=662d65cc-a56c-4b5d-9230-d2c15d6c3a4a SaleId=bbf5a3fb-87db-495f-b56f-5584d9187a8a ScenarioId=sim-approved-v1 Status=APPROVED TransactionId=SIM-TXN-C06FC66220BBA3A12FBF2DBA ElapsedMs=3.3762&#xD;
+info: POSCartService.Controllers.VentasController[0]&#xD;
+      Venta bbf5a3fb-87db-495f-b56f-5584d9187a8a cobrada con tarjeta. Ref: SIM-REF-C06FC66220BBA3A12FBF2DBA, Auth: SIM-APPROVED&#xD;
+info: POSCartService.Services.OutboxPublisherWorker[0]&#xD;
+      Worker de outbox deshabilitado por configuraci�n&#xD;
+info: POSCartService.Services.PaymentGatewayClient[0]&#xD;
+      Iniciando pago por pasarela RequestId=255ba716-2040-4d72-867b-3ec2e7825f5c TenantId=4d336d9c-12f3-4a65-9580-d55328d32728 SaleId=fd6bcd2d-b89b-4cd5-8358-f405a63178c8 ScenarioId=sim-approved-v1&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[100]&#xD;
+      Start processing HTTP request POST http://127.0.0.1:59607/simulator/payments&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[100]&#xD;
+      Sending HTTP request POST http://127.0.0.1:59607/simulator/payments&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[101]&#xD;
+      Received HTTP response headers after 3.1301ms - 200&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[101]&#xD;
+      End processing HTTP request after 3.1894ms - 200&#xD;
+info: POSCartService.Services.PaymentGatewayClient[0]&#xD;
+      Pago procesado por pasarela RequestId=255ba716-2040-4d72-867b-3ec2e7825f5c TenantId=4d336d9c-12f3-4a65-9580-d55328d32728 SaleId=fd6bcd2d-b89b-4cd5-8358-f405a63178c8 ScenarioId=sim-approved-v1 Status=APPROVED TransactionId=SIM-TXN-8AC477DBEDD40FCC1006CB09 ElapsedMs=3.2459&#xD;
+info: POSCartService.Controllers.VentasController[0]&#xD;
+      Venta fd6bcd2d-b89b-4cd5-8358-f405a63178c8 cobrada con tarjeta. Ref: SIM-REF-8AC477DBEDD40FCC1006CB09, Auth: SIM-APPROVED&#xD;
+info: POSCartService.Services.PaymentGatewayClient[0]&#xD;
+      Iniciando pago por pasarela RequestId=255ba716-2040-4d72-867b-3ec2e7825f5c TenantId=ca789697-a490-4388-869a-55311e11bc94 SaleId=8ece58cc-1dcd-45da-a113-f033c8175cfd ScenarioId=sim-approved-v1&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[100]&#xD;
+      Start processing HTTP request POST http://127.0.0.1:59607/simulator/payments&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[100]&#xD;
+      Sending HTTP request POST http://127.0.0.1:59607/simulator/payments&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[101]&#xD;
+      Received HTTP response headers after 1.4231ms - 200&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[101]&#xD;
+      End processing HTTP request after 1.5001ms - 200&#xD;
+info: POSCartService.Services.PaymentGatewayClient[0]&#xD;
+      Pago procesado por pasarela RequestId=255ba716-2040-4d72-867b-3ec2e7825f5c TenantId=ca789697-a490-4388-869a-55311e11bc94 SaleId=8ece58cc-1dcd-45da-a113-f033c8175cfd ScenarioId=sim-approved-v1 Status=APPROVED TransactionId=SIM-TXN-B8EA408F1341D7DC0CD15C3E ElapsedMs=1.5888&#xD;
+info: POSCartService.Controllers.VentasController[0]&#xD;
+      Venta 8ece58cc-1dcd-45da-a113-f033c8175cfd cobrada con tarjeta. Ref: SIM-REF-B8EA408F1341D7DC0CD15C3E, Auth: SIM-APPROVED&#xD;
+info: POSCartService.Services.PaymentGatewayClient[0]&#xD;
+      Consultando estado de autorizaci�n RequestId=255ba716-2040-4d72-867b-3ec2e7825f5c TenantId=4d336d9c-12f3-4a65-9580-d55328d32728&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[100]&#xD;
+      Start processing HTTP request GET http://127.0.0.1:59607/simulator/payments/255ba716-2040-4d72-867b-3ec2e7825f5c?tenant_id=4d336d9c-12f3-4a65-9580-d55328d32728&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[100]&#xD;
+      Sending HTTP request GET http://127.0.0.1:59607/simulator/payments/255ba716-2040-4d72-867b-3ec2e7825f5c?tenant_id=4d336d9c-12f3-4a65-9580-d55328d32728&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[101]&#xD;
+      Received HTTP response headers after 0.9744ms - 200&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[101]&#xD;
+      End processing HTTP request after 1.0419ms - 200&#xD;
+info: POSCartService.Services.PaymentGatewayClient[0]&#xD;
+      Estado de autorizaci�n recuperado RequestId=255ba716-2040-4d72-867b-3ec2e7825f5c TenantId=4d336d9c-12f3-4a65-9580-d55328d32728 Status=APPROVED TransactionId=SIM-TXN-8AC477DBEDD40FCC1006CB09 ElapsedMs=1.1813&#xD;
+info: POSCartService.Services.PaymentGatewayClient[0]&#xD;
+      Consultando estado de autorizaci�n RequestId=255ba716-2040-4d72-867b-3ec2e7825f5c TenantId=ca789697-a490-4388-869a-55311e11bc94&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[100]&#xD;
+      Start processing HTTP request GET http://127.0.0.1:59607/simulator/payments/255ba716-2040-4d72-867b-3ec2e7825f5c?tenant_id=ca789697-a490-4388-869a-55311e11bc94&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[100]&#xD;
+      Sending HTTP request GET http://127.0.0.1:59607/simulator/payments/255ba716-2040-4d72-867b-3ec2e7825f5c?tenant_id=ca789697-a490-4388-869a-55311e11bc94&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[101]&#xD;
+      Received HTTP response headers after 0.4985ms - 200&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[101]&#xD;
+      End processing HTTP request after 0.5343ms - 200&#xD;
+info: POSCartService.Services.PaymentGatewayClient[0]&#xD;
+      Estado de autorizaci�n recuperado RequestId=255ba716-2040-4d72-867b-3ec2e7825f5c TenantId=ca789697-a490-4388-869a-55311e11bc94 Status=APPROVED TransactionId=SIM-TXN-B8EA408F1341D7DC0CD15C3E ElapsedMs=0.5612&#xD;
+info: POSCartService.Services.OutboxPublisherWorker[0]&#xD;
+      Worker de outbox deshabilitado por configuraci�n&#xD;
+info: POSCartService.Services.PaymentGatewayClient[0]&#xD;
+      Iniciando pago por pasarela RequestId=7deef386-6f08-4522-87cc-6acff0480820 TenantId=f8c12700-e1a9-4faa-aa19-ab2ed8b90504 SaleId=3e35f01e-0c37-4dac-828d-622f56d2e199 ScenarioId=sim-approved-v1&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[100]&#xD;
+      Start processing HTTP request POST http://127.0.0.1:59649/simulator/payments&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[100]&#xD;
+      Sending HTTP request POST http://127.0.0.1:59649/simulator/payments&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[101]&#xD;
+      Received HTTP response headers after 3.1041ms - 200&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[101]&#xD;
+      End processing HTTP request after 3.1571ms - 200&#xD;
+info: POSCartService.Services.PaymentGatewayClient[0]&#xD;
+      Pago procesado por pasarela RequestId=7deef386-6f08-4522-87cc-6acff0480820 TenantId=f8c12700-e1a9-4faa-aa19-ab2ed8b90504 SaleId=3e35f01e-0c37-4dac-828d-622f56d2e199 ScenarioId=sim-approved-v1 Status=APPROVED TransactionId=SIM-TXN-57ED065AEA823C5C0E673AAF ElapsedMs=3.2145&#xD;
+info: POSCartService.Services.PaymentGatewayClient[0]&#xD;
+      Consultando estado de autorizaci�n RequestId=7deef386-6f08-4522-87cc-6acff0480820 TenantId=f8c12700-e1a9-4faa-aa19-ab2ed8b90504&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[100]&#xD;
+      Start processing HTTP request GET http://127.0.0.1:59649/simulator/payments/7deef386-6f08-4522-87cc-6acff0480820?tenant_id=f8c12700-e1a9-4faa-aa19-ab2ed8b90504&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[100]&#xD;
+      Sending HTTP request GET http://127.0.0.1:59649/simulator/payments/7deef386-6f08-4522-87cc-6acff0480820?tenant_id=f8c12700-e1a9-4faa-aa19-ab2ed8b90504&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[101]&#xD;
+      Received HTTP response headers after 1.0856ms - 200&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[101]&#xD;
+      End processing HTTP request after 1.1256ms - 200&#xD;
+info: POSCartService.Services.PaymentGatewayClient[0]&#xD;
+      Estado de autorizaci�n recuperado RequestId=7deef386-6f08-4522-87cc-6acff0480820 TenantId=f8c12700-e1a9-4faa-aa19-ab2ed8b90504 Status=APPROVED TransactionId=SIM-TXN-57ED065AEA823C5C0E673AAF ElapsedMs=1.1701&#xD;
+info: POSCartService.Services.PaymentGatewayClient[0]&#xD;
+      Consultando estado de autorizaci�n RequestId=7deef386-6f08-4522-87cc-6acff0480820 TenantId=f8c12700-e1a9-4faa-aa19-ab2ed8b90504&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[100]&#xD;
+      Start processing HTTP request GET http://127.0.0.1:59649/simulator/payments/7deef386-6f08-4522-87cc-6acff0480820?tenant_id=f8c12700-e1a9-4faa-aa19-ab2ed8b90504&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[100]&#xD;
+      Sending HTTP request GET http://127.0.0.1:59649/simulator/payments/7deef386-6f08-4522-87cc-6acff0480820?tenant_id=f8c12700-e1a9-4faa-aa19-ab2ed8b90504&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[101]&#xD;
+      Received HTTP response headers after 0.9909ms - 200&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[101]&#xD;
+      End processing HTTP request after 1.0515ms - 200&#xD;
+info: POSCartService.Services.PaymentGatewayClient[0]&#xD;
+      Estado de autorizaci�n recuperado RequestId=7deef386-6f08-4522-87cc-6acff0480820 TenantId=f8c12700-e1a9-4faa-aa19-ab2ed8b90504 Status=APPROVED TransactionId=SIM-TXN-57ED065AEA823C5C0E673AAF ElapsedMs=1.1252&#xD;
+info: POSCartService.Services.OutboxPublisherWorker[0]&#xD;
+      Worker de outbox deshabilitado por configuraci�n&#xD;
+info: POSCartService.Services.OutboxPublisherWorker[0]&#xD;
+      Worker de outbox deshabilitado por configuraci�n&#xD;
+info: POSCartService.Services.OutboxPublisherWorker[0]&#xD;
+      Worker de outbox deshabilitado por configuraci�n&#xD;
+info: POSCartService.Services.PaymentGatewayClient[0]&#xD;
+      Iniciando pago por pasarela RequestId=874e0403-cf65-4970-abf1-d4d268437468 TenantId=efbab1ed-401c-478d-b4d5-97b15432ca2b SaleId=037a7859-c3d2-40a0-98bf-61e1744aa4fd ScenarioId=sim-approved-v1&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[100]&#xD;
+      Start processing HTTP request POST http://127.0.0.1:59749/simulator/payments&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[100]&#xD;
+      Sending HTTP request POST http://127.0.0.1:59749/simulator/payments&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[101]&#xD;
+      Received HTTP response headers after 3.3925ms - 200&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[101]&#xD;
+      End processing HTTP request after 3.4401ms - 200&#xD;
+info: POSCartService.Services.PaymentGatewayClient[0]&#xD;
+      Pago procesado por pasarela RequestId=874e0403-cf65-4970-abf1-d4d268437468 TenantId=efbab1ed-401c-478d-b4d5-97b15432ca2b SaleId=037a7859-c3d2-40a0-98bf-61e1744aa4fd ScenarioId=sim-approved-v1 Status=APPROVED TransactionId=SIM-TXN-A34B0989D31837FE337F1EA1 ElapsedMs=3.4947&#xD;
+info: POSCartService.Controllers.VentasController[0]&#xD;
+      Venta 037a7859-c3d2-40a0-98bf-61e1744aa4fd cobrada con tarjeta. Ref: SIM-REF-A34B0989D31837FE337F1EA1, Auth: SIM-APPROVED&#xD;
+info: POSCartService.Services.OutboxPublisherWorker[0]&#xD;
+      Worker de outbox deshabilitado por configuraci�n&#xD;
+info: POSCartService.Services.PaymentGatewayClient[0]&#xD;
+      Iniciando pago por pasarela RequestId=75a75ca4-02e3-4ef8-820e-58abd719cf8a TenantId=0970aabe-7474-40e7-bdce-06c8386a7746 SaleId=a738dc6a-2dbb-49bb-99b4-434f05faaca9 ScenarioId=sim-timeout-v1&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[100]&#xD;
+      Start processing HTTP request POST http://127.0.0.1:59785/simulator/payments&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[100]&#xD;
+      Sending HTTP request POST http://127.0.0.1:59785/simulator/payments&#xD;
+%3|1792862915.520|FAIL|rdkafka#producer-23| [thrd:localhost:9092/bootstrap]: localhost:9092/bootstrap: Connect to ipv6#[::1]:9092 failed: Unknown error (after 2037ms in state CONNECT)&#xD;
+%3|1792862915.520|ERROR|rdkafka#producer-23| [thrd:localhost:9092/bootstrap]: 1/1 brokers are down&#xD;
+%3|1792862915.520|ERROR|rdkafka#producer-23| [thrd:app]: rdkafka#producer-23: localhost:9092/bootstrap: Connect to ipv6#[::1]:9092 failed: Unknown error (after 2037ms in state CONNECT)&#xD;
+warn: POSCartService.Services.PaymentGatewayClient[0]&#xD;
+      Timeout de pasarela RequestId=75a75ca4-02e3-4ef8-820e-58abd719cf8a TenantId=0970aabe-7474-40e7-bdce-06c8386a7746 SaleId=a738dc6a-2dbb-49bb-99b4-434f05faaca9 ScenarioId=sim-timeout-v1 Status=TIMED_OUT ElapsedMs=2012.0123&#xD;
+info: POSCartService.Services.PaymentGatewayClient[0]&#xD;
+      Consultando estado de autorizaci�n RequestId=75a75ca4-02e3-4ef8-820e-58abd719cf8a TenantId=0970aabe-7474-40e7-bdce-06c8386a7746&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[100]&#xD;
+      Start processing HTTP request GET http://127.0.0.1:59785/simulator/payments/75a75ca4-02e3-4ef8-820e-58abd719cf8a?tenant_id=0970aabe-7474-40e7-bdce-06c8386a7746&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[100]&#xD;
+      Sending HTTP request GET http://127.0.0.1:59785/simulator/payments/75a75ca4-02e3-4ef8-820e-58abd719cf8a?tenant_id=0970aabe-7474-40e7-bdce-06c8386a7746&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[101]&#xD;
+      Received HTTP response headers after 1.6119ms - 404&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[101]&#xD;
+      End processing HTTP request after 1.671ms - 404&#xD;
+warn: POSCartService.Services.PaymentGatewayClient[0]&#xD;
+      Estado de autorizaci�n desconocido RequestId=75a75ca4-02e3-4ef8-820e-58abd719cf8a TenantId=0970aabe-7474-40e7-bdce-06c8386a7746 Status=UNKNOWN ElapsedMs=1.7035&#xD;
+warn: POSCartService.Controllers.VentasController[0]&#xD;
+      Timeout al comunicarse con la pasarela para venta a738dc6a-2dbb-49bb-99b4-434f05faaca9&#xD;
+      POSCartService.Exceptions.PaymentAuthorizationUncertainException: La autorizaci�n no respondi� y su estado no pudo confirmarse para RequestId=75a75ca4-02e3-4ef8-820e-58abd719cf8a. No se debe iniciar otro cobro autom�ticamente.&#xD;
+       ---&gt; System.Threading.Tasks.TaskCanceledException: The request was canceled due to the configured HttpClient.Timeout of 2 seconds elapsing.&#xD;
+       ---&gt; System.TimeoutException: The operation was canceled.&#xD;
+       ---&gt; System.Threading.Tasks.TaskCanceledException: The operation was canceled.&#xD;
+       ---&gt; System.IO.IOException: Unable to read data from the transport connection: La operaci�n de E/S se anul� por una salida de subproceso o por una solicitud de aplicaci�n..&#xD;
+       ---&gt; System.Net.Sockets.SocketException (995): La operaci�n de E/S se anul� por una salida de subproceso o por una solicitud de aplicaci�n.&#xD;
+         --- End of inner exception stack trace ---&#xD;
+         at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)&#xD;
+         at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource&lt;System.Int32&gt;.GetResult(Int16 token)&#xD;
+         at System.Net.Http.HttpConnection.InitialFillAsync(Boolean async)&#xD;
+         at System.Net.Http.HttpConnection.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)&#xD;
+         --- End of inner exception stack trace ---&#xD;
+         at System.Net.Http.HttpConnection.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)&#xD;
+         at System.Net.Http.HttpConnectionPool.SendWithVersionDetectionAndRetryAsync(HttpRequestMessage request, Boolean async, Boolean doRequestAuth, CancellationToken cancellationToken)&#xD;
+         at System.Net.Http.DiagnosticsHandler.SendAsyncCore(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)&#xD;
+         at System.Net.Http.RedirectHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)&#xD;
+         at Microsoft.Extensions.Http.Logging.LoggingHttpMessageHandler.&lt;SendCoreAsync&gt;g__Core|5_0(HttpRequestMessage request, Boolean useAsync, CancellationToken cancellationToken)&#xD;
+         at GlobalMart.IntegrationTests.CobroSeguroIntegrationTests.GatewayTraffic.SendAsync(HttpRequestMessage request, CancellationToken ct) in C:\Users\dp877\Desktop\Universidad\Semestre 6\TallerIntegra3\TallerIntegracion3\tests\GlobalMart.IntegrationTests\CobroSeguroIntegrationTests.cs:line 570&#xD;
+         at Microsoft.Extensions.Http.Logging.LoggingScopeHttpMessageHandler.&lt;SendCoreAsync&gt;g__Core|5_0(HttpRequestMessage request, Boolean useAsync, CancellationToken cancellationToken)&#xD;
+         at System.Net.Http.HttpClient.&lt;SendAsync&gt;g__Core|83_0(HttpRequestMessage request, HttpCompletionOption completionOption, CancellationTokenSource cts, Boolean disposeCts, CancellationTokenSource pendingRequestsCts, CancellationToken originalCancellationToken)&#xD;
+         --- End of inner exception stack trace ---&#xD;
+         --- End of inner exception stack trace ---&#xD;
+         at System.Net.Http.HttpClient.HandleFailure(Exception e, Boolean telemetryStarted, HttpResponseMessage response, CancellationTokenSource cts, CancellationToken cancellationToken, CancellationTokenSource pendingRequestsCts)&#xD;
+         at System.Net.Http.HttpClient.&lt;SendAsync&gt;g__Core|83_0(HttpRequestMessage request, HttpCompletionOption completionOption, CancellationTokenSource cts, Boolean disposeCts, CancellationTokenSource pendingRequestsCts, CancellationToken originalCancellationToken)&#xD;
+         at POSCartService.Services.PaymentGatewayClient.ProcessPaymentAsync(PaymentGatewayRequest request, CancellationToken cancellationToken) in C:\Users\dp877\Desktop\Universidad\Semestre 6\TallerIntegra3\TallerIntegracion3\src\POSCartService\Services\PaymentGatewayClient.cs:line 55&#xD;
+         --- End of inner exception stack trace ---&#xD;
+         at POSCartService.Services.PaymentGatewayClient.ProcessPaymentAsync(PaymentGatewayRequest request, CancellationToken cancellationToken) in C:\Users\dp877\Desktop\Universidad\Semestre 6\TallerIntegra3\TallerIntegracion3\src\POSCartService\Services\PaymentGatewayClient.cs:line 93&#xD;
+         at POSCartService.Controllers.VentasController.CobrarTarjeta(Guid id, CobrarTarjetaRequest request, CancellationToken cancellationToken) in C:\Users\dp877\Desktop\Universidad\Semestre 6\TallerIntegra3\TallerIntegracion3\src\POSCartService\Controllers\VentasController.cs:line 894&#xD;
+info: POSCartService.Services.OutboxPublisherWorker[0]&#xD;
+      Worker de outbox deshabilitado por configuraci�n&#xD;
+info: POSCartService.Services.PaymentGatewayClient[0]&#xD;
+      Iniciando pago por pasarela RequestId=3122db71-b606-4ed7-87b9-4ed9d2984a34 TenantId=b9b66b20-0f56-46a4-a95c-4f0b275423a8 SaleId=edcbb323-b4df-4a2f-a187-5e992ce68cb9 ScenarioId=sim-approved-v1&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[100]&#xD;
+      Start processing HTTP request POST http://127.0.0.1:59819/simulator/payments&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[100]&#xD;
+      Sending HTTP request POST http://127.0.0.1:59819/simulator/payments&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[101]&#xD;
+      Received HTTP response headers after 3.1265ms - 200&#xD;
+%3|1792862918.508|FAIL|rdkafka#producer-24| [thrd:localhost:9092/bootstrap]: localhost:9092/bootstrap: Connect to ipv4#127.0.0.1:9092 failed: Unknown error (after 2040ms in state CONNECT)&#xD;
+%3|1792862918.508|ERROR|rdkafka#producer-24| [thrd:localhost:9092/bootstrap]: 1/1 brokers are down&#xD;
+%3|1792862918.508|ERROR|rdkafka#producer-24| [thrd:app]: rdkafka#producer-24: localhost:9092/bootstrap: Connect to ipv4#127.0.0.1:9092 failed: Unknown error (after 2040ms in state CONNECT)&#xD;
+warn: POSCartService.Services.PaymentGatewayClient[0]&#xD;
+      Timeout de pasarela RequestId=3122db71-b606-4ed7-87b9-4ed9d2984a34 TenantId=b9b66b20-0f56-46a4-a95c-4f0b275423a8 SaleId=edcbb323-b4df-4a2f-a187-5e992ce68cb9 ScenarioId=sim-approved-v1 Status=TIMED_OUT ElapsedMs=2002.1437&#xD;
+info: POSCartService.Services.PaymentGatewayClient[0]&#xD;
+      Consultando estado de autorizaci�n RequestId=3122db71-b606-4ed7-87b9-4ed9d2984a34 TenantId=b9b66b20-0f56-46a4-a95c-4f0b275423a8&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[100]&#xD;
+      Start processing HTTP request GET http://127.0.0.1:59819/simulator/payments/3122db71-b606-4ed7-87b9-4ed9d2984a34?tenant_id=b9b66b20-0f56-46a4-a95c-4f0b275423a8&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[100]&#xD;
+      Sending HTTP request GET http://127.0.0.1:59819/simulator/payments/3122db71-b606-4ed7-87b9-4ed9d2984a34?tenant_id=b9b66b20-0f56-46a4-a95c-4f0b275423a8&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[101]&#xD;
+      Received HTTP response headers after 1.1857ms - 200&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[101]&#xD;
+      End processing HTTP request after 1.2232ms - 200&#xD;
+info: POSCartService.Services.PaymentGatewayClient[0]&#xD;
+      Estado de autorizaci�n recuperado RequestId=3122db71-b606-4ed7-87b9-4ed9d2984a34 TenantId=b9b66b20-0f56-46a4-a95c-4f0b275423a8 Status=APPROVED TransactionId=SIM-TXN-D5914935AD9A62EA07AE288E ElapsedMs=1.2626&#xD;
+info: POSCartService.Services.PaymentGatewayClient[0]&#xD;
+      Autorizaci�n reconciliada tras timeout RequestId=3122db71-b606-4ed7-87b9-4ed9d2984a34 TenantId=b9b66b20-0f56-46a4-a95c-4f0b275423a8 Status=APPROVED TransactionId=SIM-TXN-D5914935AD9A62EA07AE288E&#xD;
+info: POSCartService.Controllers.VentasController[0]&#xD;
+      Venta edcbb323-b4df-4a2f-a187-5e992ce68cb9 cobrada con tarjeta. Ref: SIM-REF-D5914935AD9A62EA07AE288E, Auth: SIM-APPROVED&#xD;
+info: POSCartService.Services.OutboxPublisherWorker[0]&#xD;
+      Worker de outbox deshabilitado por configuraci�n&#xD;
+info: POSCartService.Services.PaymentGatewayClient[0]&#xD;
+      Iniciando pago por pasarela RequestId=1d8b3dbe-4b70-4a73-9f7e-4e6b011e7fdd TenantId=28b5f1cc-f9dc-4316-86b9-beb59fec5dc0 SaleId=0190fb36-70cf-4202-8e46-c9ad6239e4e0 ScenarioId=sim-declined-v1&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[100]&#xD;
+      Start processing HTTP request POST http://127.0.0.1:59848/simulator/payments&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[100]&#xD;
+      Sending HTTP request POST http://127.0.0.1:59848/simulator/payments&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[101]&#xD;
+      Received HTTP response headers after 3.3817ms - 200&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[101]&#xD;
+      End processing HTTP request after 3.4195ms - 200&#xD;
+info: POSCartService.Services.PaymentGatewayClient[0]&#xD;
+      Pago procesado por pasarela RequestId=1d8b3dbe-4b70-4a73-9f7e-4e6b011e7fdd TenantId=28b5f1cc-f9dc-4316-86b9-beb59fec5dc0 SaleId=0190fb36-70cf-4202-8e46-c9ad6239e4e0 ScenarioId=sim-declined-v1 Status=DECLINED TransactionId=SIM-TXN-ADC4CF01C7107035EF20485F ElapsedMs=3.477&#xD;
+warn: POSCartService.Controllers.VentasController[0]&#xD;
+      Pago rechazado para venta 0190fb36-70cf-4202-8e46-c9ad6239e4e0. Status: DECLINED, Decline: DO_NOT_HONOR&#xD;
+info: POSCartService.Services.PaymentGatewayClient[0]&#xD;
+      Iniciando pago por pasarela RequestId=f4a4e097-6cd3-4358-b388-591290b87119 TenantId=28b5f1cc-f9dc-4316-86b9-beb59fec5dc0 SaleId=0190fb36-70cf-4202-8e46-c9ad6239e4e0 ScenarioId=sim-approved-v1&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[100]&#xD;
+      Start processing HTTP request POST http://127.0.0.1:59848/simulator/payments&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[100]&#xD;
+      Sending HTTP request POST http://127.0.0.1:59848/simulator/payments&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[101]&#xD;
+      Received HTTP response headers after 3.1711ms - 200&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[101]&#xD;
+      End processing HTTP request after 3.2768ms - 200&#xD;
+info: POSCartService.Services.PaymentGatewayClient[0]&#xD;
+      Pago procesado por pasarela RequestId=f4a4e097-6cd3-4358-b388-591290b87119 TenantId=28b5f1cc-f9dc-4316-86b9-beb59fec5dc0 SaleId=0190fb36-70cf-4202-8e46-c9ad6239e4e0 ScenarioId=sim-approved-v1 Status=APPROVED TransactionId=SIM-TXN-E77810D9FFCB6568E92C88E4 ElapsedMs=3.3924&#xD;
+info: POSCartService.Controllers.VentasController[0]&#xD;
+      Venta 0190fb36-70cf-4202-8e46-c9ad6239e4e0 cobrada con tarjeta. Ref: SIM-REF-E77810D9FFCB6568E92C88E4, Auth: SIM-APPROVED&#xD;
+[xUnit.net 00:01:14.59]   Finished:    GlobalMart.IntegrationTests&#xD;
+</StdOut>
+    </Output>
+  </ResultSummary>
+</TestRun>
