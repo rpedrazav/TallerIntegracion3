@@ -3,7 +3,7 @@ id: estado-actual
 tipo: indice
 titulo: Estado Real de Implementación — GlobalMart OS
 estado: vigente
-fuentes: [docs/context/_reports/inventario.md, src/, globalmart-frontend/src/api/client.ts, globalmart-frontend/src/hardware/simulated-scale-adapter.ts, globalmart-frontend/src/hardware/scale-adapter-factory.ts, globalmart-frontend/tests/simulated-scale-adapter.test.cjs, git log, docs/context/_reports/preguntas-abiertas.md, tests/GlobalMart.IntegrationTests/CobroSeguroIntegrationTests.cs, docs/qa/S2-035/reporte.md, new-ingresses.yaml]
+fuentes: [docs/context/_reports/inventario.md, src/, globalmart-frontend/src/api/client.ts, globalmart-frontend/src/hardware/simulated-scale-adapter.ts, globalmart-frontend/src/hardware/scale-adapter-factory.ts, globalmart-frontend/src/hardware/scale-ipc.ts, globalmart-frontend/src/preload.ts, globalmart-frontend/tests/simulated-scale-adapter.test.cjs, globalmart-frontend/tests/scale-ipc.test.cjs, git log, docs/context/_reports/preguntas-abiertas.md, tests/GlobalMart.IntegrationTests/CobroSeguroIntegrationTests.cs, docs/qa/S2-035/reporte.md, new-ingresses.yaml]
 verificado_contra_codigo: true
 ultima_revision: 2026-10-25
 depende_de: []
@@ -386,8 +386,12 @@ Verificación final S2-064: recompilación Release y **33/33 casos S2-064/S2-063
 
 ## S2-066 / TI3-697 — Definir interfaz de balanza
 
-[IMPLEMENTADO] Contrato TypeScript independiente del dispositivo en `globalmart-frontend/src/hardware/scale-contract.ts`: conectar, desconectar, consultar estado y leer peso estable; estados cerrados de conexión/lectura, errores tipados y lectura canónica en kg. `ScaleRendererApi` no contiene ruta serial, baud rate ni objetos Node. Typecheck y prueba estática aprobados el 2026-10-24; la prueba confirma que renderer y contrato no acceden a `serialport`, `navigator.serial` ni `SerialPort`. IPC y adaptador serial siguen [PLANIFICADOS]. [Detalle](integraciones/hardware.md).
+[IMPLEMENTADO] Contrato TypeScript independiente del dispositivo en `globalmart-frontend/src/hardware/scale-contract.ts`: conectar, desconectar, consultar estado y leer peso estable; estados cerrados de conexión/lectura, errores tipados y lectura canónica en kg. `ScaleRendererApi` no contiene ruta serial, baud rate ni objetos Node. Typecheck y prueba estática aprobados el 2026-10-24; la prueba confirma que renderer y contrato no acceden a `serialport`, `navigator.serial` ni `SerialPort`. El IPC se implementó en S2-068; el adaptador serial sigue [PLANIFICADO]. [Detalle](integraciones/hardware.md).
 
 ## S2-067 / TI3-698 — Implementar adaptador de balanza simulada
 
-[IMPLEMENTADO] `SimulatedScaleAdapter` implementa el contrato común con escenarios deterministas de peso estable, desconexión y error, sin hardware. Convierte `g` a `kg`, valida mínimo de 10 g y precisión de 1 g, y devuelve estados/errores serializables. La fábrica selecciona `simulator` por defecto mediante `GLOBALMART_SCALE_ADAPTER` y admite la inyección posterior del driver `serial` sin cambiar consumidores. Typecheck y pruebas dirigidas aprobados el 2026-10-24. La entrega a la UI mediante IPC sigue [PLANIFICADA] en S2-068. [Detalle](integraciones/hardware.md).
+[IMPLEMENTADO] `SimulatedScaleAdapter` implementa el contrato común con escenarios deterministas de peso estable, desconexión y error, sin hardware. Convierte `g` a `kg`, valida mínimo de 10 g y precisión de 1 g, y devuelve estados/errores serializables. La fábrica selecciona `simulator` por defecto mediante `GLOBALMART_SCALE_ADAPTER` y admite la inyección posterior del driver `serial` sin cambiar consumidores. Typecheck y pruebas dirigidas aprobados el 2026-10-24. La entrega mediante IPC se implementó en S2-068; su consumo visual sigue pendiente. [Detalle](integraciones/hardware.md).
+
+## S2-068 / TI3-699 — Exponer IPC mínimo y validado
+
+[IMPLEMENTADO] Electron main registra exclusivamente `scale:connect`, `scale:disconnect`, `scale:read-stable` y `scale:get-state`; preload los expone como `window.api.scale` con `ScaleRendererApi`. No existe invocación genérica ni parámetros de puerto/comando; el renderer mantiene aislamiento, sandbox y Node.js deshabilitado. La lectura admite solo `timeoutMs` y `stabilityWindowMs` enteros entre 0 y 60.000 ms; cualquier otra propiedad se rechaza antes del adaptador. Typecheck y 10/10 pruebas de contrato, simulador e IPC aprobadas el 2026-10-25. Integración visual React y hardware físico [NO VERIFICADOS]. [Detalle](frontend/electron-ipc.md).

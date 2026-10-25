@@ -5,7 +5,7 @@ titulo: Frontend — Estructura del Proyecto Electron + React
 estado: parcial
 fuentes: [globalmart-frontend/src/, globalmart-frontend/package.json, globalmart-frontend/forge.config.ts]
 verificado_contra_codigo: true
-ultima_revision: 2026-10-24
+ultima_revision: 2026-10-25
 depende_de: [stack, ms1-identity, guia-estilo]
 publica: []
 consume: []
@@ -47,7 +47,8 @@ globalmart-frontend/
 │   ├── hardware/
 │   │   ├── scale-contract.ts  Contrato tipado de balanza física/simulada
 │   │   ├── simulated-scale-adapter.ts  Escenarios deterministas sin hardware
-│   │   └── scale-adapter-factory.ts  Selección de driver por configuración
+│   │   ├── scale-adapter-factory.ts  Selección de driver por configuración
+│   │   └── scale-ipc.ts  Whitelist, validación y handlers IPC
 │   └── types/
 │       └── global.d.ts   Tipos globales TypeScript
 ├── package.json          Dependencias (Electron, React, axios, etc.)
@@ -90,7 +91,7 @@ globalmart-frontend/
 3. **Cobro no implementado:** `handleCheckout()` muestra `alert('Funcionalidad de cobro se implementará en el futuro.')`.
 4. **Sin RoleSwitcher:** No hay componente para cambiar el rol activo.
 5. **Turnos:** Las páginas de apertura y cierre usan MS-5; el carrito POS aún no crea ventas.
-6. **Hardware parcial:** Existen el contrato tipado, el adaptador simulado y la fábrica configurable de balanza; no hay adaptador SerialPort, IPC ni integración visual.
+6. **Hardware parcial:** Existen el contrato tipado, el adaptador simulado, la fábrica configurable y el IPC mínimo de balanza; no hay adaptador SerialPort ni integración visual en React.
 
 ## Conexiones
 - Autenticación: [[auth-y-roles]]
@@ -106,4 +107,5 @@ globalmart-frontend/
 - `globalmart-frontend/src/hardware/scale-contract.ts`
 - `globalmart-frontend/src/hardware/simulated-scale-adapter.ts`
 - `globalmart-frontend/src/hardware/scale-adapter-factory.ts`
+- `globalmart-frontend/src/hardware/scale-ipc.ts`
 - `globalmart-frontend/package.json`
