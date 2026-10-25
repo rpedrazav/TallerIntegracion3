@@ -82,7 +82,7 @@ export interface ScaleAdapter {
   getState(): Promise<ScaleState>;
 }
 
-/** API serializable que un preload futuro podrá exponer mediante contextBridge. */
+/** API serializable expuesta por preload mediante contextBridge. */
 export type ScaleRendererApi = Pick<
   ScaleAdapter,
   'connect' | 'disconnect' | 'readStableWeight' | 'getState'

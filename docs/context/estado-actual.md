@@ -3,7 +3,7 @@ id: estado-actual
 tipo: indice
 titulo: Estado Real de Implementación — GlobalMart OS
 estado: vigente
-fuentes: [docs/context/_reports/inventario.md, src/, globalmart-frontend/src/api/client.ts, globalmart-frontend/src/hardware/simulated-scale-adapter.ts, globalmart-frontend/src/hardware/scale-adapter-factory.ts, globalmart-frontend/src/hardware/scale-ipc.ts, globalmart-frontend/src/preload.ts, globalmart-frontend/tests/simulated-scale-adapter.test.cjs, globalmart-frontend/tests/scale-ipc.test.cjs, git log, docs/context/_reports/preguntas-abiertas.md, tests/GlobalMart.IntegrationTests/CobroSeguroIntegrationTests.cs, docs/qa/S2-035/reporte.md, new-ingresses.yaml]
+fuentes: [docs/context/_reports/inventario.md, src/, globalmart-frontend/src/api/client.ts, globalmart-frontend/src/hardware/simulated-scale-adapter.ts, globalmart-frontend/src/hardware/serial-scale-adapter.ts, globalmart-frontend/src/hardware/scale-adapter-factory.ts, globalmart-frontend/src/hardware/scale-ipc.ts, globalmart-frontend/src/preload.ts, globalmart-frontend/tests/simulated-scale-adapter.test.cjs, globalmart-frontend/tests/serial-scale-adapter.test.cjs, globalmart-frontend/tests/scale-ipc.test.cjs, git log, docs/context/_reports/preguntas-abiertas.md, tests/GlobalMart.IntegrationTests/CobroSeguroIntegrationTests.cs, docs/qa/S2-035/reporte.md, new-ingresses.yaml]
 verificado_contra_codigo: true
 ultima_revision: 2026-10-25
 depende_de: []
@@ -386,7 +386,7 @@ Verificación final S2-064: recompilación Release y **33/33 casos S2-064/S2-063
 
 ## S2-066 / TI3-697 — Definir interfaz de balanza
 
-[IMPLEMENTADO] Contrato TypeScript independiente del dispositivo en `globalmart-frontend/src/hardware/scale-contract.ts`: conectar, desconectar, consultar estado y leer peso estable; estados cerrados de conexión/lectura, errores tipados y lectura canónica en kg. `ScaleRendererApi` no contiene ruta serial, baud rate ni objetos Node. Typecheck y prueba estática aprobados el 2026-10-24; la prueba confirma que renderer y contrato no acceden a `serialport`, `navigator.serial` ni `SerialPort`. El IPC se implementó en S2-068; el adaptador serial sigue [PLANIFICADO]. [Detalle](integraciones/hardware.md).
+[IMPLEMENTADO] Contrato TypeScript independiente del dispositivo en `globalmart-frontend/src/hardware/scale-contract.ts`: conectar, desconectar, consultar estado y leer peso estable; estados cerrados de conexión/lectura, errores tipados y lectura canónica en kg. `ScaleRendererApi` no contiene ruta serial, baud rate ni objetos Node. Typecheck y prueba estática aprobados el 2026-10-24; la prueba confirma que renderer y contrato no acceden a `serialport`, `navigator.serial` ni `SerialPort`. El IPC se implementó en S2-068 y la estructura serial intercambiable en S2-069; compatibilidad física [NO VERIFICADA]. [Detalle](integraciones/hardware.md).
 
 ## S2-067 / TI3-698 — Implementar adaptador de balanza simulada
 
@@ -395,3 +395,7 @@ Verificación final S2-064: recompilación Release y **33/33 casos S2-064/S2-063
 ## S2-068 / TI3-699 — Exponer IPC mínimo y validado
 
 [IMPLEMENTADO] Electron main registra exclusivamente `scale:connect`, `scale:disconnect`, `scale:read-stable` y `scale:get-state`; preload los expone como `window.api.scale` con `ScaleRendererApi`. No existe invocación genérica ni parámetros de puerto/comando; el renderer mantiene aislamiento, sandbox y Node.js deshabilitado. La lectura admite solo `timeoutMs` y `stabilityWindowMs` enteros entre 0 y 60.000 ms; cualquier otra propiedad se rechaza antes del adaptador. Typecheck y 10/10 pruebas de contrato, simulador e IPC aprobadas el 2026-10-25. Integración visual React y hardware físico [NO VERIFICADOS]. [Detalle](frontend/electron-ipc.md).
+
+## S2-069 / TI3-700 — Preparar adaptador serial intercambiable
+
+[IMPLEMENTADO SIN HARDWARE] `SerialScaleAdapter` implementa el contrato común con `SerialScaleTransport` y `SerialScaleParser` inyectables. Puerto, baud rate e identificador de parser permanecen en Electron main; el renderer conserva sin cambios `window.api.scale`. El driver predeterminado sigue siendo `simulator`; `serial` requiere configuración completa y un proveedor que permanece deshabilitado. No se agregó `serialport` ni un protocolo de fabricante, por lo que no se afirma compatibilidad física. Typecheck y 15/15 pruebas de balanza/IPC aprobadas el 2026-10-25; hardware real [NO VERIFICADO]. [Detalle](integraciones/hardware.md).

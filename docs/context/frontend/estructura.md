@@ -47,6 +47,7 @@ globalmart-frontend/
 │   ├── hardware/
 │   │   ├── scale-contract.ts  Contrato tipado de balanza física/simulada
 │   │   ├── simulated-scale-adapter.ts  Escenarios deterministas sin hardware
+│   │   ├── serial-scale-adapter.ts  Transporte/parser inyectables, sin driver real
 │   │   ├── scale-adapter-factory.ts  Selección de driver por configuración
 │   │   └── scale-ipc.ts  Whitelist, validación y handlers IPC
 │   └── types/
@@ -91,7 +92,7 @@ globalmart-frontend/
 3. **Cobro no implementado:** `handleCheckout()` muestra `alert('Funcionalidad de cobro se implementará en el futuro.')`.
 4. **Sin RoleSwitcher:** No hay componente para cambiar el rol activo.
 5. **Turnos:** Las páginas de apertura y cierre usan MS-5; el carrito POS aún no crea ventas.
-6. **Hardware parcial:** Existen el contrato tipado, el adaptador simulado, la fábrica configurable y el IPC mínimo de balanza; no hay adaptador SerialPort ni integración visual en React.
+6. **Hardware parcial:** Existen contrato, simulador, estructura serial intercambiable, fábrica e IPC mínimo. No hay dependencia `serialport`, parser de fabricante, verificación física ni integración visual en React.
 
 ## Conexiones
 - Autenticación: [[auth-y-roles]]
@@ -106,6 +107,7 @@ globalmart-frontend/
 - `globalmart-frontend/src/pages/Pos.tsx`
 - `globalmart-frontend/src/hardware/scale-contract.ts`
 - `globalmart-frontend/src/hardware/simulated-scale-adapter.ts`
+- `globalmart-frontend/src/hardware/serial-scale-adapter.ts`
 - `globalmart-frontend/src/hardware/scale-adapter-factory.ts`
 - `globalmart-frontend/src/hardware/scale-ipc.ts`
 - `globalmart-frontend/package.json`

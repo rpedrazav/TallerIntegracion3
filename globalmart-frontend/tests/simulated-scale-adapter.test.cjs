@@ -132,14 +132,18 @@ test('entrega error controlado y rechaza lecturas de peso inválidas', async () 
 
 test('permite inyectar el adaptador serial futuro sin cambiar al consumidor', () => {
   const serialAdapter = { marker: 'serial-placeholder' };
+  const configuration = {
+    driver: 'serial',
+    serial: { portPath: 'TEST-PORT', baudRate: 9_600, parserId: 'test-parser' },
+  };
   const selected = createScaleAdapter(
-    { driver: 'serial' },
+    configuration,
     { createSerialAdapter: () => serialAdapter },
   );
 
   assert.equal(selected, serialAdapter);
   assert.throws(
-    () => createScaleAdapter({ driver: 'serial' }),
-    /todavía no está disponible/,
+    () => createScaleAdapter(configuration),
+    /proveedor está deshabilitado/,
   );
 });

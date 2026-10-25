@@ -127,7 +127,7 @@ Inspección de código, 2026-10-24:
 - [PENDIENTE] Exponer/resolver unidad del catálogo: `ProductoCatalogDto` no incluye `UomBaseId`. Definir la correspondencia real y validar precio por kg.
 - [IMPLEMENTADO — S2-063] Se conserva la precisión del precio persistido y MS-2 redondea subtotal e IVA por línea antes de sumar la venta.
 - [PENDIENTE] Aplicar las validaciones completas de peso en crear venta y probarlas mediante HTTP/persistencia.
-- [IMPLEMENTADO — S2-067] El simulador recibe unidad explícita `g`/`kg`, convierte una sola vez a kg y rechaza valores menores a 10 g o con fracciones inferiores a 1 g. La prueba dirigida verifica `750 g → 0.750 kg`; la aceptación E2E mediante IPC/UI sigue pendiente.
+- [IMPLEMENTADO — S2-067/S2-069] El simulador y el adaptador serial abstracto reciben unidad explícita `g`/`kg`, convierten una sola vez a kg y rechazan valores menores a 10 g o con fracciones inferiores a 1 g. Pruebas con dobles verifican `750 g → 0.750 kg`; la aceptación E2E mediante UI/hardware sigue pendiente.
 
 Validación S2-062 del 2026-10-24: **20/20 casos nuevos aprobados** más 12 de regresión, limitados a agregar ítems. [Reporte y evidencia](../../qa/S2-062/reporte.md).
 
@@ -139,6 +139,7 @@ Validación S2-062 del 2026-10-24: **20/20 casos nuevos aprobados** más 12 de r
 - [Modelo de catálogo](../../../src/CatalogPricingService/Models/Producto.cs)
 - [Persistencia MS-5](../../../src/POSCartService/Data/PosCartDbContext.cs)
 - [Adaptador simulado](../../../globalmart-frontend/src/hardware/simulated-scale-adapter.ts)
+- [Adaptador serial abstracto](../../../globalmart-frontend/src/hardware/serial-scale-adapter.ts)
 - [MS-5](../servicios/ms5-pos.md), [MS-3](../servicios/ms3-catalog.md), [hardware](../integraciones/hardware.md)
 
 Validación S2-063 del 2026-10-24: **42/42 pruebas Release aprobadas** (10 nuevas, 32 de regresión), con PostgreSQL temporal, HTTP MS-5 y calculador productivo MS-2 a través de handler HTTP. Regresión manual TC-01 aprobada. [Evidencia y límites](../../qa/S2-063/reporte.md).

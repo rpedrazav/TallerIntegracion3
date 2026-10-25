@@ -3,7 +3,7 @@ id: electron-ipc
 tipo: frontend
 titulo: Electron IPC — Comunicación Main/Renderer
 estado: parcial
-fuentes: [globalmart-frontend/src/preload.ts, globalmart-frontend/src/index.ts, globalmart-frontend/src/types/global.d.ts, globalmart-frontend/src/hardware/scale-contract.ts, globalmart-frontend/src/hardware/simulated-scale-adapter.ts, globalmart-frontend/src/hardware/scale-adapter-factory.ts, globalmart-frontend/src/hardware/scale-ipc.ts, globalmart-frontend/tests/scale-contract.test.cjs, globalmart-frontend/tests/simulated-scale-adapter.test.cjs, globalmart-frontend/tests/scale-ipc.test.cjs]
+fuentes: [globalmart-frontend/src/preload.ts, globalmart-frontend/src/index.ts, globalmart-frontend/src/types/global.d.ts, globalmart-frontend/src/hardware/scale-contract.ts, globalmart-frontend/src/hardware/simulated-scale-adapter.ts, globalmart-frontend/src/hardware/serial-scale-adapter.ts, globalmart-frontend/src/hardware/scale-adapter-factory.ts, globalmart-frontend/src/hardware/scale-ipc.ts, globalmart-frontend/tests/scale-contract.test.cjs, globalmart-frontend/tests/simulated-scale-adapter.test.cjs, globalmart-frontend/tests/serial-scale-adapter.test.cjs, globalmart-frontend/tests/scale-ipc.test.cjs]
 verificado_contra_codigo: true
 ultima_revision: 2026-10-25
 depende_de: [estructura]
@@ -42,7 +42,7 @@ Según `diagramas/rodrigo/R1_screen_flow_electron.drawio.png`:
 
 ## Contrato de balanza por IPC (S2-066)
 
-`ScaleRendererApi` define únicamente operaciones de alto nivel: conectar, desconectar, consultar estado y leer peso estable. No contiene ruta de puerto, baud rate ni objetos de `serialport`. `SimulatedScaleAdapter` implementa `ScaleAdapter`, Electron main lo selecciona por configuración y S2-068 conecta sus métodos con `ipcMain` y `contextBridge`. El adaptador físico sigue planificado.
+`ScaleRendererApi` define únicamente operaciones de alto nivel: conectar, desconectar, consultar estado y leer peso estable. No contiene ruta de puerto, baud rate ni objetos de `serialport`. `SimulatedScaleAdapter` y la estructura `SerialScaleAdapter` implementan el mismo contrato; Electron main selecciona el driver por configuración y S2-068 conecta sus métodos con `ipcMain` y `contextBridge`. El transporte/parser físico sigue deshabilitado y [NO VERIFICADO].
 
 ```typescript
 // Implementado en preload: delegación exclusiva por canales constantes.
@@ -60,6 +60,8 @@ const scaleApi: ScaleRendererApi = {
 
 El único payload permitido corresponde a `readStableWeight`: objeto opcional con `timeoutMs` y `stabilityWindowMs`, ambos enteros entre 0 y 60.000 ms. Cualquier ruta de puerto, comando serial, propiedad desconocida, arreglo o valor fuera de rango se rechaza antes de alcanzar el adaptador.
 
+S2-069 no cambia esta superficie: puerto, baud rate y parser se resuelven únicamente en main. Cambiar entre simulador y serial no requiere modificar preload, IPC, tipos globales ni componentes React.
+
 ## Conexiones
 - Estructura: [[estructura]]
 - Hardware: [[hardware]]
@@ -70,10 +72,12 @@ El único payload permitido corresponde a `readStableWeight`: objeto opcional co
 - `globalmart-frontend/src/index.ts`
 - `globalmart-frontend/src/hardware/scale-contract.ts`
 - `globalmart-frontend/src/hardware/simulated-scale-adapter.ts`
+- `globalmart-frontend/src/hardware/serial-scale-adapter.ts`
 - `globalmart-frontend/src/hardware/scale-adapter-factory.ts`
 - `globalmart-frontend/src/hardware/scale-ipc.ts`
 - `globalmart-frontend/src/types/global.d.ts`
 - `globalmart-frontend/tests/scale-contract.test.cjs`
 - `globalmart-frontend/tests/simulated-scale-adapter.test.cjs`
+- `globalmart-frontend/tests/serial-scale-adapter.test.cjs`
 - `globalmart-frontend/tests/scale-ipc.test.cjs`
 - `diagramas/rodrigo/R1_screen_flow_electron.drawio.png`

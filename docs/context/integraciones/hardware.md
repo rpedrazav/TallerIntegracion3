@@ -3,7 +3,7 @@ id: hardware
 tipo: integracion
 titulo: Integración con Hardware — Balanza y Terminal POS
 estado: parcial
-fuentes: [GlobalMart_ContextMaster.md#sec12, diagramas/rodrigo/, globalmart-frontend/src/index.ts, globalmart-frontend/src/preload.ts, globalmart-frontend/src/hardware/scale-contract.ts, globalmart-frontend/src/hardware/simulated-scale-adapter.ts, globalmart-frontend/src/hardware/scale-adapter-factory.ts, globalmart-frontend/src/hardware/scale-ipc.ts, globalmart-frontend/tests/scale-contract.test.cjs, globalmart-frontend/tests/simulated-scale-adapter.test.cjs, globalmart-frontend/tests/scale-ipc.test.cjs]
+fuentes: [GlobalMart_ContextMaster.md#sec12, diagramas/rodrigo/, globalmart-frontend/src/index.ts, globalmart-frontend/src/preload.ts, globalmart-frontend/src/hardware/scale-contract.ts, globalmart-frontend/src/hardware/simulated-scale-adapter.ts, globalmart-frontend/src/hardware/serial-scale-adapter.ts, globalmart-frontend/src/hardware/scale-adapter-factory.ts, globalmart-frontend/src/hardware/scale-ipc.ts, globalmart-frontend/tests/scale-contract.test.cjs, globalmart-frontend/tests/simulated-scale-adapter.test.cjs, globalmart-frontend/tests/serial-scale-adapter.test.cjs, globalmart-frontend/tests/scale-ipc.test.cjs]
 verificado_contra_codigo: true
 ultima_revision: 2026-10-25
 depende_de: [ms5-pos, electron-ipc]
@@ -13,7 +13,7 @@ reglas: [RF-15]
 ---
 # Integración con Hardware — Balanza y Terminal POS
 
-> Dispositivos físicos en el mostrador del minimarket. La integración ocurre en el proceso principal de Electron (Node.js) y se expone al renderer vía IPC. **Estado: PARCIAL** — el contrato tipado, el adaptador simulado y el IPC mínimo están implementados; la integración visual y el adaptador serial siguen planificados.
+> Dispositivos físicos en el mostrador del minimarket. La integración ocurre en el proceso principal de Electron (Node.js) y se expone al renderer vía IPC. **Estado: PARCIAL** — contrato, simulador, IPC y estructura serial intercambiable implementados; la integración visual, el transporte/parser de un modelo real y la compatibilidad física siguen pendientes.
 
 ## Balanza Física
 
@@ -79,6 +79,19 @@ Electron main crea el adaptador seleccionado por configuración y registra una w
 
 Typecheck y pruebas dirigidas aprobados el 2026-10-25. La prueba verifica la whitelist exacta, la validación del payload, el aislamiento del renderer y la superficie real publicada por `contextBridge`. No acredita todavía un componente React consumiendo la balanza ni compatibilidad con hardware físico.
 
+## S2-069 / TI3-700 — Adaptador serial intercambiable [IMPLEMENTADO SIN HARDWARE]
+
+`serial-scale-adapter.ts` implementa `ScaleAdapter` detrás de dos puertos internos de Electron main:
+
+- `SerialScaleTransport`: abre/cierra el puerto y entrega una trama, sin imponer biblioteca serial.
+- `SerialScaleParser`: traduce una trama específica del dispositivo a valor, unidad `g`/`kg` y señal de estabilidad.
+
+La configuración privada contiene `portPath`, `baudRate` y `parserId`. Se obtiene en main mediante `GLOBALMART_SCALE_SERIAL_PORT`, `GLOBALMART_SCALE_SERIAL_BAUD_RATE` y `GLOBALMART_SCALE_SERIAL_PARSER`; nunca cruza IPC ni forma parte de `ScaleRendererApi`. El adaptador normaliza la lectura válida a kg y traduce timeout, dispositivo no disponible, trama inválida e inestabilidad al contrato común, sin devolver la trama ni detalles del puerto al renderer.
+
+El driver por defecto continúa siendo `GLOBALMART_SCALE_ADAPTER=simulator`. Elegir `serial` exige las tres configuraciones y un proveedor de transporte/parser inyectado; como el repositorio no incorpora `serialport` ni un parser de fabricante, main falla explícitamente indicando que el proveedor está deshabilitado. Esto evita afirmar compatibilidad con un modelo desconocido.
+
+Typecheck y pruebas dirigidas aprobados el 2026-10-25. Las pruebas usan dobles de transporte/parser, comprueban conversión `750 g → 0.750 kg`, conexión/lectura/desconexión, errores neutrales y selección por configuración. Funcionamiento con puerto, balanza y protocolo reales: [NO VERIFICADO]. React conserva `window.api.scale` sin cambios.
+
 ## Terminal POS
 
 Dispositivo compuesto que agrupa varios periféricos:
@@ -90,7 +103,7 @@ Dispositivo compuesto que agrupa varios periféricos:
 | Impresora de tickets | ESC/POS protocol | Imprime recibo al finalizar venta |
 | Display para cliente | Serial/USB | Muestra el total antes de que el cliente pague |
 
-## IPC implementado y adaptador serial futuro
+## IPC implementado y transporte serial futuro
 
 ```typescript
 // Implementado en Electron main mediante una whitelist centralizada:
@@ -100,7 +113,7 @@ ipcMain.handle('scale:read-stable', (_, options) =>
   scaleAdapter.readStableWeight(parseStableWeightReadOptions(options)));
 ipcMain.handle('scale:get-state', () => scaleAdapter.getState());
 
-// Futuro: solo el adaptador serial en main podrá importar SerialPort.
+// Futuro: solo un transporte inyectado en main podrá importar SerialPort.
 // Cajón de dinero
 ipcMain.handle('cajon:abrir', () => {
   // Enviar comando ESC/POS al terminal
@@ -116,7 +129,7 @@ ipcMain.handle('impresora:imprimir', (_, contenido: string) => {
 
 | ID | Caso de Uso | Estado |
 |----|-------------|--------|
-| CP-09 | Capturar Peso de Balanza | [PARCIAL: adaptador e IPC, sin UI] |
+| CP-09 | Capturar Peso de Balanza | [PARCIAL: adaptadores e IPC, sin UI/hardware] |
 | PC-10 | Integrar Peso de Balanza | [PLANIFICADO] |
 | PC-26 | Leer Tarjeta en Terminal | [PLANIFICADO] |
 | PC-32 | Abrir Cajón de Dinero | [PLANIFICADO] |
@@ -133,13 +146,16 @@ ipcMain.handle('impresora:imprimir', (_, contenido: string) => {
 - `diagramas/rodrigo/R1_screen_flow_electron.drawio.png`
 - `globalmart-frontend/src/hardware/scale-contract.ts`
 - `globalmart-frontend/src/hardware/simulated-scale-adapter.ts`
+- `globalmart-frontend/src/hardware/serial-scale-adapter.ts`
 - `globalmart-frontend/src/hardware/scale-adapter-factory.ts`
 - `globalmart-frontend/src/hardware/scale-ipc.ts`
 - `globalmart-frontend/src/index.ts`
 - `globalmart-frontend/src/preload.ts`
 - `globalmart-frontend/tests/scale-contract.test.cjs`
 - `globalmart-frontend/tests/simulated-scale-adapter.test.cjs`
+- `globalmart-frontend/tests/serial-scale-adapter.test.cjs`
 - `globalmart-frontend/tests/scale-ipc.test.cjs`
 - `tareas/sprint2_youtrack_resultado.json` (`S2-066` → `TI3-697`)
 - `tareas/sprint2_youtrack_resultado.json` (`S2-067` → `TI3-698`)
 - `tareas/sprint2_youtrack_resultado.json` (`S2-068` → `TI3-699`)
+- `tareas/sprint2_youtrack_resultado.json` (`S2-069` → `TI3-700`)
