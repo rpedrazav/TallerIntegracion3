@@ -13,7 +13,7 @@ reglas: [RN-01, RN-06, RN-07]
 ---
 # Contrato de ítem pesable — S2-061
 
-**Entrega: CONTRATO DEFINIDO, versión 1. Aplicación integral en ejecución: PARCIAL (S2-062: validación al agregar; S2-063: cálculo y precisión del precio; S2-064: edición por tipo).** Este documento especifica las reglas que deberán compartir catálogo, simulador, POS y MS-5. No certifica pruebas de integración ni una balanza implementada.
+**Entrega: CONTRATO DEFINIDO, versión 1. Aplicación integral en ejecución: PARCIAL (S2-062: validación al agregar; S2-063: cálculo y precisión del precio; S2-064: edición por tipo; S2-067: simulador).** Este documento especifica las reglas que deberán compartir catálogo, simulador, POS y MS-5. No certifica pruebas de integración ni una balanza física implementada.
 
 El mínimo de 10 g y la precisión de 1 g son decisiones de diseño de esta tarea para el simulador, no especificaciones verificadas de hardware. Capacidad máxima y resolución de una balanza física: [NO VERIFICADO].
 
@@ -127,7 +127,7 @@ Inspección de código, 2026-10-24:
 - [PENDIENTE] Exponer/resolver unidad del catálogo: `ProductoCatalogDto` no incluye `UomBaseId`. Definir la correspondencia real y validar precio por kg.
 - [IMPLEMENTADO — S2-063] Se conserva la precisión del precio persistido y MS-2 redondea subtotal e IVA por línea antes de sumar la venta.
 - [PENDIENTE] Aplicar las validaciones completas de peso en crear venta y probarlas mediante HTTP/persistencia.
-- [PENDIENTE] Implementar y probar conversión explícita en el simulador/adaptador. Este documento no acredita aceptación E2E.
+- [IMPLEMENTADO — S2-067] El simulador recibe unidad explícita `g`/`kg`, convierte una sola vez a kg y rechaza valores menores a 10 g o con fracciones inferiores a 1 g. La prueba dirigida verifica `750 g → 0.750 kg`; la aceptación E2E mediante IPC/UI sigue pendiente.
 
 Validación S2-062 del 2026-10-24: **20/20 casos nuevos aprobados** más 12 de regresión, limitados a agregar ítems. [Reporte y evidencia](../../qa/S2-062/reporte.md).
 
@@ -138,6 +138,7 @@ Validación S2-062 del 2026-10-24: **20/20 casos nuevos aprobados** más 12 de r
 - [DTO de crear venta](../../../src/POSCartService/DTOs/CrearVentaRequest.cs)
 - [Modelo de catálogo](../../../src/CatalogPricingService/Models/Producto.cs)
 - [Persistencia MS-5](../../../src/POSCartService/Data/PosCartDbContext.cs)
+- [Adaptador simulado](../../../globalmart-frontend/src/hardware/simulated-scale-adapter.ts)
 - [MS-5](../servicios/ms5-pos.md), [MS-3](../servicios/ms3-catalog.md), [hardware](../integraciones/hardware.md)
 
 Validación S2-063 del 2026-10-24: **42/42 pruebas Release aprobadas** (10 nuevas, 32 de regresión), con PostgreSQL temporal, HTTP MS-5 y calculador productivo MS-2 a través de handler HTTP. Regresión manual TC-01 aprobada. [Evidencia y límites](../../qa/S2-063/reporte.md).

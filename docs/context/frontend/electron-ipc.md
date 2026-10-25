@@ -3,7 +3,7 @@ id: electron-ipc
 tipo: frontend
 titulo: Electron IPC — Comunicación Main/Renderer
 estado: parcial
-fuentes: [globalmart-frontend/src/preload.ts, globalmart-frontend/src/index.ts, globalmart-frontend/src/hardware/scale-contract.ts, globalmart-frontend/tests/scale-contract.test.cjs]
+fuentes: [globalmart-frontend/src/preload.ts, globalmart-frontend/src/index.ts, globalmart-frontend/src/hardware/scale-contract.ts, globalmart-frontend/src/hardware/simulated-scale-adapter.ts, globalmart-frontend/src/hardware/scale-adapter-factory.ts, globalmart-frontend/tests/scale-contract.test.cjs, globalmart-frontend/tests/simulated-scale-adapter.test.cjs]
 verificado_contra_codigo: true
 ultima_revision: 2026-10-24
 depende_de: [estructura]
@@ -13,7 +13,7 @@ reglas: []
 ---
 # Electron IPC — Comunicación Main/Renderer
 
-> `preload.ts` expone APIs seleccionadas del proceso principal (Node.js) al renderer (React). El contrato de balanza está definido, pero todavía no se publica ni tiene handlers IPC.
+> `preload.ts` expone APIs seleccionadas del proceso principal (Node.js) al renderer (React). El contrato y el adaptador simulado de balanza están implementados, pero todavía no se publican ni tienen handlers IPC.
 
 ## Arquitectura Electron
 
@@ -42,7 +42,7 @@ Según `diagramas/rodrigo/R1_screen_flow_electron.drawio.png`:
 
 ## Contrato de balanza por IPC (S2-066)
 
-`ScaleRendererApi` define únicamente operaciones de alto nivel: conectar, desconectar, consultar estado y leer peso estable. No contiene ruta de puerto, baud rate ni objetos de `serialport`. El adaptador físico y el simulador deberán implementar `ScaleAdapter` en Electron main; una tarea posterior conectará sus métodos con `ipcMain` y `contextBridge`.
+`ScaleRendererApi` define únicamente operaciones de alto nivel: conectar, desconectar, consultar estado y leer peso estable. No contiene ruta de puerto, baud rate ni objetos de `serialport`. `SimulatedScaleAdapter` ya implementa `ScaleAdapter` y es seleccionable por configuración del proceso principal; S2-068 conectará sus métodos con `ipcMain` y `contextBridge`. El adaptador físico sigue planificado.
 
 ```typescript
 // Diseño futuro del preload: delegación exclusiva por IPC.
@@ -63,5 +63,8 @@ const scaleApi: ScaleRendererApi = {
 - `globalmart-frontend/src/preload.ts`
 - `globalmart-frontend/src/index.ts`
 - `globalmart-frontend/src/hardware/scale-contract.ts`
+- `globalmart-frontend/src/hardware/simulated-scale-adapter.ts`
+- `globalmart-frontend/src/hardware/scale-adapter-factory.ts`
 - `globalmart-frontend/tests/scale-contract.test.cjs`
+- `globalmart-frontend/tests/simulated-scale-adapter.test.cjs`
 - `diagramas/rodrigo/R1_screen_flow_electron.drawio.png`

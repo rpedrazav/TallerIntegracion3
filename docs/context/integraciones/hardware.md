@@ -3,7 +3,7 @@ id: hardware
 tipo: integracion
 titulo: Integración con Hardware — Balanza y Terminal POS
 estado: parcial
-fuentes: [GlobalMart_ContextMaster.md#sec12, diagramas/rodrigo/, globalmart-frontend/src/hardware/scale-contract.ts, globalmart-frontend/tests/scale-contract.test.cjs]
+fuentes: [GlobalMart_ContextMaster.md#sec12, diagramas/rodrigo/, globalmart-frontend/src/hardware/scale-contract.ts, globalmart-frontend/src/hardware/simulated-scale-adapter.ts, globalmart-frontend/src/hardware/scale-adapter-factory.ts, globalmart-frontend/tests/scale-contract.test.cjs, globalmart-frontend/tests/simulated-scale-adapter.test.cjs]
 verificado_contra_codigo: true
 ultima_revision: 2026-10-24
 depende_de: [ms5-pos, electron-ipc]
@@ -13,7 +13,7 @@ reglas: [RF-15]
 ---
 # Integración con Hardware — Balanza y Terminal POS
 
-> Dispositivos físicos en el mostrador del minimarket. La integración ocurre en el proceso principal de Electron (Node.js) y se expone al renderer vía IPC. **Estado: PARCIAL** — el contrato tipado de balanza está implementado; adaptador, simulador e IPC siguen planificados.
+> Dispositivos físicos en el mostrador del minimarket. La integración ocurre en el proceso principal de Electron (Node.js) y se expone al renderer vía IPC. **Estado: PARCIAL** — el contrato tipado y el adaptador simulado están implementados; IPC y adaptador serial siguen planificados.
 
 ## Balanza Física
 
@@ -34,7 +34,7 @@ reglas: [RF-15]
 
 **Si balanza no responde:** el cajero ingresa el peso manualmente (fallback de UI).
 
-El [contrato S2-061](../dominio/peso-variable.md) define mínimo de 0.010 kg, precisión de 0.001 kg y rechazo de lecturas sin unidad. Estas son reglas del simulador; la integración física y la conversión del adaptador siguen pendientes.
+El [contrato S2-061](../dominio/peso-variable.md) define mínimo de 0.010 kg, precisión de 0.001 kg y rechazo de lecturas sin unidad. El simulador aplica el mínimo y la precisión, recibe unidad explícita `g`/`kg` y normaliza a kg. La integración física sigue pendiente.
 
 ## S2-066 / TI3-697 — Interfaz de balanza [IMPLEMENTADO]
 
@@ -49,6 +49,20 @@ El [contrato S2-061](../dominio/peso-variable.md) define mínimo de 0.010 kg, pr
 - `ScaleRendererApi`: superficie serializable que un preload futuro podrá publicar por `contextBridge`.
 
 La configuración física del puerto se inyectará al construir el adaptador en Electron main. No forma parte de `ScaleRendererApi`, por lo que el renderer no recibe ruta serial, baud rate ni handle del dispositivo. La prueba estática `scale-contract.test.cjs` valida los estados y prohíbe `serialport`, `navigator.serial` y creación de `SerialPort` en el contrato y renderer. Typecheck y prueba aprobados el 2026-10-24.
+
+## S2-067 / TI3-698 — Adaptador de balanza simulada [IMPLEMENTADO]
+
+`SimulatedScaleAdapter` implementa `ScaleAdapter` sin acceder a hardware y consume una secuencia determinista de escenarios configurables:
+
+- `stable`: recibe valor con unidad explícita `g` o `kg`, convierte a kg y devuelve una `StableWeightReading`.
+- `disconnected`: cambia el estado de conexión a `disconnected` y devuelve `device_unavailable`.
+- `error`: devuelve un código, mensaje y condición de reintento controlados sin desconectar necesariamente el adaptador.
+
+Una lectura sin conexión devuelve `not_connected`; valores no finitos, menores que `0.010 kg` o con fracciones inferiores a 1 g devuelven `invalid_reading`. Las respuestas conservan el mismo contrato serializable que usará la UI cuando S2-068 agregue el bridge IPC.
+
+`scale-adapter-factory.ts` selecciona el driver mediante `GLOBALMART_SCALE_ADAPTER=simulator|serial`. El valor por defecto es `simulator`; seleccionar `serial` exige inyectar el proveedor futuro y falla de forma explícita mientras no exista. La configuración y el adaptador permanecen en Electron main y no se exponen al renderer.
+
+Typecheck y pruebas del contrato/simulador aprobados el 2026-10-24. Las pruebas cubren selección por configuración, conversión `750 g → 0.750 kg`, lectura sin conexión, desconexión durante lectura, error controlado y peso inválido. IPC y renderizado visual permanecen [PLANIFICADOS] para S2-068.
 
 ## Terminal POS
 
@@ -106,5 +120,9 @@ ipcMain.handle('impresora:imprimir', (_, contenido: string) => {
 - `GlobalMart_ContextMaster.md` §12
 - `diagramas/rodrigo/R1_screen_flow_electron.drawio.png`
 - `globalmart-frontend/src/hardware/scale-contract.ts`
+- `globalmart-frontend/src/hardware/simulated-scale-adapter.ts`
+- `globalmart-frontend/src/hardware/scale-adapter-factory.ts`
 - `globalmart-frontend/tests/scale-contract.test.cjs`
+- `globalmart-frontend/tests/simulated-scale-adapter.test.cjs`
 - `tareas/sprint2_youtrack_resultado.json` (`S2-066` → `TI3-697`)
+- `tareas/sprint2_youtrack_resultado.json` (`S2-067` → `TI3-698`)
