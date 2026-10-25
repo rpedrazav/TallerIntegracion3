@@ -196,6 +196,27 @@ if (app.Environment.IsDevelopment())
             "Seed de desarrollo aplicado. Cajero: cajero@demo.cl | Admin: admin@demo.cl | password: demo1234 | tenantId: {TenantId}",
             tenantIdDemo);
     }
+    else if (!db.Usuarios.IgnoreQueryFilters().Any(u => u.Email == "admin@demo.cl"))
+    {
+        var rolAdminId = Guid.Parse("11111111-0000-0000-0000-000000000003");
+        var admin = new TenantIdentityService.Models.Usuario
+        {
+            Id           = Guid.Parse("bbbbbbbb-0000-0000-0000-000000000002"),
+            TenantId     = tenantIdDemo,
+            Nombre       = "Admin Demo",
+            Email        = "admin@demo.cl",
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword("demo1234"),
+            Activo       = true
+        };
+        var adminRol = new TenantIdentityService.Models.UsuarioRol
+        {
+            UsuarioId = admin.Id,
+            RolId     = rolAdminId
+        };
+        db.Usuarios.Add(admin);
+        db.UsuarioRoles.Add(adminRol);
+        db.SaveChanges();
+    }
 }
 
 app.Run();
