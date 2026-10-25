@@ -18,4 +18,17 @@ contextBridge.exposeInMainWorld('api', {
   setToken: (token: string) => ipcRenderer.invoke('auth:setToken', token),
   logout: () => ipcRenderer.invoke('auth:logout'),
   scale: scaleApi,
+  devices: {
+    terminal: {
+      iniciar: (params: any) => ipcRenderer.invoke('devices:terminal:iniciar', params),
+      obtenerEstado: () => ipcRenderer.invoke('devices:terminal:obtenerEstado'),
+      cancelar: () => ipcRenderer.invoke('devices:terminal:cancelar'),
+      autorizar: (action?: any) => ipcRenderer.invoke('devices:terminal:autorizar', action),
+    },
+    scale: {
+      obtenerPeso: () => ipcRenderer.invoke('devices:scale:obtenerPeso'),
+      tarar: () => ipcRenderer.invoke('devices:scale:tarar'),
+      simularPeso: (peso: number) => ipcRenderer.invoke('devices:scale:simularPeso', peso),
+    },
+  },
 });

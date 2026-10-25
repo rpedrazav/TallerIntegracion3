@@ -62,10 +62,30 @@ El único payload permitido corresponde a `readStableWeight`: objeto opcional co
 
 S2-069 no cambia esta superficie: puerto, baud rate y parser se resuelven únicamente en main. Cambiar entre simulador y serial no requiere modificar preload, IPC, tipos globales ni componentes React.
 
+## Endurecimiento y Canales de Dispositivos (S2-087 / S2-088)
+
+Se amplió la superficie segura en `preload.ts` (`window.api.devices`) para terminal y balanza bajo validación exhaustiva en `index.ts`:
+
+- **Canales de Terminal:**
+  - `devices:terminal:iniciar`: Valida `monto > 0`, número finito, moneda ISO y correlación alfanumérica.
+  - `devices:terminal:obtenerEstado`: Sin payload, consulta estado actual.
+  - `devices:terminal:cancelar`: Sin payload, cancela transacción activa.
+  - `devices:terminal:autorizar`: Valida acción contra whitelist (`APROBAR`, `RECHAZAR`, `TIMEOUT`, `ERROR_LECTURA`).
+- **Canales de Balanza:**
+  - `devices:scale:obtenerPeso`: Retorna peso neto en kg.
+  - `devices:scale:tarar`: Restablece el peso tara.
+  - `devices:scale:simularPeso`: Valida peso finito en rango 0..500 kg.
+
+**Postura de Seguridad (S2-088):**
+1. `contextIsolation: true` y `nodeIntegration: false`, `sandbox: true` estrictos.
+2. Sin exposición de `ipcRenderer` genérico ni APIs arbitrarias de Node.js / shell.
+3. Tipos TypeScript exportados en `src/types/global.d.ts`.
+
 ## Conexiones
 - Estructura: [[estructura]]
 - Hardware: [[hardware]]
 - Auth: [[auth-y-roles]]
+- Límites terminal: [[limites-terminal-simulado]]
 
 ## Fuentes
 - `globalmart-frontend/src/preload.ts`

@@ -356,3 +356,23 @@ Validación: **54/54 pruebas backend**, incluidas **17 S2-035** y **5 S2-040**, 
 ## S2-053 / TI3-684 — Autorización e idempotencia
 
 [IMPLEMENTADO y VERIFICADO localmente] Tres casos con filtro `Plan=S2-053` aprobados en Release el 2026-10-19 con simulador Node real; los dos casos HTTP de MS-5 usan JWT y PostgreSQL 16 temporal. Repetir la misma clave tras aprobación o con respuesta pendiente devuelve 409 sin otro POST externo: una autorización lógica, un intento APROBADO, un Pago TARJETA de 119 CLP con referencia coincidente y un outbox pendiente. Dos POST idénticos directos al simulador conservan transacción, referencia y fecha de procesamiento. No acredita Electron, entrega Kafka ni despliegue remoto; el bloqueo remoto descrito en S2-052 no fue reevaluado. [Evidencia y reproducción](../../qa/S2-053/reporte.md).
+
+## S2-059 / TI3-690 — Logs de correlación de cobro [IMPLEMENTADO]
+
+Para trazabilidad y auditoría de pagos con tarjeta en MS-5 sin violar PCI DSS, se implementó registro estructurado mediante el prefijo unificado `[COBRO_CORRELATION]` en `VentasController.cs` y `PaymentGatewayClient.cs`:
+
+- **Identificadores opacos:** Se registran únicamente `CorrelationId`, `IntentoId`, `VentaId` y `TenantId`.
+- **Fases cubiertas:**
+  1. *Entrada:* Captura del request de cobro con correlación y tenant.
+  2. *Llamada a pasarela:* Registro previo al despacho HTTP con escenario y montos declarados.
+  3. *Respuesta de pasarela:* Registro de resultado aprobado, rechazado con `DeclineCode` o fallas/timeout.
+- **Exclusión estricta de secretos:** No se registra ningún dato confidencial de tarjeta (0 PANs de 16 dígitos, 0 CVVs, 0 PINs, 0 tokens sensibles). Verificado mediante expresión regular en `CobroTarjetaCorrelationIntegrationTests`.
+
+## S2-060 / TI3-691 — Smoke de despliegue de tarjeta [IMPLEMENTADO]
+
+Flujo de verificación automatizado para validar el ciclo mínimo de cobro con tarjeta mediante el script reproducible `scripts/smoke-tarjeta.sh` y la suite `CobroTarjetaCorrelationIntegrationTests`:
+
+1. **Aprobación:** Escenario aprobado completa la venta en estado `COMPLETADA`, genera el registro `Pago` de tipo `TARJETA` y emite el mensaje outbox.
+2. **Rechazo:** Escenario de rechazo por fondos insuficientes o declinación retorna HTTP 422 y conserva la venta en estado `PENDIENTE` sin registrar pagos ni outbox espurios.
+3. **Pérdida temporal / Timeout:** Timeout de la pasarela responde adecuadamente (HTTP 504 / 503) y conserva la venta en estado `PENDIENTE` sin corrupción de saldos.
+

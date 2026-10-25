@@ -375,3 +375,15 @@ Validación S2-063 del 2026-10-24: **42/42 pruebas Release aprobadas** (10 nueva
 Validación S2-064 del 2026-10-24: **75/75 pruebas Release aprobadas**, incluidas 23 nuevas de edición y 10 de aislamiento de ventas entre tenants, con HTTP/JWT y PostgreSQL temporal. [Evidencia](../../qa/S2-064/reporte.md).
 
 Verificación final S2-064: recompilación Release y **33/33 casos S2-064/S2-063 aprobados**, sin fallos ni omisiones; evidencia adicional en el reporte S2-064.
+
+## S2-059 — Logs estructurados de correlación de cobro [IMPLEMENTADO]
+
+[IMPLEMENTADO] Se integró registro de correlación en `VentasController.cs` y `PaymentGatewayClient.cs` bajo la etiqueta unificada `[COBRO_CORRELATION]`. Traza cada fase del cobro (`Entrada`, `Llamada pasarela`, `Respuesta pasarela`) asociando `CorrelationId`, `IntentoId`, `VentaId` y `TenantId`. Prohíbe y excluye de forma estricta cualquier dato confidencial de tarjeta (PAN, CVV, secretos), validado mediante la suite `CobroTarjetaCorrelationIntegrationTests`.
+
+## S2-060 — Smoke de despliegue de cobro con tarjeta [IMPLEMENTADO]
+
+[IMPLEMENTADO] Suite automatizada y script `scripts/smoke-tarjeta.sh` que comprueba los tres estados fundamentales del simulador de pasarela:
+1. **Aprobado:** Transiciona la venta a estado `COMPLETADA`, persiste el `Pago` de tipo `TARJETA` y genera el evento `sale.completed` en el outbox.
+2. **Rechazado:** Devuelve HTTP 422 y mantiene la venta en estado `PENDIENTE`.
+3. **Pérdida temporal / Timeout:** Devuelve HTTP 504 / 503 y mantiene la venta en estado `PENDIENTE` sin registrar pagos espurios.
+

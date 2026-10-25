@@ -125,13 +125,39 @@ ipcMain.handle('impresora:imprimir', (_, contenido: string) => {
 });
 ```
 
+## Límites del Terminal Simulado (S2-086)
+
+Ver la especificación exhaustiva en [[limites-terminal-simulado]]:
+- Matriz de operaciones: `iniciar`, `cancelar`, `autorizar`, `obtenerEstado`.
+- Desacoplamiento total de pasarela bancaria externa.
+- Regla de aceptación: No declarar compatibilidad con marcas físicas sin verificación en hardware real.
+
+## Configuración de Adaptadores y Reserva de Hardware Real (S2-087)
+
+En `globalmart-frontend/src/devices/`:
+- `DeviceManager`: Singleton que orquesta la selección de adaptadores para balanza y terminal según variables de entorno (`GLOBALMART_TERMINAL_ADAPTER`, `GLOBALMART_SCALE_ADAPTER`).
+- **Adaptadores simulados por defecto:** `MockTerminalAdapter` y `MockScaleAdapter` inician de forma inmediata sin solicitar permisos de sistema ni requerir drivers.
+- **Adaptadores físicos reservados:** `RealTerminalAdapter` está implementado como clase de extensión segura; rechaza cualquier ejecución activa devolviendo error controlado (`DEVICE_NOT_CERTIFIED`) para impedir invocaciones a periféricos no homologados.
+
+## Seguridad de Canales IPC (S2-088)
+
+- Endurecimiento de `BrowserWindow` con `contextIsolation: true`, `nodeIntegration: false` y `sandbox: true`.
+- Validación estricta de tipos y rangos numéricos en `index.ts` antes de invocar los adaptadores (`validateIniciarParams`, `validateSimulacionAction`, `validatePeso`).
+- Prohibición absoluta de APIs genéricas de ejecución (`eval`, `child_process`, `exec`) o handles directos al sistema operativo.
+
+## Smoke Automatizado de Simuladores (S2-089)
+
+- Script `scripts/smoke-simuladores-frontend.sh` y suite `globalmart-frontend/tests/smoke-simulators.ts`.
+- Valida lectura de balanza (cero inicial, tara y lectura estable) y operaciones de terminal (inicio, aprobación con token opaco, rechazo y cancelación limpia).
+- Ejecución 100% libre de hardware en entornos CI / headless.
+
 ## Casos de uso afectados
 
 | ID | Caso de Uso | Estado |
 |----|-------------|--------|
-| CP-09 | Capturar Peso de Balanza | [PARCIAL: adaptadores e IPC, sin UI/hardware] |
-| PC-10 | Integrar Peso de Balanza | [PLANIFICADO] |
-| PC-26 | Leer Tarjeta en Terminal | [PLANIFICADO] |
+| CP-09 | Capturar Peso de Balanza | [PARCIAL: adaptadores e IPC, widget en POS] |
+| PC-10 | Integrar Peso de Balanza | [PARCIAL: simulador integrado en POS] |
+| PC-26 | Leer Tarjeta en Terminal | [PARCIAL: simulador integrado y smoke S2-089] |
 | PC-32 | Abrir Cajón de Dinero | [PLANIFICADO] |
 | PC-33 | Imprimir Recibo | [PLANIFICADO] |
 | PC-34 | Mostrar Total en Display | [PLANIFICADO] |
@@ -140,6 +166,7 @@ ipcMain.handle('impresora:imprimir', (_, contenido: string) => {
 - Frontend: [[electron-ipc]]
 - POS backend: [[ms5-pos]]
 - Pasarela de pago: [[pasarela-pago]]
+- Límites terminal: [[limites-terminal-simulado]]
 
 ## Fuentes
 - `GlobalMart_ContextMaster.md` §12

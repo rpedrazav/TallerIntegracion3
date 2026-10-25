@@ -399,3 +399,37 @@ Verificación final S2-064: recompilación Release y **33/33 casos S2-064/S2-063
 ## S2-069 / TI3-700 — Preparar adaptador serial intercambiable
 
 [IMPLEMENTADO SIN HARDWARE] `SerialScaleAdapter` implementa el contrato común con `SerialScaleTransport` y `SerialScaleParser` inyectables. Puerto, baud rate e identificador de parser permanecen en Electron main; el renderer conserva sin cambios `window.api.scale`. El driver predeterminado sigue siendo `simulator`; `serial` requiere configuración completa y un proveedor que permanece deshabilitado. No se agregó `serialport` ni un protocolo de fabricante, por lo que no se afirma compatibilidad física. Typecheck y 15/15 pruebas de balanza/IPC aprobadas el 2026-10-25; hardware real [NO VERIFICADO]. [Detalle](integraciones/hardware.md).
+
+## S2-059 / TI3-690 — Agregar logs de correlación de cobro
+
+[IMPLEMENTADO] En MS-5 (`VentasController.cs` y `PaymentGatewayClient.cs`), se incorporaron logs estructurados con el prefijo `[COBRO_CORRELATION]` que registran `Entrada`, `Llamada pasarela` y `Respuesta pasarela` asociando identificadores opacos (`CorrelationId`, `IntentoId`, `VentaId`, `TenantId`). Se verificó mediante prueba automatizada con expresiones regulares en `CobroTarjetaCorrelationIntegrationTests` que nunca se registran números de tarjeta (PAN de 16 dígitos), códigos de seguridad (CVV/CVC) ni secretos.
+
+## S2-060 / TI3-691 — Ejecutar smoke de despliegue de tarjeta
+
+[IMPLEMENTADO] Verificación automatizada mediante el script `scripts/smoke-tarjeta.sh` y la suite `CobroTarjetaCorrelationIntegrationTests`. Ejercita los tres estados del simulador:
+1. *Aprobado:* La venta transiciona a `COMPLETADA`, persiste el pago `TARJETA` y emite el evento en outbox.
+2. *Rechazado:* Retorna HTTP 422 y conserva la venta en estado `PENDIENTE`.
+3. *Timeout / No disponible:* Retorna HTTP 504 / 503 y conserva la venta en estado `PENDIENTE` sin registrar pagos no confirmados.
+
+## S2-086 / TI3-717 — Definir límites del terminal simulado
+
+[IMPLEMENTADO] Especificación documentada en `docs/context/integraciones/limites-terminal-simulado.md`. Establece la matriz de operaciones soportadas (`iniciar`, `cancelar`, `autorizar`, `obtenerEstado`), delimita el desacoplamiento estricto respecto a la pasarela bancaria y prohíbe declarar compatibilidad con hardware o marcas físicas sin validación empírica.
+
+## S2-087 / TI3-718 — Preparar configuración de adaptadores
+
+[IMPLEMENTADO] Implementación modular en `globalmart-frontend/src/devices/`:
+- `DeviceManager`: Orquestador que selecciona `MockTerminalAdapter` y `MockScaleAdapter` por defecto sin requerir drivers ni privilegios de hardware.
+- `RealTerminalAdapter`: Reservado como adaptador físico que rechaza ejecuciones no homologadas devolviendo error seguro (`DEVICE_NOT_CERTIFIED`).
+- Estructura modular desacoplada de la UI que permite incorporar dispositivos futuros sin alterar las vistas.
+
+## S2-088 / TI3-719 — Validar seguridad de IPC
+
+[IMPLEMENTADO] Endurecimiento integral de Electron:
+- Ventana POS con `contextIsolation: true`, `nodeIntegration: false` y `sandbox: true`.
+- Validación previa de tipos, límites y rangos numéricos en `index.ts` antes de invocar cualquier adaptador (`validateIniciarParams`, `validateSimulacionAction`, `validatePeso`).
+- Prohibición absoluta de APIs genéricas de ejecución o acceso directo a shell/sistema operativo desde el renderer.
+
+## S2-089 / TI3-720 — Integrar smoke de simuladores
+
+[IMPLEMENTADO] Flujo de prueba automatizado mediante `scripts/smoke-simuladores-frontend.sh` y `globalmart-frontend/tests/smoke-simulators.ts`, ejecutable en CI o local sin periféricos conectados. Comprueba lecturas de balanza, pesaje, tara y el ciclo de vida del terminal (inicio, aprobación con token opaco, rechazo y cancelación). Incluye widget interactivo de balanza integrado en la interfaz POS (`Pos.tsx`).
+

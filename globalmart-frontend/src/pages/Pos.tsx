@@ -1,4 +1,4 @@
-﻿import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
+import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { catalogApi, CatalogProduct, posApi, VentaPendiente } from '../api/client';
@@ -62,6 +62,33 @@ export default function Pos() {
   const saleRef = useRef<VentaPendiente | null>(null);
   const saleNeedsRefreshRef = useRef(false);
   const mutationQueue = useRef<Promise<void>>(Promise.resolve());
+
+  // Estado de balanza simulada (S2-087 / S2-089)
+  const [pesoBalanza, setPesoBalanza] = useState<number>(0);
+  const [pesoEstable, setPesoEstable] = useState<boolean>(true);
+
+  const handleSimularPeso = async (kilos: number) => {
+    if (window.api?.devices?.scale) {
+      const res = await window.api.devices.scale.simularPeso(kilos);
+      setPesoBalanza(res.pesoKg);
+      setPesoEstable(res.estable);
+    } else {
+      setPesoBalanza(kilos);
+      setPesoEstable(true);
+    }
+  };
+
+  const handleTarar = async () => {
+    if (window.api?.devices?.scale) {
+      await window.api.devices.scale.tarar();
+      const res = await window.api.devices.scale.obtenerPeso();
+      setPesoBalanza(res.pesoKg);
+      setPesoEstable(res.estable);
+    } else {
+      setPesoBalanza(0);
+      setPesoEstable(true);
+    }
+  };
 
   useEffect(() => {
     let active = true;
@@ -726,6 +753,55 @@ export default function Pos() {
               </div>
             ))
           )}
+        </div>
+
+        {/* Simulador de Balanza Integrado (S2-087 / S2-089) */}
+        <div style={{ marginTop: '0.75rem', padding: '0.75rem', backgroundColor: 'var(--color-bg)', borderRadius: '8px', border: '1px solid var(--color-line)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+            <span style={{ fontWeight: 600, fontSize: '0.85rem', color: 'var(--color-ink)' }}>⚖️ Balanza Simulada</span>
+            <span style={{ fontSize: '0.8rem', color: pesoEstable ? 'var(--color-success)' : 'var(--color-muted)' }}>
+              {pesoEstable ? '● Estable' : '○ Leyendo...'}
+            </span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+            <span style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--color-primary)' }}>
+              {pesoBalanza.toFixed(3)} kg
+            </span>
+            <button
+              type="button"
+              onClick={handleTarar}
+              style={{
+                padding: '0.25rem 0.5rem',
+                fontSize: '0.75rem',
+                backgroundColor: 'var(--color-surface)',
+                border: '1px solid var(--color-line)',
+                borderRadius: '4px',
+                cursor: 'pointer'
+              }}
+            >
+              Tarar
+            </button>
+          </div>
+          <div style={{ display: 'flex', gap: '0.25rem', flexWrap: 'wrap' }}>
+            {[0.25, 0.5, 1.0, 2.5].map((kg) => (
+              <button
+                key={kg}
+                type="button"
+                onClick={() => handleSimularPeso(kg)}
+                style={{
+                  flex: 1,
+                  padding: '0.2rem',
+                  fontSize: '0.7rem',
+                  backgroundColor: 'var(--color-surface)',
+                  border: '1px solid var(--color-line)',
+                  borderRadius: '4px',
+                  cursor: 'pointer'
+                }}
+              >
+                +{kg}kg
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
