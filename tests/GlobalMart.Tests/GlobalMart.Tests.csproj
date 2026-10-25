@@ -32,6 +32,7 @@
     <ProjectReference Include="..\..\src\TaxComplianceService\TaxComplianceService.csproj" />
     <ProjectReference Include="..\..\src\WarehouseInventoryService\WarehouseInventoryService.csproj" />
     <ProjectReference Include="..\..\src\CatalogPricingService\CatalogPricingService.csproj" />
+    <ProjectReference Include="..\..\src\POSCartService\POSCartService.csproj" />
   </ItemGroup>
 
 </Project>

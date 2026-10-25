@@ -109,6 +109,7 @@ builder.Services.AddHttpClient(TaxClient.HttpClientName, client =>
 
 builder.Services.AddScoped<ICatalogClient, CatalogClient>();
 builder.Services.AddScoped<ITaxClient, TaxClient>();
+builder.Services.AddScoped<IPasarelaPagoClient, PasarelaPagoClient>();
 
 
 // â”€â”€â”€ 4. Controllers + Swagger â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€

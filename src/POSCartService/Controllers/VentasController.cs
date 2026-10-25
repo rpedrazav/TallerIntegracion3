@@ -628,4 +628,77 @@ public sealed class VentasController : ControllerBase
 
         return Ok(new CobrarVentaResponse(VentaResponse.FromModel(ventaCompletada), request.MontoRecibido, vuelto));
     }
+
+    /// <summary>
+    /// Procesa el cobro con tarjeta mediante pasarela externa/simulada (RN-02).
+    /// Emite logs estructurados de correlación con IDs opacos sin secretos (S2-059).
+    /// Soporta smoke tests para estados Aprobado, Rechazado y Pérdida Temporal (S2-060).
+    /// </summary>
+    [HttpPost("{id:guid}/cobrar-tarjeta")]
+    [ProducesResponseType(typeof(CobrarTarjetaResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(CobroTarjetaRechazadoResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
+    public async Task<IActionResult> CobrarTarjeta(
+        [FromRoute] Guid id,
+        [FromBody] CobrarTarjetaRequest? request,
+        CancellationToken cancellationToken)
+    {
+        request ??= new CobrarTarjetaRequest();
+
+        // 1. Extraer claims del JWT
+        if (!TryGetClaims(out _, out _))
+            return Unauthorized(new { error = "Token inválido: faltan cajero_id/sub o tenant_id." });
+
+        // 2. Verificar que la venta exista
+        var venta = await _ventaService.GetByIdAsync(id);
+        if (venta is null)
+            return NotFound(new { error = $"Venta {id} no encontrada." });
+
+        // 3. Verificar que la venta esté PENDIENTE antes de cobrar
+        if (venta.Estado != EstadoVenta.PENDIENTE)
+        {
+            return Conflict(new
+            {
+                error = $"Solo se puede cobrar una venta en estado PENDIENTE. Estado actual: {venta.Estado}."
+            });
+        }
+
+        try
+        {
+            var resultado = await _ventaService.CobrarTarjetaAsync(id, request, cancellationToken);
+
+            if (!resultado.Exitoso)
+            {
+                return BadRequest(new CobroTarjetaRechazadoResponse(
+                    Error: "Cobro con tarjeta rechazado",
+                    CodigoRespuesta: resultado.CodigoRespuesta ?? "RECHAZADO",
+                    Motivo: resultado.MotivoRechazo ?? "Fondos insuficientes o tarjeta declinada",
+                    CorrelationId: resultado.CorrelationId,
+                    IntentoId: resultado.IntentoId));
+            }
+
+            return Ok(new CobrarTarjetaResponse(
+                Venta: VentaResponse.FromModel(resultado.Venta!),
+                CorrelationId: resultado.CorrelationId,
+                IntentoId: resultado.IntentoId,
+                CodigoAutorizacion: resultado.CodigoAutorizacion,
+                ReferenciaExterna: resultado.ReferenciaExterna));
+        }
+        catch (PasarelaNoDisponibleException ex)
+        {
+            _logger?.LogError(ex, "Pérdida temporal de pasarela en cobro de venta {VentaId}. CorrelationId: {CorrelationId}",
+                id, ex.CorrelationId);
+
+            return StatusCode(StatusCodes.Status503ServiceUnavailable, new
+            {
+                error = "Pasarela de cobro temporalmente no disponible",
+                detalle = ex.Message,
+                correlation_id = ex.CorrelationId,
+                intento_id = ex.IntentoId
+            });
+        }
+    }
 }

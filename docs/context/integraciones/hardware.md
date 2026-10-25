@@ -2,18 +2,18 @@
 id: hardware
 tipo: integracion
 titulo: Integración con Hardware — Balanza y Terminal POS
-estado: planificado
-fuentes: [GlobalMart_ContextMaster.md#sec12, diagramas/rodrigo/]
-verificado_contra_codigo: false
-ultima_revision: 2026-09-28
-depende_de: [ms5-pos, electron-ipc]
+estado: parcial
+fuentes: [globalmart-frontend/src/devices/, GlobalMart_ContextMaster.md#sec12, diagramas/rodrigo/]
+verificado_contra_codigo: true
+ultima_revision: 2026-10-25
+depende_de: [ms5-pos, electron-ipc, limites-terminal-simulado]
 publica: []
 consume: []
-reglas: [RF-15]
+reglas: [RF-15, RN-02]
 ---
 # Integración con Hardware — Balanza y Terminal POS
 
-> Dispositivos físicos en el mostrador del minimarket. La integración ocurre en el proceso principal de Electron (Node.js) y se expone al renderer vía IPC. **Estado: PLANIFICADO** — sin implementación en el código actual.
+> Dispositivos del mostrador del minimarket. La integración se gestiona en Electron Main mediante el patrón de adaptadores (`DeviceManager`), operando con simuladores desacoplados (`MockTerminalAdapter`, `MockScaleAdapter`) en software sin requerir periféricos físicos ni permisos de drivers. El proveedor real está reservado sin activar rutas no homologadas (S2-086, S2-087, S2-089).
 
 ## Balanza Física
 

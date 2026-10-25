@@ -113,6 +113,27 @@ public interface IVentaService
         decimal nuevoSubtotalVenta,
         decimal nuevosImpuestosVenta,
         decimal nuevoTotalVenta);
+
+    /// <summary>
+    /// Procesa el cobro con tarjeta mediante la pasarela de pagos con trazabilidad correlacionada
+    /// y exclusión de secretos (S2-059 / S2-060).
+    /// </summary>
+    Task<ResultadoCobroVentaTarjeta> CobrarTarjetaAsync(
+        Guid ventaId,
+        DTOs.CobrarTarjetaRequest request,
+        CancellationToken cancellationToken = default);
+}
+
+public class ResultadoCobroVentaTarjeta
+{
+    public bool Exitoso { get; set; }
+    public Venta? Venta { get; set; }
+    public string CorrelationId { get; set; } = string.Empty;
+    public string IntentoId { get; set; } = string.Empty;
+    public string? CodigoAutorizacion { get; set; }
+    public string? ReferenciaExterna { get; set; }
+    public string? CodigoRespuesta { get; set; }
+    public string? MotivoRechazo { get; set; }
 }
 
 

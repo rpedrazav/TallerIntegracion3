@@ -1,65 +1,51 @@
 ---
 id: electron-ipc
 tipo: frontend
-titulo: Electron IPC — Comunicación Main/Renderer
-estado: parcial
-fuentes: [globalmart-frontend/src/preload.ts, globalmart-frontend/src/index.ts]
+titulo: Electron IPC — Comunicación Main/Renderer y Seguridad (S2-088)
+estado: implementado
+fuentes: [globalmart-frontend/src/preload.ts, globalmart-frontend/src/index.ts, globalmart-frontend/src/devices/]
 verificado_contra_codigo: true
-ultima_revision: 2026-09-28
-depende_de: [estructura]
+ultima_revision: 2026-10-25
+depende_de: [estructura, hardware, limites-terminal-simulado]
 publica: []
 consume: []
 reglas: []
 ---
-# Electron IPC — Comunicación Main/Renderer
+# Electron IPC — Comunicación Main/Renderer y Seguridad (S2-088 / TI3-719)
 
-> El preload.ts expone APIs seguras del proceso principal (Node.js) al renderer (React). Actualmente el preload existe pero con contenido NO VERIFICADO en detalle.
+> Expone APIs fuertemente tipadas y seguras desde el proceso principal (Node.js) al renderer (React) mediante `contextBridge`.
 
-## Arquitectura Electron
+## 1. Postura de Seguridad (S2-088)
 
-```
-Main Process (Node.js)
-  ↕ IPC (ipcMain / ipcRenderer / contextBridge)
-Renderer Process (React/TypeScript)
-  ↕ HTTP/axios
-Backend APIs (MS-1, MS-3, MS-5)
-```
+Para mitigar riesgos de seguridad y cumplir el criterio de aceptación (*"No hay API genérica de ejecución o acceso serial en renderer"*):
+- `contextIsolation: true` forzado en `BrowserWindow`.
+- `nodeIntegration: false` para evitar que scripts del renderer invoquen APIs nativas de Node.js.
+- `sandbox: true` activado para aislar el contexto de renderizado.
+- **Sin APIs genéricas de ejecución:** No se expone `shell.openExternal` libre, `child_process.exec`, `eval`, ni acceso serial crudo (`SerialPort`) al renderer.
 
-## Preload.ts
+## 2. Canales de Dispositivos Implementados
 
-El archivo `src/preload.ts` existe y actúa como bridge de seguridad entre el proceso principal y el renderer. Expone selectivamente las APIs de Node.js que el renderer puede usar.
+| Canal IPC | Validador de Argumentos | Propósito |
+|---|---|---|
+| `devices:terminal:iniciar` | `validateIniciarParams` | Valida que `monto` sea número positivo finito (0 < x ≤ 100M). |
+| `devices:terminal:obtenerEstado` | Sin argumentos | Retorna estado del terminal (`IDLE`, `ESPERANDO_TARJETA`, etc.). |
+| `devices:terminal:cancelar` | Sin argumentos | Cancela operación en curso en el terminal. |
+| `devices:terminal:autorizar` | `validateSimulacionAction` | Whitelist de acciones: `['APROBAR', 'RECHAZAR', 'TIMEOUT', 'ERROR_LECTURA']`. |
+| `devices:scale:obtenerPeso` | Sin argumentos | Retorna peso neto estable en kg. |
+| `devices:scale:tarar` | Sin argumentos | Tara la balanza a cero. |
+| `devices:scale:simularPeso` | `validatePeso` | Valida número finito positivo entre 0 y 500 kg. |
 
-**Contenido no verificado en detalle.** Ver `globalmart-frontend/src/preload.ts`.
+## 3. Preload Bridge (`src/preload.ts`)
 
-## Handlers IPC diseñados (de diagramas)
-
-Según `diagramas/rodrigo/R1_screen_flow_electron.drawio.png`:
-- IPC para abrir drawer/cajón de dinero
-- IPC para SerialPort (balanza, impresora)
-- IPC para gestión de ventanas
-
-**Estado:** NO VERIFICADO si están implementados en el código actual.
-
-## Hardware por IPC (PLANIFICADO)
-
+El renderer accede exclusivamente a través de:
 ```typescript
-// Diseño esperado (NO en código actual):
-// main process
-ipcMain.handle('balanza:leer-peso', async () => {
-  const puerto = new SerialPort({ path: 'COM3', baudRate: 9600 });
-  // ... leer peso
-});
-
-// renderer (vía contextBridge)
-const peso = await window.electronAPI.balanza.leerPeso();
+window.api.devices.terminal.iniciar({ monto: 5000 });
+window.api.devices.terminal.autorizar('APROBAR');
+window.api.devices.scale.obtenerPeso();
 ```
 
 ## Conexiones
 - Estructura: [[estructura]]
 - Hardware: [[hardware]]
+- Límites Terminal: [[limites-terminal-simulado]]
 - Auth: [[auth-y-roles]]
-
-## Fuentes
-- `globalmart-frontend/src/preload.ts`
-- `globalmart-frontend/src/index.ts`
-- `diagramas/rodrigo/R1_screen_flow_electron.drawio.png`

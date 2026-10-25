@@ -83,6 +83,9 @@ jobs:
       - name: Build IntegrationTests
         run: dotnet build tests/GlobalMart.IntegrationTests/GlobalMart.IntegrationTests.csproj --no-restore --configuration Release
 
+      - name: Build GlobalMart.Tests
+        run: dotnet build tests/GlobalMart.Tests/GlobalMart.Tests.csproj --no-restore --configuration Release
+
       # ------------------------------------------------------------------
       # 5. Levantar infraestructura con Docker Compose
       #    Se excluye 'frontend' (requiere Electron/display) y servicios

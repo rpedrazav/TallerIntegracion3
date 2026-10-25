@@ -12,23 +12,27 @@ if (require('electron-squirrel-startup')) {
 }
 
 // --- Persistent Store ---
-interface StoreSchema {
+type StoreSchema = {
   jwt_token: string | null;
   user_info: { name: string; role: string } | null;
   tenant_config: { tenantId: string; currency: string } | null;
-}
+  [key: string]: unknown;
+};
 
 const store = new Store<StoreSchema>({
   defaults: { jwt_token: null, user_info: null, tenant_config: null },
 });
 
 const createWindow = (): void => {
-  // Create the browser window.
+  // Create the browser window with explicit security posture (S2-088)
   const mainWindow = new BrowserWindow({
     height: 600,
     width: 800,
     webPreferences: {
       preload: MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY,
+      contextIsolation: true,
+      nodeIntegration: false,
+      sandbox: true,
     },
   });
 
@@ -61,8 +65,45 @@ app.on('activate', () => {
   }
 });
 
-// In this file you can include the rest of your app's specific main process
-// code. You can also put them in separate files and import them here.
+// --- Inicialización de Adaptadores de Dispositivos (S2-087) ---
+import { DeviceManager } from './devices/DeviceManager';
+import { IniciarOperacionParams, SimulatedAction } from './devices/types';
+
+const deviceManager = DeviceManager.getInstance();
+
+// --- Validadores de Seguridad de Argumentos IPC (S2-088) ---
+function validateIniciarParams(data: unknown): IniciarOperacionParams {
+  if (!data || typeof data !== 'object') {
+    throw new Error('IPC Security: Los parámetros de inicio deben ser un objeto.');
+  }
+  const obj = data as Record<string, unknown>;
+  const monto = Number(obj.monto);
+  if (isNaN(monto) || !isFinite(monto) || monto <= 0 || monto > 100000000) {
+    throw new Error('IPC Security: Monto inválido para iniciar cobro en terminal.');
+  }
+  const moneda = typeof obj.moneda === 'string' && /^[A-Z]{3}$/.test(obj.moneda) ? obj.moneda : 'CLP';
+  const correlationId = typeof obj.correlationId === 'string' && /^[a-zA-Z0-9_-]{1,64}$/.test(obj.correlationId)
+    ? obj.correlationId
+    : undefined;
+
+  return { monto, moneda, correlationId };
+}
+
+function validateSimulacionAction(action: unknown): SimulatedAction {
+  const allowed: SimulatedAction[] = ['APROBAR', 'RECHAZAR', 'TIMEOUT', 'ERROR_LECTURA'];
+  if (typeof action !== 'string' || !allowed.includes(action as SimulatedAction)) {
+    throw new Error(`IPC Security: Acción simulada no permitida. Permitidas: ${allowed.join(', ')}.`);
+  }
+  return action as SimulatedAction;
+}
+
+function validatePeso(peso: unknown): number {
+  const p = Number(peso);
+  if (isNaN(p) || !isFinite(p) || p < 0 || p > 500) {
+    throw new Error('IPC Security: Peso simulado debe ser un número finito entre 0 y 500 kg.');
+  }
+  return p;
+}
 
 // --- IPC Handlers ---
 ipcMain.handle('ping', () => {
@@ -70,9 +111,43 @@ ipcMain.handle('ping', () => {
   return 'pong';
 });
 
-// @ts-ignore
-ipcMain.handle('auth:getToken', () => store.get('jwt_token'));
-// @ts-ignore
-ipcMain.handle('auth:setToken', (_e, token: string) => store.set('jwt_token', token));
-// @ts-ignore
-ipcMain.handle('auth:logout', () => store.set('jwt_token', null));
+ipcMain.handle('auth:getToken', (): string | null => (store as any).get('jwt_token') ?? null);
+ipcMain.handle('auth:setToken', (_e, token: string): void => {
+  if (typeof token !== 'string') {
+    throw new Error('IPC Security: Token debe ser un string.');
+  }
+  (store as any).set('jwt_token', token);
+});
+ipcMain.handle('auth:logout', (): void => (store as any).set('jwt_token', null));
+
+// --- Canales Nuevos de Dispositivos (S2-088: Sin API genérica ni acceso serial) ---
+ipcMain.handle('devices:terminal:iniciar', async (_e, rawParams: unknown) => {
+  const params = validateIniciarParams(rawParams);
+  return deviceManager.getTerminal().iniciar(params);
+});
+
+ipcMain.handle('devices:terminal:obtenerEstado', async () => {
+  return deviceManager.getTerminal().obtenerEstado();
+});
+
+ipcMain.handle('devices:terminal:cancelar', async () => {
+  return deviceManager.getTerminal().cancelar();
+});
+
+ipcMain.handle('devices:terminal:autorizar', async (_e, rawSimulacion?: unknown) => {
+  const action = rawSimulacion !== undefined ? validateSimulacionAction(rawSimulacion) : 'APROBAR';
+  return deviceManager.getTerminal().autorizar(action);
+});
+
+ipcMain.handle('devices:scale:obtenerPeso', async () => {
+  return deviceManager.getScale().obtenerPeso();
+});
+
+ipcMain.handle('devices:scale:tarar', async () => {
+  return deviceManager.getScale().tarar();
+});
+
+ipcMain.handle('devices:scale:simularPeso', async (_e, rawPeso: unknown) => {
+  const peso = validatePeso(rawPeso);
+  return deviceManager.getScale().simularPeso(peso);
+});

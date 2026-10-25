@@ -2,22 +2,25 @@
 id: pasarela-pago
 tipo: integracion
 titulo: Integración con Pasarela de Pago
-estado: planificado
-fuentes: [GlobalMart_ContextMaster.md#sec12, src/POSCartService/]
+estado: parcial
+fuentes: [GlobalMart_ContextMaster.md#sec12, src/POSCartService/Services/PasarelaPagoClient.cs, tests/GlobalMart.Tests/MS5_POS/CobroTarjetaCorrelationTests.cs]
 verificado_contra_codigo: true
-ultima_revision: 2026-09-28
+ultima_revision: 2026-10-25
 depende_de: [ms5-pos]
-publica: []
+publica: [sale.completed]
 consume: []
 reglas: [RN-02, RF-07, PC-17, PC-27, PC-28]
 ---
 # Integración con Pasarela de Pago
 
-> Toda transacción con tarjeta DEBE ir por una pasarela externa (RN-02). **Estado: PLANIFICADO** — MS-5 no tiene integración de pago implementada.
+> Toda transacción con tarjeta DEBE ir por una pasarela externa (RN-02). **Estado: PARCIAL** — Implementado cliente de pasarela con simulador desacoplado, logs de correlación estructurados con IDs opacos sin secretos (S2-059), endpoint `POST /ventas/{id}/cobrar-tarjeta` y suite de smoke test para los 3 estados de cobro (S2-060).
 
-## Estado: [PLANIFICADO]
+## Estado: [PARCIAL]
 
-`VentaService.CompletarAsync` solo cambia el estado a COMPLETADA sin procesar pago real.
+- `IPasarelaPagoClient` y `PasarelaPagoClient` implementados con trazabilidad `[COBRO_CORRELATION]` (S2-059).
+- Endpoint `POST /ventas/{id}/cobrar-tarjeta` en `VentasController.cs` con soporte para Aprobación, Rechazo y Pérdida Temporal (S2-060).
+- Pauta de diagnóstico documentada en `docs/pautas/inspeccion-fallos-cobro.md`.
+- Smoke reproducible validado con `scripts/smoke-tarjeta.sh`.
 
 ## Pasarelas contempladas por región
 

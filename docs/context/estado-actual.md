@@ -5,7 +5,7 @@ titulo: Estado Real de Implementación — GlobalMart OS
 estado: vigente
 fuentes: [docs/context/_reports/inventario.md, src/, git log, docs/context/_reports/preguntas-abiertas.md]
 verificado_contra_codigo: true
-ultima_revision: 2026-10-04
+ultima_revision: 2026-10-25
 depende_de: []
 publica: []
 consume: []
@@ -131,15 +131,17 @@ reglas: []
 - `GET /ventas/{id}` — obtener venta [IMPLEMENTADO]
 - `GET /ventas/turno/{turnoId}` — ventas por turno [IMPLEMENTADO]
 - `POST /ventas/{id}/cobrar` — valida `monto_recibido` ≥ total, completa la venta, retorna vuelto y publica `sale.completed` a Kafka con `event_id` único [IMPLEMENTADO]
-- VentaService con métodos `CompletarAsync` y `AnularAsync` [IMPLEMENTADO en service]
+- `POST /ventas/{id}/cobrar-tarjeta` — procesa cobro con pasarela/simulador, correlación de logs con IDs opacos sin secretos (S2-059), persiste pago TARJETA y publica `sale.completed` a Kafka con verificación smoke de 3 estados (S2-060) [IMPLEMENTADO]
+- VentaService con métodos `CompletarAsync`, `CobrarTarjetaAsync` y `AnularAsync` [IMPLEMENTADO en service]
 - KafkaProducerService — publica eventos Kafka con key=tenant_id y event_id único [IMPLEMENTADO]
 - test de integración abre turno con JWT de cajero y verifica persistencia en estado `ABIERTO` [IMPLEMENTADO]
 - test de integración crea venta, agrega dos productos y verifica subtotal, IVA y total con handlers simulados para MS-2/MS-3 [IMPLEMENTADO]
+- Suite CobroTarjetaCorrelationTests (4 tests xUnit) y smoke de despliegue de tarjeta [IMPLEMENTADO]
 
 **No implementado / CRÍTICO:**
 - Endpoint HTTP `POST /ventas/{id}/anular` aún no está expuesto en `VentasController.cs`
-- Integración con pasarela de cobro externa (planificada simulación con pasarelas tipo Mercado Pago)
-- Integración con hardware (balanza, impresora, cajón de dinero)
+- Integración física con pasarela bancaria oficial en producción (actualmente opera con simulador desacoplado conforme a S2-059/S2-060 y RN-02)
+- Integración física con hardware oficial (actualmente opera con adaptadores mock en Electron conforme a S2-086/S2-087/S2-089)
 
 ---
 
@@ -184,10 +186,10 @@ reglas: []
 |----------|--------|-----------------|
 | Login | [IMPLEMENTADO] | Llama directo a `http://127.0.0.1:5124` |
 | Abrir Turno (`AbrirTurnoPage`) | [IMPLEMENTADO] | Llama a MS-5 `/turnos/activo` y `POST /turnos/abrir` |
-| POS/Carrito | [PARCIAL] | UI implementada con datos mockeados; pendiente llamada a APIs |
+| POS/Carrito | [PARCIAL] | UI con simulador de balanza y terminal POS interactivo (S2-086/S2-087/S2-089) |
 | Admin | [PLACEHOLDER] | Componente básico (`<h2>Administración</h2>`) para acceso directo |
 
-**Nota de integración Electron:** `preload.ts` expone únicamente funciones de autenticación y sesión (`ping`, `getToken`, `setToken`, `logout`). No expone hardware serial ni actualización automática por ahora.
+**Nota de integración Electron:** `preload.ts` expone autenticación y canales protegidos de hardware simulado (`window.api.devices.terminal` y `window.api.devices.scale`). Cumple con `contextIsolation: true`, validación estricta de argumentos y exclusión de acceso serial genérico al renderer (S2-088). No expone hardware serial no probado.
 
 ---
 

@@ -1,3 +1,6 @@
+using Microsoft.Extensions.Logging;
+using POSCartService.DTOs;
+using POSCartService.Exceptions;
 using POSCartService.Messaging;
 using POSCartService.Models;
 using POSCartService.Repositories;
@@ -9,15 +12,21 @@ public class VentaService : IVentaService
     private readonly IVentaRepository _ventaRepository;
     private readonly IItemVentaRepository? _itemVentaRepository;
     private readonly IKafkaProducerService? _kafkaProducer;
+    private readonly IPasarelaPagoClient? _pasarelaClient;
+    private readonly ILogger<VentaService>? _logger;
 
     public VentaService(
         IVentaRepository ventaRepository,
         IItemVentaRepository? itemVentaRepository = null,
-        IKafkaProducerService? kafkaProducer = null)
+        IKafkaProducerService? kafkaProducer = null,
+        IPasarelaPagoClient? pasarelaClient = null,
+        ILogger<VentaService>? logger = null)
     {
         _ventaRepository     = ventaRepository ?? throw new ArgumentNullException(nameof(ventaRepository));
         _itemVentaRepository = itemVentaRepository;
         _kafkaProducer       = kafkaProducer;
+        _pasarelaClient      = pasarelaClient;
+        _logger              = logger;
     }
 
 
@@ -270,6 +279,136 @@ public class VentaService : IVentaService
         await _ventaRepository.ActualizarAsync(venta);
 
         return (venta, item);
+    }
+
+    /// <inheritdoc/>
+    public async Task<ResultadoCobroVentaTarjeta> CobrarTarjetaAsync(
+        Guid ventaId,
+        CobrarTarjetaRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var venta = await _ventaRepository.GetByIdAsync(ventaId)
+            ?? throw new KeyNotFoundException($"Venta {ventaId} no encontrada.");
+
+        if (venta.Estado != EstadoVenta.PENDIENTE)
+            throw new InvalidOperationException(
+                $"Solo se puede cobrar una venta PENDIENTE. Estado actual: {venta.Estado}.");
+
+        var correlationId = string.IsNullOrWhiteSpace(request.CorrelationId)
+            ? Guid.NewGuid().ToString("N")
+            : request.CorrelationId;
+        var intentoId = Guid.NewGuid().ToString("N");
+
+        _logger?.LogInformation(
+            "[COBRO_CORRELATION] Evento=IniciandoCobroTarjeta VentaId={VentaId} IntentoId={IntentoId} CorrelationId={CorrelationId} Total={Total}",
+            venta.Id, intentoId, correlationId, venta.Total);
+
+        if (_pasarelaClient is null)
+        {
+            throw new InvalidOperationException("Cliente de pasarela de pagos no configurado en VentaService.");
+        }
+
+        var solicitud = new SolicitudCobroPasarela
+        {
+            VentaId = venta.Id,
+            TenantId = venta.TenantId,
+            Monto = venta.Total,
+            Moneda = "CLP",
+            TokenTransaccion = request.TokenTransaccion,
+            CorrelationId = correlationId,
+            IntentoId = intentoId,
+            ModoSimulado = request.SimularResultado
+        };
+
+        var resultadoPasarela = await _pasarelaClient.ProcesarCobroAsync(solicitud, cancellationToken);
+
+        if (resultadoPasarela.Estado == EstadoCobroPasarela.ERROR_COMUNICACION)
+        {
+            // RN-02: La venta permanece en PENDIENTE. Pérdida temporal del simulador (S2-060)
+            throw new PasarelaNoDisponibleException(
+                resultadoPasarela.Mensaje ?? "El simulador de pasarela no responde o no está disponible",
+                correlationId,
+                intentoId);
+        }
+
+        if (resultadoPasarela.Estado == EstadoCobroPasarela.RECHAZADO)
+        {
+            // RN-02: La venta permanece en PENDIENTE. No se altera en BD.
+            return new ResultadoCobroVentaTarjeta
+            {
+                Exitoso = false,
+                Venta = venta,
+                CorrelationId = correlationId,
+                IntentoId = intentoId,
+                CodigoRespuesta = resultadoPasarela.CodigoRespuesta ?? "RECHAZADO",
+                MotivoRechazo = resultadoPasarela.Mensaje ?? "Cobro rechazado por la pasarela"
+            };
+        }
+
+        // APROBADO: cambiar estado a COMPLETADA y registrar Pago con TARJETA
+        venta.Estado = EstadoVenta.COMPLETADA;
+        venta.MetodoPago = MetodoPagoVenta.TARJETA;
+        venta.Pagos.Add(new Pago
+        {
+            Id = Guid.NewGuid(),
+            VentaId = venta.Id,
+            Metodo = MetodoPago.TARJETA,
+            Monto = venta.Total,
+            Vuelto = 0
+        });
+
+        var ventaCompletada = await _ventaRepository.ActualizarAsync(venta);
+
+        // Publicar sale.completed a Kafka
+        if (_kafkaProducer is not null)
+        {
+            var itemsParaEvento = (ventaCompletada.Items != null && ventaCompletada.Items.Count > 0)
+                ? ventaCompletada.Items
+                : venta.Items;
+
+            var evento = new SaleCompletedEvent
+            {
+                EventId    = Guid.NewGuid(),
+                TenantId   = ventaCompletada.TenantId,
+                VentaId    = ventaCompletada.Id,
+                CajeroId   = ventaCompletada.CajeroId,
+                SucursalId = ventaCompletada.SucursalId,
+                Subtotal   = ventaCompletada.Subtotal,
+                Iva        = ventaCompletada.Impuestos,
+                Total      = ventaCompletada.Total,
+                MetodoPago = ventaCompletada.MetodoPago.ToString(),
+                Timestamp  = DateTime.UtcNow,
+                Items      = itemsParaEvento.Select(i => new SaleCompletedItemEvent
+                {
+                    ProductoId     = i.ProductoId,
+                    Cantidad       = i.Cantidad,
+                    PrecioUnitario = i.PrecioUnitario
+                }).ToList()
+            };
+
+            try
+            {
+                await _kafkaProducer.PublicarSaleCompletedAsync(evento);
+            }
+            catch
+            {
+                // Fire-and-forget resiliente
+            }
+        }
+
+        _logger?.LogInformation(
+            "[COBRO_CORRELATION] Evento=CobroTarjetaCompletado VentaId={VentaId} IntentoId={IntentoId} CorrelationId={CorrelationId} CodigoAutorizacion={CodigoAutorizacion}",
+            ventaCompletada.Id, intentoId, correlationId, resultadoPasarela.CodigoAutorizacion);
+
+        return new ResultadoCobroVentaTarjeta
+        {
+            Exitoso = true,
+            Venta = ventaCompletada,
+            CorrelationId = correlationId,
+            IntentoId = intentoId,
+            CodigoAutorizacion = resultadoPasarela.CodigoAutorizacion,
+            ReferenciaExterna = resultadoPasarela.ReferenciaExterna
+        };
     }
 }
 

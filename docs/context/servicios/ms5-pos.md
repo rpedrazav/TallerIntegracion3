@@ -5,7 +5,7 @@ titulo: MS-5 · POS & Cart Service
 estado: parcial
 fuentes: [src/POSCartService/]
 verificado_contra_codigo: true
-ultima_revision: 2026-10-01
+ultima_revision: 2026-10-25
 depende_de: [ms1-identity, ms2-tax, ms3-catalog]
 publica: [sale.completed]
 consume: []
@@ -54,6 +54,7 @@ src/POSCartService/
 | GET | `/ventas/{id}` | JWT | [IMPLEMENTADO] |
 | GET | `/ventas/turno/{turnoId}` | JWT | [IMPLEMENTADO] |
 | POST | `/ventas/{id}/cobrar` | JWT | [IMPLEMENTADO — valida monto_recibido ≥ total, calcula vuelto, persiste pago EFECTIVO y publica sale.completed] |
+| POST | `/ventas/{id}/cobrar-tarjeta` | JWT | [IMPLEMENTADO — procesa cobro con pasarela/simulador, correlación con IDs opacos S2-059, persiste pago TARJETA y publica sale.completed S2-060] |
 | POST | `/ventas/{id}/anular` | JWT | [PLANIFICADO en controller — implementado en VentaService.AnularAsync] |
 | GET | `/health` | Público | [IMPLEMENTADO] |
 
