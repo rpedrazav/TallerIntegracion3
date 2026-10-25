@@ -381,3 +381,7 @@ Validación S2-063 del 2026-10-24: **42/42 pruebas Release aprobadas** (10 nueva
 Validación S2-064 del 2026-10-24: **75/75 pruebas Release aprobadas**, incluidas 23 nuevas de edición y 10 de aislamiento de ventas entre tenants, con HTTP/JWT y PostgreSQL temporal. [Evidencia](../qa/S2-064/reporte.md).
 
 Verificación final S2-064: recompilación Release y **33/33 casos S2-064/S2-063 aprobados**, sin fallos ni omisiones; evidencia adicional en el reporte S2-064.
+
+## S2-066 / TI3-697 — Definir interfaz de balanza
+
+[IMPLEMENTADO] Contrato TypeScript independiente del dispositivo en `globalmart-frontend/src/hardware/scale-contract.ts`: conectar, desconectar, consultar estado y leer peso estable; estados cerrados de conexión/lectura, errores tipados y lectura canónica en kg. `ScaleRendererApi` no contiene ruta serial, baud rate ni objetos Node. Typecheck y prueba estática aprobados el 2026-10-24; la prueba confirma que renderer y contrato no acceden a `serialport`, `navigator.serial` ni `SerialPort`. Adaptador, simulador e IPC siguen [PLANIFICADOS]. [Detalle](integraciones/hardware.md).

@@ -2,10 +2,10 @@
 id: hardware
 tipo: integracion
 titulo: Integración con Hardware — Balanza y Terminal POS
-estado: planificado
-fuentes: [GlobalMart_ContextMaster.md#sec12, diagramas/rodrigo/]
-verificado_contra_codigo: false
-ultima_revision: 2026-10-23
+estado: parcial
+fuentes: [GlobalMart_ContextMaster.md#sec12, diagramas/rodrigo/, globalmart-frontend/src/hardware/scale-contract.ts, globalmart-frontend/tests/scale-contract.test.cjs]
+verificado_contra_codigo: true
+ultima_revision: 2026-10-24
 depende_de: [ms5-pos, electron-ipc]
 publica: []
 consume: []
@@ -13,7 +13,7 @@ reglas: [RF-15]
 ---
 # Integración con Hardware — Balanza y Terminal POS
 
-> Dispositivos físicos en el mostrador del minimarket. La integración ocurre en el proceso principal de Electron (Node.js) y se expone al renderer vía IPC. **Estado: PLANIFICADO** — sin implementación en el código actual.
+> Dispositivos físicos en el mostrador del minimarket. La integración ocurre en el proceso principal de Electron (Node.js) y se expone al renderer vía IPC. **Estado: PARCIAL** — el contrato tipado de balanza está implementado; adaptador, simulador e IPC siguen planificados.
 
 ## Balanza Física
 
@@ -36,6 +36,20 @@ reglas: [RF-15]
 
 El [contrato S2-061](../dominio/peso-variable.md) define mínimo de 0.010 kg, precisión de 0.001 kg y rechazo de lecturas sin unidad. Estas son reglas del simulador; la integración física y la conversión del adaptador siguen pendientes.
 
+## S2-066 / TI3-697 — Interfaz de balanza [IMPLEMENTADO]
+
+`globalmart-frontend/src/hardware/scale-contract.ts` define un contrato común para el adaptador físico y el simulador:
+
+- `ScaleAdapter`: `connect`, `disconnect`, `readStableWeight` y `getState`.
+- Estados de conexión: `disconnected`, `connecting`, `connected`, `disconnecting` y `error`.
+- Estados de lectura: `idle`, `waiting_for_stability`, `stable` y `error`.
+- Errores tipados y cerrados mediante `ScaleErrorCode`, con indicador `retryable`.
+- `StableWeightReading`: lectura estable normalizada a `kg`, con fecha ISO y `stable: true`.
+- `ScaleOperationResult<T>`: resultado discriminado de éxito o error que incluye el estado vigente.
+- `ScaleRendererApi`: superficie serializable que un preload futuro podrá publicar por `contextBridge`.
+
+La configuración física del puerto se inyectará al construir el adaptador en Electron main. No forma parte de `ScaleRendererApi`, por lo que el renderer no recibe ruta serial, baud rate ni handle del dispositivo. La prueba estática `scale-contract.test.cjs` valida los estados y prohíbe `serialport`, `navigator.serial` y creación de `SerialPort` en el contrato y renderer. Typecheck y prueba aprobados el 2026-10-24.
+
 ## Terminal POS
 
 Dispositivo compuesto que agrupa varios periféricos:
@@ -47,17 +61,19 @@ Dispositivo compuesto que agrupa varios periféricos:
 | Impresora de tickets | ESC/POS protocol | Imprime recibo al finalizar venta |
 | Display para cliente | Serial/USB | Muestra el total antes de que el cliente pague |
 
-## Implementación en Electron (diseño)
+## Implementación futura en Electron
 
 ```typescript
-// Diseño esperado en main process:
+// Solo en Electron main; nunca en el renderer:
 import { SerialPort } from 'serialport';
+import type { ScaleAdapter } from './hardware/scale-contract';
 
-// Balanza
-ipcMain.handle('balanza:conectar', (_, puerto: string) => {
-  const serial = new SerialPort({ path: puerto, baudRate: 9600 });
-  // ...
-});
+// La configuración serial se inyecta al crear el adaptador.
+// Los handlers IPC delegan en ScaleAdapter y no aceptan una ruta de puerto.
+ipcMain.handle('balanza:conectar', () => scaleAdapter.connect());
+ipcMain.handle('balanza:desconectar', () => scaleAdapter.disconnect());
+ipcMain.handle('balanza:leer-peso-estable', (_, options) =>
+  scaleAdapter.readStableWeight(options));
 
 // Cajón de dinero
 ipcMain.handle('cajon:abrir', () => {
@@ -89,3 +105,6 @@ ipcMain.handle('impresora:imprimir', (_, contenido: string) => {
 ## Fuentes
 - `GlobalMart_ContextMaster.md` §12
 - `diagramas/rodrigo/R1_screen_flow_electron.drawio.png`
+- `globalmart-frontend/src/hardware/scale-contract.ts`
+- `globalmart-frontend/tests/scale-contract.test.cjs`
+- `tareas/sprint2_youtrack_resultado.json` (`S2-066` → `TI3-697`)

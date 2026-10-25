@@ -5,7 +5,7 @@ titulo: Frontend — Estructura del Proyecto Electron + React
 estado: parcial
 fuentes: [globalmart-frontend/src/, globalmart-frontend/package.json, globalmart-frontend/forge.config.ts]
 verificado_contra_codigo: true
-ultima_revision: 2026-10-13
+ultima_revision: 2026-10-24
 depende_de: [stack, ms1-identity, guia-estilo]
 publica: []
 consume: []
@@ -44,6 +44,8 @@ globalmart-frontend/
 │   │       └── CartItem.tsx      Componente de ítem en carrito
 │   ├── hooks/
 │   │   └── useAuth.ts    Hook de autenticación con electron-store
+│   ├── hardware/
+│   │   └── scale-contract.ts  Contrato tipado de balanza física/simulada
 │   └── types/
 │       └── global.d.ts   Tipos globales TypeScript
 ├── package.json          Dependencias (Electron, React, axios, etc.)
@@ -86,7 +88,7 @@ globalmart-frontend/
 3. **Cobro no implementado:** `handleCheckout()` muestra `alert('Funcionalidad de cobro se implementará en el futuro.')`.
 4. **Sin RoleSwitcher:** No hay componente para cambiar el rol activo.
 5. **Turnos:** Las páginas de apertura y cierre usan MS-5; el carrito POS aún no crea ventas.
-6. **Sin hardware:** No hay SerialPort, ni integración con balanza ni impresora.
+6. **Hardware parcial:** Existe el contrato tipado de balanza; no hay adaptador SerialPort, simulador, IPC ni integración visual.
 
 ## Conexiones
 - Autenticación: [[auth-y-roles]]
@@ -99,4 +101,5 @@ globalmart-frontend/
 - `globalmart-frontend/src/App.tsx`
 - `globalmart-frontend/src/pages/Login.tsx`
 - `globalmart-frontend/src/pages/Pos.tsx`
+- `globalmart-frontend/src/hardware/scale-contract.ts`
 - `globalmart-frontend/package.json`

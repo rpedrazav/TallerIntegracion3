@@ -3,9 +3,9 @@ id: electron-ipc
 tipo: frontend
 titulo: Electron IPC — Comunicación Main/Renderer
 estado: parcial
-fuentes: [globalmart-frontend/src/preload.ts, globalmart-frontend/src/index.ts]
+fuentes: [globalmart-frontend/src/preload.ts, globalmart-frontend/src/index.ts, globalmart-frontend/src/hardware/scale-contract.ts, globalmart-frontend/tests/scale-contract.test.cjs]
 verificado_contra_codigo: true
-ultima_revision: 2026-09-28
+ultima_revision: 2026-10-24
 depende_de: [estructura]
 publica: []
 consume: []
@@ -13,7 +13,7 @@ reglas: []
 ---
 # Electron IPC — Comunicación Main/Renderer
 
-> El preload.ts expone APIs seguras del proceso principal (Node.js) al renderer (React). Actualmente el preload existe pero con contenido NO VERIFICADO en detalle.
+> `preload.ts` expone APIs seleccionadas del proceso principal (Node.js) al renderer (React). El contrato de balanza está definido, pero todavía no se publica ni tiene handlers IPC.
 
 ## Arquitectura Electron
 
@@ -29,7 +29,7 @@ Backend APIs (MS-1, MS-3, MS-5)
 
 El archivo `src/preload.ts` existe y actúa como bridge de seguridad entre el proceso principal y el renderer. Expone selectivamente las APIs de Node.js que el renderer puede usar.
 
-**Contenido no verificado en detalle.** Ver `globalmart-frontend/src/preload.ts`.
+Actualmente expone `ping`, `getToken`, `setToken` y `logout`. No expone Node.js, puertos seriales ni una API de balanza.
 
 ## Handlers IPC diseñados (de diagramas)
 
@@ -38,20 +38,20 @@ Según `diagramas/rodrigo/R1_screen_flow_electron.drawio.png`:
 - IPC para SerialPort (balanza, impresora)
 - IPC para gestión de ventanas
 
-**Estado:** NO VERIFICADO si están implementados en el código actual.
+**Estado:** el IPC de autenticación está implementado; los handlers de hardware siguen planificados.
 
-## Hardware por IPC (PLANIFICADO)
+## Contrato de balanza por IPC (S2-066)
+
+`ScaleRendererApi` define únicamente operaciones de alto nivel: conectar, desconectar, consultar estado y leer peso estable. No contiene ruta de puerto, baud rate ni objetos de `serialport`. El adaptador físico y el simulador deberán implementar `ScaleAdapter` en Electron main; una tarea posterior conectará sus métodos con `ipcMain` y `contextBridge`.
 
 ```typescript
-// Diseño esperado (NO en código actual):
-// main process
-ipcMain.handle('balanza:leer-peso', async () => {
-  const puerto = new SerialPort({ path: 'COM3', baudRate: 9600 });
-  // ... leer peso
-});
-
-// renderer (vía contextBridge)
-const peso = await window.electronAPI.balanza.leerPeso();
+// Diseño futuro del preload: delegación exclusiva por IPC.
+const scaleApi: ScaleRendererApi = {
+  connect: () => ipcRenderer.invoke('scale:connect'),
+  disconnect: () => ipcRenderer.invoke('scale:disconnect'),
+  readStableWeight: (options) => ipcRenderer.invoke('scale:read-stable', options),
+  getState: () => ipcRenderer.invoke('scale:get-state'),
+};
 ```
 
 ## Conexiones
@@ -62,4 +62,6 @@ const peso = await window.electronAPI.balanza.leerPeso();
 ## Fuentes
 - `globalmart-frontend/src/preload.ts`
 - `globalmart-frontend/src/index.ts`
+- `globalmart-frontend/src/hardware/scale-contract.ts`
+- `globalmart-frontend/tests/scale-contract.test.cjs`
 - `diagramas/rodrigo/R1_screen_flow_electron.drawio.png`
