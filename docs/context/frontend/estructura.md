@@ -13,7 +13,7 @@ reglas: [RNF-06]
 ---
 # Frontend — Estructura del Proyecto Electron + React
 
-> App de escritorio multiplataforma construida con Electron + React + TypeScript. Tiene páginas de Login, POS, turnos y administración; la integración del carrito con ventas de MS-5 sigue pendiente.
+> App de escritorio multiplataforma construida con Electron + React + TypeScript. Tiene páginas de Login, POS, turnos y administración; el POS consume catálogo, ventas, pagos y la balanza simulada, con áreas administrativas aún parciales.
 
 ## Sistema visual
 
@@ -49,7 +49,8 @@ globalmart-frontend/
 │   │   ├── simulated-scale-adapter.ts  Escenarios deterministas sin hardware
 │   │   ├── serial-scale-adapter.ts  Transporte/parser inyectables, sin driver real
 │   │   ├── scale-adapter-factory.ts  Selección de driver por configuración
-│   │   └── scale-ipc.ts  Whitelist, validación y handlers IPC
+│   │   ├── scale-ipc.ts  Whitelist, validación y handlers IPC
+│   │   └── scale-cart.ts  Filtro de peso estable antes de ingresar al carrito
 │   └── types/
 │       └── global.d.ts   Tipos globales TypeScript
 ├── package.json          Dependencias (Electron, React, axios, etc.)
@@ -82,17 +83,17 @@ globalmart-frontend/
 | Pantalla | Integración API | Estado |
 |---------|-----------------|--------|
 | Login | POST /auth/login mediante `identityApi` | [IMPLEMENTADO] |
-| Pos | Catálogo MS-3 mediante `catalogApi`; carrito local | [PARCIAL] |
+| Pos | Catálogo MS-3, ventas/pagos MS-5 y balanza simulada; borrador local previo | [PARCIAL] |
 | Admin | `GET /users` de MS-1 + creación/asignación de roles | [PARCIAL] |
 
 ## Hallazgos importantes
 
 1. **URL del login:** `identityApi` usa el host MS-1 configurado en `src/api/client.ts`.
-2. **POS y catálogo:** Pos.tsx obtiene productos de MS-3 y conserva el carrito local.
-3. **Cobro no implementado:** `handleCheckout()` muestra `alert('Funcionalidad de cobro se implementará en el futuro.')`.
+2. **POS y catálogo:** Pos.tsx obtiene productos de MS-3; conserva localmente solo el borrador anterior a iniciar una venta y después usa MS-5 como autoridad.
+3. **Cobro:** efectivo y tarjeta simulada están conectados con MS-5; la pasarela bancaria real no forma parte del proyecto.
 4. **Sin RoleSwitcher:** No hay componente para cambiar el rol activo.
-5. **Turnos:** Las páginas de apertura y cierre usan MS-5; el carrito POS aún no crea ventas.
-6. **Hardware parcial:** Existen contrato, simulador, estructura serial intercambiable, fábrica e IPC mínimo. No hay dependencia `serialport`, parser de fabricante, verificación física ni integración visual en React.
+5. **Turnos:** Las páginas de apertura y cierre usan MS-5; el POS crea y recupera ventas pendientes.
+6. **Hardware parcial:** Existen contrato, simulador, estructura serial intercambiable, fábrica, IPC y consumo mínimo en React. No hay dependencia `serialport`, parser de fabricante ni verificación física.
 
 ## Conexiones
 - Autenticación: [[auth-y-roles]]
@@ -110,4 +111,6 @@ globalmart-frontend/
 - `globalmart-frontend/src/hardware/serial-scale-adapter.ts`
 - `globalmart-frontend/src/hardware/scale-adapter-factory.ts`
 - `globalmart-frontend/src/hardware/scale-ipc.ts`
+- `globalmart-frontend/src/hardware/scale-cart.ts`
+- `globalmart-frontend/tests/scale-main-preload.integration.test.cjs`
 - `globalmart-frontend/package.json`

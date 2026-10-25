@@ -5,6 +5,7 @@ import { catalogApi, CatalogProduct, posApi, VentaPendiente } from '../api/clien
 import BarcodeInput from '../components/pos/BarcodeInput';
 import CartItem from '../components/pos/CartItem';
 import PaymentModal, { PaymentMethod, PaymentState } from '../components/pos/PaymentModal';
+import { readStableWeightForCart } from '../hardware/scale-cart';
 import { Ms5TerminalAdapter } from '../payments/Ms5TerminalAdapter';
 import type { TerminalPort } from '../payments/TerminalPort';
 
@@ -17,6 +18,8 @@ export interface ProductItem {
   quantity: number;
   subtotal?: number;
   itemId?: string;
+  isWeightVariable?: boolean;
+  weightKg?: number;
 }
 
 interface PosLocationState {
@@ -57,6 +60,8 @@ export default function Pos() {
   const [draftPaymentMethod, setDraftPaymentMethod] = useState<'EFECTIVO' | 'TARJETA'>('EFECTIVO');
   const paymentInFlight = useRef(false);
   const paymentAttemptReference = useRef<string | null>(null);
+  const scaleReadInFlight = useRef(false);
+  const [isReadingScale, setIsReadingScale] = useState(false);
   const [pendingMutations, setPendingMutations] = useState(0);
   const [saleNeedsRefresh, setSaleNeedsRefresh] = useState(false);
   const saleRef = useRef<VentaPendiente | null>(null);
@@ -157,6 +162,8 @@ export default function Pos() {
         price: item.precio_unitario,
         quantity: item.cantidad,
         subtotal: item.subtotal,
+        isWeightVariable: item.peso_kg != null,
+        weightKg: item.peso_kg ?? undefined,
       }))
     : draftItems;
 
@@ -225,35 +232,82 @@ export default function Pos() {
     }
   };
 
-  const addProductToCart = useCallback((product: CatalogProduct) => {
-    if (isStartingSale || saleNeedsRefresh || paymentState === 'uncertain' || paymentState === 'processing') return;
+  const addProductToCart = useCallback(async (product: CatalogProduct): Promise<boolean> => {
+    if (isStartingSale || saleNeedsRefresh || paymentState === 'uncertain' || paymentState === 'processing') return false;
+
+    let weightKg: number | undefined;
+    if (product.esPesoVariable) {
+      if (scaleReadInFlight.current) return false;
+      scaleReadInFlight.current = true;
+      setIsReadingScale(true);
+      setVentaError('');
+      try {
+        const reading = await readStableWeightForCart(window.api.scale);
+        if (!reading.ok) {
+          setVentaError(`No se agregó ${product.nombre}: ${reading.message}`);
+          return false;
+        }
+        weightKg = reading.weightKg;
+      } finally {
+        scaleReadInFlight.current = false;
+        setIsReadingScale(false);
+      }
+    }
+
     if (venta) {
       void queueSaleMutation(async (current) => {
         const existing = current.items.find((item) => item.producto_id === product.id);
         if (existing) {
-          await posApi.updateSaleItem(current.id, existing.id, existing.cantidad + 1);
+          if (weightKg !== undefined) {
+            const accumulatedWeight = existing.cantidad + weightKg;
+            await posApi.updateSaleItem(
+              current.id,
+              existing.id,
+              accumulatedWeight,
+              accumulatedWeight,
+            );
+          } else {
+            await posApi.updateSaleItem(current.id, existing.id, existing.cantidad + 1);
+          }
         } else {
-          await posApi.addSaleItem(current.id, product.id, 1);
+          await posApi.addSaleItem(
+            current.id,
+            product.id,
+            weightKg === undefined ? 1 : weightKg,
+            weightKg,
+          );
         }
       });
       setSearchResults([]);
       setClearSearchSignal((value) => value + 1);
-      return;
+      return true;
     }
     setDraftItems(prev => {
       const existing = prev.find(item => item.id === product.id);
       if (existing) {
-        return prev.map(item => item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item);
+        return prev.map((item) => {
+          if (item.id !== product.id) return item;
+          const quantity = item.quantity + (weightKg ?? 1);
+          return {
+            ...item,
+            quantity,
+            weightKg: product.esPesoVariable ? quantity : undefined,
+            isWeightVariable: product.esPesoVariable,
+          };
+        });
       }
       return [...prev, {
         id: product.id,
         name: product.nombre,
         price: product.precioBase,
-        quantity: 1
+        quantity: weightKg ?? 1,
+        weightKg,
+        isWeightVariable: product.esPesoVariable,
       }];
     });
     setSearchResults([]);
     setClearSearchSignal((value) => value + 1);
+    return true;
   }, [venta, isStartingSale, saleNeedsRefresh, paymentState, queueSaleMutation]);
 
   const handleTypingSearch = useCallback(async (query: string) => {
@@ -284,9 +338,9 @@ export default function Pos() {
     setSearchState('loading');
     try {
       const product = await catalogApi.lookupProduct(q);
-      addProductToCart(product);
+      const added = await addProductToCart(product);
       setSearchState('idle');
-      return true;
+      return added;
     } catch (error: unknown) {
       if (!(axios.isAxiosError(error) && error.response?.status === 404)) {
         setSearchState('error');
@@ -296,9 +350,9 @@ export default function Pos() {
     try {
       const result = await catalogApi.searchProducts(q);
       if (result.data.length === 1) {
-        addProductToCart(result.data[0]);
+        const added = await addProductToCart(result.data[0]);
         setSearchState('idle');
-        return true;
+        return added;
       }
       setSearchResults(result.data);
       setSearchState(result.data.length ? 'idle' : 'empty');
@@ -374,6 +428,7 @@ export default function Pos() {
       const creada = await posApi.createSale(draftItems.map((item) => ({
         producto_id: item.id,
         cantidad: item.quantity,
+        peso_kg: item.isWeightVariable ? item.weightKg ?? item.quantity : undefined,
       })), draftPaymentMethod);
       saleRef.current = creada;
       setVenta(creada);
@@ -634,6 +689,7 @@ export default function Pos() {
       )}
       {paymentState === 'uncertain' && venta && <div role="alert" style={{ padding: '0.75rem 1rem', border: '1px solid var(--color-warning)', background: 'var(--color-warning-bg)', color: 'var(--color-warning-text)', borderRadius: '8px' }}>Resultado del cobro sin confirmar. Abre Cobrar y verifica la venta antes de continuar.</div>}
       {pendingMutations > 0 && <div role="status">Sincronizando ítems con MS-5...</div>}
+      {isReadingScale && <div role="status">Esperando un peso estable de la balanza...</div>}
       {venta && (
         <div role="status" style={{ padding: '0.75rem 1rem', border: '1px solid var(--color-success)', background: 'var(--color-success-bg)', color: 'var(--color-success)', borderRadius: '8px' }}>
           Venta {venta.estado === 'COMPLETADA' ? 'completada' : 'pendiente'} #{venta.id.slice(0, 8)}. Los ítems y totales provienen de MS-5.
@@ -680,8 +736,8 @@ export default function Pos() {
         {/* Columna Izquierda: Búsqueda y Escaneo */}
         <div style={{ flex: '0 0 320px', display: 'flex', flexDirection: 'column', background: 'var(--color-surface)', padding: '1rem', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
                 <h3 style={{ marginTop: 0, color: 'var(--color-primary)', fontSize: '1.25rem' }}>Buscar Producto</h3>
-        {isStartingSale || saleNeedsRefresh || paymentState === 'uncertain' || paymentState === 'processing' || (venta && venta.estado !== 'PENDIENTE') ? (
-          <p style={{ color: 'var(--color-ink-soft)' }}>{isStartingSale ? 'Iniciando venta...' : 'Actualiza la venta para seguir agregando productos.'}</p>
+        {isStartingSale || isReadingScale || saleNeedsRefresh || paymentState === 'uncertain' || paymentState === 'processing' || (venta && venta.estado !== 'PENDIENTE') ? (
+          <p style={{ color: 'var(--color-ink-soft)' }}>{isStartingSale ? 'Iniciando venta...' : isReadingScale ? 'Leyendo balanza...' : 'Actualiza la venta para seguir agregando productos.'}</p>
         ) : (
           <BarcodeInput onSearch={handleSearch} onTyping={handleTypingSearch} clearSignal={clearSearchSignal} />
         )}
@@ -694,7 +750,7 @@ export default function Pos() {
             searchResults.map(prod => (
               <div 
                 key={prod.id}
-                onClick={() => addProductToCart(prod)}
+                onClick={() => { void addProductToCart(prod); }}
                 style={{
                   padding: '0.75rem',
                   border: '1px solid var(--color-line)',
@@ -719,6 +775,7 @@ export default function Pos() {
                 <div>
                   <div style={{ fontWeight: 600, color: 'var(--color-ink)' }}>{prod.nombre}</div>
                   <div style={{ fontSize: '0.75rem', color: 'var(--color-ink-soft)' }}>{prod.codigoBarras}</div>
+                  {prod.esPesoVariable && <div style={{ fontSize: '0.75rem', color: 'var(--color-warning-text)' }}>Requiere peso estable</div>}
                 </div>
                 <div style={{ fontWeight: 'bold', color: 'var(--color-primary)' }}>
                   ${prod.precioBase.toLocaleString('es-CL')}
@@ -766,7 +823,8 @@ export default function Pos() {
                     price={item.price} 
                     quantity={item.quantity} 
                     subtotal={item.subtotal}
-                    readOnly={isStartingSale || pendingMutations > 0 || saleNeedsRefresh || paymentState === 'uncertain' || paymentState === 'processing' || !!(venta && venta.estado !== 'PENDIENTE')}
+                    isWeightVariable={item.isWeightVariable}
+                    readOnly={item.isWeightVariable || isStartingSale || pendingMutations > 0 || saleNeedsRefresh || paymentState === 'uncertain' || paymentState === 'processing' || !!(venta && venta.estado !== 'PENDIENTE')}
                     canRemove={!venta || venta.estado === 'PENDIENTE'}
                     onQuantityChange={handleQuantityChange}
                     onRemove={handleRemoveItem}

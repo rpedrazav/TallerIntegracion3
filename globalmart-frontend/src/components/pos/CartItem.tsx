@@ -6,13 +6,14 @@ export interface CartItemProps {
   price: number;
   quantity: number;
   subtotal?: number;
+  isWeightVariable?: boolean;
   readOnly?: boolean;
   canRemove?: boolean;
   onQuantityChange: (id: string, quantity: number) => void;
   onRemove: (id: string) => void;
 }
 
-export default function CartItem({ id, name, price, quantity, subtotal, readOnly = false, canRemove = true, onQuantityChange, onRemove }: CartItemProps) {
+export default function CartItem({ id, name, price, quantity, subtotal, isWeightVariable = false, readOnly = false, canRemove = true, onQuantityChange, onRemove }: CartItemProps) {
   const [draftQuantity, setDraftQuantity] = useState(String(quantity));
 
   useEffect(() => {
@@ -38,7 +39,9 @@ export default function CartItem({ id, name, price, quantity, subtotal, readOnly
         $ {price.toLocaleString('es-CL')}
       </td>
       <td style={{ padding: '1rem 0.5rem' }}>
-        <input
+        {isWeightVariable ? (
+          <span aria-label="Peso estable">{quantity.toFixed(3)} kg</span>
+        ) : <input
           type="number"
           min="1"
           value={draftQuantity}
@@ -58,7 +61,7 @@ export default function CartItem({ id, name, price, quantity, subtotal, readOnly
             e.target.style.borderColor = 'var(--color-line)';
             commitQuantity();
           }}
-        />
+        />}
       </td>
       <td style={{ padding: '1rem 0.5rem', fontWeight: 600, color: 'var(--color-ink)' }}>
         $ {(subtotal ?? price * quantity).toLocaleString('es-CL')}

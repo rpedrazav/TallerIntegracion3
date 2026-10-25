@@ -3,7 +3,7 @@ id: electron-ipc
 tipo: frontend
 titulo: Electron IPC — Comunicación Main/Renderer
 estado: parcial
-fuentes: [globalmart-frontend/src/preload.ts, globalmart-frontend/src/index.ts, globalmart-frontend/src/types/global.d.ts, globalmart-frontend/src/hardware/scale-contract.ts, globalmart-frontend/src/hardware/simulated-scale-adapter.ts, globalmart-frontend/src/hardware/serial-scale-adapter.ts, globalmart-frontend/src/hardware/scale-adapter-factory.ts, globalmart-frontend/src/hardware/scale-ipc.ts, globalmart-frontend/tests/scale-contract.test.cjs, globalmart-frontend/tests/simulated-scale-adapter.test.cjs, globalmart-frontend/tests/serial-scale-adapter.test.cjs, globalmart-frontend/tests/scale-ipc.test.cjs]
+fuentes: [globalmart-frontend/src/preload.ts, globalmart-frontend/src/index.ts, globalmart-frontend/src/types/global.d.ts, globalmart-frontend/src/pages/Pos.tsx, globalmart-frontend/src/hardware/scale-contract.ts, globalmart-frontend/src/hardware/simulated-scale-adapter.ts, globalmart-frontend/src/hardware/serial-scale-adapter.ts, globalmart-frontend/src/hardware/scale-adapter-factory.ts, globalmart-frontend/src/hardware/scale-ipc.ts, globalmart-frontend/src/hardware/scale-cart.ts, globalmart-frontend/tests/scale-contract.test.cjs, globalmart-frontend/tests/simulated-scale-adapter.test.cjs, globalmart-frontend/tests/serial-scale-adapter.test.cjs, globalmart-frontend/tests/scale-ipc.test.cjs, globalmart-frontend/tests/scale-main-preload.integration.test.cjs]
 verificado_contra_codigo: true
 ultima_revision: 2026-10-25
 depende_de: [estructura]
@@ -62,6 +62,12 @@ El único payload permitido corresponde a `readStableWeight`: objeto opcional co
 
 S2-069 no cambia esta superficie: puerto, baud rate y parser se resuelven únicamente en main. Cambiar entre simulador y serial no requiere modificar preload, IPC, tipos globales ni componentes React.
 
+## Prueba integrada de main/preload (S2-070)
+
+`scale-main-preload.integration.test.cjs` enlaza el simulador y los handlers reales de main con la API real publicada por preload y el filtro `readStableWeightForCart`. Cubre lectura estable, dato corrupto, desconexión y reconexión; únicamente las lecturas estables, positivas y válidas llegan al colector que representa el carrito. El POS consume el mismo filtro mediante `window.api.scale`, sin acceder a `ipcRenderer` ni a configuración serial.
+
+Esta verificación se ejecuta sin hardware y con Electron simulado en memoria. Puerto, driver, parser y dispositivo físicos permanecen [NO VERIFICADOS].
+
 ## Conexiones
 - Estructura: [[estructura]]
 - Hardware: [[hardware]]
@@ -75,9 +81,12 @@ S2-069 no cambia esta superficie: puerto, baud rate y parser se resuelven única
 - `globalmart-frontend/src/hardware/serial-scale-adapter.ts`
 - `globalmart-frontend/src/hardware/scale-adapter-factory.ts`
 - `globalmart-frontend/src/hardware/scale-ipc.ts`
+- `globalmart-frontend/src/hardware/scale-cart.ts`
+- `globalmart-frontend/src/pages/Pos.tsx`
 - `globalmart-frontend/src/types/global.d.ts`
 - `globalmart-frontend/tests/scale-contract.test.cjs`
 - `globalmart-frontend/tests/simulated-scale-adapter.test.cjs`
 - `globalmart-frontend/tests/serial-scale-adapter.test.cjs`
 - `globalmart-frontend/tests/scale-ipc.test.cjs`
+- `globalmart-frontend/tests/scale-main-preload.integration.test.cjs`
 - `diagramas/rodrigo/R1_screen_flow_electron.drawio.png`

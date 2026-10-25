@@ -3,9 +3,9 @@ id: peso-variable
 tipo: dominio
 titulo: Contrato de ítem pesable — S2-061
 estado: contrato_definido
-fuentes: [src/POSCartService/Controllers/VentasController.cs, src/POSCartService/DTOs/AgregarItemDTOs.cs, src/POSCartService/DTOs/CrearVentaRequest.cs, src/CatalogPricingService/Models/Producto.cs]
-verificado_contra_codigo: false
-ultima_revision: 2026-10-24
+fuentes: [src/POSCartService/Controllers/VentasController.cs, src/POSCartService/DTOs/AgregarItemDTOs.cs, src/POSCartService/DTOs/CrearVentaRequest.cs, src/CatalogPricingService/Models/Producto.cs, globalmart-frontend/src/pages/Pos.tsx, globalmart-frontend/src/hardware/scale-cart.ts, globalmart-frontend/tests/scale-main-preload.integration.test.cjs]
+verificado_contra_codigo: true
+ultima_revision: 2026-10-25
 depende_de: [ms3-catalog, ms5-pos, hardware]
 publica: []
 consume: []
@@ -13,7 +13,7 @@ reglas: [RN-01, RN-06, RN-07]
 ---
 # Contrato de ítem pesable — S2-061
 
-**Entrega: CONTRATO DEFINIDO, versión 1. Aplicación integral en ejecución: PARCIAL (S2-062: validación al agregar; S2-063: cálculo y precisión del precio; S2-064: edición por tipo; S2-067: simulador).** Este documento especifica las reglas que deberán compartir catálogo, simulador, POS y MS-5. No certifica pruebas de integración ni una balanza física implementada.
+**Entrega: CONTRATO DEFINIDO, versión 1. Aplicación integral en ejecución: PARCIAL (S2-062: validación al agregar; S2-063: cálculo y precisión del precio; S2-064: edición por tipo; S2-067: simulador; S2-070: consumo desde el POS).** Este documento especifica las reglas que comparten catálogo, simulador, POS y MS-5. No certifica una balanza física.
 
 El mínimo de 10 g y la precisión de 1 g son decisiones de diseño de esta tarea para el simulador, no especificaciones verificadas de hardware. Capacidad máxima y resolución de una balanza física: [NO VERIFICADO].
 
@@ -119,7 +119,7 @@ Para acreditar implementación posteriormente:
 
 ## 7. Estado real y trabajo de implementación pendiente
 
-Inspección de código, 2026-10-24:
+Inspección de código, 2026-10-25:
 
 - [IMPLEMENTADO] Los DTOs admiten `peso_kg`; crear/agregar copia un peso positivo a cantidad cuando catálogo indica `EsPesoVariable`. MS-5 obtiene precio de catálogo y calcula subtotal.
 - [IMPLEMENTADO — S2-062] Agregar ítem consulta `EsPesoVariable` en catálogo y rechaza peso ausente, inferior a 0.010 kg, fracciones de gramo, cantidad contradictoria y peso en productos no pesables antes de calcular impuestos o persistir. S2-064 aplica las mismas restricciones al modificar, consultando el tipo en MS-3. Crear venta todavía no aplica estas reglas completas.
@@ -127,7 +127,8 @@ Inspección de código, 2026-10-24:
 - [PENDIENTE] Exponer/resolver unidad del catálogo: `ProductoCatalogDto` no incluye `UomBaseId`. Definir la correspondencia real y validar precio por kg.
 - [IMPLEMENTADO — S2-063] Se conserva la precisión del precio persistido y MS-2 redondea subtotal e IVA por línea antes de sumar la venta.
 - [PENDIENTE] Aplicar las validaciones completas de peso en crear venta y probarlas mediante HTTP/persistencia.
-- [IMPLEMENTADO — S2-067/S2-069] El simulador y el adaptador serial abstracto reciben unidad explícita `g`/`kg`, convierten una sola vez a kg y rechazan valores menores a 10 g o con fracciones inferiores a 1 g. Pruebas con dobles verifican `750 g → 0.750 kg`; la aceptación E2E mediante UI/hardware sigue pendiente.
+- [IMPLEMENTADO — S2-067/S2-069] El simulador y el adaptador serial abstracto reciben unidad explícita `g`/`kg`, convierten una sola vez a kg y rechazan valores menores a 10 g o con fracciones inferiores a 1 g.
+- [IMPLEMENTADO CON SIMULADOR — S2-070] El POS consulta `window.api.scale` mediante un filtro único, acepta solamente peso estable y válido, bloquea la edición manual de líneas pesables y envía `cantidad = peso_kg`. La prueba integrada recorre simulador, main, preload, dato corrupto, desconexión y reconexión. UI con hardware físico [NO VERIFICADA].
 
 Validación S2-062 del 2026-10-24: **20/20 casos nuevos aprobados** más 12 de regresión, limitados a agregar ítems. [Reporte y evidencia](../../qa/S2-062/reporte.md).
 
@@ -140,6 +141,8 @@ Validación S2-062 del 2026-10-24: **20/20 casos nuevos aprobados** más 12 de r
 - [Persistencia MS-5](../../../src/POSCartService/Data/PosCartDbContext.cs)
 - [Adaptador simulado](../../../globalmart-frontend/src/hardware/simulated-scale-adapter.ts)
 - [Adaptador serial abstracto](../../../globalmart-frontend/src/hardware/serial-scale-adapter.ts)
+- [Filtro de peso para el carrito](../../../globalmart-frontend/src/hardware/scale-cart.ts)
+- [Prueba main/preload con simulador](../../../globalmart-frontend/tests/scale-main-preload.integration.test.cjs)
 - [MS-5](../servicios/ms5-pos.md), [MS-3](../servicios/ms3-catalog.md), [hardware](../integraciones/hardware.md)
 
 Validación S2-063 del 2026-10-24: **42/42 pruebas Release aprobadas** (10 nuevas, 32 de regresión), con PostgreSQL temporal, HTTP MS-5 y calculador productivo MS-2 a través de handler HTTP. Regresión manual TC-01 aprobada. [Evidencia y límites](../../qa/S2-063/reporte.md).
