@@ -3,7 +3,7 @@ id: pantallas
 tipo: frontend
 titulo: Pantallas del Frontend — GlobalMart OS
 estado: parcial
-fuentes: [globalmart-frontend/src/pages/, globalmart-frontend/src/components/, globalmart-frontend/src/api/client.ts]
+fuentes: [globalmart-frontend/src/pages/, globalmart-frontend/src/components/, globalmart-frontend/src/api/client.ts, globalmart-frontend/src/hardware/scale-cart.ts, globalmart-frontend/tests/scale-main-preload.integration.test.cjs]
 verificado_contra_codigo: true
 ultima_revision: 2026-10-25
 depende_de: [estructura, ms1-identity, ms5-pos, guia-estilo]
@@ -51,7 +51,7 @@ Carrito de compras con:
 Productos obtenidos de MS-3 mediante `catalogApi`; solo el borrador anterior a la venta se guarda en `localStorage`
 Al entrar a /pos, consulta `posApi.activeShift`. Mientras espera muestra carga; ante 404 redirige a /abrir-turno. Si falla la conexión, bloquea el POS y ofrece reintentar. El catálogo se consulta solo después de confirmar el turno activo [IMPLEMENTADO].
 
-POST /ventas envía items [{producto_id, cantidad}] y metodo_pago EFECTIVO; no envía precio ni impuesto.
+POST /ventas envía `producto_id`, `cantidad` y, solo para productos pesables, `peso_kg`; nunca envía precio ni impuesto. El método puede ser EFECTIVO o TARJETA.
 GET /ventas/turno/{turnoId} identifica la última venta PENDIENTE del turno activo al abrir POS y antes de crear otra; GET /ventas/{id} recupera su estado completo antes de mostrar el carrito. Si falla la recuperación, POS muestra un error y ofrece reintentar sin usar el borrador local como autoridad.
 El ID, los ítems y los totales de la venta pendiente vienen de MS-5; el borrador local deja de ser autoridad.
 En venta pendiente, búsqueda y escaneo agregan ítems con `POST /ventas/{id}/items` o aumentan cantidad con `PUT /ventas/{id}/items/{itemId}`. Editar la cantidad de una fila usa el ID del ítem de MS-5. Tras cada operación consulta `GET /ventas/{id}` para renovar carrito, subtotal, impuestos y total; si no puede confirmar el estado, bloquea nuevas ediciones hasta reintentar la consulta [IMPLEMENTADO].
@@ -59,6 +59,12 @@ Eliminar una fila de la venta pendiente llama `DELETE /ventas/{id}/items/{itemId
 Errores de inicio visibles; ante respuesta perdida, vuelve a consultar el turno antes de permitir otro intento [IMPLEMENTADO].
 NO abre turno desde esta pantalla; dirige a /abrir-turno cuando falta
 ```
+
+### Balanza simulada — S2-070 / TI3-701 [IMPLEMENTADO CON SIMULADOR]
+
+Al seleccionar un producto con `esPesoVariable`, el POS llama exclusivamente a `readStableWeightForCart(window.api.scale)`. Mientras espera bloquea otra lectura y muestra estado; solo agrega la línea cuando recibe un peso estable, positivo, en kg, de al menos 10 g y con precisión de 1 g. Un dato corrupto, error o desconexión deja el carrito sin cambios y presenta un mensaje. El intento siguiente consulta el estado y reconecta antes de leer cuando corresponde.
+
+La cantidad de una línea pesable se muestra con tres decimales en kg y no puede editarse manualmente. Crear, agregar y modificar envían `cantidad = peso_kg` y `peso_kg`; los totales posteriores continúan proviniendo de MS-5. La prueba integrada de simulador/main/preload confirma la secuencia válida, corrupta, desconectada y recuperada; hardware real [NO VERIFICADO].
 
 ### Modal de cobro — contrato visual S2-046 [IMPLEMENTADO]
 
