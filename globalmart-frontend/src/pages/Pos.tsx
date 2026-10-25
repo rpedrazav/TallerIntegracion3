@@ -5,6 +5,10 @@ import { catalogApi, CatalogProduct, posApi, VentaPendiente } from '../api/clien
 import BarcodeInput from '../components/pos/BarcodeInput';
 import CartItem from '../components/pos/CartItem';
 import PaymentModal, { PaymentMethod, PaymentState } from '../components/pos/PaymentModal';
+import { Ms5TerminalAdapter } from '../payments/Ms5TerminalAdapter';
+import type { TerminalPort } from '../payments/TerminalPort';
+
+const terminalPort: TerminalPort = new Ms5TerminalAdapter();
 
 export interface ProductItem {
   id: string;
@@ -52,6 +56,7 @@ export default function Pos() {
   const [paymentReference, setPaymentReference] = useState<string | null>(null);
   const [draftPaymentMethod, setDraftPaymentMethod] = useState<'EFECTIVO' | 'TARJETA'>('EFECTIVO');
   const paymentInFlight = useRef(false);
+  const paymentAttemptReference = useRef<string | null>(null);
   const [pendingMutations, setPendingMutations] = useState(0);
   const [saleNeedsRefresh, setSaleNeedsRefresh] = useState(false);
   const saleRef = useRef<VentaPendiente | null>(null);
@@ -74,20 +79,24 @@ export default function Pos() {
         let pendiente = recovered?.estado === 'PENDIENTE' ? recovered : null;
         if (pendiente?.metodo_pago === 'TARJETA') {
           try {
-            const intento = await posApi.cardAttemptStatus(pendiente.id);
+            const intento = await terminalPort.consultarEstado({
+              ventaId: pendiente.id,
+              monto: pendiente.total,
+              referenciaIntento: paymentAttemptReference.current,
+            });
             if (!active) return;
-            pendiente = intento.venta;
-            if (intento.status === 'UNCERTAIN') {
+            paymentAttemptReference.current = intento.referenciaIntento;
+            if (intento.estado === 'uncertain') {
               setPaymentState('uncertain');
               setPaymentError('El intento de tarjeta sigue sin resultado confirmado. Verifica su estado antes de cobrar.');
               setIsPaymentOpen(true);
-            } else if (intento.status === 'APPROVED') {
-              setPaymentReference(intento.gateway_reference ?? null);
+            } else if (intento.estado === 'approved') {
+              setPaymentReference(intento.referenciaOpaca);
               setPaymentState('approved');
               setIsPaymentOpen(true);
-            } else if (intento.status === 'DECLINED') {
+            } else if (intento.estado === 'declined') {
               setPaymentState('declined');
-              setPaymentError(intento.message || 'La pasarela rechazó el cobro.');
+              setPaymentError('La pasarela rechazó el cobro.');
               setIsPaymentOpen(true);
             }
           } catch {
@@ -445,25 +454,28 @@ export default function Pos() {
     setPaymentError('');
     setPaymentReference(null);
     try {
-      const result = await posApi.chargeCard(current.id, crypto.randomUUID());
-      if (result.status !== 'APPROVED' || result.venta?.id !== current.id || result.venta.estado !== 'COMPLETADA') {
+      const claveIdempotencia = paymentAttemptReference.current ?? crypto.randomUUID();
+      paymentAttemptReference.current = claveIdempotencia;
+      const result = await terminalPort.iniciarCobro({
+        ventaId: current.id,
+        monto: current.total,
+        claveIdempotencia,
+      });
+      if (result.estado === 'declined') {
+        setPaymentState('declined');
+        setPaymentError('La pasarela rechazó el cobro.');
+        return;
+      }
+      if (result.estado !== 'approved') {
         setPaymentState('uncertain');
         setPaymentError('MS-5 no devolvió una confirmación completa. Verifica la venta antes de otro intento.');
         return;
       }
-      saleRef.current = result.venta;
-      setVenta(result.venta);
-      setPaymentReference(result.gateway_reference);
+      setPaymentReference(result.referenciaOpaca);
       setPaymentState('approved');
-    } catch (error: unknown) {
-      if (axios.isAxiosError(error) && error.response?.status === 422) {
-        const data = error.response.data as { error?: string; mensaje?: string } | undefined;
-        setPaymentState('declined');
-        setPaymentError(data?.mensaje || data?.error || 'La pasarela rechazó el cobro.');
-      } else {
-        setPaymentState('uncertain');
-        setPaymentError('No se pudo confirmar el resultado de la pasarela. Verifica la venta antes de otro cobro.');
-      }
+    } catch {
+      setPaymentState('uncertain');
+      setPaymentError('No se pudo confirmar el resultado de la pasarela. Verifica la venta antes de otro cobro.');
     } finally {
       paymentInFlight.current = false;
     }
@@ -485,6 +497,7 @@ export default function Pos() {
       setVenta(updated);
       setPaymentState('available');
       setPaymentReference(null);
+      paymentAttemptReference.current = null;
     } catch (error: unknown) {
       setPaymentError(saleErrorMessage(error));
     } finally {
@@ -500,15 +513,18 @@ export default function Pos() {
     setPaymentError('');
     try {
       if (current.metodo_pago === 'TARJETA') {
-        const intento = await posApi.cardAttemptStatus(current.id);
-        saleRef.current = intento.venta;
-        setVenta(intento.venta);
-        if (intento.status === 'APPROVED') {
-          setPaymentReference(intento.gateway_reference ?? null);
+        const intento = await terminalPort.consultarEstado({
+          ventaId: current.id,
+          monto: current.total,
+          referenciaIntento: paymentAttemptReference.current,
+        });
+        paymentAttemptReference.current = intento.referenciaIntento;
+        if (intento.estado === 'approved') {
+          setPaymentReference(intento.referenciaOpaca);
           setPaymentState('approved');
-        } else if (intento.status === 'DECLINED') {
+        } else if (intento.estado === 'declined') {
           setPaymentState('declined');
-          setPaymentError(intento.message || 'La pasarela rechazó el pago. Puedes elegir otro método o reintentar manualmente.');
+          setPaymentError('La pasarela rechazó el pago. Puedes elegir otro método o reintentar manualmente.');
         } else {
           setPaymentState('uncertain');
           setPaymentError('El intento aún no tiene un resultado definitivo. No se iniciará otra autorización.');
@@ -538,6 +554,7 @@ export default function Pos() {
     setPaymentState('available');
     setPaymentError('');
     setPaymentReference(null);
+    paymentAttemptReference.current = null;
   };
 
   const closePayment = () => {
@@ -551,6 +568,7 @@ export default function Pos() {
       setPaymentError('');
       setPaymentShortfall(null);
       setPaymentReference(null);
+      paymentAttemptReference.current = null;
     }
   };
 

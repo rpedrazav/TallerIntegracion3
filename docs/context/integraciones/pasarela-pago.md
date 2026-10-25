@@ -5,7 +5,7 @@ titulo: Integración con Pasarela de Pago
 estado: parcial
 fuentes: [GlobalMart_ContextMaster.md#sec12, src/POSCartService/Services/IPaymentGatewayClient.cs, src/POSCartService/Services/PaymentGatewayClient.cs, src/POSCartService/Exceptions/PaymentAuthorizationUncertainException.cs, src/POSCartService/DTOs/PaymentGatewayDtos.cs, src/POSCartService/Program.cs, Docker/simulator/server.js, tests/GlobalMart.IntegrationTests/PaymentGatewayClientTests.cs, tests/GlobalMart.IntegrationTests/PaymentSimulatorIntegrationTests.cs, tests/GlobalMart.IntegrationTests/PaymentRetrySafetyTests.cs, tareas/sprint2_youtrack_resultado.json, Docker/env.example, .env.example, src/POSCartService/appsettings.json, tests/GlobalMart.IntegrationTests/CobroSeguroIntegrationTests.cs, docs/qa/S2-035/reporte.md, src/POSCartService/Services/VentaService.cs, src/POSCartService/Repositories/VentaRepository.cs, src/POSCartService/Controllers/VentasController.cs, src/POSCartService/Models/Pago.cs, src/POSCartService/DTOs/CobrarTarjetaDTOs.cs, tests/GlobalMart.IntegrationTests/CobrarTarjetaIntegrationTests.cs, tests/GlobalMart.IntegrationTests/PaymentEventSequenceContractTests.cs]
 verificado_contra_codigo: true
-ultima_revision: 2026-10-19
+ultima_revision: 2026-10-25
 depende_de: [ms5-pos]
 publica: []
 consume: []
@@ -208,6 +208,14 @@ La migración `20261018040621_AddPagoGatewayReference` agrega `Pago.Referencia` 
 La suite con trait `S2-040` cubre contrato seguro, propagación servicio-pago-outbox, aprobación, rechazo y timeout. Las pruebas sin infraestructura aprobaron **2/2** el 2026-10-18 y EF confirmó que no existen cambios de modelo pendientes después de la migración. Las tres pruebas PostgreSQL están implementadas y compiladas, pero su ejecución quedó [NO VERIFICADA] porque `localhost:5436` no estaba disponible y el usuario del entorno no pudo acceder al socket Docker. [Reporte y reproducción](../../qa/S2-040/reporte.md).
 
 Validación posterior del merge, 2026-10-18: **5/5 casos S2-040 aprobados** dentro de las 54 pruebas backend. Las tres integraciones PostgreSQL anteriormente pendientes están verificadas; se conserva la migración y la referencia opaca en pago/intento/respuesta.
+
+## S2-071 / TI3-702 — Contrato frontend del terminal [IMPLEMENTADO]
+
+El frontend define `TerminalPort` con operaciones separadas `iniciarCobro`, `consultarEstado` y `cancelarIntento`. Sus solicitudes y resultados contienen únicamente `ventaId`, monto, clave o referencia de correlación/idempotencia, estado y referencia opaca del gateway. No existen PAN, número de tarjeta, CVV ni fecha de expiración en el contrato o el adaptador.
+
+`Ms5TerminalAdapter` reutiliza `POST /ventas/{id}/cobrar-tarjeta` para iniciar y `GET /ventas/{id}/intento-tarjeta` para consultar. Conserva la misma referencia del intento durante el ciclo y traduce las respuestas a la máquina de estados pura `available`, `processing`, `approved`, `declined`, `uncertain` y `cancelled`. Las transiciones inválidas producen `InvalidTerminalTransitionError`.
+
+MS-5 no expone un endpoint de cancelación de intento. Por ello `cancelarIntento` devuelve `CANCELACION_NO_SOPORTADA` sin realizar una llamada HTTP; el estado `cancelled` forma parte del contrato para transportes futuros, pero la cancelación remota mediante MS-5 permanece [PLANIFICADA]. No se agregó IPC ni simulador de terminal. Pruebas unitarias enfocadas **4/4** y typecheck aprobados el 2026-10-25.
 
 ## S2-056 / TI3-687 — Configuración segura del simulador [IMPLEMENTADO]
 

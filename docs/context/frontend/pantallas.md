@@ -5,7 +5,7 @@ titulo: Pantallas del Frontend — GlobalMart OS
 estado: parcial
 fuentes: [globalmart-frontend/src/pages/, globalmart-frontend/src/components/, globalmart-frontend/src/api/client.ts]
 verificado_contra_codigo: true
-ultima_revision: 2026-10-18
+ultima_revision: 2026-10-25
 depende_de: [estructura, ms1-identity, ms5-pos, guia-estilo]
 publica: []
 consume: []
@@ -71,10 +71,13 @@ NO abre turno desde esta pantalla; dirige a /abrir-turno cuando falta
 | Aprobado | Venta confirmada; referencia opaca si es tarjeta | Cerrar |
 | Rechazado | Venta pendiente; motivo del rechazo | Cambiar método o cerrar |
 | Resultado incierto | Verificar venta antes de intentar otro cobro | Verificar, cuando exista manejador; o cerrar |
+| Cancelado | Intento cancelado | Cerrar; MS-5 todavía no soporta esta transición remotamente |
 
 El botón **Cobrar** del POS abre el modal en estado Disponible. En una venta `EFECTIVO`, confirmar un monto positivo llama `POST /ventas/{id}/cobrar` con `monto_recibido`; Procesando evita un segundo envío, Aprobado usa la venta `COMPLETADA` y el `vuelto` de la respuesta, y un 400 `Monto insuficiente` conserva la venta `PENDIENTE` y muestra `diferencia` devuelta por MS-5 [IMPLEMENTADO]. Ante un resultado de red incierto, bloquea otra confirmación y permite consultar `GET /ventas/{id}`; la consulta puede confirmar el estado de la venta, pero no reconstruye el vuelto si se perdió la respuesta del cobro. Antes de iniciar una venta se elige `EFECTIVO` o `TARJETA`. La tarjeta llama `POST /ventas/{id}/cobrar-tarjeta` con una clave UUID nueva, muestra aprobación y referencia opaca o rechazo, y permite cambiar el método de una venta pendiente mediante `PATCH /ventas/{id}/metodo-pago`. Un resultado incierto exige verificar la venta antes de otro cobro [IMPLEMENTADO]. Pruebas de interfaz controladas 4/4 aprobadas el 2026-10-18; integración E2E con la pasarela desplegada [NO VERIFICADA].
 
 S2-049: ante timeout o error de tarjeta, el modal muestra Resultado incierto y solo ofrece verificar. `GET /ventas/{id}/intento-tarjeta` recupera el último intento al recargar POS y consulta la pasarela; `UNCERTAIN` mantiene el cobro bloqueado, `APPROVED` cierra la venta y `DECLINED` permite un nuevo intento manual con otra clave o cambiar método. No hay reenvío automático del POST. Prueba dirigida de interfaz con doble clic, timeout, recarga y recuperación aprobada el 2026-10-18; E2E con PostgreSQL y pasarela desplegada [NO VERIFICADA].
+
+S2-071 / TI3-702 [IMPLEMENTADO]: el flujo de tarjeta consume `TerminalPort` mediante `Ms5TerminalAdapter`. El puerto separa `iniciarCobro`, `consultarEstado` y `cancelarIntento`, usando solo `ventaId`, monto, clave/referencia del intento, estado y referencia opaca; no define PAN, número de tarjeta, CVV ni vencimiento. `terminalStateMachine` centraliza `available`, `processing`, `approved`, `declined`, `uncertain` y `cancelled` con transiciones explícitas. MS-5 respalda inicio y consulta con los endpoints existentes; como no expone cancelación, el adaptador devuelve `CANCELACION_NO_SOPORTADA` sin llamada HTTP. Pruebas puras **4/4** y TypeScript aprobados el 2026-10-25.
 
 La búsqueda del POS consulta `GET /products/search` por nombre o código parcial y `GET /products/lookup` por código exacto, sin depender de la primera página del catálogo. Muestra carga, ausencia de resultados y errores; Enter conserva el texto si no se agregó un producto. `/admin/productos` permanece reservado a ADMIN/SUPER_ADMIN para la gestión administrativa; el cajero usa la búsqueda del POS [IMPLEMENTADO].
 
