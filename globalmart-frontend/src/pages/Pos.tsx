@@ -1,10 +1,15 @@
-﻿import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
+import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { catalogApi, CatalogProduct, posApi, VentaPendiente } from '../api/client';
 import BarcodeInput from '../components/pos/BarcodeInput';
 import CartItem from '../components/pos/CartItem';
 import PaymentModal, { PaymentMethod, PaymentState } from '../components/pos/PaymentModal';
+import { readStableWeightForCart } from '../hardware/scale-cart';
+import { Ms5TerminalAdapter } from '../payments/Ms5TerminalAdapter';
+import type { TerminalPort } from '../payments/TerminalPort';
+
+const terminalPort: TerminalPort = new Ms5TerminalAdapter();
 
 export interface ProductItem {
   id: string;
@@ -13,6 +18,8 @@ export interface ProductItem {
   quantity: number;
   subtotal?: number;
   itemId?: string;
+  isWeightVariable?: boolean;
+  weightKg?: number;
 }
 
 interface PosLocationState {
@@ -52,11 +59,41 @@ export default function Pos() {
   const [paymentReference, setPaymentReference] = useState<string | null>(null);
   const [draftPaymentMethod, setDraftPaymentMethod] = useState<'EFECTIVO' | 'TARJETA'>('EFECTIVO');
   const paymentInFlight = useRef(false);
+  const paymentAttemptReference = useRef<string | null>(null);
+  const scaleReadInFlight = useRef(false);
+  const [isReadingScale, setIsReadingScale] = useState(false);
   const [pendingMutations, setPendingMutations] = useState(0);
   const [saleNeedsRefresh, setSaleNeedsRefresh] = useState(false);
   const saleRef = useRef<VentaPendiente | null>(null);
   const saleNeedsRefreshRef = useRef(false);
   const mutationQueue = useRef<Promise<void>>(Promise.resolve());
+
+  // Estado de balanza simulada (S2-087 / S2-089)
+  const [pesoBalanza, setPesoBalanza] = useState<number>(0);
+  const [pesoEstable, setPesoEstable] = useState<boolean>(true);
+
+  const handleSimularPeso = async (kilos: number) => {
+    if (window.api?.devices?.scale) {
+      const res = await window.api.devices.scale.simularPeso(kilos);
+      setPesoBalanza(res.pesoKg);
+      setPesoEstable(res.estable);
+    } else {
+      setPesoBalanza(kilos);
+      setPesoEstable(true);
+    }
+  };
+
+  const handleTarar = async () => {
+    if (window.api?.devices?.scale) {
+      await window.api.devices.scale.tarar();
+      const res = await window.api.devices.scale.obtenerPeso();
+      setPesoBalanza(res.pesoKg);
+      setPesoEstable(res.estable);
+    } else {
+      setPesoBalanza(0);
+      setPesoEstable(true);
+    }
+  };
 
   useEffect(() => {
     let active = true;
@@ -74,20 +111,24 @@ export default function Pos() {
         let pendiente = recovered?.estado === 'PENDIENTE' ? recovered : null;
         if (pendiente?.metodo_pago === 'TARJETA') {
           try {
-            const intento = await posApi.cardAttemptStatus(pendiente.id);
+            const intento = await terminalPort.consultarEstado({
+              ventaId: pendiente.id,
+              monto: pendiente.total,
+              referenciaIntento: paymentAttemptReference.current,
+            });
             if (!active) return;
-            pendiente = intento.venta;
-            if (intento.status === 'UNCERTAIN') {
+            paymentAttemptReference.current = intento.referenciaIntento;
+            if (intento.estado === 'uncertain') {
               setPaymentState('uncertain');
               setPaymentError('El intento de tarjeta sigue sin resultado confirmado. Verifica su estado antes de cobrar.');
               setIsPaymentOpen(true);
-            } else if (intento.status === 'APPROVED') {
-              setPaymentReference(intento.gateway_reference ?? null);
+            } else if (intento.estado === 'approved') {
+              setPaymentReference(intento.referenciaOpaca);
               setPaymentState('approved');
               setIsPaymentOpen(true);
-            } else if (intento.status === 'DECLINED') {
+            } else if (intento.estado === 'declined') {
               setPaymentState('declined');
-              setPaymentError(intento.message || 'La pasarela rechazó el cobro.');
+              setPaymentError('La pasarela rechazó el cobro.');
               setIsPaymentOpen(true);
             }
           } catch {
@@ -148,6 +189,8 @@ export default function Pos() {
         price: item.precio_unitario,
         quantity: item.cantidad,
         subtotal: item.subtotal,
+        isWeightVariable: item.peso_kg != null,
+        weightKg: item.peso_kg ?? undefined,
       }))
     : draftItems;
 
@@ -216,35 +259,82 @@ export default function Pos() {
     }
   };
 
-  const addProductToCart = useCallback((product: CatalogProduct) => {
-    if (isStartingSale || saleNeedsRefresh || paymentState === 'uncertain' || paymentState === 'processing') return;
+  const addProductToCart = useCallback(async (product: CatalogProduct): Promise<boolean> => {
+    if (isStartingSale || saleNeedsRefresh || paymentState === 'uncertain' || paymentState === 'processing') return false;
+
+    let weightKg: number | undefined;
+    if (product.esPesoVariable) {
+      if (scaleReadInFlight.current) return false;
+      scaleReadInFlight.current = true;
+      setIsReadingScale(true);
+      setVentaError('');
+      try {
+        const reading = await readStableWeightForCart(window.api.scale);
+        if (!reading.ok) {
+          setVentaError(`No se agregó ${product.nombre}: ${reading.message}`);
+          return false;
+        }
+        weightKg = reading.weightKg;
+      } finally {
+        scaleReadInFlight.current = false;
+        setIsReadingScale(false);
+      }
+    }
+
     if (venta) {
       void queueSaleMutation(async (current) => {
         const existing = current.items.find((item) => item.producto_id === product.id);
         if (existing) {
-          await posApi.updateSaleItem(current.id, existing.id, existing.cantidad + 1);
+          if (weightKg !== undefined) {
+            const accumulatedWeight = existing.cantidad + weightKg;
+            await posApi.updateSaleItem(
+              current.id,
+              existing.id,
+              accumulatedWeight,
+              accumulatedWeight,
+            );
+          } else {
+            await posApi.updateSaleItem(current.id, existing.id, existing.cantidad + 1);
+          }
         } else {
-          await posApi.addSaleItem(current.id, product.id, 1);
+          await posApi.addSaleItem(
+            current.id,
+            product.id,
+            weightKg === undefined ? 1 : weightKg,
+            weightKg,
+          );
         }
       });
       setSearchResults([]);
       setClearSearchSignal((value) => value + 1);
-      return;
+      return true;
     }
     setDraftItems(prev => {
       const existing = prev.find(item => item.id === product.id);
       if (existing) {
-        return prev.map(item => item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item);
+        return prev.map((item) => {
+          if (item.id !== product.id) return item;
+          const quantity = item.quantity + (weightKg ?? 1);
+          return {
+            ...item,
+            quantity,
+            weightKg: product.esPesoVariable ? quantity : undefined,
+            isWeightVariable: product.esPesoVariable,
+          };
+        });
       }
       return [...prev, {
         id: product.id,
         name: product.nombre,
         price: product.precioBase,
-        quantity: 1
+        quantity: weightKg ?? 1,
+        weightKg,
+        isWeightVariable: product.esPesoVariable,
       }];
     });
     setSearchResults([]);
     setClearSearchSignal((value) => value + 1);
+    return true;
   }, [venta, isStartingSale, saleNeedsRefresh, paymentState, queueSaleMutation]);
 
   const handleTypingSearch = useCallback(async (query: string) => {
@@ -275,9 +365,9 @@ export default function Pos() {
     setSearchState('loading');
     try {
       const product = await catalogApi.lookupProduct(q);
-      addProductToCart(product);
+      const added = await addProductToCart(product);
       setSearchState('idle');
-      return true;
+      return added;
     } catch (error: unknown) {
       if (!(axios.isAxiosError(error) && error.response?.status === 404)) {
         setSearchState('error');
@@ -287,9 +377,9 @@ export default function Pos() {
     try {
       const result = await catalogApi.searchProducts(q);
       if (result.data.length === 1) {
-        addProductToCart(result.data[0]);
+        const added = await addProductToCart(result.data[0]);
         setSearchState('idle');
-        return true;
+        return added;
       }
       setSearchResults(result.data);
       setSearchState(result.data.length ? 'idle' : 'empty');
@@ -365,6 +455,7 @@ export default function Pos() {
       const creada = await posApi.createSale(draftItems.map((item) => ({
         producto_id: item.id,
         cantidad: item.quantity,
+        peso_kg: item.isWeightVariable ? item.weightKg ?? item.quantity : undefined,
       })), draftPaymentMethod);
       saleRef.current = creada;
       setVenta(creada);
@@ -445,25 +536,28 @@ export default function Pos() {
     setPaymentError('');
     setPaymentReference(null);
     try {
-      const result = await posApi.chargeCard(current.id, crypto.randomUUID());
-      if (result.status !== 'APPROVED' || result.venta?.id !== current.id || result.venta.estado !== 'COMPLETADA') {
+      const claveIdempotencia = paymentAttemptReference.current ?? crypto.randomUUID();
+      paymentAttemptReference.current = claveIdempotencia;
+      const result = await terminalPort.iniciarCobro({
+        ventaId: current.id,
+        monto: current.total,
+        claveIdempotencia,
+      });
+      if (result.estado === 'declined') {
+        setPaymentState('declined');
+        setPaymentError('La pasarela rechazó el cobro.');
+        return;
+      }
+      if (result.estado !== 'approved') {
         setPaymentState('uncertain');
         setPaymentError('MS-5 no devolvió una confirmación completa. Verifica la venta antes de otro intento.');
         return;
       }
-      saleRef.current = result.venta;
-      setVenta(result.venta);
-      setPaymentReference(result.gateway_reference);
+      setPaymentReference(result.referenciaOpaca);
       setPaymentState('approved');
-    } catch (error: unknown) {
-      if (axios.isAxiosError(error) && error.response?.status === 422) {
-        const data = error.response.data as { error?: string; mensaje?: string } | undefined;
-        setPaymentState('declined');
-        setPaymentError(data?.mensaje || data?.error || 'La pasarela rechazó el cobro.');
-      } else {
-        setPaymentState('uncertain');
-        setPaymentError('No se pudo confirmar el resultado de la pasarela. Verifica la venta antes de otro cobro.');
-      }
+    } catch {
+      setPaymentState('uncertain');
+      setPaymentError('No se pudo confirmar el resultado de la pasarela. Verifica la venta antes de otro cobro.');
     } finally {
       paymentInFlight.current = false;
     }
@@ -485,6 +579,7 @@ export default function Pos() {
       setVenta(updated);
       setPaymentState('available');
       setPaymentReference(null);
+      paymentAttemptReference.current = null;
     } catch (error: unknown) {
       setPaymentError(saleErrorMessage(error));
     } finally {
@@ -500,15 +595,18 @@ export default function Pos() {
     setPaymentError('');
     try {
       if (current.metodo_pago === 'TARJETA') {
-        const intento = await posApi.cardAttemptStatus(current.id);
-        saleRef.current = intento.venta;
-        setVenta(intento.venta);
-        if (intento.status === 'APPROVED') {
-          setPaymentReference(intento.gateway_reference ?? null);
+        const intento = await terminalPort.consultarEstado({
+          ventaId: current.id,
+          monto: current.total,
+          referenciaIntento: paymentAttemptReference.current,
+        });
+        paymentAttemptReference.current = intento.referenciaIntento;
+        if (intento.estado === 'approved') {
+          setPaymentReference(intento.referenciaOpaca);
           setPaymentState('approved');
-        } else if (intento.status === 'DECLINED') {
+        } else if (intento.estado === 'declined') {
           setPaymentState('declined');
-          setPaymentError(intento.message || 'La pasarela rechazó el pago. Puedes elegir otro método o reintentar manualmente.');
+          setPaymentError('La pasarela rechazó el pago. Puedes elegir otro método o reintentar manualmente.');
         } else {
           setPaymentState('uncertain');
           setPaymentError('El intento aún no tiene un resultado definitivo. No se iniciará otra autorización.');
@@ -538,6 +636,7 @@ export default function Pos() {
     setPaymentState('available');
     setPaymentError('');
     setPaymentReference(null);
+    paymentAttemptReference.current = null;
   };
 
   const closePayment = () => {
@@ -551,6 +650,7 @@ export default function Pos() {
       setPaymentError('');
       setPaymentShortfall(null);
       setPaymentReference(null);
+      paymentAttemptReference.current = null;
     }
   };
 
@@ -616,6 +716,7 @@ export default function Pos() {
       )}
       {paymentState === 'uncertain' && venta && <div role="alert" style={{ padding: '0.75rem 1rem', border: '1px solid var(--color-warning)', background: 'var(--color-warning-bg)', color: 'var(--color-warning-text)', borderRadius: '8px' }}>Resultado del cobro sin confirmar. Abre Cobrar y verifica la venta antes de continuar.</div>}
       {pendingMutations > 0 && <div role="status">Sincronizando ítems con MS-5...</div>}
+      {isReadingScale && <div role="status">Esperando un peso estable de la balanza...</div>}
       {venta && (
         <div role="status" style={{ padding: '0.75rem 1rem', border: '1px solid var(--color-success)', background: 'var(--color-success-bg)', color: 'var(--color-success)', borderRadius: '8px' }}>
           Venta {venta.estado === 'COMPLETADA' ? 'completada' : 'pendiente'} #{venta.id.slice(0, 8)}. Los ítems y totales provienen de MS-5.
@@ -662,8 +763,8 @@ export default function Pos() {
         {/* Columna Izquierda: Búsqueda y Escaneo */}
         <div style={{ flex: '0 0 320px', display: 'flex', flexDirection: 'column', background: 'var(--color-surface)', padding: '1rem', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
                 <h3 style={{ marginTop: 0, color: 'var(--color-primary)', fontSize: '1.25rem' }}>Buscar Producto</h3>
-        {isStartingSale || saleNeedsRefresh || paymentState === 'uncertain' || paymentState === 'processing' || (venta && venta.estado !== 'PENDIENTE') ? (
-          <p style={{ color: 'var(--color-ink-soft)' }}>{isStartingSale ? 'Iniciando venta...' : 'Actualiza la venta para seguir agregando productos.'}</p>
+        {isStartingSale || isReadingScale || saleNeedsRefresh || paymentState === 'uncertain' || paymentState === 'processing' || (venta && venta.estado !== 'PENDIENTE') ? (
+          <p style={{ color: 'var(--color-ink-soft)' }}>{isStartingSale ? 'Iniciando venta...' : isReadingScale ? 'Leyendo balanza...' : 'Actualiza la venta para seguir agregando productos.'}</p>
         ) : (
           <BarcodeInput onSearch={handleSearch} onTyping={handleTypingSearch} clearSignal={clearSearchSignal} />
         )}
@@ -676,7 +777,7 @@ export default function Pos() {
             searchResults.map(prod => (
               <div 
                 key={prod.id}
-                onClick={() => addProductToCart(prod)}
+                onClick={() => { void addProductToCart(prod); }}
                 style={{
                   padding: '0.75rem',
                   border: '1px solid var(--color-line)',
@@ -701,6 +802,7 @@ export default function Pos() {
                 <div>
                   <div style={{ fontWeight: 600, color: 'var(--color-ink)' }}>{prod.nombre}</div>
                   <div style={{ fontSize: '0.75rem', color: 'var(--color-ink-soft)' }}>{prod.codigoBarras}</div>
+                  {prod.esPesoVariable && <div style={{ fontSize: '0.75rem', color: 'var(--color-warning-text)' }}>Requiere peso estable</div>}
                 </div>
                 <div style={{ fontWeight: 'bold', color: 'var(--color-primary)' }}>
                   ${prod.precioBase.toLocaleString('es-CL')}
@@ -708,6 +810,55 @@ export default function Pos() {
               </div>
             ))
           )}
+        </div>
+
+        {/* Simulador de Balanza Integrado (S2-087 / S2-089) */}
+        <div style={{ marginTop: '0.75rem', padding: '0.75rem', backgroundColor: 'var(--color-bg)', borderRadius: '8px', border: '1px solid var(--color-line)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+            <span style={{ fontWeight: 600, fontSize: '0.85rem', color: 'var(--color-ink)' }}>⚖️ Balanza Simulada</span>
+            <span style={{ fontSize: '0.8rem', color: pesoEstable ? 'var(--color-success)' : 'var(--color-muted)' }}>
+              {pesoEstable ? '● Estable' : '○ Leyendo...'}
+            </span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+            <span style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--color-primary)' }}>
+              {pesoBalanza.toFixed(3)} kg
+            </span>
+            <button
+              type="button"
+              onClick={handleTarar}
+              style={{
+                padding: '0.25rem 0.5rem',
+                fontSize: '0.75rem',
+                backgroundColor: 'var(--color-surface)',
+                border: '1px solid var(--color-line)',
+                borderRadius: '4px',
+                cursor: 'pointer'
+              }}
+            >
+              Tarar
+            </button>
+          </div>
+          <div style={{ display: 'flex', gap: '0.25rem', flexWrap: 'wrap' }}>
+            {[0.25, 0.5, 1.0, 2.5].map((kg) => (
+              <button
+                key={kg}
+                type="button"
+                onClick={() => handleSimularPeso(kg)}
+                style={{
+                  flex: 1,
+                  padding: '0.2rem',
+                  fontSize: '0.7rem',
+                  backgroundColor: 'var(--color-surface)',
+                  border: '1px solid var(--color-line)',
+                  borderRadius: '4px',
+                  cursor: 'pointer'
+                }}
+              >
+                +{kg}kg
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -748,7 +899,8 @@ export default function Pos() {
                     price={item.price} 
                     quantity={item.quantity} 
                     subtotal={item.subtotal}
-                    readOnly={isStartingSale || pendingMutations > 0 || saleNeedsRefresh || paymentState === 'uncertain' || paymentState === 'processing' || !!(venta && venta.estado !== 'PENDIENTE')}
+                    isWeightVariable={item.isWeightVariable}
+                    readOnly={item.isWeightVariable || isStartingSale || pendingMutations > 0 || saleNeedsRefresh || paymentState === 'uncertain' || paymentState === 'processing' || !!(venta && venta.estado !== 'PENDIENTE')}
                     canRemove={!venta || venta.estado === 'PENDIENTE'}
                     onQuantityChange={handleQuantityChange}
                     onRemove={handleRemoveItem}

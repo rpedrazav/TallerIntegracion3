@@ -37,11 +37,13 @@ public class TaxCalculatorService : ITaxCalculatorService
         {
             if (item == null) continue;
 
-            decimal itemSubtotal = item.Precio * item.Cantidad;
+            // Redondeo por línea: la venta suma los importes facturados, no fracciones ocultas.
+            decimal itemSubtotal = Math.Round(item.Precio * item.Cantidad, 2, MidpointRounding.ToEven);
             bool esExento = item.Exento || item.EsExento || (item.PorcentajeIva.HasValue && item.PorcentajeIva.Value == 0) || porcentajeIva == 0;
 
             decimal tasaAplicada = esExento ? 0m : (item.PorcentajeIva ?? porcentajeIva);
-            decimal itemIva = esExento ? 0m : itemSubtotal * (tasaAplicada / 100m);
+            decimal itemIva = esExento ? 0m
+                : Math.Round(itemSubtotal * (tasaAplicada / 100m), 2, MidpointRounding.ToEven);
             decimal itemTotal = itemSubtotal + itemIva;
 
             subtotal += itemSubtotal;

@@ -5,7 +5,7 @@ titulo: MS-3 · Catalog & Pricing Service
 estado: parcial
 fuentes: [src/CatalogPricingService/]
 verificado_contra_codigo: true
-ultima_revision: 2026-10-18
+ultima_revision: 2026-10-24
 depende_de: [ms1-identity]
 publica: []
 consume: []
@@ -144,3 +144,11 @@ PUT ajeno e inexistente retornan el mismo 404 y body; GET por ID, lookup y DELET
 - `src/CatalogPricingService/Controllers/CategoriaController.cs`
 - `src/CatalogPricingService/Data/Migrations/20260927164215_AddProductoNombreTrgmIndex.cs`
 - `src/CatalogPricingService/Data/Migrations/20260925154800_AddCategoriaHierarchy.cs`
+
+## S2-061 — Unidad y precio de productos pesables
+
+[CONTRATO DEFINIDO] Para `EsPesoVariable`, el [contrato de peso variable](../dominio/peso-variable.md) exige kg como unidad base y `PrecioBase` por kg. La correspondencia de `UomBaseId` con kg está [NO VERIFICADO]; MS-5 todavía no recibe esa unidad en `ProductoCatalogDto`. La validación de unidad entre servicios sigue pendiente; S2-063 conserva los cuatro decimales del precio en MS-5.
+
+## S2-063 — Consumo del precio en MS-5
+
+El precio `decimal(12,4)` de MS-3 se conserva ahora en el snapshot `numeric(20,4)` de MS-5. Para `EsPesoVariable`, MS-5 interpreta `PrecioBase` por kg conforme a S2-061. No se agrega un UUID de kg ni un catálogo de unidades: la correspondencia real de `UomBaseId` sigue [NO VERIFICADO]. No cambia el modelo ni los endpoints de MS-3.

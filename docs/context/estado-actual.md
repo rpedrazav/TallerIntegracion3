@@ -3,9 +3,9 @@ id: estado-actual
 tipo: indice
 titulo: Estado Real de Implementación — GlobalMart OS
 estado: vigente
-fuentes: [docs/context/_reports/inventario.md, src/, globalmart-frontend/src/api/client.ts, git log, docs/context/_reports/preguntas-abiertas.md, tests/GlobalMart.IntegrationTests/CobroSeguroIntegrationTests.cs, docs/qa/S2-035/reporte.md, new-ingresses.yaml]
+fuentes: [docs/context/_reports/inventario.md, src/, globalmart-frontend/src/api/client.ts, globalmart-frontend/src/hardware/simulated-scale-adapter.ts, globalmart-frontend/src/hardware/serial-scale-adapter.ts, globalmart-frontend/src/hardware/scale-adapter-factory.ts, globalmart-frontend/src/hardware/scale-ipc.ts, globalmart-frontend/src/preload.ts, globalmart-frontend/tests/simulated-scale-adapter.test.cjs, globalmart-frontend/tests/serial-scale-adapter.test.cjs, globalmart-frontend/tests/scale-ipc.test.cjs, git log, docs/context/_reports/preguntas-abiertas.md, tests/GlobalMart.IntegrationTests/CobroSeguroIntegrationTests.cs, docs/qa/S2-035/reporte.md, new-ingresses.yaml]
 verificado_contra_codigo: true
-ultima_revision: 2026-10-19
+ultima_revision: 2026-10-25
 depende_de: []
 publica: []
 consume: []
@@ -27,6 +27,8 @@ reglas: []
 ---
 
 ## Matriz de Estado por Microservicio
+
+S2-052 — 2026-10-19: **2/2 pruebas de integración HTTP locales aprobadas** para rechazo y timeout de tarjeta con PostgreSQL temporal y simulador real. La venta conserva PENDIENTE, sin Pago ni evento outbox, incluso tras la respuesta tardía y reintentos bloqueados. Publicación Kafka no ejercitada. Intento contra despliegue remoto bloqueado antes del cobro: `POST /ventas` devuelve 502 por conexión a MS-3 en `localhost:5203`; aceptación remota [NO VERIFICADO]. No se cambiaron destinos del clúster. [Reporte](../qa/S2-052/reporte.md).
 
 | Microservicio | Controllers | Kafka | Tests | Estado General |
 |---------------|-------------|-------|-------|----------------|
@@ -196,6 +198,8 @@ S2-024 / TI3-655 [IMPLEMENTADO]: esqueleto Playwright de Electron real en `globa
 
 S2-049 [IMPLEMENTADO en código]: MS-5 guarda el intento de tarjeta antes de autorizar y bloquea otra autorización de la misma venta mientras el resultado siga pendiente. `GET /ventas/{id}/intento-tarjeta` consulta el estado del mismo intento y reconcilia aprobación o rechazo sin repetir el POST. El POS muestra resultado incierto tras timeout, recupera el intento al recargar y solo ofrece reintento manual tras un rechazo definitivo. La prueba dirigida de interfaz y las pruebas del adaptador sin base pasaron el 2026-10-18; la integración HTTP con PostgreSQL temporal y simulador real fue verificada al resolver el merge (54/54 casos backend, incluida recuperación posterior sin otro POST).
 
+S2-071 / TI3-702 [IMPLEMENTADO]: el frontend define el puerto tipado `TerminalPort`, una máquina pura con estados `available`, `processing`, `approved`, `declined`, `uncertain` y `cancelled`, y `Ms5TerminalAdapter`. `Pos.tsx` inicia y consulta intentos mediante ese adaptador conservando la referencia de idempotencia del ciclo. El contrato contiene venta, monto, referencia del intento, estado y referencia opaca, sin PAN/CVV ni persistencia de tarjeta. MS-5 no tiene endpoint de cancelación: `cancelarIntento` responde de forma tipada `CANCELACION_NO_SOPORTADA` y no realiza HTTP. Pruebas enfocadas **4/4** y typecheck aprobados el 2026-10-25.
+
 El frontend usa `src/api/client.ts` para Login (MS-1), catálogo del POS (MS-3) y turnos y ventas (MS-5): URL por servicio, métodos tipados, JWT y timeout de 15 s centralizados, con cierre de sesión ante 401 en llamadas protegidas [IMPLEMENTADO]. POS consulta el turno activo al entrar, muestra carga y solo habilita el carrito tras confirmarlo; ante 404 redirige a apertura y ante otros errores ofrece reintentar [IMPLEMENTADO]. El borrador previo a la venta sigue local; al iniciar, POS envía solo producto y cantidad a `POST /ventas` y usa la respuesta de MS-5 para ID, ítems y totales. Al recargar, identifica la venta PENDIENTE con `GET /ventas/turno/{turnoId}` y recupera ítems y totales con `GET /ventas/{id}`, sin tomar el borrador local como autoridad [IMPLEMENTADO]. En esa venta, escaneo, búsqueda, cambio de cantidad y eliminación usan los endpoints de ítems de MS-5; después de cada operación, `GET /ventas/{id}` renueva ítems, subtotal, impuestos y total [IMPLEMENTADO]. El botón Cobrar abre `PaymentModal`; para efectivo llama `POST /ventas/{id}/cobrar`, muestra el vuelto devuelto por MS-5 o la diferencia del error 400 sin completar la venta, y bloquea reintentos automáticos ante resultado incierto [IMPLEMENTADO]. El POS permite elegir EFECTIVO o TARJETA al iniciar una venta; el modal llama al cobro simulado de MS-5 con clave UUID de idempotencia, muestra aprobación con referencia opaca o rechazo y permite cambiar el método de una venta pendiente mediante PATCH /ventas/{id}/metodo-pago. El resultado incierto exige verificar la venta antes de otro cobro [IMPLEMENTADO]. La búsqueda del POS consulta MS-3 por nombre/código activo y muestra errores de catálogo, mientras /admin/productos sigue reservado a ADMIN/SUPER_ADMIN [IMPLEMENTADO]. Pruebas Playwright dirigidas 4/4 aprobadas en Edge el 2026-10-18; E2E con pasarela desplegada [NO VERIFICADA].
 
 El 2026-10-18, los tres destinos remotos del frontend (MS-1, MS-3 y MS-5) respondieron `GET /health` con HTTP 200 y certificado HTTPS válido de Let's Encrypt. Los Ingress usan `globalmart-dev-tls` [IMPLEMENTADO]. La renovación no está automatizada en el clúster actual; el certificado vence el 2027-01-16. Ver [[matriz-rutas]].
@@ -357,8 +361,6 @@ Validación posterior del merge, 2026-10-18: **5/5 casos S2-040 aprobados** dent
 [IMPLEMENTADO] Se unificó la reserva previa de S2-035 con `IniciarIntentoPagoAsync`, preservando el bloqueo por venta y tenant, la validación de clave y la referencia en `Pago`. Timeout/error/estado desconocido conserva `IntentoPago.PENDIENTE` (incierto), compatible con la consulta de S2-049. La actualización condicional solo admite reservas pendientes/fallidas del mismo tenant, venta, clave, monto y moneda; una aprobación no inserta un intento nuevo. La reserva se separa del seguimiento EF para no sobrescribir una reconciliación concurrente.
 
 Validación: **54/54 pruebas backend**, incluidas **17 S2-035** y **5 S2-040**, más typecheck, **2/2 archivos de pruebas de usuarios** y **7/7 pruebas de interfaz de cobro/búsqueda**. El caso de fallo de commit local verifica ahora recuperación mediante GET, segunda consulta estable y un solo POST externo. Las pruebas de navegador usan APIs controladas; no acreditan E2E contra un despliegue. [Resolución y evidencia](../qa/S2-035/merge.md).
-<<<<<<< Updated upstream
-=======
 
 ## S2-053 / TI3-684 — Autorización e idempotencia
 
@@ -383,4 +385,60 @@ Validación S2-063 del 2026-10-24: **42/42 pruebas Release aprobadas** (10 nueva
 ## S2-085 - Protocolo de prueba física de balanza
 
 [CONDICIONADA — pendiente de modelo real] Se preparó el [protocolo y checklist ejecutable](../qa/S2-085/protocolo-balanza-fisica.md) para cuando llegue el equipo: identificación de puerto (COM, VID/PID, reconexión), parámetros serie, comandos y formato de trama, estabilidad (rango ≤ 1 `e`, asentamiento), exactitud/tolerancia con masas patrón (≤ 1 `e` de placa), robustez de conexión, conversión al contrato S2-061 y flujo POS con turno abierto y JWT. Incluye [capturar-balanza.ps1](../qa/S2-085/capturar-balanza.ps1) para listar puertos y registrar tramas crudas en CSV. Entrega documental: no implementa adaptador, IPC ni simulador de balanza. Script probado solo sin hardware (listado y puerto inexistente); lectura física y aceptación E2E [NO VERIFICADO].
->>>>>>> Stashed changes
+
+## S2-064 — Actualizar cantidad pesable con recálculo
+
+[IMPLEMENTADO] El PUT de ítems valida por tipo consultado en MS-3: peso obligatorio y válido para pesables, cantidad positiva sin peso para no pesables. Conserva precio snapshot, recalcula con MS-2 e identidad del ítem. Los rechazos y fallos de dependencias previos a persistir no alteran el carrito. Sin migraciones nuevas; crear venta aún no aplica el contrato completo de peso. [Reporte y reproducción](../qa/S2-064/reporte.md).
+
+Validación S2-064 del 2026-10-24: **75/75 pruebas Release aprobadas**, incluidas 23 nuevas de edición y 10 de aislamiento de ventas entre tenants, con HTTP/JWT y PostgreSQL temporal. [Evidencia](../qa/S2-064/reporte.md).
+
+Verificación final S2-064: recompilación Release y **33/33 casos S2-064/S2-063 aprobados**, sin fallos ni omisiones; evidencia adicional en el reporte S2-064.
+
+## S2-066 / TI3-697 — Definir interfaz de balanza
+
+[IMPLEMENTADO] Contrato TypeScript independiente del dispositivo en `globalmart-frontend/src/hardware/scale-contract.ts`: conectar, desconectar, consultar estado y leer peso estable; estados cerrados de conexión/lectura, errores tipados y lectura canónica en kg. `ScaleRendererApi` no contiene ruta serial, baud rate ni objetos Node. Typecheck y prueba estática aprobados el 2026-10-24; la prueba confirma que renderer y contrato no acceden a `serialport`, `navigator.serial` ni `SerialPort`. El IPC se implementó en S2-068 y la estructura serial intercambiable en S2-069; compatibilidad física [NO VERIFICADA]. [Detalle](integraciones/hardware.md).
+
+## S2-067 / TI3-698 — Implementar adaptador de balanza simulada
+
+[IMPLEMENTADO] `SimulatedScaleAdapter` implementa el contrato común con escenarios deterministas de peso estable, desconexión y error, sin hardware. Convierte `g` a `kg`, valida mínimo de 10 g y precisión de 1 g, y devuelve estados/errores serializables. La fábrica selecciona `simulator` por defecto mediante `GLOBALMART_SCALE_ADAPTER` y admite la inyección posterior del driver `serial` sin cambiar consumidores. Typecheck y pruebas dirigidas aprobados el 2026-10-24. La entrega mediante IPC se implementó en S2-068; su consumo visual sigue pendiente. [Detalle](integraciones/hardware.md).
+
+## S2-068 / TI3-699 — Exponer IPC mínimo y validado
+
+[IMPLEMENTADO] Electron main registra exclusivamente `scale:connect`, `scale:disconnect`, `scale:read-stable` y `scale:get-state`; preload los expone como `window.api.scale` con `ScaleRendererApi`. No existe invocación genérica ni parámetros de puerto/comando; el renderer mantiene aislamiento, sandbox y Node.js deshabilitado. La lectura admite solo `timeoutMs` y `stabilityWindowMs` enteros entre 0 y 60.000 ms; cualquier otra propiedad se rechaza antes del adaptador. Typecheck y 10/10 pruebas de contrato, simulador e IPC aprobadas el 2026-10-25. Integración visual React y hardware físico [NO VERIFICADOS]. [Detalle](frontend/electron-ipc.md).
+
+## S2-069 / TI3-700 — Preparar adaptador serial intercambiable
+
+[IMPLEMENTADO SIN HARDWARE] `SerialScaleAdapter` implementa el contrato común con `SerialScaleTransport` y `SerialScaleParser` inyectables. Puerto, baud rate e identificador de parser permanecen en Electron main; el renderer conserva sin cambios `window.api.scale`. El driver predeterminado sigue siendo `simulator`; `serial` requiere configuración completa y un proveedor que permanece deshabilitado. No se agregó `serialport` ni un protocolo de fabricante, por lo que no se afirma compatibilidad física. Typecheck y 15/15 pruebas de balanza/IPC aprobadas el 2026-10-25; hardware real [NO VERIFICADO]. [Detalle](integraciones/hardware.md).
+
+## S2-059 / TI3-690 — Agregar logs de correlación de cobro
+
+[IMPLEMENTADO] En MS-5 (`VentasController.cs` y `PaymentGatewayClient.cs`), se incorporaron logs estructurados con el prefijo `[COBRO_CORRELATION]` que registran `Entrada`, `Llamada pasarela` y `Respuesta pasarela` asociando identificadores opacos (`CorrelationId`, `IntentoId`, `VentaId`, `TenantId`). Se verificó mediante prueba automatizada con expresiones regulares en `CobroTarjetaCorrelationIntegrationTests` que nunca se registran números de tarjeta (PAN de 16 dígitos), códigos de seguridad (CVV/CVC) ni secretos.
+
+## S2-060 / TI3-691 — Ejecutar smoke de despliegue de tarjeta
+
+[IMPLEMENTADO] Verificación automatizada mediante el script `scripts/smoke-tarjeta.sh` y la suite `CobroTarjetaCorrelationIntegrationTests`. Ejercita los tres estados del simulador:
+1. *Aprobado:* La venta transiciona a `COMPLETADA`, persiste el pago `TARJETA` y emite el evento en outbox.
+2. *Rechazado:* Retorna HTTP 422 y conserva la venta en estado `PENDIENTE`.
+3. *Timeout / No disponible:* Retorna HTTP 504 / 503 y conserva la venta en estado `PENDIENTE` sin registrar pagos no confirmados.
+
+## S2-086 / TI3-717 — Definir límites del terminal simulado
+
+[IMPLEMENTADO] Especificación documentada en `docs/context/integraciones/limites-terminal-simulado.md`. Establece la matriz de operaciones soportadas (`iniciar`, `cancelar`, `autorizar`, `obtenerEstado`), delimita el desacoplamiento estricto respecto a la pasarela bancaria y prohíbe declarar compatibilidad con hardware o marcas físicas sin validación empírica.
+
+## S2-087 / TI3-718 — Preparar configuración de adaptadores
+
+[IMPLEMENTADO] Implementación modular en `globalmart-frontend/src/devices/`:
+- `DeviceManager`: Orquestador que selecciona `MockTerminalAdapter` y `MockScaleAdapter` por defecto sin requerir drivers ni privilegios de hardware.
+- `RealTerminalAdapter`: Reservado como adaptador físico que rechaza ejecuciones no homologadas devolviendo error seguro (`DEVICE_NOT_CERTIFIED`).
+- Estructura modular desacoplada de la UI que permite incorporar dispositivos futuros sin alterar las vistas.
+
+## S2-088 / TI3-719 — Validar seguridad de IPC
+
+[IMPLEMENTADO] Endurecimiento integral de Electron:
+- Ventana POS con `contextIsolation: true`, `nodeIntegration: false` y `sandbox: true`.
+- Validación previa de tipos, límites y rangos numéricos en `index.ts` antes de invocar cualquier adaptador (`validateIniciarParams`, `validateSimulacionAction`, `validatePeso`).
+- Prohibición absoluta de APIs genéricas de ejecución o acceso directo a shell/sistema operativo desde el renderer.
+
+## S2-089 / TI3-720 — Integrar smoke de simuladores
+
+[IMPLEMENTADO] Flujo de prueba automatizado mediante `scripts/smoke-simuladores-frontend.sh` y `globalmart-frontend/tests/smoke-simulators.ts`, ejecutable en CI o local sin periféricos conectados. Comprueba lecturas de balanza, pesaje, tara y el ciclo de vida del terminal (inicio, aprobación con token opaco, rechazo y cancelación). Incluye widget interactivo de balanza integrado en la interfaz POS (`Pos.tsx`).

@@ -5,7 +5,7 @@ titulo: MS-2 · Tax & Compliance Service
 estado: parcial
 fuentes: [src/TaxComplianceService/, src/POSCartService/Services/TaxClient.cs]
 verificado_contra_codigo: true
-ultima_revision: 2026-10-06
+ultima_revision: 2026-10-24
 depende_de: [ms1-identity]
 publica: []
 consume: []
@@ -258,3 +258,9 @@ MS-5 (POSCartService) llama a MS-2 directamente (no vía Kong) en cada operació
 - `src/TaxComplianceService/Services/TenantConfigClient.cs`
 - `src/TaxComplianceService/Data/Migrations/20261001190000_AddComprobanteCorrelativeFunction.cs`
 - `src/POSCartService/Services/TaxClient.cs`
+
+## S2-063 — Redondeo reproducible por línea
+
+[IMPLEMENTADO] `TaxCalculatorService` calcula cada subtotal como `Round(precio × cantidad, 2, ToEven)` y su IVA como `Round(subtotal × tasa / 100, 2, ToEven)`. Total de línea = subtotal + IVA; la venta suma subtotales e IVA ya redondeados. Conserva tasas por tenant/ítem y exenciones. Esto también afecta a comprobantes que usan el mismo calculador: cambia el tratamiento de fracciones de centavo, no las tasas. El precio de entrada mantiene cuatro decimales y no se redondea antes de multiplicar.
+
+Validación S2-063 del 2026-10-24: **42/42 pruebas Release aprobadas** (10 nuevas, 32 de regresión), con PostgreSQL temporal, HTTP MS-5 y calculador productivo MS-2 a través de handler HTTP. Regresión manual TC-01 aprobada. [Evidencia y límites](../../qa/S2-063/reporte.md).

@@ -5,7 +5,7 @@ titulo: Integración con Pasarela de Pago
 estado: parcial
 fuentes: [GlobalMart_ContextMaster.md#sec12, src/POSCartService/Services/IPaymentGatewayClient.cs, src/POSCartService/Services/PaymentGatewayClient.cs, src/POSCartService/Exceptions/PaymentAuthorizationUncertainException.cs, src/POSCartService/DTOs/PaymentGatewayDtos.cs, src/POSCartService/Program.cs, Docker/simulator/server.js, tests/GlobalMart.IntegrationTests/PaymentGatewayClientTests.cs, tests/GlobalMart.IntegrationTests/PaymentSimulatorIntegrationTests.cs, tests/GlobalMart.IntegrationTests/PaymentRetrySafetyTests.cs, tareas/sprint2_youtrack_resultado.json, Docker/env.example, .env.example, src/POSCartService/appsettings.json, tests/GlobalMart.IntegrationTests/CobroSeguroIntegrationTests.cs, docs/qa/S2-035/reporte.md, src/POSCartService/Services/VentaService.cs, src/POSCartService/Repositories/VentaRepository.cs, src/POSCartService/Controllers/VentasController.cs, src/POSCartService/Models/Pago.cs, src/POSCartService/DTOs/CobrarTarjetaDTOs.cs, tests/GlobalMart.IntegrationTests/CobrarTarjetaIntegrationTests.cs, tests/GlobalMart.IntegrationTests/PaymentEventSequenceContractTests.cs]
 verificado_contra_codigo: true
-ultima_revision: 2026-10-18
+ultima_revision: 2026-10-25
 depende_de: [ms5-pos]
 publica: []
 consume: []
@@ -209,6 +209,14 @@ La suite con trait `S2-040` cubre contrato seguro, propagación servicio-pago-ou
 
 Validación posterior del merge, 2026-10-18: **5/5 casos S2-040 aprobados** dentro de las 54 pruebas backend. Las tres integraciones PostgreSQL anteriormente pendientes están verificadas; se conserva la migración y la referencia opaca en pago/intento/respuesta.
 
+## S2-071 / TI3-702 — Contrato frontend del terminal [IMPLEMENTADO]
+
+El frontend define `TerminalPort` con operaciones separadas `iniciarCobro`, `consultarEstado` y `cancelarIntento`. Sus solicitudes y resultados contienen únicamente `ventaId`, monto, clave o referencia de correlación/idempotencia, estado y referencia opaca del gateway. No existen PAN, número de tarjeta, CVV ni fecha de expiración en el contrato o el adaptador.
+
+`Ms5TerminalAdapter` reutiliza `POST /ventas/{id}/cobrar-tarjeta` para iniciar y `GET /ventas/{id}/intento-tarjeta` para consultar. Conserva la misma referencia del intento durante el ciclo y traduce las respuestas a la máquina de estados pura `available`, `processing`, `approved`, `declined`, `uncertain` y `cancelled`. Las transiciones inválidas producen `InvalidTerminalTransitionError`.
+
+MS-5 no expone un endpoint de cancelación de intento. Por ello `cancelarIntento` devuelve `CANCELACION_NO_SOPORTADA` sin realizar una llamada HTTP; el estado `cancelled` forma parte del contrato para transportes futuros, pero la cancelación remota mediante MS-5 permanece [PLANIFICADA]. No se agregó IPC ni simulador de terminal. Pruebas unitarias enfocadas **4/4** y typecheck aprobados el 2026-10-25.
+
 ## S2-056 / TI3-687 — Configuración segura del simulador [IMPLEMENTADO]
 
 Para garantizar entornos reproducibles y proteger credenciales de producción (RN-02 / PCI DSS), la configuración de la pasarela y simulador separa estrictamente endpoints, llaves y timeouts entre desarrollo y producción.
@@ -344,3 +352,27 @@ Validación Release el 2026-10-18: **17/17 pruebas aprobadas**, más **35/35 de 
 [IMPLEMENTADO] Se unificó la reserva previa de S2-035 con `IniciarIntentoPagoAsync`, preservando el bloqueo por venta y tenant, la validación de clave y la referencia en `Pago`. Timeout/error/estado desconocido conserva `IntentoPago.PENDIENTE` (incierto), compatible con la consulta de S2-049. La actualización condicional solo admite reservas pendientes/fallidas del mismo tenant, venta, clave, monto y moneda; una aprobación no inserta un intento nuevo. La reserva se separa del seguimiento EF para no sobrescribir una reconciliación concurrente.
 
 Validación: **54/54 pruebas backend**, incluidas **17 S2-035** y **5 S2-040**, más typecheck, **2/2 archivos de pruebas de usuarios** y **7/7 pruebas de interfaz de cobro/búsqueda**. El caso de fallo de commit local verifica ahora recuperación mediante GET, segunda consulta estable y un solo POST externo. Las pruebas de navegador usan APIs controladas; no acreditan E2E contra un despliegue. [Resolución y evidencia](../../qa/S2-035/merge.md).
+
+## S2-053 / TI3-684 — Autorización e idempotencia
+
+[IMPLEMENTADO y VERIFICADO localmente] Tres casos con filtro `Plan=S2-053` aprobados en Release el 2026-10-19 con simulador Node real; los dos casos HTTP de MS-5 usan JWT y PostgreSQL 16 temporal. Repetir la misma clave tras aprobación o con respuesta pendiente devuelve 409 sin otro POST externo: una autorización lógica, un intento APROBADO, un Pago TARJETA de 119 CLP con referencia coincidente y un outbox pendiente. Dos POST idénticos directos al simulador conservan transacción, referencia y fecha de procesamiento. No acredita Electron, entrega Kafka ni despliegue remoto; el bloqueo remoto descrito en S2-052 no fue reevaluado. [Evidencia y reproducción](../../qa/S2-053/reporte.md).
+
+## S2-059 / TI3-690 — Logs de correlación de cobro [IMPLEMENTADO]
+
+Para trazabilidad y auditoría de pagos con tarjeta en MS-5 sin violar PCI DSS, se implementó registro estructurado mediante el prefijo unificado `[COBRO_CORRELATION]` en `VentasController.cs` y `PaymentGatewayClient.cs`:
+
+- **Identificadores opacos:** Se registran únicamente `CorrelationId`, `IntentoId`, `VentaId` y `TenantId`.
+- **Fases cubiertas:**
+  1. *Entrada:* Captura del request de cobro con correlación y tenant.
+  2. *Llamada a pasarela:* Registro previo al despacho HTTP con escenario y montos declarados.
+  3. *Respuesta de pasarela:* Registro de resultado aprobado, rechazado con `DeclineCode` o fallas/timeout.
+- **Exclusión estricta de secretos:** No se registra ningún dato confidencial de tarjeta (0 PANs de 16 dígitos, 0 CVVs, 0 PINs, 0 tokens sensibles). Verificado mediante expresión regular en `CobroTarjetaCorrelationIntegrationTests`.
+
+## S2-060 / TI3-691 — Smoke de despliegue de tarjeta [IMPLEMENTADO]
+
+Flujo de verificación automatizado para validar el ciclo mínimo de cobro con tarjeta mediante el script reproducible `scripts/smoke-tarjeta.sh` y la suite `CobroTarjetaCorrelationIntegrationTests`:
+
+1. **Aprobación:** Escenario aprobado completa la venta en estado `COMPLETADA`, genera el registro `Pago` de tipo `TARJETA` y emite el mensaje outbox.
+2. **Rechazo:** Escenario de rechazo por fondos insuficientes o declinación retorna HTTP 422 y conserva la venta en estado `PENDIENTE` sin registrar pagos ni outbox espurios.
+3. **Pérdida temporal / Timeout:** Timeout de la pasarela responde adecuadamente (HTTP 504 / 503) y conserva la venta en estado `PENDIENTE` sin corrupción de saldos.
+

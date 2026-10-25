@@ -12,6 +12,7 @@
     "publish": "electron-forge publish",
     "typecheck": "tsc --noEmit",
     "lint": "eslint --ext .ts,.tsx .",
+    "smoke:simulators": "ts-node tests/smoke-simulators.ts",
     "test:e2e": "playwright test",
     "test:e2e:electron": "node e2e/electron/build.cjs && playwright test --config playwright.electron.config.ts",
     "test:e2e:card": "node e2e/electron/run-card.cjs",
@@ -50,6 +51,7 @@
     "node-loader": "^2.1.0",
     "style-loader": "^3.3.4",
     "ts-loader": "^9.6.2",
+    "ts-node": "^10.9.2",
     "typescript": "^5.9.3"
   },
   "dependencies": {

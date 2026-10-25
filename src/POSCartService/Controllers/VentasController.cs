@@ -154,8 +154,11 @@ public sealed class VentasController : ControllerBase
                 cantidad = 1;
             }
 
+            if (producto.PrecioBase < 0)
+                return BadRequest(new { error = "El precio de catálogo no puede ser negativo." });
+
             decimal precioUnitario = producto.PrecioBase;
-            decimal subtotalItem = Math.Round(precioUnitario * cantidad, 2);
+            decimal subtotalItem = Math.Round(precioUnitario * cantidad, 2, MidpointRounding.ToEven);
 
             itemsDominio.Add(new ItemVenta
             {
@@ -291,21 +294,37 @@ public sealed class VentasController : ControllerBase
             return BadRequest(new { error = $"El producto '{producto.Nombre}' está inactivo y no se puede vender." });
         }
 
-        // 6. Determinar cantidad y peso
-        decimal cantidad = request.Cantidad;
+        // 6. Validar S2-061 antes de calcular impuestos o mutar el carrito.
+        // La clasificación proviene del catálogo, nunca del cliente.
+        decimal cantidad = request.Cantidad ?? 1m;
         decimal? pesoKg = request.PesoKg;
 
-        if (producto.EsPesoVariable && pesoKg.HasValue && pesoKg.Value > 0)
+        if (producto.EsPesoVariable)
         {
+            if (!pesoKg.HasValue)
+                return BadRequest(new { error = "peso_kg es obligatorio para productos de peso variable." });
+            if (pesoKg.Value < 0.010m)
+                return BadRequest(new { error = "peso_kg debe ser mayor o igual a 0.010 kg (10 gramos)." });
+            if (pesoKg.Value % 0.001m != 0)
+                return BadRequest(new { error = "peso_kg debe expresarse en incrementos de 0.001 kg (1 gramo), sin redondeo." });
+            if (request.Cantidad.HasValue && request.Cantidad.Value != pesoKg.Value)
+                return BadRequest(new { error = "cantidad debe coincidir con peso_kg para productos de peso variable." });
+
             cantidad = pesoKg.Value;
         }
-        else if (cantidad <= 0)
+        else
         {
-            cantidad = 1;
+            if (pesoKg.HasValue)
+                return BadRequest(new { error = "peso_kg no corresponde a un producto que no es de peso variable." });
+            if (cantidad <= 0)
+                return BadRequest(new { error = "cantidad debe ser mayor a 0." });
         }
 
+        if (producto.PrecioBase < 0)
+            return BadRequest(new { error = "El precio de catálogo no puede ser negativo." });
+
         decimal precioUnitario = producto.PrecioBase;
-        decimal subtotalItem = Math.Round(precioUnitario * cantidad, 2);
+        decimal subtotalItem = Math.Round(precioUnitario * cantidad, 2, MidpointRounding.ToEven);
 
         var nuevoItem = new ItemVenta
         {
@@ -391,6 +410,7 @@ public sealed class VentasController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
+    [ProducesResponseType(StatusCodes.Status502BadGateway)]
     [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
     public async Task<IActionResult> ModificarCantidadItem(
         [FromRoute] Guid id,
@@ -423,20 +443,47 @@ public sealed class VentasController : ControllerBase
             return NotFound(new { error = $"Ítem {itemId} no encontrado en la venta {id}." });
         }
 
-        // 5. Determinar nueva cantidad y peso
-        decimal nuevaCantidad = request.Cantidad;
-        decimal? nuevoPesoKg = request.PesoKg;
-
-        if (nuevoPesoKg.HasValue && nuevoPesoKg.Value > 0)
+        // El catálogo determina el tipo; el precio sigue siendo el snapshot del ítem.
+        var authHeader = Request.Headers.Authorization.ToString();
+        ProductoCatalogDto? producto;
+        try
         {
+            producto = await _catalogClient.GetProductAsync(item.ProductoId, authHeader, cancellationToken);
+        }
+        catch (ExternalServiceException ex)
+        {
+            _logger?.LogError(ex, "MS-3 no responde al consultar el tipo del ítem");
+            return StatusCode(StatusCodes.Status502BadGateway, new { error = ex.Message });
+        }
+        if (producto is null)
+            return NotFound(new { error = "Producto del ítem no encontrado en el catálogo." });
+        if (!producto.IsActive)
+            return BadRequest(new { error = "El producto del ítem está inactivo." });
+
+        decimal nuevaCantidad;
+        decimal? nuevoPesoKg = request.PesoKg;
+        if (producto.EsPesoVariable)
+        {
+            if (!nuevoPesoKg.HasValue)
+                return BadRequest(new { error = "peso_kg es obligatorio para productos de peso variable." });
+            if (nuevoPesoKg.Value < 0.010m)
+                return BadRequest(new { error = "peso_kg debe ser mayor o igual a 0.010 kg (10 gramos)." });
+            if (nuevoPesoKg.Value % 0.001m != 0)
+                return BadRequest(new { error = "peso_kg debe expresarse en incrementos de 0.001 kg (1 gramo), sin redondeo." });
+            if (request.Cantidad.HasValue && request.Cantidad.Value != nuevoPesoKg.Value)
+                return BadRequest(new { error = "cantidad debe coincidir con peso_kg para productos de peso variable." });
             nuevaCantidad = nuevoPesoKg.Value;
         }
-        else if (nuevaCantidad <= 0)
+        else
         {
-            return BadRequest(new { error = "La cantidad debe ser mayor a 0." });
+            if (nuevoPesoKg.HasValue)
+                return BadRequest(new { error = "peso_kg no corresponde a un producto que no es de peso variable." });
+            if (!request.Cantidad.HasValue || request.Cantidad.Value <= 0)
+                return BadRequest(new { error = "cantidad debe ser mayor a 0." });
+            nuevaCantidad = request.Cantidad.Value;
         }
 
-        decimal nuevoSubtotalItem = Math.Round(item.PrecioUnitario * nuevaCantidad, 2);
+        decimal nuevoSubtotalItem = Math.Round(item.PrecioUnitario * nuevaCantidad, 2, MidpointRounding.ToEven);
 
         // 6. Recalcular IVA y totales consolidados de la venta consultando MS-2
         var itemsParaCalculo = venta.Items.Select(i => new TaxItemDto
@@ -446,7 +493,6 @@ public sealed class VentasController : ControllerBase
             Cantidad = (i.Id == itemId) ? nuevaCantidad : i.Cantidad
         }).ToList();
 
-        var authHeader = Request.Headers.Authorization.ToString();
         TaxCalculationResult? taxResult;
         try
         {
@@ -874,6 +920,10 @@ public sealed class VentasController : ControllerBase
             });
         }
 
+        _logger?.LogInformation(
+            "[COBRO_CORRELATION] Entrada: VentaId={VentaId}, IntentoId={IntentoId}, CorrelationId={CorrelationId}, TenantId={TenantId}",
+            id, intentoPago.Id, requestId, tenantId);
+
         var scenarioId = string.IsNullOrWhiteSpace(request?.ScenarioId)
             ? "sim-approved-v1"
             : request.ScenarioId;
@@ -888,6 +938,10 @@ public sealed class VentasController : ControllerBase
             ScenarioId = scenarioId
         };
 
+        _logger?.LogInformation(
+            "[COBRO_CORRELATION] Llamada pasarela: VentaId={VentaId}, IntentoId={IntentoId}, CorrelationId={CorrelationId}, ScenarioId={ScenarioId}",
+            venta.Id, intentoPago.Id, requestId, scenarioId);
+
         PaymentGatewayResponse gatewayResponse;
         try
         {
@@ -895,7 +949,10 @@ public sealed class VentasController : ControllerBase
         }
         catch (TimeoutException ex)
         {
-            _logger?.LogWarning(ex, "Timeout al comunicarse con la pasarela para venta {VentaId}", venta.Id);
+            _logger?.LogWarning(
+                ex,
+                "[COBRO_CORRELATION] Timeout pasarela: VentaId={VentaId}, IntentoId={IntentoId}, CorrelationId={CorrelationId}",
+                venta.Id, intentoPago.Id, requestId);
 
             return StatusCode(StatusCodes.Status504GatewayTimeout, new
             {
@@ -906,7 +963,10 @@ public sealed class VentasController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger?.LogError(ex, "Error al comunicarse con la pasarela para venta {VentaId}", venta.Id);
+            _logger?.LogError(
+                ex,
+                "[COBRO_CORRELATION] Error pasarela: VentaId={VentaId}, IntentoId={IntentoId}, CorrelationId={CorrelationId}",
+                venta.Id, intentoPago.Id, requestId);
 
             return StatusCode(StatusCodes.Status502BadGateway, new
             {
@@ -933,6 +993,10 @@ public sealed class VentasController : ControllerBase
             var ventaCompletada = await _ventaService.CompletarTarjetaAsync(venta.Id, intentoPago);
 
             _logger?.LogInformation(
+                "[COBRO_CORRELATION] Respuesta pasarela: VentaId={VentaId}, IntentoId={IntentoId}, CorrelationId={CorrelationId}, Status={Status}, Code={Code}",
+                venta.Id, intentoPago.Id, requestId, gatewayResponse.Status, gatewayResponse.AuthorizationCode);
+
+            _logger?.LogInformation(
                 "Venta {VentaId} cobrada con tarjeta. Ref: {Ref}, Auth: {Auth}",
                 ventaCompletada.Id, gatewayResponse.GatewayReference, gatewayResponse.AuthorizationCode);
 
@@ -955,6 +1019,10 @@ public sealed class VentasController : ControllerBase
             await _ventaService.ActualizarIntentoPagoAsync(intentoPago);
 
             _logger?.LogWarning(
+                "[COBRO_CORRELATION] Respuesta pasarela rechazada: VentaId={VentaId}, IntentoId={IntentoId}, CorrelationId={CorrelationId}, Status={Status}, DeclineCode={DeclineCode}",
+                venta.Id, intentoPago.Id, requestId, gatewayResponse.Status, gatewayResponse.DeclineCode);
+
+            _logger?.LogWarning(
                 "Pago rechazado para venta {VentaId}. Status: {Status}, Decline: {DeclineCode}",
                 venta.Id, gatewayResponse.Status, gatewayResponse.DeclineCode);
 
@@ -968,6 +1036,11 @@ public sealed class VentasController : ControllerBase
                 request_id   = requestId
             });
         }
+
+        _logger?.LogWarning(
+            "[COBRO_CORRELATION] Respuesta pasarela no reconocida: VentaId={VentaId}, IntentoId={IntentoId}, CorrelationId={CorrelationId}, Status={Status}",
+            venta.Id, intentoPago.Id, requestId, gatewayResponse.Status);
+
         return StatusCode(StatusCodes.Status502BadGateway, new
         {
             error = "La pasarela devolvió un estado no reconocido. Consulte el intento antes de cobrar de nuevo.",

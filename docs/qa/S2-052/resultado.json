@@ -1,0 +1,25 @@
+{
+  "plan": "S2-052",
+  "started_at": "2026-10-19T15:37:01.5141919+00:00",
+  "pos_url": "https://pos-rpedraza.dev.censei.cl",
+  "tenant_id": "aaaaaaaa-0000-0000-0000-000000000001",
+  "cases": [
+    {
+      "scenario": "sim-declined-v1",
+      "checks": [],
+      "observations": [],
+      "creation": {
+        "body": {
+          "error": "[MS-3 CatalogPricingService] Error de conexión con MS-3: Connection refused (localhost:5203)"
+        },
+        "elapsed_ms": 2522,
+        "code": 502
+      }
+    }
+  ],
+  "result": "FAILED",
+  "persistence": "NO VERIFICADO",
+  "event_scope": "Outbox retenido, no lectura directa de Kafka",
+  "error": "Crear venta HTTP 502",
+  "finished_at": "2026-10-19T15:37:09.4433395+00:00"
+}
