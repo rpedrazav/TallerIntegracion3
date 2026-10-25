@@ -27,7 +27,7 @@ export class MockScaleAdapter implements IScaleAdapter {
   }
 
   public async simularPeso(pesoKg: number): Promise<ScaleReading> {
-    if (typeof pesoKg !== 'number' || isNaN(pesoKg) || pesoKg < 0) {
+    if (typeof pesoKg !== 'number' || !Number.isFinite(pesoKg) || pesoKg < 0) {
       throw new Error('El peso a simular debe ser un número positivo válido.');
     }
     this.pesoActualKg = pesoKg;

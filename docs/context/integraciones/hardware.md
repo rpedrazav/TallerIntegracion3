@@ -15,6 +15,12 @@ reglas: [RF-15]
 
 > Dispositivos físicos en el mostrador del minimarket. La integración ocurre en el proceso principal de Electron (Node.js) y se expone al renderer vía IPC. **Estado: PARCIAL** — contrato, simulador, IPC y estructura serial intercambiable implementados; la integración visual, el transporte/parser de un modelo real y la compatibilidad física siguen pendientes.
 
+## S2-082 — Validación y redondeo del simulador
+
+[IMPLEMENTADO, validado el 2026-10-25] `SimulatedScaleAdapter` rechaza unidades distintas de `g`/`kg` también en ejecución, antes de normalizar; devuelve `invalid_reading`. `MockScaleAdapter.simularPeso` exige un número finito no negativo antes de modificar el peso almacenado, evitando aceptar `Infinity`.
+
+La suite [ScaleParserRoundingIntegrationTests](../../../tests/GlobalMart.IntegrationTests/ScaleParserRoundingIntegrationTests.cs) ejecuta módulos TypeScript productivos y el callback real de incorporación al carrito: **43/43 casos aprobados, sin omisiones**. Cubre conversión g/kg, mínimo de 10 g, precisión de 1 g, ruido flotante, entradas inválidas, estados simulados, tara y redondeo. Los 13 casos inválidos del carrito producen cero llamadas a los espías de agregar/actualizar de MS-5; los dos controles válidos producen una llamada. Reproducción: [run-s2082.ps1](../../../tests/GlobalMart.IntegrationTests/run-s2082.ps1). Typecheck aprobado. No acredita HTTP/BD, detección física de estabilidad ni un parser de protocolo serial: [NO VERIFICADO].
+
 ## Balanza Física
 
 **Protocolo:** Puerto serial (COM) o USB.

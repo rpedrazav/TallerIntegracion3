@@ -13,6 +13,10 @@ reglas: []
 ---
 # Estado Real de Implementación — GlobalMart OS
 
+## S2-082 — Parser y redondeo de peso simulado
+
+[IMPLEMENTADO, validado el 2026-10-25] Corregidos los dos hallazgos de la suite: `SimulatedScaleAdapter` rechaza unidades distintas de `g`/`kg` en ejecución y `MockScaleAdapter` rechaza valores no finitos antes de guardar el peso. **43/43 pruebas aprobadas, cero fallos u omisiones**, y typecheck aprobado. Se ejercitan módulos productivos y el callback del carrito: 13 entradas inválidas producen cero llamadas a MS-5 mediante espías y dos controles válidos producen una llamada. HTTP/BD, protocolo serial y hardware físico [NO VERIFICADOS]. [Alcance y reproducción](integraciones/hardware.md#s2-082--validación-y-redondeo-del-simulador).
+
 ## S2-055 / TI3-686 — E2E tarjeta desde Electron
 
 [IMPLEMENTADO, alcance acotado] Dos escenarios automatizados desde Electron real: login con identidad de fixture → apertura de turno → producto → venta TARJETA → cobro aprobado/rechazado. MS-5, validación JWT, PostgreSQL migrado y simulador Node son reales. Se verifica concordancia de solicitud/respuesta de pasarela, venta, intento, pago y `sale.completed` durable: aprobación produce COMPLETADA + 1 pago + 1 evento; rechazo conserva PENDIENTE + 0 pagos + 0 eventos. Catálogo e IVA son fixtures; publicación Kafka deshabilitada, entrega al broker [NO VERIFICADA] por esta suite. Validación Windows 2026-10-19: **2/2 aprobadas, sin omisiones**, con capturas. Ejecutar `npm run test:e2e:card` con PostgreSQL de pruebas; los E2E gráficos son opt-in. [Reporte y evidencias](../qa/S2-055/reporte.md).

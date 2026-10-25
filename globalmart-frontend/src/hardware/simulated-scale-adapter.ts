@@ -231,6 +231,7 @@ export class SimulatedScaleAdapter implements ScaleAdapter {
   }
 
   private normalizeWeight(value: number, unit: 'g' | 'kg'): number | null {
+    if (unit !== 'g' && unit !== 'kg') return null;
     if (!Number.isFinite(value)) return null;
 
     const weightKg = unit === 'g' ? value / GRAMS_PER_KILOGRAM : value;

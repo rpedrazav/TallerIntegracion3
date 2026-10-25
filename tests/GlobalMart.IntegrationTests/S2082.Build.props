@@ -1,0 +1,9 @@
+<Project>
+  <PropertyGroup>
+    <!-- Keep every referenced project's generated files in the permitted QA area. -->
+    <BaseIntermediateOutputPath>$(MSBuildThisFileDirectory)obj\S2082\$(MSBuildProjectName)\</BaseIntermediateOutputPath>
+    <MSBuildProjectExtensionsPath>$(BaseIntermediateOutputPath)</MSBuildProjectExtensionsPath>
+    <BaseOutputPath>$(MSBuildThisFileDirectory)bin\S2082\$(MSBuildProjectName)\</BaseOutputPath>
+    <DefaultItemExcludes>$(DefaultItemExcludes);**/bin/**;**/obj/**;**/TestResults/**</DefaultItemExcludes>
+  </PropertyGroup>
+</Project>
