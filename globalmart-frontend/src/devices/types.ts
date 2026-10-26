@@ -21,6 +21,13 @@ export type SimulatedAction =
 
 export type DeviceMode = 'mock' | 'real';
 
+export type SimulatedTerminalScenario =
+  | 'waiting'
+  | 'approved'
+  | 'declined'
+  | 'cancelled'
+  | 'disconnected';
+
 export interface IniciarOperacionParams {
   monto: number;
   moneda?: string;
@@ -78,4 +85,5 @@ export interface DevicesConfig {
   scaleMode: DeviceMode;
   mockTerminalDelayMs: number;
   autoApproveMock: boolean;
+  mockTerminalScenario: SimulatedTerminalScenario;
 }

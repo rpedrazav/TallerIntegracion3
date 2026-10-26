@@ -5,7 +5,7 @@ titulo: Integración con Pasarela de Pago
 estado: parcial
 fuentes: [GlobalMart_ContextMaster.md#sec12, src/POSCartService/Services/IPaymentGatewayClient.cs, src/POSCartService/Services/PaymentGatewayClient.cs, src/POSCartService/Exceptions/PaymentAuthorizationUncertainException.cs, src/POSCartService/DTOs/PaymentGatewayDtos.cs, src/POSCartService/Program.cs, Docker/simulator/server.js, tests/GlobalMart.IntegrationTests/PaymentGatewayClientTests.cs, tests/GlobalMart.IntegrationTests/PaymentSimulatorIntegrationTests.cs, tests/GlobalMart.IntegrationTests/PaymentRetrySafetyTests.cs, tareas/sprint2_youtrack_resultado.json, Docker/env.example, .env.example, src/POSCartService/appsettings.json, tests/GlobalMart.IntegrationTests/CobroSeguroIntegrationTests.cs, docs/qa/S2-035/reporte.md, src/POSCartService/Services/VentaService.cs, src/POSCartService/Repositories/VentaRepository.cs, src/POSCartService/Controllers/VentasController.cs, src/POSCartService/Models/Pago.cs, src/POSCartService/DTOs/CobrarTarjetaDTOs.cs, tests/GlobalMart.IntegrationTests/CobrarTarjetaIntegrationTests.cs, tests/GlobalMart.IntegrationTests/PaymentEventSequenceContractTests.cs]
 verificado_contra_codigo: true
-ultima_revision: 2026-10-25
+ultima_revision: 2026-10-26
 depende_de: [ms5-pos]
 publica: []
 consume: []
@@ -216,6 +216,14 @@ El frontend define `TerminalPort` con operaciones separadas `iniciarCobro`, `con
 `Ms5TerminalAdapter` reutiliza `POST /ventas/{id}/cobrar-tarjeta` para iniciar y `GET /ventas/{id}/intento-tarjeta` para consultar. Conserva la misma referencia del intento durante el ciclo y traduce las respuestas a la máquina de estados pura `available`, `processing`, `approved`, `declined`, `uncertain` y `cancelled`. Las transiciones inválidas producen `InvalidTerminalTransitionError`.
 
 MS-5 no expone un endpoint de cancelación de intento. Por ello `cancelarIntento` devuelve `CANCELACION_NO_SOPORTADA` sin realizar una llamada HTTP; el estado `cancelled` forma parte del contrato para transportes futuros, pero la cancelación remota mediante MS-5 permanece [PLANIFICADA]. No se agregó IPC ni simulador de terminal. Pruebas unitarias enfocadas **4/4** y typecheck aprobados el 2026-10-25.
+
+## S2-072 / TI3-703 — Simulador frontend de terminal [IMPLEMENTADO]
+
+`SimulatedTerminalAdapter` implementa el mismo `TerminalPort` que el transporte MS-5. `createTerminalPort()` selecciona `mock` o `real` mediante `DEVICE_TERMINAL_MODE`; el modo `real` conserva `Ms5TerminalAdapter` y el modo `mock` no requiere equipo físico ni llamadas HTTP. `MOCK_TERMINAL_SCENARIO` admite `waiting`, `approved`, `declined`, `cancelled` y `disconnected`, mientras `MOCK_TERMINAL_DELAY_MS` controla la espera antes de resolver los escenarios finales. Lectura/inicio significa que `iniciarCobro` recibe los datos del intento y pasa a `processing`.
+
+Cada combinación de escenario e intento produce el mismo resultado. La referencia aprobada se deriva de forma estable de la clave del intento y no expone esa clave; rechazo y desconexión no inventan referencias de aprobación. `disconnected` se representa como `uncertain` para permitir reconciliación posterior y la cancelación simulada termina en `cancelled`. El adaptador no contiene PAN, número de tarjeta, CVV ni vencimiento y no persiste datos sensibles.
+
+Esta implementación pertenece a la capa `payments` y no modifica ni mezcla el `MockTerminalAdapter` legado basado en `ITerminalAdapter`. Tampoco agrega IPC/contextBridge ni sincronización adicional con MS-5/pasarela. Pruebas puras del terminal y simulador **11/11** y typecheck aprobados el 2026-10-26.
 
 ## S2-056 / TI3-687 — Configuración segura del simulador [IMPLEMENTADO]
 

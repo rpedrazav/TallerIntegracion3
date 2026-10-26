@@ -5,7 +5,7 @@ titulo: Pantallas del Frontend — GlobalMart OS
 estado: parcial
 fuentes: [globalmart-frontend/src/pages/, globalmart-frontend/src/components/, globalmart-frontend/src/api/client.ts, globalmart-frontend/src/hardware/scale-cart.ts, globalmart-frontend/tests/scale-main-preload.integration.test.cjs]
 verificado_contra_codigo: true
-ultima_revision: 2026-10-25
+ultima_revision: 2026-10-26
 depende_de: [estructura, ms1-identity, ms5-pos, guia-estilo]
 publica: []
 consume: []
@@ -84,6 +84,8 @@ El botón **Cobrar** del POS abre el modal en estado Disponible. En una venta `E
 S2-049: ante timeout o error de tarjeta, el modal muestra Resultado incierto y solo ofrece verificar. `GET /ventas/{id}/intento-tarjeta` recupera el último intento al recargar POS y consulta la pasarela; `UNCERTAIN` mantiene el cobro bloqueado, `APPROVED` cierra la venta y `DECLINED` permite un nuevo intento manual con otra clave o cambiar método. No hay reenvío automático del POST. Prueba dirigida de interfaz con doble clic, timeout, recarga y recuperación aprobada el 2026-10-18; E2E con PostgreSQL y pasarela desplegada [NO VERIFICADA].
 
 S2-071 / TI3-702 [IMPLEMENTADO]: el flujo de tarjeta consume `TerminalPort` mediante `Ms5TerminalAdapter`. El puerto separa `iniciarCobro`, `consultarEstado` y `cancelarIntento`, usando solo `ventaId`, monto, clave/referencia del intento, estado y referencia opaca; no define PAN, número de tarjeta, CVV ni vencimiento. `terminalStateMachine` centraliza `available`, `processing`, `approved`, `declined`, `uncertain` y `cancelled` con transiciones explícitas. MS-5 respalda inicio y consulta con los endpoints existentes; como no expone cancelación, el adaptador devuelve `CANCELACION_NO_SOPORTADA` sin llamada HTTP. Pruebas puras **4/4** y TypeScript aprobados el 2026-10-25.
+
+S2-072 / TI3-703 [IMPLEMENTADO]: `createTerminalPort()` selecciona por `DEVICE_TERMINAL_MODE`: `mock` crea `SimulatedTerminalAdapter` y `real` conserva `Ms5TerminalAdapter`. El simulador implementa `TerminalPort` y reproduce de forma determinista `waiting`, `approved`, `declined`, `cancelled` y `disconnected`; lectura/inicio significa que `iniciarCobro` recibe los datos del intento y pasa a `processing`. Reutiliza `MOCK_TERMINAL_DELAY_MS`, conserva venta/monto/referencia y genera una referencia opaca estable sin `Math.random()` ni `Date.now()`. `Pos.tsx` desconoce los detalles del adaptador. No solicita ni almacena PAN/CVV, no usa IPC y permanece separado del `MockTerminalAdapter`/`ITerminalAdapter` legado. Pruebas enfocadas **11/11** y TypeScript aprobados el 2026-10-26.
 
 La búsqueda del POS consulta `GET /products/search` por nombre o código parcial y `GET /products/lookup` por código exacto, sin depender de la primera página del catálogo. Muestra carga, ausencia de resultados y errores; Enter conserva el texto si no se agregó un producto. `/admin/productos` permanece reservado a ADMIN/SUPER_ADMIN para la gestión administrativa; el cajero usa la búsqueda del POS [IMPLEMENTADO].
 

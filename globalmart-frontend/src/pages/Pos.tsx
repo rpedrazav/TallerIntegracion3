@@ -6,10 +6,9 @@ import BarcodeInput from '../components/pos/BarcodeInput';
 import CartItem from '../components/pos/CartItem';
 import PaymentModal, { PaymentMethod, PaymentState } from '../components/pos/PaymentModal';
 import { readStableWeightForCart } from '../hardware/scale-cart';
-import { Ms5TerminalAdapter } from '../payments/Ms5TerminalAdapter';
-import type { TerminalPort } from '../payments/TerminalPort';
+import { createTerminalPort } from '../payments/createTerminalPort';
 
-const terminalPort: TerminalPort = new Ms5TerminalAdapter();
+const terminalPort = createTerminalPort();
 
 export interface ProductItem {
   id: string;
@@ -538,16 +537,30 @@ export default function Pos() {
     try {
       const claveIdempotencia = paymentAttemptReference.current ?? crypto.randomUUID();
       paymentAttemptReference.current = claveIdempotencia;
-      const result = await terminalPort.iniciarCobro({
+      let result = await terminalPort.iniciarCobro({
         ventaId: current.id,
         monto: current.total,
         claveIdempotencia,
       });
+      paymentAttemptReference.current = result.referenciaIntento;
+      if (result.estado === 'processing') {
+        result = await terminalPort.consultarEstado({
+          ventaId: current.id,
+          monto: current.total,
+          referenciaIntento: result.referenciaIntento,
+        });
+        paymentAttemptReference.current = result.referenciaIntento;
+      }
       if (result.estado === 'declined') {
         setPaymentState('declined');
         setPaymentError('La pasarela rechazó el cobro.');
         return;
       }
+      if (result.estado === 'cancelled') {
+        setPaymentState('cancelled');
+        return;
+      }
+      if (result.estado === 'processing') return;
       if (result.estado !== 'approved') {
         setPaymentState('uncertain');
         setPaymentError('MS-5 no devolvió una confirmación completa. Verifica la venta antes de otro intento.');
