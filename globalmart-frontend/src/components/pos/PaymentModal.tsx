@@ -1,8 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
+import type { TerminalState } from '../../payments/terminalStateMachine';
 import './PaymentModal.css';
 
 export type PaymentMethod = 'cash' | 'card';
-export type PaymentState = 'available' | 'processing' | 'approved' | 'declined' | 'uncertain';
+export type PaymentState = TerminalState;
 
 interface PaymentModalProps {
   total: number;
@@ -42,6 +43,11 @@ const stateText: Record<Exclude<PaymentState, 'available'>, { title: string; det
     title: 'Resultado incierto',
     detail: 'No se pudo confirmar el resultado. Verifica el estado de la venta antes de intentar cobrar de nuevo.',
     symbol: '?',
+  },
+  cancelled: {
+    title: 'Intento cancelado',
+    detail: 'El intento de cobro fue cancelado.',
+    symbol: '—',
   },
 };
 

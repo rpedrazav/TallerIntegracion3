@@ -3,8 +3,8 @@ id: peso-variable
 tipo: dominio
 titulo: Contrato de ítem pesable — S2-061
 estado: contrato_definido
-fuentes: [src/POSCartService/Controllers/VentasController.cs, src/POSCartService/DTOs/AgregarItemDTOs.cs, src/POSCartService/DTOs/CrearVentaRequest.cs, src/CatalogPricingService/Models/Producto.cs]
-verificado_contra_codigo: false
+fuentes: [src/POSCartService/Controllers/VentasController.cs, src/POSCartService/DTOs/AgregarItemDTOs.cs, src/POSCartService/DTOs/CrearVentaRequest.cs, src/CatalogPricingService/Models/Producto.cs, globalmart-frontend/src/pages/Pos.tsx, globalmart-frontend/src/hardware/scale-cart.ts, globalmart-frontend/tests/scale-main-preload.integration.test.cjs]
+verificado_contra_codigo: true
 ultima_revision: 2026-10-26
 depende_de: [ms3-catalog, ms5-pos, hardware]
 publica: []
@@ -13,7 +13,7 @@ reglas: [RN-01, RN-06, RN-07]
 ---
 # Contrato de ítem pesable — S2-061
 
-**Entrega: CONTRATO DEFINIDO, versión 1. Aplicación integral en ejecución: PARCIAL (S2-062: validación al agregar; S2-063: cálculo y precisión del precio; S2-064: edición por tipo).** Este documento especifica las reglas que deberán compartir catálogo, simulador, POS y MS-5. No certifica pruebas de integración ni una balanza implementada.
+**Entrega: CONTRATO DEFINIDO, versión 1. Aplicación integral en ejecución: PARCIAL (S2-062: validación al agregar; S2-063: cálculo y precisión del precio; S2-064: edición por tipo; S2-067: simulador; S2-070: consumo desde el POS).** Este documento especifica las reglas que comparten catálogo, simulador, POS y MS-5. No certifica una balanza física.
 
 El mínimo de 10 g y la precisión de 1 g son decisiones de diseño de esta tarea para el simulador, no especificaciones verificadas de hardware. Capacidad máxima y resolución de una balanza física: [NO VERIFICADO].
 
@@ -127,7 +127,8 @@ Inspección de código, 2026-10-26:
 - [PENDIENTE] Exponer/resolver unidad del catálogo: `ProductoCatalogDto` no incluye `UomBaseId`. Definir la correspondencia real y validar precio por kg.
 - [IMPLEMENTADO — S2-063] Se conserva la precisión del precio persistido y MS-2 redondea subtotal e IVA por línea antes de sumar la venta.
 - [IMPLEMENTADO — S2-065] Crear, agregar y editar usan `ReglasCantidadItem`; la matriz HTTP incluye mínimo, precisión, tipo y aislamiento contra MS-3 real.
-- [PENDIENTE] Implementar y probar conversión explícita en el simulador/adaptador. Este documento no acredita aceptación E2E.
+- [IMPLEMENTADO — S2-067/S2-069] El simulador y el adaptador serial abstracto reciben unidad explícita `g`/`kg`, convierten una sola vez a kg y rechazan valores menores a 10 g o con fracciones inferiores a 1 g.
+- [IMPLEMENTADO CON SIMULADOR — S2-070] El POS consulta `window.api.scale` mediante un filtro único, acepta solamente peso estable y válido, bloquea la edición manual de líneas pesables y envía `cantidad = peso_kg`. La prueba integrada recorre simulador, main, preload, dato corrupto, desconexión y reconexión. UI con hardware físico [NO VERIFICADA].
 
 Validación S2-062 del 2026-10-24: **20/20 casos nuevos aprobados** más 12 de regresión, limitados a agregar ítems. [Reporte y evidencia](../../qa/S2-062/reporte.md).
 
@@ -138,6 +139,10 @@ Validación S2-062 del 2026-10-24: **20/20 casos nuevos aprobados** más 12 de r
 - [DTO de crear venta](../../../src/POSCartService/DTOs/CrearVentaRequest.cs)
 - [Modelo de catálogo](../../../src/CatalogPricingService/Models/Producto.cs)
 - [Persistencia MS-5](../../../src/POSCartService/Data/PosCartDbContext.cs)
+- [Adaptador simulado](../../../globalmart-frontend/src/hardware/simulated-scale-adapter.ts)
+- [Adaptador serial abstracto](../../../globalmart-frontend/src/hardware/serial-scale-adapter.ts)
+- [Filtro de peso para el carrito](../../../globalmart-frontend/src/hardware/scale-cart.ts)
+- [Prueba main/preload con simulador](../../../globalmart-frontend/tests/scale-main-preload.integration.test.cjs)
 - [MS-5](../servicios/ms5-pos.md), [MS-3](../servicios/ms3-catalog.md), [hardware](../integraciones/hardware.md)
 
 Validación S2-063 del 2026-10-24: **42/42 pruebas Release aprobadas** (10 nuevas, 32 de regresión), con PostgreSQL temporal, HTTP MS-5 y calculador productivo MS-2 a través de handler HTTP. Regresión manual TC-01 aprobada. [Evidencia y límites](../../qa/S2-063/reporte.md).
@@ -148,6 +153,6 @@ Validación S2-064 del 2026-10-24: **75/75 pruebas Release aprobadas**, incluida
 
 Verificación final S2-064: recompilación Release y **33/33 casos S2-064/S2-063 aprobados**, sin fallos ni omisiones; evidencia adicional en el reporte S2-064.
 
-S2-065 encontró y corrigió creación de pesable sin peso (201 incorrecto); ahora devuelve 400 sin crear venta. [Matriz, diagnóstico y evidencia](../../qa/S2-065/reporte.md). La conversión del adaptador y resolución de unidad UUID siguen pendientes.
+S2-065 encontró y corrigió creación de pesable sin peso (201 incorrecto); ahora devuelve 400 sin crear venta. [Matriz, diagnóstico y evidencia](../../qa/S2-065/reporte.md). La conversión del adaptador se incorpora con S2-067/S2-069; la resolución de unidad UUID sigue pendiente.
 
 Validación del 2026-10-26: **84/84 pruebas Release aprobadas**, sin fallos ni omisiones (nueve nuevas con matrices, 75 de regresión). Diagnóstico previo: 7/8 aprobadas y fallo reproducido de creación sin peso. [Evidencia y límites](../../qa/S2-065/reporte.md).

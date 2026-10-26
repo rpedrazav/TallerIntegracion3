@@ -378,6 +378,17 @@ Verificación final S2-064: recompilación Release y **33/33 casos S2-064/S2-063
 
 ## S2-065 — Fronteras de peso y tenant
 
-[IMPLEMENTADO — backend] Crear, agregar y editar comparten `ReglasCantidadItem`. Crear ya no convierte la ausencia de peso pesable en cantidad 1: rechaza con 400 sin persistir; el DTO de creación usa cantidad nullable. Las pruebas usan catálogo MS-3 real para productos pesables propios/ajenos, JWT firmado y PostgreSQL aislado. La conversión del adaptador de balanza y validación de UUID de unidad permanecen pendientes. [Matriz y evidencia](../../qa/S2-065/reporte.md).
+[IMPLEMENTADO — backend] Crear, agregar y editar comparten `ReglasCantidadItem`. Crear ya no convierte la ausencia de peso pesable en cantidad 1: rechaza con 400 sin persistir; el DTO de creación usa cantidad nullable. Las pruebas usan catálogo MS-3 real para productos pesables propios/ajenos, JWT firmado y PostgreSQL aislado. La conversión del adaptador se incorpora con S2-067/S2-069/S2-070; la validación de UUID de unidad sigue pendiente. [Matriz y evidencia](../../qa/S2-065/reporte.md).
 
 Validación del 2026-10-26: **84/84 pruebas Release aprobadas**, sin fallos ni omisiones (nueve nuevas con matrices, 75 de regresión). Diagnóstico previo: 7/8 aprobadas y fallo reproducido de creación sin peso. [Evidencia y límites](../../qa/S2-065/reporte.md).
+
+## S2-059 — Logs estructurados de correlación de cobro [IMPLEMENTADO]
+
+[IMPLEMENTADO] Se integró registro de correlación en `VentasController.cs` y `PaymentGatewayClient.cs` bajo la etiqueta unificada `[COBRO_CORRELATION]`. Traza cada fase del cobro (`Entrada`, `Llamada pasarela`, `Respuesta pasarela`) asociando `CorrelationId`, `IntentoId`, `VentaId` y `TenantId`. Prohíbe y excluye de forma estricta cualquier dato confidencial de tarjeta (PAN, CVV, secretos), validado mediante la suite `CobroTarjetaCorrelationIntegrationTests`.
+
+## S2-060 — Smoke de despliegue de cobro con tarjeta [IMPLEMENTADO]
+
+[IMPLEMENTADO] Suite automatizada y script `scripts/smoke-tarjeta.sh` que comprueba los tres estados fundamentales del simulador de pasarela:
+1. **Aprobado:** Transiciona la venta a estado `COMPLETADA`, persiste el `Pago` de tipo `TARJETA` y genera el evento `sale.completed` en el outbox.
+2. **Rechazado:** Devuelve HTTP 422 y mantiene la venta en estado `PENDIENTE`.
+3. **Pérdida temporal / Timeout:** Devuelve HTTP 504 / 503 y mantiene la venta en estado `PENDIENTE` sin registrar pagos espurios.

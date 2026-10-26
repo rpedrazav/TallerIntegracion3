@@ -3,9 +3,9 @@ id: pantallas
 tipo: frontend
 titulo: Pantallas del Frontend — GlobalMart OS
 estado: parcial
-fuentes: [globalmart-frontend/src/pages/, globalmart-frontend/src/components/, globalmart-frontend/src/api/client.ts]
+fuentes: [globalmart-frontend/src/pages/, globalmart-frontend/src/components/, globalmart-frontend/src/api/client.ts, globalmart-frontend/src/hardware/scale-cart.ts, globalmart-frontend/src/payments/terminal-ipc.ts, globalmart-frontend/src/preload.ts, globalmart-frontend/tests/scale-main-preload.integration.test.cjs, globalmart-frontend/tests/terminal-ipc.test.cjs]
 verificado_contra_codigo: true
-ultima_revision: 2026-10-18
+ultima_revision: 2026-10-26
 depende_de: [estructura, ms1-identity, ms5-pos, guia-estilo]
 publica: []
 consume: []
@@ -51,7 +51,7 @@ Carrito de compras con:
 Productos obtenidos de MS-3 mediante `catalogApi`; solo el borrador anterior a la venta se guarda en `localStorage`
 Al entrar a /pos, consulta `posApi.activeShift`. Mientras espera muestra carga; ante 404 redirige a /abrir-turno. Si falla la conexión, bloquea el POS y ofrece reintentar. El catálogo se consulta solo después de confirmar el turno activo [IMPLEMENTADO].
 
-POST /ventas envía items [{producto_id, cantidad}] y metodo_pago EFECTIVO; no envía precio ni impuesto.
+POST /ventas envía `producto_id`, `cantidad` y, solo para productos pesables, `peso_kg`; nunca envía precio ni impuesto. El método puede ser EFECTIVO o TARJETA.
 GET /ventas/turno/{turnoId} identifica la última venta PENDIENTE del turno activo al abrir POS y antes de crear otra; GET /ventas/{id} recupera su estado completo antes de mostrar el carrito. Si falla la recuperación, POS muestra un error y ofrece reintentar sin usar el borrador local como autoridad.
 El ID, los ítems y los totales de la venta pendiente vienen de MS-5; el borrador local deja de ser autoridad.
 En venta pendiente, búsqueda y escaneo agregan ítems con `POST /ventas/{id}/items` o aumentan cantidad con `PUT /ventas/{id}/items/{itemId}`. Editar la cantidad de una fila usa el ID del ítem de MS-5. Tras cada operación consulta `GET /ventas/{id}` para renovar carrito, subtotal, impuestos y total; si no puede confirmar el estado, bloquea nuevas ediciones hasta reintentar la consulta [IMPLEMENTADO].
@@ -59,6 +59,12 @@ Eliminar una fila de la venta pendiente llama `DELETE /ventas/{id}/items/{itemId
 Errores de inicio visibles; ante respuesta perdida, vuelve a consultar el turno antes de permitir otro intento [IMPLEMENTADO].
 NO abre turno desde esta pantalla; dirige a /abrir-turno cuando falta
 ```
+
+### Balanza simulada — S2-070 / TI3-701 [IMPLEMENTADO CON SIMULADOR]
+
+Al seleccionar un producto con `esPesoVariable`, el POS llama exclusivamente a `readStableWeightForCart(window.api.scale)`. Mientras espera bloquea otra lectura y muestra estado; solo agrega la línea cuando recibe un peso estable, positivo, en kg, de al menos 10 g y con precisión de 1 g. Un dato corrupto, error o desconexión deja el carrito sin cambios y presenta un mensaje. El intento siguiente consulta el estado y reconecta antes de leer cuando corresponde.
+
+La cantidad de una línea pesable se muestra con tres decimales en kg y no puede editarse manualmente. Crear, agregar y modificar envían `cantidad = peso_kg` y `peso_kg`; los totales posteriores continúan proviniendo de MS-5. La prueba integrada de simulador/main/preload confirma la secuencia válida, corrupta, desconectada y recuperada; hardware real [NO VERIFICADO].
 
 ### Modal de cobro — contrato visual S2-046 [IMPLEMENTADO]
 
@@ -71,10 +77,17 @@ NO abre turno desde esta pantalla; dirige a /abrir-turno cuando falta
 | Aprobado | Venta confirmada; referencia opaca si es tarjeta | Cerrar |
 | Rechazado | Venta pendiente; motivo del rechazo | Cambiar método o cerrar |
 | Resultado incierto | Verificar venta antes de intentar otro cobro | Verificar, cuando exista manejador; o cerrar |
+| Cancelado | Intento cancelado | Cerrar; MS-5 todavía no soporta esta transición remotamente |
 
 El botón **Cobrar** del POS abre el modal en estado Disponible. En una venta `EFECTIVO`, confirmar un monto positivo llama `POST /ventas/{id}/cobrar` con `monto_recibido`; Procesando evita un segundo envío, Aprobado usa la venta `COMPLETADA` y el `vuelto` de la respuesta, y un 400 `Monto insuficiente` conserva la venta `PENDIENTE` y muestra `diferencia` devuelta por MS-5 [IMPLEMENTADO]. Ante un resultado de red incierto, bloquea otra confirmación y permite consultar `GET /ventas/{id}`; la consulta puede confirmar el estado de la venta, pero no reconstruye el vuelto si se perdió la respuesta del cobro. Antes de iniciar una venta se elige `EFECTIVO` o `TARJETA`. La tarjeta llama `POST /ventas/{id}/cobrar-tarjeta` con una clave UUID nueva, muestra aprobación y referencia opaca o rechazo, y permite cambiar el método de una venta pendiente mediante `PATCH /ventas/{id}/metodo-pago`. Un resultado incierto exige verificar la venta antes de otro cobro [IMPLEMENTADO]. Pruebas de interfaz controladas 4/4 aprobadas el 2026-10-18; integración E2E con la pasarela desplegada [NO VERIFICADA].
 
 S2-049: ante timeout o error de tarjeta, el modal muestra Resultado incierto y solo ofrece verificar. `GET /ventas/{id}/intento-tarjeta` recupera el último intento al recargar POS y consulta la pasarela; `UNCERTAIN` mantiene el cobro bloqueado, `APPROVED` cierra la venta y `DECLINED` permite un nuevo intento manual con otra clave o cambiar método. No hay reenvío automático del POST. Prueba dirigida de interfaz con doble clic, timeout, recarga y recuperación aprobada el 2026-10-18; E2E con PostgreSQL y pasarela desplegada [NO VERIFICADA].
+
+S2-071 / TI3-702 [IMPLEMENTADO]: el flujo de tarjeta consume `TerminalPort` mediante `Ms5TerminalAdapter`. El puerto separa `iniciarCobro`, `consultarEstado` y `cancelarIntento`, usando solo `ventaId`, monto, clave/referencia del intento, estado y referencia opaca; no define PAN, número de tarjeta, CVV ni vencimiento. `terminalStateMachine` centraliza `available`, `processing`, `approved`, `declined`, `uncertain` y `cancelled` con transiciones explícitas. MS-5 respalda inicio y consulta con los endpoints existentes; como no expone cancelación, el adaptador devuelve `CANCELACION_NO_SOPORTADA` sin llamada HTTP. Pruebas puras **4/4** y TypeScript aprobados el 2026-10-25.
+
+S2-072 / TI3-703 [IMPLEMENTADO]: `createTerminalPort()` selecciona por `DEVICE_TERMINAL_MODE`: `mock` crea `SimulatedTerminalAdapter` y `real` conserva `Ms5TerminalAdapter`. El simulador implementa `TerminalPort` y reproduce de forma determinista `waiting`, `approved`, `declined`, `cancelled` y `disconnected`; lectura/inicio significa que `iniciarCobro` recibe los datos del intento y pasa a `processing`. Reutiliza `MOCK_TERMINAL_DELAY_MS`, conserva venta/monto/referencia y genera una referencia opaca estable sin `Math.random()` ni `Date.now()`. `Pos.tsx` desconoce los detalles del adaptador. No solicita ni almacena PAN/CVV y permanece separado del `MockTerminalAdapter`/`ITerminalAdapter` legado. TI3-703 no agregó IPC; el bridge incorporado después se documenta en TI3-704. Pruebas enfocadas **11/11** y TypeScript aprobados el 2026-10-26.
+
+S2-073 / TI3-704 [IMPLEMENTADO]: `Pos.tsx` inicia y consulta intentos exclusivamente mediante la API tipada `window.api.terminal`, expuesta por `contextBridge` con los canales fijos `devices:terminal:iniciarCobro` y `devices:terminal:consultarEstado`. El preload no expone `send`, `invoke`, selección libre de canal, cancelación ni comandos de hardware en esta API. Main conserva un único `TerminalPort` simulado por proceso y valida antes de invocarlo objetos planos con listas exactas de propiedades: inicio acepta solo `ventaId`, `monto` y `claveIdempotencia`; consulta acepta solo `ventaId`, `monto` y `referenciaIntento`. UUID, monto positivo finito dentro del máximo y referencias seguras/acotadas son obligatorios; propiedades adicionales se rechazan. La respuesta IPC se reduce a venta, monto, referencia del intento, estado y referencia opaca, sin PAN/CVV/vencimiento. En `DEVICE_TERMINAL_MODE=real`, main falla de forma controlada y explícita porque el transporte MS-5 desde main permanece pendiente de TI3-705; no aplica fallback a `mock`. Los IPC heredados de `ITerminalAdapter` permanecen separados. Pruebas IPC puras **6/6** y TypeScript aprobados el 2026-10-26.
 
 La búsqueda del POS consulta `GET /products/search` por nombre o código parcial y `GET /products/lookup` por código exacto, sin depender de la primera página del catálogo. Muestra carga, ausencia de resultados y errores; Enter conserva el texto si no se agregó un producto. `/admin/productos` permanece reservado a ADMIN/SUPER_ADMIN para la gestión administrativa; el cajero usa la búsqueda del POS [IMPLEMENTADO].
 

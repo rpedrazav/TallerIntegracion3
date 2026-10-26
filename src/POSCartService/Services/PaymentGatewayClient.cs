@@ -43,7 +43,7 @@ public sealed class PaymentGatewayClient : IPaymentGatewayClient
 
         var startedAt = Stopwatch.GetTimestamp();
         _logger.LogInformation(
-            "Iniciando pago por pasarela RequestId={RequestId} TenantId={TenantId} SaleId={SaleId} ScenarioId={ScenarioId}",
+            "[COBRO_CORRELATION] Iniciando pago por pasarela RequestId={RequestId} TenantId={TenantId} SaleId={SaleId} ScenarioId={ScenarioId}",
             request.RequestId,
             request.TenantId,
             request.SaleId,
@@ -58,7 +58,7 @@ public sealed class PaymentGatewayClient : IPaymentGatewayClient
         {
             var elapsedMs = Stopwatch.GetElapsedTime(startedAt).TotalMilliseconds;
             _logger.LogWarning(
-                "Timeout de pasarela RequestId={RequestId} TenantId={TenantId} SaleId={SaleId} ScenarioId={ScenarioId} Status={Status} ElapsedMs={ElapsedMs}",
+                "[COBRO_CORRELATION] Timeout de pasarela RequestId={RequestId} TenantId={TenantId} SaleId={SaleId} ScenarioId={ScenarioId} Status={Status} ElapsedMs={ElapsedMs}",
                 request.RequestId,
                 request.TenantId,
                 request.SaleId,
@@ -167,7 +167,7 @@ public sealed class PaymentGatewayClient : IPaymentGatewayClient
             }
 
             _logger.LogInformation(
-                "Pago procesado por pasarela RequestId={RequestId} TenantId={TenantId} SaleId={SaleId} ScenarioId={ScenarioId} Status={Status} TransactionId={TransactionId} ElapsedMs={ElapsedMs}",
+                "[COBRO_CORRELATION] Pago procesado por pasarela RequestId={RequestId} TenantId={TenantId} SaleId={SaleId} ScenarioId={ScenarioId} Status={Status} TransactionId={TransactionId} ElapsedMs={ElapsedMs}",
                 request.RequestId,
                 request.TenantId,
                 request.SaleId,

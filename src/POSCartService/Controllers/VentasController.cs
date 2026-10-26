@@ -877,6 +877,10 @@ public sealed class VentasController : ControllerBase
             });
         }
 
+        _logger?.LogInformation(
+            "[COBRO_CORRELATION] Entrada: VentaId={VentaId}, IntentoId={IntentoId}, CorrelationId={CorrelationId}, TenantId={TenantId}",
+            id, intentoPago.Id, requestId, tenantId);
+
         var scenarioId = string.IsNullOrWhiteSpace(request?.ScenarioId)
             ? "sim-approved-v1"
             : request.ScenarioId;
@@ -891,6 +895,10 @@ public sealed class VentasController : ControllerBase
             ScenarioId = scenarioId
         };
 
+        _logger?.LogInformation(
+            "[COBRO_CORRELATION] Llamada pasarela: VentaId={VentaId}, IntentoId={IntentoId}, CorrelationId={CorrelationId}, ScenarioId={ScenarioId}",
+            venta.Id, intentoPago.Id, requestId, scenarioId);
+
         PaymentGatewayResponse gatewayResponse;
         try
         {
@@ -898,7 +906,10 @@ public sealed class VentasController : ControllerBase
         }
         catch (TimeoutException ex)
         {
-            _logger?.LogWarning(ex, "Timeout al comunicarse con la pasarela para venta {VentaId}", venta.Id);
+            _logger?.LogWarning(
+                ex,
+                "[COBRO_CORRELATION] Timeout pasarela: VentaId={VentaId}, IntentoId={IntentoId}, CorrelationId={CorrelationId}",
+                venta.Id, intentoPago.Id, requestId);
 
             return StatusCode(StatusCodes.Status504GatewayTimeout, new
             {
@@ -909,7 +920,10 @@ public sealed class VentasController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger?.LogError(ex, "Error al comunicarse con la pasarela para venta {VentaId}", venta.Id);
+            _logger?.LogError(
+                ex,
+                "[COBRO_CORRELATION] Error pasarela: VentaId={VentaId}, IntentoId={IntentoId}, CorrelationId={CorrelationId}",
+                venta.Id, intentoPago.Id, requestId);
 
             return StatusCode(StatusCodes.Status502BadGateway, new
             {
@@ -936,6 +950,10 @@ public sealed class VentasController : ControllerBase
             var ventaCompletada = await _ventaService.CompletarTarjetaAsync(venta.Id, intentoPago);
 
             _logger?.LogInformation(
+                "[COBRO_CORRELATION] Respuesta pasarela: VentaId={VentaId}, IntentoId={IntentoId}, CorrelationId={CorrelationId}, Status={Status}, Code={Code}",
+                venta.Id, intentoPago.Id, requestId, gatewayResponse.Status, gatewayResponse.AuthorizationCode);
+
+            _logger?.LogInformation(
                 "Venta {VentaId} cobrada con tarjeta. Ref: {Ref}, Auth: {Auth}",
                 ventaCompletada.Id, gatewayResponse.GatewayReference, gatewayResponse.AuthorizationCode);
 
@@ -958,6 +976,10 @@ public sealed class VentasController : ControllerBase
             await _ventaService.ActualizarIntentoPagoAsync(intentoPago);
 
             _logger?.LogWarning(
+                "[COBRO_CORRELATION] Respuesta pasarela rechazada: VentaId={VentaId}, IntentoId={IntentoId}, CorrelationId={CorrelationId}, Status={Status}, DeclineCode={DeclineCode}",
+                venta.Id, intentoPago.Id, requestId, gatewayResponse.Status, gatewayResponse.DeclineCode);
+
+            _logger?.LogWarning(
                 "Pago rechazado para venta {VentaId}. Status: {Status}, Decline: {DeclineCode}",
                 venta.Id, gatewayResponse.Status, gatewayResponse.DeclineCode);
 
@@ -971,6 +993,11 @@ public sealed class VentasController : ControllerBase
                 request_id   = requestId
             });
         }
+
+        _logger?.LogWarning(
+            "[COBRO_CORRELATION] Respuesta pasarela no reconocida: VentaId={VentaId}, IntentoId={IntentoId}, CorrelationId={CorrelationId}, Status={Status}",
+            venta.Id, intentoPago.Id, requestId, gatewayResponse.Status);
+
         return StatusCode(StatusCodes.Status502BadGateway, new
         {
             error = "La pasarela devolvió un estado no reconocido. Consulte el intento antes de cobrar de nuevo.",
