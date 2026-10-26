@@ -5,7 +5,7 @@ titulo: Estado Real de Implementación — GlobalMart OS
 estado: vigente
 fuentes: [docs/context/_reports/inventario.md, src/, globalmart-frontend/src/api/client.ts, git log, docs/context/_reports/preguntas-abiertas.md, tests/GlobalMart.IntegrationTests/CobroSeguroIntegrationTests.cs, docs/qa/S2-035/reporte.md, new-ingresses.yaml]
 verificado_contra_codigo: true
-ultima_revision: 2026-10-24
+ultima_revision: 2026-10-26
 depende_de: []
 publica: []
 consume: []
@@ -381,3 +381,9 @@ Validación S2-063 del 2026-10-24: **42/42 pruebas Release aprobadas** (10 nueva
 Validación S2-064 del 2026-10-24: **75/75 pruebas Release aprobadas**, incluidas 23 nuevas de edición y 10 de aislamiento de ventas entre tenants, con HTTP/JWT y PostgreSQL temporal. [Evidencia](../qa/S2-064/reporte.md).
 
 Verificación final S2-064: recompilación Release y **33/33 casos S2-064/S2-063 aprobados**, sin fallos ni omisiones; evidencia adicional en el reporte S2-064.
+
+## S2-065 — Probar fronteras de peso y tenant
+
+[IMPLEMENTADO — suite backend] Pruebas HTTP de creación, agregado y edición con MS-3 real, PostgreSQL aislado y calculador productivo MS-2 mediante handler. Se corrigió creación de pesable sin peso, que devolvía 201: las tres operaciones comparten reglas de peso/tipo/cantidad y crear devuelve 400 sin mutar ante entrada inválida. Las pruebas incluyen ataques entre tenants en ambos sentidos y controles propios. Conversión de gramos en simulador y validación de `UomBaseId`: pendientes, aceptación externa [NO VERIFICADO]. [Reporte](../qa/S2-065/reporte.md).
+
+Validación del 2026-10-26: **84/84 pruebas Release aprobadas**, sin fallos ni omisiones (nueve nuevas con matrices, 75 de regresión). Diagnóstico previo: 7/8 aprobadas y fallo reproducido de creación sin peso. [Evidencia y límites](../qa/S2-065/reporte.md).

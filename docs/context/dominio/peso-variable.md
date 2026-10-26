@@ -5,7 +5,7 @@ titulo: Contrato de ítem pesable — S2-061
 estado: contrato_definido
 fuentes: [src/POSCartService/Controllers/VentasController.cs, src/POSCartService/DTOs/AgregarItemDTOs.cs, src/POSCartService/DTOs/CrearVentaRequest.cs, src/CatalogPricingService/Models/Producto.cs]
 verificado_contra_codigo: false
-ultima_revision: 2026-10-24
+ultima_revision: 2026-10-26
 depende_de: [ms3-catalog, ms5-pos, hardware]
 publica: []
 consume: []
@@ -119,14 +119,14 @@ Para acreditar implementación posteriormente:
 
 ## 7. Estado real y trabajo de implementación pendiente
 
-Inspección de código, 2026-10-24:
+Inspección de código, 2026-10-26:
 
 - [IMPLEMENTADO] Los DTOs admiten `peso_kg`; crear/agregar copia un peso positivo a cantidad cuando catálogo indica `EsPesoVariable`. MS-5 obtiene precio de catálogo y calcula subtotal.
-- [IMPLEMENTADO — S2-062] Agregar ítem consulta `EsPesoVariable` en catálogo y rechaza peso ausente, inferior a 0.010 kg, fracciones de gramo, cantidad contradictoria y peso en productos no pesables antes de calcular impuestos o persistir. S2-064 aplica las mismas restricciones al modificar, consultando el tipo en MS-3. Crear venta todavía no aplica estas reglas completas.
-- [PARCIAL — S2-062] `AgregarItemRequest.Cantidad` es nullable: para pesables se deriva del peso cuando se omite o es null; si tiene valor debe coincidir. Para no pesables, omisión/null conserva default 1. `ModificarCantidadItemRequest.Cantidad` también es nullable desde S2-064, pero para no pesables debe enviarse una cantidad positiva al editar. El DTO de crear aún necesita adaptación.
+- [IMPLEMENTADO — S2-062] Agregar ítem consulta `EsPesoVariable` en catálogo y rechaza peso ausente, inferior a 0.010 kg, fracciones de gramo, cantidad contradictoria y peso en productos no pesables antes de calcular impuestos o persistir. S2-064 aplica las mismas restricciones al modificar, consultando el tipo en MS-3. S2-065 extiende las mismas reglas a crear venta con `ReglasCantidadItem`.
+- [PARCIAL — S2-062] `AgregarItemRequest.Cantidad` es nullable: para pesables se deriva del peso cuando se omite o es null; si tiene valor debe coincidir. Para no pesables, omisión/null conserva default 1. `ModificarCantidadItemRequest.Cantidad` también es nullable desde S2-064, pero para no pesables debe enviarse una cantidad positiva al editar. S2-065 adapta también el DTO de crear a cantidad nullable; omisión/null en no pesables conserva default 1.
 - [PENDIENTE] Exponer/resolver unidad del catálogo: `ProductoCatalogDto` no incluye `UomBaseId`. Definir la correspondencia real y validar precio por kg.
 - [IMPLEMENTADO — S2-063] Se conserva la precisión del precio persistido y MS-2 redondea subtotal e IVA por línea antes de sumar la venta.
-- [PENDIENTE] Aplicar las validaciones completas de peso en crear venta y probarlas mediante HTTP/persistencia.
+- [IMPLEMENTADO — S2-065] Crear, agregar y editar usan `ReglasCantidadItem`; la matriz HTTP incluye mínimo, precisión, tipo y aislamiento contra MS-3 real.
 - [PENDIENTE] Implementar y probar conversión explícita en el simulador/adaptador. Este documento no acredita aceptación E2E.
 
 Validación S2-062 del 2026-10-24: **20/20 casos nuevos aprobados** más 12 de regresión, limitados a agregar ítems. [Reporte y evidencia](../../qa/S2-062/reporte.md).
@@ -147,3 +147,7 @@ S2-064: editar conserva el precio snapshot y consulta el tipo actual del catálo
 Validación S2-064 del 2026-10-24: **75/75 pruebas Release aprobadas**, incluidas 23 nuevas de edición y 10 de aislamiento de ventas entre tenants, con HTTP/JWT y PostgreSQL temporal. [Evidencia](../../qa/S2-064/reporte.md).
 
 Verificación final S2-064: recompilación Release y **33/33 casos S2-064/S2-063 aprobados**, sin fallos ni omisiones; evidencia adicional en el reporte S2-064.
+
+S2-065 encontró y corrigió creación de pesable sin peso (201 incorrecto); ahora devuelve 400 sin crear venta. [Matriz, diagnóstico y evidencia](../../qa/S2-065/reporte.md). La conversión del adaptador y resolución de unidad UUID siguen pendientes.
+
+Validación del 2026-10-26: **84/84 pruebas Release aprobadas**, sin fallos ni omisiones (nueve nuevas con matrices, 75 de regresión). Diagnóstico previo: 7/8 aprobadas y fallo reproducido de creación sin peso. [Evidencia y límites](../../qa/S2-065/reporte.md).
