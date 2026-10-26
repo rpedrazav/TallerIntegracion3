@@ -6,9 +6,6 @@ import BarcodeInput from '../components/pos/BarcodeInput';
 import CartItem from '../components/pos/CartItem';
 import PaymentModal, { PaymentMethod, PaymentState } from '../components/pos/PaymentModal';
 import { readStableWeightForCart } from '../hardware/scale-cart';
-import { createTerminalPort } from '../payments/createTerminalPort';
-
-const terminalPort = createTerminalPort();
 
 export interface ProductItem {
   id: string;
@@ -110,7 +107,7 @@ export default function Pos() {
         let pendiente = recovered?.estado === 'PENDIENTE' ? recovered : null;
         if (pendiente?.metodo_pago === 'TARJETA') {
           try {
-            const intento = await terminalPort.consultarEstado({
+            const intento = await window.api.terminal.consultarEstado({
               ventaId: pendiente.id,
               monto: pendiente.total,
               referenciaIntento: paymentAttemptReference.current,
@@ -537,14 +534,14 @@ export default function Pos() {
     try {
       const claveIdempotencia = paymentAttemptReference.current ?? crypto.randomUUID();
       paymentAttemptReference.current = claveIdempotencia;
-      let result = await terminalPort.iniciarCobro({
+      let result = await window.api.terminal.iniciarCobro({
         ventaId: current.id,
         monto: current.total,
         claveIdempotencia,
       });
       paymentAttemptReference.current = result.referenciaIntento;
       if (result.estado === 'processing') {
-        result = await terminalPort.consultarEstado({
+        result = await window.api.terminal.consultarEstado({
           ventaId: current.id,
           monto: current.total,
           referenciaIntento: result.referenciaIntento,
@@ -608,7 +605,7 @@ export default function Pos() {
     setPaymentError('');
     try {
       if (current.metodo_pago === 'TARJETA') {
-        const intento = await terminalPort.consultarEstado({
+        const intento = await window.api.terminal.consultarEstado({
           ventaId: current.id,
           monto: current.total,
           referenciaIntento: paymentAttemptReference.current,
