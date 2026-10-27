@@ -5,7 +5,7 @@ titulo: Pantallas del Frontend — GlobalMart OS
 estado: parcial
 fuentes: [globalmart-frontend/src/pages/, globalmart-frontend/src/components/, globalmart-frontend/src/api/client.ts, globalmart-frontend/src/hardware/scale-cart.ts, globalmart-frontend/src/payments/SimulatedTerminalAdapter.ts, globalmart-frontend/src/payments/terminal-ipc.ts, globalmart-frontend/src/payments/synchronizeCardPayment.ts, globalmart-frontend/src/preload.ts, globalmart-frontend/tests/scale-main-preload.integration.test.cjs, globalmart-frontend/tests/terminal-port.test.cjs, globalmart-frontend/tests/terminal-ipc.test.cjs, globalmart-frontend/tests/synchronized-card-payment.test.cjs]
 verificado_contra_codigo: true
-ultima_revision: 2026-10-26
+ultima_revision: 2026-10-27
 depende_de: [estructura, ms1-identity, ms5-pos, guia-estilo]
 publica: []
 consume: []
@@ -92,6 +92,10 @@ S2-073 / TI3-704 [IMPLEMENTADO]: `Pos.tsx` inicia y consulta intentos exclusivam
 S2-074 / TI3-705 [IMPLEMENTADO]: la aprobación de `TerminalPort` es preliminar y nunca basta para mostrar la venta cobrada. `Pos.tsx` genera o reutiliza una sola clave por intento; `synchronizeCardPayment` la entrega al terminal como `claveIdempotencia`, exige conservarla como `referenciaIntento` y, solo si el terminal aprueba, llama `posApi.chargeCard` con esa misma clave. MS-5 la usa como `request_id` y `Idempotency-Key` ante la pasarela. La UI pasa a `approved` únicamente cuando MS-5 responde `APPROVED` con la misma venta en estado `COMPLETADA`; muestra exclusivamente el `gateway_reference` confirmado por MS-5, no la referencia opaca local del terminal.
 
 Si la respuesta de autorización es ambigua o falla, `cardAttemptStatus` consulta el intento existente sin generar otra clave. La reconciliación solo aprueba cuando `request_id` coincide con la referencia esperada, el estado es `APPROVED` y la venta está `COMPLETADA`; una referencia distinta o un resultado no definitivo deja la UI en `uncertain`. La recuperación inicial y `verifyPayment()` también consultan MS-5 como fuente final y no crean una autorización nueva. Pruebas puras del flujo sincronizado **6/6** y TypeScript aprobados el 2026-10-26.
+
+S2-075 / TI3-706 [IMPLEMENTADO]: pruebas puras cubren los escenarios deterministas `approved`, `declined`, `timeout` y `disconnected` desde `processing`, conservando en inicio y consulta la misma `referenciaIntento` y sin datos sensibles. Timeout y desconexión terminan en `uncertain`; los estados terminales rechazan transiciones inválidas. Los handlers IPC se ejercitan con `SimulatedTerminalAdapter` real para ambos canales permitidos, verificando estados, referencia y el conjunto exacto de cinco campos seguros.
+
+La protección de doble clic reutiliza una guarda single-flight extraída sin cambio funcional del `paymentInFlight` de POS. Dos invocaciones inmediatas producen una sola ejecución del terminal, una sola consulta, una sola llamada `chargeCard`, una sola clave generada y un único cargo lógico; `claveIdempotencia`, `referenciaIntento` y la clave entregada a MS-5 son idénticas. Evidencia dirigida: `terminal-port` **12/12**, `terminal-ipc` **7/7** y `synchronized-card-payment` **7/7**, total **26/26**, más TypeScript aprobado el 2026-10-27.
 
 La búsqueda del POS consulta `GET /products/search` por nombre o código parcial y `GET /products/lookup` por código exacto, sin depender de la primera página del catálogo. Muestra carga, ausencia de resultados y errores; Enter conserva el texto si no se agregó un producto. `/admin/productos` permanece reservado a ADMIN/SUPER_ADMIN para la gestión administrativa; el cajero usa la búsqueda del POS [IMPLEMENTADO].
 

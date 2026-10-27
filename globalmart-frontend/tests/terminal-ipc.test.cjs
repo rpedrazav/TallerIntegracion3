@@ -4,19 +4,34 @@ const assert = require('node:assert/strict');
 const path = require('node:path');
 const ts = require('typescript');
 
-function loadTerminalIpc() {
-  const sourcePath = path.resolve(__dirname, '../src/payments/terminal-ipc.ts');
+function loadTypeScript(relativePath, mocks = {}) {
+  const sourcePath = path.resolve(__dirname, relativePath);
   const source = readFileSync(sourcePath, 'utf8');
   const javascript = ts.transpileModule(source, {
     compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
   }).outputText;
   const moduleUnderTest = { exports: {} };
+  const localRequire = request => (
+    Object.prototype.hasOwnProperty.call(mocks, request) ? mocks[request] : require(request)
+  );
   Function('require', 'module', 'exports', javascript)(
-    require,
+    localRequire,
     moduleUnderTest,
     moduleUnderTest.exports,
   );
   return moduleUnderTest.exports;
+}
+
+function loadTerminalIpc() {
+  return loadTypeScript('../src/payments/terminal-ipc.ts');
+}
+
+function loadSimulatedTerminalAdapter() {
+  const stateMachine = loadTypeScript('../src/payments/terminalStateMachine.ts');
+  return loadTypeScript(
+    '../src/payments/SimulatedTerminalAdapter.ts',
+    { './terminalStateMachine': stateMachine },
+  ).SimulatedTerminalAdapter;
 }
 
 const ventaId = '11111111-1111-1111-1111-111111111111';
@@ -163,6 +178,59 @@ test('handlers validan antes del puerto y devuelven solo campos seguros', async 
     estado: 'processing',
     referenciaOpaca: null,
   });
+});
+
+test('IPC conserva la clave y expone estados seguros del simulador real', async () => {
+  const { registerTerminalIpcHandlers, TERMINAL_IPC_CHANNELS } = loadTerminalIpc();
+  const SimulatedTerminalAdapter = loadSimulatedTerminalAdapter();
+  const scenarios = [
+    ['approved', 'approved'],
+    ['declined', 'declined'],
+    ['timeout', 'uncertain'],
+    ['disconnected', 'uncertain'],
+  ];
+  const safeFields = [
+    'estado',
+    'monto',
+    'referenciaIntento',
+    'referenciaOpaca',
+    'ventaId',
+  ];
+
+  for (const [scenario, expectedState] of scenarios) {
+    const handlers = new Map();
+    const terminal = new SimulatedTerminalAdapter({ scenario, delayMs: 0 });
+    registerTerminalIpcHandlers({
+      handle: (channel, handler) => handlers.set(channel, handler),
+    }, terminal);
+
+    assert.deepEqual([...handlers.keys()], [
+      TERMINAL_IPC_CHANNELS.iniciarCobro,
+      TERMINAL_IPC_CHANNELS.consultarEstado,
+    ]);
+
+    const inicio = await handlers.get(TERMINAL_IPC_CHANNELS.iniciarCobro)(null, {
+      ventaId,
+      monto: 15990,
+      claveIdempotencia,
+    });
+    const resultado = await handlers.get(TERMINAL_IPC_CHANNELS.consultarEstado)(null, {
+      ventaId,
+      monto: 15990,
+      referenciaIntento: inicio.referenciaIntento,
+    });
+
+    assert.equal(inicio.estado, 'processing');
+    assert.equal(inicio.referenciaIntento, claveIdempotencia);
+    assert.equal(resultado.estado, expectedState);
+    assert.equal(resultado.referenciaIntento, claveIdempotencia);
+    assert.deepEqual(Object.keys(inicio).sort(), safeFields);
+    assert.deepEqual(Object.keys(resultado).sort(), safeFields);
+    assert.doesNotMatch(
+      JSON.stringify({ inicio, resultado }),
+      /\bpan\b|\bcvv\b|card.?number|numero.?tarjeta|fecha.?expiracion/i,
+    );
+  }
 });
 
 test('modo real en main falla explícitamente sin fallback a mock', async () => {

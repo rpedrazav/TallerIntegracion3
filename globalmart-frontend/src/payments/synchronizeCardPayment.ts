@@ -20,6 +20,20 @@ export interface CardPaymentResult {
   venta: VentaPendiente | null;
 }
 
+interface PaymentSingleFlightLock {
+  current: boolean;
+}
+
+export function tryAcquirePaymentSingleFlight(lock: PaymentSingleFlightLock): boolean {
+  if (lock.current) return false;
+  lock.current = true;
+  return true;
+}
+
+export function releasePaymentSingleFlight(lock: PaymentSingleFlightLock): void {
+  lock.current = false;
+}
+
 interface SynchronizeCardPaymentOptions {
   terminal: CardTerminal;
   ms5: Ms5CardPaymentClient;

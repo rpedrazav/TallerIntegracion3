@@ -67,6 +67,14 @@ test('máquina del terminal rechaza transiciones inválidas', () => {
     () => transitionTerminalState('cancelled', 'START'),
     error => error.name === 'InvalidTerminalTransitionError',
   );
+  assert.throws(
+    () => transitionTerminalState('approved', 'VERIFY'),
+    error => error.name === 'InvalidTerminalTransitionError',
+  );
+  assert.throws(
+    () => transitionTerminalState('declined', 'APPROVE'),
+    error => error.name === 'InvalidTerminalTransitionError',
+  );
 });
 
 test('TerminalPort inicia autorización con venta, monto y clave sin datos sensibles', async () => {
@@ -201,11 +209,19 @@ test('simulador approved entrega resultado y referencia opaca deterministas', as
   async function execute() {
     const terminal = new SimulatedTerminalAdapter({ scenario: 'approved', delayMs: 0 });
     const inicio = await terminal.iniciarCobro(simulatedRequest);
-    return terminal.consultarEstado({
+    assert.equal(inicio.estado, 'processing');
+    assert.equal(inicio.referenciaIntento, simulatedRequest.claveIdempotencia);
+    const resultado = await terminal.consultarEstado({
       ventaId: inicio.ventaId,
       monto: inicio.monto,
       referenciaIntento: inicio.referenciaIntento,
     });
+    assert.equal(resultado.referenciaIntento, simulatedRequest.claveIdempotencia);
+    assert.doesNotMatch(
+      JSON.stringify({ solicitud: simulatedRequest, inicio, resultado }),
+      /\bpan\b|\bcvv\b|card.?number|numero.?tarjeta|fecha.?expiracion/i,
+    );
+    return resultado;
   }
 
   const first = await execute();
@@ -225,8 +241,15 @@ test('simulador declined termina rechazado sin referencia de aprobación', async
     referenciaIntento: inicio.referenciaIntento,
   });
 
+  assert.equal(inicio.estado, 'processing');
+  assert.equal(inicio.referenciaIntento, simulatedRequest.claveIdempotencia);
   assert.equal(resultado.estado, 'declined');
+  assert.equal(resultado.referenciaIntento, simulatedRequest.claveIdempotencia);
   assert.equal(resultado.referenciaOpaca, null);
+  assert.doesNotMatch(
+    JSON.stringify({ solicitud: simulatedRequest, inicio, resultado }),
+    /\bpan\b|\bcvv\b|card.?number|numero.?tarjeta|fecha.?expiracion/i,
+  );
 });
 
 test('simulador cancelled soporta cancelación y termina cancelled', async () => {
@@ -254,9 +277,15 @@ test('simulador disconnected conserva el intento como uncertain', async () => {
     referenciaIntento: inicio.referenciaIntento,
   });
 
+  assert.equal(inicio.estado, 'processing');
+  assert.equal(inicio.referenciaIntento, simulatedRequest.claveIdempotencia);
   assert.equal(resultado.estado, 'uncertain');
   assert.equal(resultado.referenciaIntento, simulatedRequest.claveIdempotencia);
   assert.equal(resultado.referenciaOpaca, null);
+  assert.doesNotMatch(
+    JSON.stringify({ solicitud: simulatedRequest, inicio, resultado }),
+    /\bpan\b|\bcvv\b|card.?number|numero.?tarjeta|fecha.?expiracion/i,
+  );
 });
 
 test('simulador timeout termina uncertain y conserva la referencia', async () => {

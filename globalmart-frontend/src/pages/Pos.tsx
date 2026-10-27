@@ -8,7 +8,9 @@ import PaymentModal, { PaymentMethod, PaymentState } from '../components/pos/Pay
 import { readStableWeightForCart } from '../hardware/scale-cart';
 import {
   reconcileCardPayment,
+  releasePaymentSingleFlight,
   synchronizeCardPayment,
+  tryAcquirePaymentSingleFlight,
 } from '../payments/synchronizeCardPayment';
 
 export interface ProductItem {
@@ -531,8 +533,8 @@ export default function Pos() {
   const handleCardPayment = async (method: PaymentMethod) => {
     const current = saleRef.current;
     if (paymentState !== 'available' || method !== 'card' || !current || current.estado !== 'PENDIENTE'
-      || current.metodo_pago !== 'TARJETA' || paymentInFlight.current) return;
-    paymentInFlight.current = true;
+      || current.metodo_pago !== 'TARJETA') return;
+    if (!tryAcquirePaymentSingleFlight(paymentInFlight)) return;
     setPaymentState('processing');
     setPaymentError('');
     setPaymentReference(null);
@@ -572,7 +574,7 @@ export default function Pos() {
       setPaymentState('uncertain');
       setPaymentError('No se pudo confirmar el resultado de la pasarela. Verifica la venta antes de otro cobro.');
     } finally {
-      paymentInFlight.current = false;
+      releasePaymentSingleFlight(paymentInFlight);
     }
   };
 

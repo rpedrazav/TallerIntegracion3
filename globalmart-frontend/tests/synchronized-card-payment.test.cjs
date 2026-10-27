@@ -226,3 +226,74 @@ test('terminal uncertain no muestra cobrado ni ejecuta autorización MS-5', asyn
   assert.notEqual(result.estado, 'approved');
   assert.equal(ms5Calls, 0);
 });
+
+test('doble clic usa single-flight y produce un único intento lógico con una clave', async () => {
+  const {
+    releasePaymentSingleFlight,
+    synchronizeCardPayment,
+    tryAcquirePaymentSingleFlight,
+  } = loadCoordinator();
+  const lock = { current: false };
+  const attemptReference = { current: null };
+  const calls = [];
+  const logicalCharges = new Set();
+  let generatedKeys = 0;
+  let ms5Calls = 0;
+  const terminal = terminalScenario('approved', calls);
+  const ms5 = {
+    chargeCard: async (saleId, idempotencyKey) => {
+      ms5Calls += 1;
+      logicalCharges.add(idempotencyKey);
+      calls.push({ operation: 'ms5:charge', saleId, idempotencyKey });
+      return {
+        venta: sale('COMPLETADA'),
+        status: 'APPROVED',
+        gateway_reference: 'gateway-single-flight',
+        message: null,
+      };
+    },
+    cardAttemptStatus: async () => {
+      throw new Error('No debe reconciliar una confirmación definitiva.');
+    },
+  };
+
+  async function click() {
+    if (!tryAcquirePaymentSingleFlight(lock)) return { executed: false };
+    const key = attemptReference.current ?? (() => {
+      generatedKeys += 1;
+      return claveIdempotencia;
+    })();
+    attemptReference.current = key;
+    try {
+      const result = await synchronizeCardPayment({
+        terminal,
+        ms5,
+        ventaId,
+        monto: 15990,
+        claveIdempotencia: key,
+      });
+      return { executed: true, result };
+    } finally {
+      releasePaymentSingleFlight(lock);
+    }
+  }
+
+  const [first, second] = await Promise.all([click(), click()]);
+  const terminalStarts = calls.filter(call => call.operation === 'terminal:start');
+  const terminalQueries = calls.filter(call => call.operation === 'terminal:status');
+  const charges = calls.filter(call => call.operation === 'ms5:charge');
+
+  assert.equal(first.executed, true);
+  assert.equal(first.result.estado, 'approved');
+  assert.equal(second.executed, false);
+  assert.equal(generatedKeys, 1);
+  assert.equal(terminalStarts.length, 1);
+  assert.equal(terminalQueries.length, 1);
+  assert.equal(ms5Calls, 1);
+  assert.equal(charges.length, 1);
+  assert.equal(logicalCharges.size, 1);
+  assert.equal(terminalStarts[0].solicitud.claveIdempotencia, claveIdempotencia);
+  assert.equal(terminalQueries[0].solicitud.referenciaIntento, claveIdempotencia);
+  assert.equal(charges[0].idempotencyKey, claveIdempotencia);
+  assert.equal(attemptReference.current, claveIdempotencia);
+});
