@@ -219,11 +219,11 @@ MS-5 no expone un endpoint de cancelación de intento. Por ello `cancelarIntento
 
 ## S2-072 / TI3-703 — Simulador frontend de terminal [IMPLEMENTADO]
 
-`SimulatedTerminalAdapter` implementa el mismo `TerminalPort` que el transporte MS-5. `createTerminalPort()` selecciona `mock` o `real` mediante `DEVICE_TERMINAL_MODE`; el modo `real` conserva `Ms5TerminalAdapter` y el modo `mock` no requiere equipo físico ni llamadas HTTP. `MOCK_TERMINAL_SCENARIO` admite `waiting`, `approved`, `declined`, `cancelled` y `disconnected`, mientras `MOCK_TERMINAL_DELAY_MS` controla la espera antes de resolver los escenarios finales. Lectura/inicio significa que `iniciarCobro` recibe los datos del intento y pasa a `processing`.
+`SimulatedTerminalAdapter` implementa el mismo `TerminalPort` que el transporte MS-5. `createTerminalPort()` selecciona `mock` o `real` mediante `DEVICE_TERMINAL_MODE`; el modo `real` conserva `Ms5TerminalAdapter` y el modo `mock` no requiere equipo físico ni llamadas HTTP. `MOCK_TERMINAL_SCENARIO` admite `waiting`, `approved`, `declined`, `cancelled`, `timeout` y `disconnected`, mientras `MOCK_TERMINAL_DELAY_MS` controla la espera antes de resolver los escenarios finales. Lectura/inicio significa que `iniciarCobro` recibe los datos del intento y pasa a `processing`. El escenario `timeout` termina determinísticamente en `uncertain` después de la demora configurada, conserva la misma referencia y no crea otro intento ni se interpreta como rechazo.
 
 Cada combinación de escenario e intento produce el mismo resultado. La referencia aprobada se deriva de forma estable de la clave del intento y no expone esa clave; rechazo y desconexión no inventan referencias de aprobación. `disconnected` se representa como `uncertain` para permitir reconciliación posterior y la cancelación simulada termina en `cancelled`. El adaptador no contiene PAN, número de tarjeta, CVV ni vencimiento y no persiste datos sensibles.
 
-Esta implementación pertenece a la capa `payments` y no modifica ni mezcla el `MockTerminalAdapter` legado basado en `ITerminalAdapter`. TI3-703 no agregó IPC/contextBridge ni sincronización adicional con MS-5/pasarela; el IPC se incorporó posteriormente en TI3-704. Pruebas puras del terminal y simulador **11/11** y typecheck aprobados el 2026-10-26.
+Esta implementación pertenece a la capa `payments` y no modifica ni mezcla el `MockTerminalAdapter` legado basado en `ITerminalAdapter`. TI3-703 no agregó IPC/contextBridge ni sincronización adicional con MS-5/pasarela; el IPC se incorporó posteriormente en TI3-704. Pruebas puras del terminal y simulador **12/12** y typecheck aprobados el 2026-10-26.
 
 ## S2-073 / TI3-704 — IPC limitado del terminal [IMPLEMENTADO]
 

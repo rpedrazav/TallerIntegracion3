@@ -259,6 +259,40 @@ test('simulador disconnected conserva el intento como uncertain', async () => {
   assert.equal(resultado.referenciaOpaca, null);
 });
 
+test('simulador timeout termina uncertain y conserva la referencia', async () => {
+  const SimulatedTerminalAdapter = loadSimulatedTerminalAdapter();
+  const terminal = new SimulatedTerminalAdapter({ scenario: 'timeout', delayMs: 5 });
+
+  const inicio = await terminal.iniciarCobro(simulatedRequest);
+  assert.deepEqual(inicio, {
+    ventaId: simulatedRequest.ventaId,
+    monto: simulatedRequest.monto,
+    referenciaIntento: simulatedRequest.claveIdempotencia,
+    estado: 'processing',
+    referenciaOpaca: null,
+  });
+
+  const resultado = await terminal.consultarEstado({
+    ventaId: inicio.ventaId,
+    monto: inicio.monto,
+    referenciaIntento: inicio.referenciaIntento,
+  });
+  const segundaConsulta = await terminal.consultarEstado({
+    ventaId: inicio.ventaId,
+    monto: inicio.monto,
+    referenciaIntento: inicio.referenciaIntento,
+  });
+
+  assert.equal(resultado.estado, 'uncertain');
+  assert.notEqual(resultado.estado, 'declined');
+  assert.equal(resultado.referenciaIntento, simulatedRequest.claveIdempotencia);
+  assert.deepEqual(segundaConsulta, resultado);
+  assert.doesNotMatch(
+    JSON.stringify({ solicitud: simulatedRequest, inicio, resultado, segundaConsulta }),
+    /\bpan\b|\bcvv\b|card.?number|numero.?tarjeta|fecha.?expiracion/i,
+  );
+});
+
 test('fábrica selecciona simulador para mock y MS-5 para real', () => {
   const SimulatedTerminalAdapter = loadSimulatedTerminalAdapter();
   const posApi = {

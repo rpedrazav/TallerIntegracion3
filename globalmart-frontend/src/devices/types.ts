@@ -26,6 +26,7 @@ export type SimulatedTerminalScenario =
   | 'approved'
   | 'declined'
   | 'cancelled'
+  | 'timeout'
   | 'disconnected';
 
 export interface IniciarOperacionParams {
