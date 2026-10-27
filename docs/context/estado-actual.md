@@ -429,6 +429,8 @@ S2-076 [IMPLEMENTADO — interfaz]: el POS presenta `PesoProducto` y controles d
 
 S2-077 [IMPLEMENTADO — flujo simulado]: al seleccionar un pesable se consulta lectura estable; solo la confirmación agrega o modifica la línea. Cancelar o una lectura fallida no envía ítems. Compatibilidad con balanza física [NO VERIFICADA].
 
+S2-078 [IMPLEMENTADO — respaldo manual]: si falla la lectura se puede ingresar un peso manual identificado. Se aplican mínimo 10 g y precisión de 1 g; entradas cero, negativas o no numéricas no se envían.
+
 ## S2-086 / TI3-717 — Definir límites del terminal simulado
 
 [IMPLEMENTADO] Especificación documentada en `docs/context/integraciones/limites-terminal-simulado.md`. Establece la matriz de operaciones soportadas (`iniciar`, `cancelar`, `autorizar`, `obtenerEstado`), delimita el desacoplamiento estricto respecto a la pasarela bancaria y prohíbe declarar compatibilidad con hardware o marcas físicas sin validación empírica.

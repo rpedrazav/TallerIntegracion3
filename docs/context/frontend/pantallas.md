@@ -66,6 +66,8 @@ S2-076: `PesoProducto` muestra el producto pesable seleccionado, origen simulado
 
 S2-077: la selección de un pesable solicita lectura estable por preload y muestra el peso antes de agregar. Solo `Confirmar peso` envía la cantidad a MS-5 o al borrador; cancelar y errores no modifican el carrito. Reintentar vuelve a consultar el estado de la balanza.
 
+S2-078: ante fallo o desconexión se ofrece ingreso manual identificado. La misma validación exige al menos 0,010 kg y pasos de 0,001 kg; texto no numérico, cero o negativo no habilita confirmar ni envía ítems.
+
 Al seleccionar un producto con `esPesoVariable`, el POS llama exclusivamente a `readStableWeightForCart(window.api.scale)`. Mientras espera bloquea otra lectura y muestra estado; solo ofrece confirmar cuando recibe un peso estable, positivo, en kg, de al menos 10 g y con precisión de 1 g. Un dato corrupto, error o desconexión deja el carrito sin cambios y presenta un mensaje. El intento siguiente consulta el estado y reconecta antes de leer cuando corresponde.
 
 La cantidad de una línea pesable se muestra con tres decimales en kg y no puede editarse manualmente. Crear, agregar y modificar envían `cantidad = peso_kg` y `peso_kg`; los totales posteriores continúan proviniendo de MS-5. La prueba integrada de simulador/main/preload confirma la secuencia válida, corrupta, desconectada y recuperada; hardware real [NO VERIFICADO].

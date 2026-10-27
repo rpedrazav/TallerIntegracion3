@@ -6,7 +6,7 @@ import BarcodeInput from '../components/pos/BarcodeInput';
 import CartItem from '../components/pos/CartItem';
 import PesoProducto, { PesoEstado } from '../components/pos/PesoProducto';
 import PaymentModal, { PaymentMethod, PaymentState } from '../components/pos/PaymentModal';
-import { readStableWeightForCart } from '../hardware/scale-cart';
+import { manualWeightForCart, readStableWeightForCart } from '../hardware/scale-cart';
 import {
   reconcileCardPayment,
   synchronizeCardPayment,
@@ -63,7 +63,7 @@ export default function Pos() {
   const paymentAttemptReference = useRef<string | null>(null);
   const scaleReadInFlight = useRef(false);
   const [isReadingScale, setIsReadingScale] = useState(false);
-  const [capturaPeso, setCapturaPeso] = useState<{ product: CatalogProduct; estado: PesoEstado; pesoKg?: number; error?: string } | null>(null);
+  const [capturaPeso, setCapturaPeso] = useState<{ product: CatalogProduct; estado: PesoEstado; origen: 'simulado' | 'manual'; pesoKg?: number; error?: string; manualValue?: string } | null>(null);
   const [pendingMutations, setPendingMutations] = useState(0);
   const [saleNeedsRefresh, setSaleNeedsRefresh] = useState(false);
   const saleRef = useRef<VentaPendiente | null>(null);
@@ -323,15 +323,15 @@ export default function Pos() {
     if (scaleReadInFlight.current) return false;
     scaleReadInFlight.current = true;
     setIsReadingScale(true);
-    setCapturaPeso({ product, estado: 'leyendo' });
+    setCapturaPeso({ product, estado: 'leyendo', origen: 'simulado' });
     setVentaError('');
     try {
       const reading = await readStableWeightForCart(window.api.scale);
       if (!reading.ok) {
-        setCapturaPeso({ product, estado: 'error', error: reading.message });
+        setCapturaPeso({ product, estado: 'error', origen: 'simulado', error: reading.message });
         return false;
       }
-      setCapturaPeso({ product, estado: 'estable', pesoKg: reading.weightKg });
+      setCapturaPeso({ product, estado: 'estable', origen: 'simulado', pesoKg: reading.weightKg });
       return true;
     } finally {
       scaleReadInFlight.current = false;
@@ -846,11 +846,17 @@ export default function Pos() {
         {capturaPeso && <PesoProducto
           nombre={capturaPeso.product.nombre}
           estado={capturaPeso.estado}
-          origen="simulado"
+          origen={capturaPeso.origen}
           pesoKg={capturaPeso.pesoKg}
           error={capturaPeso.error}
+          manualValue={capturaPeso.manualValue}
+          onManualChange={(value) => {
+            const parsed = manualWeightForCart(value);
+            setCapturaPeso((current) => current ? { ...current, manualValue: value, estado: parsed.ok ? 'estable' : 'error', pesoKg: parsed.ok ? parsed.weightKg : undefined, error: parsed.ok || !value ? undefined : parsed.message } : null);
+          }}
           onConfirmar={confirmWeight}
-          onReintentar={capturaPeso.estado === 'error' ? () => { void readProductWeight(capturaPeso.product); } : undefined}
+          onReintentar={capturaPeso.origen === 'simulado' && capturaPeso.estado === 'error' ? () => { void readProductWeight(capturaPeso.product); } : undefined}
+          onManual={capturaPeso.origen === 'simulado' && capturaPeso.estado === 'error' ? () => setCapturaPeso({ product: capturaPeso.product, estado: 'error', origen: 'manual', manualValue: '' }) : undefined}
           onCancelar={() => setCapturaPeso(null)}
         />}
 

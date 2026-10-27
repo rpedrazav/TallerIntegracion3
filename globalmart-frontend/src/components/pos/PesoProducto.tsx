@@ -8,20 +8,25 @@ interface PesoProductoProps {
   origen: 'simulado' | 'manual';
   pesoKg?: number;
   error?: string;
+  manualValue?: string;
+  onManualChange?: (value: string) => void;
   onConfirmar?: () => void;
   onReintentar?: () => void;
   onManual?: () => void;
   onCancelar: () => void;
 }
 
-export default function PesoProducto({ nombre, estado, origen, pesoKg, error, onConfirmar, onReintentar, onManual, onCancelar }: PesoProductoProps) {
+export default function PesoProducto({ nombre, estado, origen, pesoKg, error, manualValue, onManualChange, onConfirmar, onReintentar, onManual, onCancelar }: PesoProductoProps) {
   return (
     <section aria-label={`Captura de peso de ${nombre}`} style={{ border: '1px solid var(--color-line)', borderRadius: 8, padding: '0.75rem', marginTop: '0.75rem', background: 'var(--color-bg)' }}>
       <strong>{nombre}</strong>
       <p style={{ margin: '0.5rem 0' }}>Origen: {origen === 'manual' ? 'Manual' : 'Balanza simulada'} · Unidad: kg</p>
       <p role="status" style={{ margin: '0.5rem 0' }}>
-        {estado === 'leyendo' ? 'Esperando peso estable...' : estado === 'estable' ? `Peso estable: ${pesoKg?.toFixed(3)} kg` : 'No se obtuvo un peso válido.'}
+        {estado === 'leyendo' ? 'Esperando peso estable...' : estado === 'estable' ? `${origen === 'manual' ? 'Peso manual' : 'Peso estable'}: ${pesoKg?.toFixed(3)} kg` : origen === 'manual' ? 'Ingresa un peso válido.' : 'No se obtuvo un peso válido.'}
       </p>
+      {origen === 'manual' && <label>Ingreso manual (kg)
+        <input type="text" inputMode="decimal" value={manualValue ?? ''} onChange={(event) => onManualChange?.(event.target.value)} aria-label="Peso manual en kg" />
+      </label>}
       {error && <p role="alert" style={{ color: 'var(--color-danger)' }}>{error}</p>}
       <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
         {estado === 'estable' && <button type="button" onClick={onConfirmar}>Confirmar peso</button>}
