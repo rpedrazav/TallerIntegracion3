@@ -36,7 +36,7 @@ export default function CartItem({ id, name, price, quantity, subtotal, isWeight
         {name}
       </td>
       <td style={{ padding: '1rem 0.5rem', color: 'var(--color-ink-soft)' }}>
-        $ {price.toLocaleString('es-CL')}
+        $ {price.toLocaleString('es-CL')}{isWeightVariable ? ' / kg' : ' / un.'}
       </td>
       <td style={{ padding: '1rem 0.5rem' }}>
         {isWeightVariable ? (

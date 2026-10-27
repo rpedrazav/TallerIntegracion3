@@ -44,7 +44,7 @@ La URL base de MS-1 está en `src/api/client.ts`.
 Carrito de compras con:
   - BarcodeInput (búsqueda con debounce)
   - Lista de CartItem (ítems del carrito)
-  - Totales locales antes de iniciar venta; luego subtotal, impuestos y total devueltos por MS-5
+  - Subtotal estimado antes de iniciar venta; luego subtotal, impuestos y total devueltos por MS-5
   - Botón "Iniciar venta" que envía producto_id y cantidad; después muestra "Cobrar" y abre el modal de efectivo
   - Botón "Cancelar borrador" antes de crear venta; en venta pendiente permite agregar, cambiar cantidad y eliminar ítems
 
@@ -67,6 +67,8 @@ S2-076: `PesoProducto` muestra el producto pesable seleccionado, origen simulado
 S2-077: la selección de un pesable solicita lectura estable por preload y muestra el peso antes de agregar. Solo `Confirmar peso` envía la cantidad a MS-5 o al borrador; cancelar y errores no modifican el carrito. Reintentar vuelve a consultar el estado de la balanza.
 
 S2-078: ante fallo o desconexión se ofrece ingreso manual identificado. La misma validación exige al menos 0,010 kg y pasos de 0,001 kg; texto no numérico, cero o negativo no habilita confirmar ni envía ítems.
+
+S2-079: cada línea pesable identifica kg y precio por kg. Antes de iniciar venta se muestra solo un subtotal estimado; impuestos y total esperan la respuesta de MS-5. Después de crear o mutar la venta, subtotal de línea, subtotal general, impuestos y total se muestran desde `VentaPendiente`, sin tasa fija de IVA en la interfaz.
 
 Al seleccionar un producto con `esPesoVariable`, el POS llama exclusivamente a `readStableWeightForCart(window.api.scale)`. Mientras espera bloquea otra lectura y muestra estado; solo ofrece confirmar cuando recibe un peso estable, positivo, en kg, de al menos 10 g y con precisión de 1 g. Un dato corrupto, error o desconexión deja el carrito sin cambios y presenta un mensaje. El intento siguiente consulta el estado y reconecta antes de leer cuando corresponde.
 

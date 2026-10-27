@@ -431,6 +431,8 @@ S2-077 [IMPLEMENTADO — flujo simulado]: al seleccionar un pesable se consulta 
 
 S2-078 [IMPLEMENTADO — respaldo manual]: si falla la lectura se puede ingresar un peso manual identificado. Se aplican mínimo 10 g y precisión de 1 g; entradas cero, negativas o no numéricas no se envían.
 
+S2-079 [IMPLEMENTADO — vista POS]: las líneas pesables muestran kg y precio por kg; IVA y total se presentan solo desde la venta retornada por MS-5. El borrador indica subtotal estimado y no calcula IVA con una tasa local.
+
 ## S2-086 / TI3-717 — Definir límites del terminal simulado
 
 [IMPLEMENTADO] Especificación documentada en `docs/context/integraciones/limites-terminal-simulado.md`. Establece la matriz de operaciones soportadas (`iniciar`, `cancelar`, `autorizar`, `obtenerEstado`), delimita el desacoplamiento estricto respecto a la pasarela bancaria y prohíbe declarar compatibilidad con hardware o marcas físicas sin validación empírica.

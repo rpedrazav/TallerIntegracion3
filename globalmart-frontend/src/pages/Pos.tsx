@@ -689,7 +689,7 @@ export default function Pos() {
     return cartItems.reduce(
       (acc, item) => {
         acc.subtotal += item.price * item.quantity;
-        acc.totalItems += item.quantity;
+        acc.totalItems += 1;
         return acc;
       },
       { subtotal: 0, totalItems: 0 }
@@ -697,9 +697,8 @@ export default function Pos() {
   }, [cartItems]);
 
   const subtotal = venta ? venta.subtotal : draftSubtotal;
-  const tasaIva = 0.19; 
-  const iva = venta ? venta.impuestos : Math.round(subtotal * tasaIva);
-  const total = venta ? venta.total : subtotal + iva;
+  const iva = venta?.impuestos;
+  const total = venta?.total;
   
   const isCartEmpty = cartItems.length === 0;
 
@@ -976,13 +975,13 @@ export default function Pos() {
         
         <div style={{ flex: 1 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem', color: 'var(--color-ink-soft)' }}>
-            <span>Subtotal:</span>
+            <span>{venta ? 'Subtotal:' : 'Subtotal estimado:'}</span>
             <span>$ {subtotal.toLocaleString('es-CL')}</span>
           </div>
           
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem', color: 'var(--color-ink-soft)' }}>
-            <span>{venta ? 'Impuestos:' : 'IVA (19%):'}</span>
-            <span>$ {iva.toLocaleString('es-CL')}</span>
+            <span>Impuestos:</span>
+            <span>{iva === undefined ? 'Se calculan en MS-5' : `$ ${iva.toLocaleString('es-CL')}`}</span>
           </div>
 
           <div style={{ borderTop: '2px dashed var(--color-line)', margin: '1.5rem 0' }}></div>
@@ -990,7 +989,7 @@ export default function Pos() {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
             <span style={{ fontSize: '1.25rem', fontWeight: 600, color: 'var(--color-ink)' }}>TOTAL:</span>
             <span style={{ fontSize: '2rem', fontWeight: 700, color: 'var(--color-primary)' }}>
-              $ {total.toLocaleString('es-CL')}
+              {total === undefined ? 'Pendiente de MS-5' : `$ ${total.toLocaleString('es-CL')}`}
             </span>
           </div>
         </div>
