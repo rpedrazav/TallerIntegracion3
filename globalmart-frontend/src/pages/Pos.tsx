@@ -6,6 +6,10 @@ import BarcodeInput from '../components/pos/BarcodeInput';
 import CartItem from '../components/pos/CartItem';
 import PaymentModal, { PaymentMethod, PaymentState } from '../components/pos/PaymentModal';
 import { readStableWeightForCart } from '../hardware/scale-cart';
+import {
+  reconcileCardPayment,
+  synchronizeCardPayment,
+} from '../payments/synchronizeCardPayment';
 
 export interface ProductItem {
   id: string;
@@ -107,10 +111,10 @@ export default function Pos() {
         let pendiente = recovered?.estado === 'PENDIENTE' ? recovered : null;
         if (pendiente?.metodo_pago === 'TARJETA') {
           try {
-            const intento = await window.api.terminal.consultarEstado({
+            const intento = await reconcileCardPayment({
+              ms5: posApi,
               ventaId: pendiente.id,
-              monto: pendiente.total,
-              referenciaIntento: paymentAttemptReference.current,
+              referenciaEsperada: paymentAttemptReference.current,
             });
             if (!active) return;
             paymentAttemptReference.current = intento.referenciaIntento;
@@ -119,7 +123,8 @@ export default function Pos() {
               setPaymentError('El intento de tarjeta sigue sin resultado confirmado. Verifica su estado antes de cobrar.');
               setIsPaymentOpen(true);
             } else if (intento.estado === 'approved') {
-              setPaymentReference(intento.referenciaOpaca);
+              if (intento.venta) pendiente = intento.venta;
+              setPaymentReference(intento.gatewayReference);
               setPaymentState('approved');
               setIsPaymentOpen(true);
             } else if (intento.estado === 'declined') {
@@ -534,19 +539,17 @@ export default function Pos() {
     try {
       const claveIdempotencia = paymentAttemptReference.current ?? crypto.randomUUID();
       paymentAttemptReference.current = claveIdempotencia;
-      let result = await window.api.terminal.iniciarCobro({
+      const result = await synchronizeCardPayment({
+        terminal: window.api.terminal,
+        ms5: posApi,
         ventaId: current.id,
         monto: current.total,
         claveIdempotencia,
       });
       paymentAttemptReference.current = result.referenciaIntento;
-      if (result.estado === 'processing') {
-        result = await window.api.terminal.consultarEstado({
-          ventaId: current.id,
-          monto: current.total,
-          referenciaIntento: result.referenciaIntento,
-        });
-        paymentAttemptReference.current = result.referenciaIntento;
+      if (result.venta) {
+        saleRef.current = result.venta;
+        setVenta(result.venta);
       }
       if (result.estado === 'declined') {
         setPaymentState('declined');
@@ -563,7 +566,7 @@ export default function Pos() {
         setPaymentError('MS-5 no devolvió una confirmación completa. Verifica la venta antes de otro intento.');
         return;
       }
-      setPaymentReference(result.referenciaOpaca);
+      setPaymentReference(result.gatewayReference);
       setPaymentState('approved');
     } catch {
       setPaymentState('uncertain');
@@ -605,14 +608,18 @@ export default function Pos() {
     setPaymentError('');
     try {
       if (current.metodo_pago === 'TARJETA') {
-        const intento = await window.api.terminal.consultarEstado({
+        const intento = await reconcileCardPayment({
+          ms5: posApi,
           ventaId: current.id,
-          monto: current.total,
-          referenciaIntento: paymentAttemptReference.current,
+          referenciaEsperada: paymentAttemptReference.current,
         });
         paymentAttemptReference.current = intento.referenciaIntento;
+        if (intento.venta) {
+          saleRef.current = intento.venta;
+          setVenta(intento.venta);
+        }
         if (intento.estado === 'approved') {
-          setPaymentReference(intento.referenciaOpaca);
+          setPaymentReference(intento.gatewayReference);
           setPaymentState('approved');
         } else if (intento.estado === 'declined') {
           setPaymentState('declined');
