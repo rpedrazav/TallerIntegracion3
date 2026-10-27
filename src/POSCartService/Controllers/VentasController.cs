@@ -141,18 +141,11 @@ public sealed class VentasController : ControllerBase
                 });
             }
 
-            // Determinar cantidad y peso
-            decimal cantidad = itemRequest.Cantidad;
             decimal? pesoKg = itemRequest.PesoKg;
-
-            if (producto.EsPesoVariable && pesoKg.HasValue && pesoKg.Value > 0)
-            {
-                cantidad = pesoKg.Value;
-            }
-            else if (cantidad <= 0)
-            {
-                cantidad = 1;
-            }
+            var errorCantidad = ReglasCantidadItem.Validar(producto.EsPesoVariable,
+                itemRequest.Cantidad, pesoKg, permitirCantidadUnitariaOmitida: true, out var cantidad);
+            if (errorCantidad is not null)
+                return BadRequest(new { error = errorCantidad });
 
             if (producto.PrecioBase < 0)
                 return BadRequest(new { error = "El precio de catálogo no puede ser negativo." });
@@ -294,31 +287,12 @@ public sealed class VentasController : ControllerBase
             return BadRequest(new { error = $"El producto '{producto.Nombre}' está inactivo y no se puede vender." });
         }
 
-        // 6. Validar S2-061 antes de calcular impuestos o mutar el carrito.
-        // La clasificación proviene del catálogo, nunca del cliente.
-        decimal cantidad = request.Cantidad ?? 1m;
+        // Validar antes de calcular impuestos o mutar el carrito.
         decimal? pesoKg = request.PesoKg;
-
-        if (producto.EsPesoVariable)
-        {
-            if (!pesoKg.HasValue)
-                return BadRequest(new { error = "peso_kg es obligatorio para productos de peso variable." });
-            if (pesoKg.Value < 0.010m)
-                return BadRequest(new { error = "peso_kg debe ser mayor o igual a 0.010 kg (10 gramos)." });
-            if (pesoKg.Value % 0.001m != 0)
-                return BadRequest(new { error = "peso_kg debe expresarse en incrementos de 0.001 kg (1 gramo), sin redondeo." });
-            if (request.Cantidad.HasValue && request.Cantidad.Value != pesoKg.Value)
-                return BadRequest(new { error = "cantidad debe coincidir con peso_kg para productos de peso variable." });
-
-            cantidad = pesoKg.Value;
-        }
-        else
-        {
-            if (pesoKg.HasValue)
-                return BadRequest(new { error = "peso_kg no corresponde a un producto que no es de peso variable." });
-            if (cantidad <= 0)
-                return BadRequest(new { error = "cantidad debe ser mayor a 0." });
-        }
+        var errorCantidad = ReglasCantidadItem.Validar(producto.EsPesoVariable,
+            request.Cantidad, pesoKg, permitirCantidadUnitariaOmitida: true, out var cantidad);
+        if (errorCantidad is not null)
+            return BadRequest(new { error = errorCantidad });
 
         if (producto.PrecioBase < 0)
             return BadRequest(new { error = "El precio de catálogo no puede ser negativo." });
@@ -460,28 +434,11 @@ public sealed class VentasController : ControllerBase
         if (!producto.IsActive)
             return BadRequest(new { error = "El producto del ítem está inactivo." });
 
-        decimal nuevaCantidad;
         decimal? nuevoPesoKg = request.PesoKg;
-        if (producto.EsPesoVariable)
-        {
-            if (!nuevoPesoKg.HasValue)
-                return BadRequest(new { error = "peso_kg es obligatorio para productos de peso variable." });
-            if (nuevoPesoKg.Value < 0.010m)
-                return BadRequest(new { error = "peso_kg debe ser mayor o igual a 0.010 kg (10 gramos)." });
-            if (nuevoPesoKg.Value % 0.001m != 0)
-                return BadRequest(new { error = "peso_kg debe expresarse en incrementos de 0.001 kg (1 gramo), sin redondeo." });
-            if (request.Cantidad.HasValue && request.Cantidad.Value != nuevoPesoKg.Value)
-                return BadRequest(new { error = "cantidad debe coincidir con peso_kg para productos de peso variable." });
-            nuevaCantidad = nuevoPesoKg.Value;
-        }
-        else
-        {
-            if (nuevoPesoKg.HasValue)
-                return BadRequest(new { error = "peso_kg no corresponde a un producto que no es de peso variable." });
-            if (!request.Cantidad.HasValue || request.Cantidad.Value <= 0)
-                return BadRequest(new { error = "cantidad debe ser mayor a 0." });
-            nuevaCantidad = request.Cantidad.Value;
-        }
+        var errorCantidad = ReglasCantidadItem.Validar(producto.EsPesoVariable,
+            request.Cantidad, nuevoPesoKg, permitirCantidadUnitariaOmitida: false, out var nuevaCantidad);
+        if (errorCantidad is not null)
+            return BadRequest(new { error = errorCantidad });
 
         decimal nuevoSubtotalItem = Math.Round(item.PrecioUnitario * nuevaCantidad, 2, MidpointRounding.ToEven);
 
