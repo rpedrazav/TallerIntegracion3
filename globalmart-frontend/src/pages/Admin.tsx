@@ -11,17 +11,27 @@ import {
 import UsuariosList, { Usuario } from '../components/admin/UsuariosList';
 import TenantConfig from '../components/admin/TenantConfig';
 import { buildServiceUrl } from '../config/api';
+import { parseJwt } from '../utils/jwt';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 export default function Admin() {
   const { token } = useAuth();
-  const [tabActiva, setTabActiva] = useState<'usuarios' | 'configuracion'>('usuarios');
+  const location = useLocation();
+  const navigate = useNavigate();
+  const tabActiva = location.pathname.endsWith('/configuracion') ? 'configuracion' : 'usuarios';
+  const tenantId = parseJwt(token)?.tenant_id ?? '';
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [sucursales, setSucursales] = useState<Array<{ id: string; nombre: string }>>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [modalAbierto, setModalAbierto] = useState(false);
   const [usuarioEditando, setUsuarioEditando] = useState<Usuario | null>(null);
   const [deactivatingUserId, setDeactivatingUserId] = useState<string | null>(null);
   const [success, setSuccess] = useState('');
+  const [credenciales, setCredenciales] = useState<CrearUsuarioValues | null>(null);
+  const [copyError, setCopyError] = useState('');
   const [reloadTick, setReloadTick] = useState(0);
 
   const recargar = useCallback(() => {
@@ -37,11 +47,12 @@ export default function Admin() {
       setError('');
       try {
         const res = await axios.get(buildServiceUrl('identity', '/users'), {
-          params: { page: 1, pageSize: 100 },
+          params: { page, pageSize: 100 },
           headers: { Authorization: `Bearer ${token}` },
         });
         if (!isMounted) return;
         setUsuarios(res.data.items ?? (Array.isArray(res.data) ? res.data : []));
+        setTotalPages(res.data.totalPages ?? 1);
       } catch (err) {
         if (!isMounted) return;
         const status = isAxiosError(err) ? err.response?.status : undefined;
@@ -57,7 +68,15 @@ export default function Admin() {
 
     void load();
     return () => { isMounted = false; };
-  }, [token, reloadTick, tabActiva]);
+  }, [token, reloadTick, tabActiva, page]);
+
+  useEffect(() => {
+    if (!token) return;
+    void axios.get<Array<{ id: string; nombre: string; activa: boolean }>>(buildServiceUrl('identity', '/sucursales'),
+      { headers: { Authorization: `Bearer ${token}` } })
+      .then(response => setSucursales(response.data.filter(s => s.activa)))
+      .catch(() => setSucursales([]));
+  }, [token]);
 
   const crearUsuario = async (v: CrearUsuarioValues) => {
     const headers = { Authorization: `Bearer ${token}` };
@@ -67,14 +86,15 @@ export default function Admin() {
         {
           nombre: v.nombre,
           email: v.email,
+          tenantId,
+          sucursalId: v.sucursalId,
           password: v.password,
           roles: [v.rol],
         },
         { headers },
       );
-      if (!res.data?.roles || res.data.roles.length === 0) {
-        await axios.post(buildServiceUrl('identity', `/users/${res.data.id}/roles`), { roles: [v.rol] }, { headers });
-      }
+      if (!res.data?.id || !res.data?.roles?.includes(v.rol))
+        throw new Error('No se pudo confirmar la asignación del rol.');
     } catch (err) {
       let msg: string | undefined;
       if (isAxiosError(err)) {
@@ -90,6 +110,8 @@ export default function Admin() {
       }
       throw new Error(msg ?? 'No se pudo crear el usuario.');
     }
+    setCredenciales(v);
+    setSuccess('Usuario creado. Copia las credenciales antes de cerrar este apartado.');
     recargar();
   };
 
@@ -229,7 +251,7 @@ export default function Admin() {
             </button>
             <button
               type="button"
-              onClick={() => setModalAbierto(true)}
+              onClick={() => { setCredenciales(null); setModalAbierto(true); }}
               style={{
                 background: 'var(--color-primary)',
                 color: 'var(--color-on-primary)',
@@ -250,14 +272,14 @@ export default function Admin() {
       <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem', borderBottom: '1px solid var(--color-line)', paddingBottom: '0.75rem' }}>
         <button
           type="button"
-          onClick={() => setTabActiva('usuarios')}
+          onClick={() => navigate('/admin/usuarios')}
           style={tabButtonStyle(tabActiva === 'usuarios')}
         >
           Usuarios
         </button>
         <button
           type="button"
-          onClick={() => setTabActiva('configuracion')}
+          onClick={() => navigate('/admin/configuracion')}
           style={tabButtonStyle(tabActiva === 'configuracion')}
         >
           Configuración del Tenant
@@ -298,6 +320,17 @@ export default function Admin() {
             </div>
           )}
 
+          {credenciales && <section aria-label="Credenciales del nuevo usuario" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-line)', borderRadius: 8, padding: '1rem', marginBottom: '1rem' }}>
+            <h3>Nuevo usuario creado</h3>
+            <p>Entrega estos datos al usuario para iniciar sesión en otro equipo. La contraseña se muestra solo en esta sesión.</p>
+            <textarea readOnly aria-label="Datos de acceso" value={`Tenant ID: ${tenantId}\nCorreo: ${credenciales.email}\nContraseña inicial: ${credenciales.password}\nRol: ${credenciales.rol}`} style={{ width: '100%', minHeight: 100 }} />
+            <div><button type="button" onClick={async () => {
+              try { await navigator.clipboard.writeText(`Tenant ID: ${tenantId}\nCorreo: ${credenciales.email}\nContraseña inicial: ${credenciales.password}\nRol: ${credenciales.rol}`); setCopyError('Datos copiados.'); }
+              catch { setCopyError('Selecciona el texto y cópialo manualmente.'); }
+            }}>Copiar datos</button> <button type="button" onClick={() => { setCredenciales(null); setCopyError(''); }}>Ocultar</button></div>
+            {copyError && <p role="status">{copyError}</p>}
+          </section>}
+
           <UsuariosList
             usuarios={usuarios}
             loading={loading}
@@ -309,9 +342,16 @@ export default function Admin() {
             onDeactivate={desactivarUsuario}
             deactivatingUserId={deactivatingUserId}
           />
+          <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', marginTop: '1rem' }}>
+            <button type="button" disabled={page <= 1 || loading} onClick={() => setPage(p => p - 1)}>Anterior</button>
+            <span>Página {page} de {totalPages}</span>
+            <button type="button" disabled={page >= totalPages || loading} onClick={() => setPage(p => p + 1)}>Siguiente</button>
+          </div>
 
           <CrearUsuarioModal
             isOpen={modalAbierto}
+            tenantId={tenantId}
+            sucursales={sucursales}
             onClose={() => setModalAbierto(false)}
             onSubmit={crearUsuario}
           />

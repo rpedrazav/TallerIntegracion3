@@ -16,6 +16,7 @@ export interface ServiceUrls {
   identity: string;
   catalog: string;
   pos: string;
+  inventory: string;
 }
 
 function getEnv(key: string): string | undefined {
@@ -40,18 +41,21 @@ const DEFAULT_URLS: Record<ApiMode, ServiceUrls> = {
     identity: 'https://auth-rpedraza.dev.censei.cl',
     catalog: 'https://catalog-rpedraza.dev.censei.cl',
     pos: 'https://pos-rpedraza.dev.censei.cl',
+    inventory: 'https://inventory-rpedraza.dev.censei.cl',
   },
   gateway: {
     // En modo Gateway, todas las peticiones pasan por Kong en el puerto 8000
     identity: 'http://localhost:8000/api',
     catalog: 'http://localhost:8000/api',
     pos: 'http://localhost:8000/api',
+    inventory: 'http://localhost:8000/api',
   },
   local: {
     // Puertos dev de host según launchSettings.json y run-apis.sh
     identity: 'http://localhost:5124',
     catalog: 'http://localhost:5203',
     pos: 'http://localhost:5000',
+    inventory: 'http://localhost:5205',
   },
 };
 
@@ -66,6 +70,8 @@ export const API_URLS: ServiceUrls = {
 
   pos: getEnv('POS_API_URL') || getEnv('REACT_APP_POS_API_URL') ||
     (API_MODE === 'gateway' && gatewayBase ? `${gatewayBase.replace(/\/+$/, '')}/api` : DEFAULT_URLS[API_MODE].pos),
+  inventory: getEnv('INVENTORY_API_URL') || getEnv('REACT_APP_INVENTORY_API_URL') ||
+    (API_MODE === 'gateway' && gatewayBase ? `${gatewayBase.replace(/\/+$/, '')}/api` : DEFAULT_URLS[API_MODE].inventory),
 };
 
 /**

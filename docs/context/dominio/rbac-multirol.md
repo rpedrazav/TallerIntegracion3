@@ -5,13 +5,15 @@ titulo: RBAC y Gestión Multi-Rol — GlobalMart OS
 estado: parcial
 fuentes: [src/TenantIdentityService/Controllers/UsuarioController.cs, src/TenantIdentityService/Services/JwtService.cs, GlobalMart_ContextMaster.md#sec13]
 verificado_contra_codigo: true
-ultima_revision: 2026-09-28
+ultima_revision: 2026-10-27
 depende_de: [ms1-identity, multi-tenant]
 publica: []
 consume: []
 reglas: [RN-07, RN-08, RN-12, RF-01, RF-13]
 ---
 # RBAC y Gestión Multi-Rol — GlobalMart OS
+
+Un ADMIN de tenant puede asignar los roles existentes CAJERO, REPONEDOR y ADMIN desde `/admin/roles`; MS-1 rechaza SUPER_ADMIN y la eliminación del ADMIN propio. Las definiciones de rol siguen siendo globales; creación o eliminación de roles personalizados por tenant no está implementada.
 
 > Sistema de control de acceso basado en roles. Un usuario puede tener múltiples roles; el `active_role` en el JWT determina el contexto de la sesión actual.
 

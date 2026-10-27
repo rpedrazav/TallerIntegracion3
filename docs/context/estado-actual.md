@@ -13,6 +13,10 @@ reglas: []
 ---
 # Estado Real de Implementación — GlobalMart OS
 
+## Avance administrativo del 2026-10-27
+
+[IMPLEMENTADO EN CÓDIGO] MS-1 permite aprovisionar un tenant y su administrador mediante `--bootstrap-admin` y variables de entorno explícitas; la creación de usuarios valida el tenant del JWT, acepta sucursal inicial del mismo tenant y entrega correo, contraseña inicial y tenant ID para copiar en la UI. Edición y baja lógica ahora actúan sobre `Usuarios`, la tabla que consulta el login; las desactivaciones impiden nuevos inicios de sesión. La vista ADMIN tiene navegación propia para usuarios, asignación de roles existentes, sucursales, inventario, catálogo y configuración. MS-4 agrega listado y ajuste de stock por sucursal con validación remota de producto y sucursal y registro de movimiento. Builds de MS-1/MS-4 y typecheck de React aprobados. [NO VERIFICADO] E2E con PostgreSQL/Kafka y funcionamiento remoto: Docker y contexto Kubernetes no estaban disponibles en este equipo. Roles personalizados, revocación de JWT ya emitidos y despliegue del manifiesto de inventario permanecen pendientes.
+
 > Nodo más importante para cualquier IA nueva. Refleja el estado REAL del código al 29-09-2026, validado contra el repositorio y las aclaraciones del equipo de desarrollo.
 
 **Contexto del proyecto:** Proyecto académico de Ingeniería Civil Informática, Universidad Católica de Temuco (UCT). Las integraciones externas que no puedan obtenerse legalmente (certificados digitales reales del SII, terminales de pago bancario físicos) serán simuladas.  
@@ -45,7 +49,7 @@ S2-052 — 2026-10-19: **2/2 pruebas de integración HTTP locales aprobadas** pa
 **Implementado:**
 - `POST /auth/login` — genera JWT con tenant_id, roles, active_role (expiración: 8 horas por defecto en appsettings.json) [IMPLEMENTADO]
 - `GET/POST/PUT/DELETE /users` (alias `/api/v1/users`, `/api/users`) — CRUD usuarios con RBAC [IMPLEMENTADO]
-- `DELETE /api/v1/users/{id}` (mismos alias) actualiza solo `users.is_active=false`, filtrando ID y tenant del JWT; retorna 204 también si ya estaba inactivo, 400 ante autodesactivación y 404 para ID inexistente/ajeno. Siete casos DELETE y tres de regresión PUT aprobados con PostgreSQL aislado en Release el 2026-10-06 [IMPLEMENTADO]. PUT/DELETE usan `users`; creación, listado y login aún usan `Usuarios`. Ver [MS-1](servicios/ms1-identity.md).
+- `DELETE /api/v1/users/{id}` (mismos alias) actualiza `Usuarios.Activo=false`, filtrando ID y tenant del JWT; retorna 204 también si ya estaba inactivo, 400 ante autodesactivación y 404 para ID inexistente/ajeno. Desde 2026-10-27 creación, listado, edición, baja y login usan `Usuarios`; el antiguo comportamiento sobre `users` quedó reemplazado. La integración PostgreSQL del nuevo flujo está [NO VERIFICADO]. Ver [MS-1](servicios/ms1-identity.md).
 - `POST /users/{id}/roles` (alias `/api/v1/users/{id}/roles`) — asignar roles (sin SUPER_ADMIN). Actualización atómica de tabla intermedia mediante EF Core Change Tracker y 3 tests de integración validados (TI3-456) [IMPLEMENTADO]
 - `GET/PUT /tenants/{id}/config` — config de tenant (país, moneda, IVA), validación con FluentValidation (TI3-459), tracking EF Core y rol ADMIN del mismo tenant (TI3-458) [IMPLEMENTADO]
 - `GET /sucursales` — lista sucursales del tenant del JWT, con zona horaria efectiva [IMPLEMENTADO]
@@ -218,7 +222,7 @@ Ver el nodo [[guia-estilo]] para el resumen y las reglas aplicables.
 | Abrir Turno (`AbrirTurnoPage`) | [IMPLEMENTADO] | Llama a MS-5 `/api/turnos/activo` y `POST /api/turnos/abrir` (spinner de carga en botón, redirección con confirmación a POS y manejo 409) (TI3-471) |
 | Cerrar Turno (`CerrarTurnoPage`) | [IMPLEMENTADO] | Tabla de denominaciones (billetes/monedas) con conteo y subtotales automáticos. Llama a MS-5 `POST /api/turnos/cuadre` para obtener efectivo esperado. Muestra resultado: efectivo esperado vs declarado, diferencia en **verde** si es $0, en **rojo** si hay discrepancia (sobrante o faltante). Botón `POST /api/turnos/cerrar` con confirmación. |
 | Productos Admin (`ProductosPage`) | [IMPLEMENTADO] | `GET /products?page=1&pageSize=500` + `GET /categories` en MS-3 (puerto 5203). Tabla con filtros, estado y acciones de catálogo. TI3-675 protege `/admin/productos` con la misma regla ADMIN/SUPER_ADMIN aplicada al resto de Administración; CAJERO recibe **Acceso denegado**. |
-| Admin | [PARCIAL] | TI3-675: `/admin/*` y `/admin/productos` comparten `AdminRoute`; ADMIN/SUPER_ADMIN acceden y CAJERO ve **Acceso denegado** una vez sincronizado el token [IMPLEMENTADO]. `TenantConfig` conserva edición exclusiva de administradores, estado de carga, controles bloqueados durante guardado y feedback de éxito/error; IVA numérico ya cubierto por TI3-645. Lista, creación, edición de email y baja lógica de usuarios disponibles. Persisten las dependencias de `sucursalId`, listado de inactivos y auditoría; sin reactivación UI. |
+| Admin | [PARCIAL] | `/admin/*` usa `AdminRoute` y un layout propio. ADMIN/SUPER_ADMIN acceden a usuarios, roles existentes, sucursales, inventario, catálogo y configuración. La creación de usuarios permite correo, contraseña inicial, rol y sucursal; muestra datos copiables. Listado incluye inactivos. Persisten auditoría, reactivación UI y despliegue/verificación remota de MS-4. |
 
 **Nota de integración Electron:** `preload.ts` expone únicamente funciones de autenticación y sesión (`ping`, `getToken`, `setToken`, `logout`). No expone hardware serial ni actualización automática por ahora.
 

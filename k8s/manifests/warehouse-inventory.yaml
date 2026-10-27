@@ -1,0 +1,154 @@
+# Requiere Secret globalmart-warehouse-config en student-rpedraza con las claves
+# db-password, connection-string, jwt-key y kafka-bootstrap-servers.
+# jwt-key debe ser idéntica a Jwt:Key de MS-1 y el servidor Kafka debe existir.
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-warehouseinventoryservice
+  namespace: student-rpedraza
+spec:
+  selector:
+    app: postgres-warehouseinventoryservice
+  ports:
+    - port: 5432
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres-warehouseinventoryservice
+  namespace: student-rpedraza
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres-warehouseinventoryservice
+  template:
+    metadata:
+      labels:
+        app: postgres-warehouseinventoryservice
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16-alpine
+          env:
+            - name: POSTGRES_USER
+              value: postgres
+            - name: POSTGRES_DB
+              value: warehouse_db
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: globalmart-warehouse-config
+                  key: db-password
+          ports:
+            - containerPort: 5432
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql/data
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: postgres-warehouse-data
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-warehouse-data
+  namespace: student-rpedraza
+spec:
+  accessModes: [ReadWriteOnce]
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: warehouseinventoryservice
+  namespace: student-rpedraza
+spec:
+  selector:
+    app: warehouseinventoryservice
+  ports:
+    - port: 80
+      targetPort: 8080
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: warehouseinventoryservice
+  namespace: student-rpedraza
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: warehouseinventoryservice
+  template:
+    metadata:
+      labels:
+        app: warehouseinventoryservice
+    spec:
+      containers:
+        - name: warehouseinventoryservice
+          image: rpedrazav/warehouseinventoryservice:latest
+          imagePullPolicy: Always
+          env:
+            - name: ASPNETCORE_HTTP_PORTS
+              value: "8080"
+            - name: ConnectionStrings__DefaultConnection
+              valueFrom:
+                secretKeyRef:
+                  name: globalmart-warehouse-config
+                  key: connection-string
+            - name: Jwt__Key
+              valueFrom:
+                secretKeyRef:
+                  name: globalmart-warehouse-config
+                  key: jwt-key
+            - name: Kafka__BootstrapServers
+              valueFrom:
+                secretKeyRef:
+                  name: globalmart-warehouse-config
+                  key: kafka-bootstrap-servers
+            - name: Services__CatalogUrl
+              value: http://catalogpricingservice
+            - name: Services__IdentityUrl
+              value: http://tenantidentityservice
+          ports:
+            - containerPort: 8080
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+          resources:
+            requests:
+              cpu: 25m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 256Mi
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: inventory-ingress
+  namespace: student-rpedraza
+  annotations:
+    external-dns.alpha.kubernetes.io/target: proxy.inf.uct.cl
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - inventory-rpedraza.dev.censei.cl
+      secretName: globalmart-dev-tls
+  rules:
+    - host: inventory-rpedraza.dev.censei.cl
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: warehouseinventoryservice
+                port:
+                  number: 80

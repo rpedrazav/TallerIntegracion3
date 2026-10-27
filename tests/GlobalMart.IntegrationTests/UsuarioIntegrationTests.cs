@@ -193,6 +193,49 @@ public class UsuarioIntegrationTests : IClassFixture<Ms1WebApplicationFactory>
         Assert.True(invalidRolesElement.GetArrayLength() > 0);
     }
 
+    [Fact]
+    public async Task UsuarioCreado_PuedeEntrar_YTrasDesactivacionNoPuedeEntrar()
+    {
+        var email = $"cajero.{Guid.NewGuid():N}@demo.cl";
+        var adminToken = CreateToken(TenantDemoId, Guid.NewGuid(), "ADMIN");
+        var create = new HttpRequestMessage(HttpMethod.Post, "/users")
+        {
+            Content = JsonContent.Create(new
+            {
+                nombre = "Cajero de prueba", email, password = "Password123!",
+                tenantId = TenantDemoId, roles = new[] { "CAJERO" }
+            })
+        };
+        create.Headers.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);
+        var created = await _client.SendAsync(create);
+        Assert.Equal(HttpStatusCode.Created, created.StatusCode);
+        using var body = JsonDocument.Parse(await created.Content.ReadAsStringAsync());
+        var id = body.RootElement.GetProperty("id").GetGuid();
+
+        var login = new { email, password = "Password123!", tenantId = TenantDemoId };
+        Assert.Equal(HttpStatusCode.OK, (await _client.PostAsJsonAsync("/auth/login", login)).StatusCode);
+
+        var delete = new HttpRequestMessage(HttpMethod.Delete, $"/users/{id}");
+        delete.Headers.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);
+        Assert.Equal(HttpStatusCode.NoContent, (await _client.SendAsync(delete)).StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, (await _client.PostAsJsonAsync("/auth/login", login)).StatusCode);
+    }
+
+    [Fact]
+    public async Task CreateUser_NoPermiteElegirOtroTenant()
+    {
+        var request = new HttpRequestMessage(HttpMethod.Post, "/users")
+        {
+            Content = JsonContent.Create(new
+            {
+                nombre = "Otro tenant", email = $"otro.{Guid.NewGuid():N}@demo.cl",
+                password = "Password123!", tenantId = Guid.NewGuid(), roles = new[] { "CAJERO" }
+            })
+        };
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", CreateToken(TenantDemoId, Guid.NewGuid(), "ADMIN"));
+        Assert.Equal(HttpStatusCode.Forbidden, (await _client.SendAsync(request)).StatusCode);
+    }
+
     private string CreateToken(Guid tenantId, Guid userId, string role)
     {
         var configuration = _factory.Services.GetRequiredService<IConfiguration>();

@@ -5,13 +5,19 @@ titulo: MS-1 · Tenant & Identity Service
 estado: parcial
 fuentes: [src/TenantIdentityService/, Docker/config/kong.yaml]
 verificado_contra_codigo: true
-ultima_revision: 2026-10-16
+ultima_revision: 2026-10-27
 depende_de: []
 publica: []
 consume: []
 reglas: [RN-01, RN-07, RN-08, RN-12]
 ---
 # MS-1 · Tenant & Identity Service
+
+## Administración del tenant (2026-10-27)
+
+`--bootstrap-admin` aprovisiona explícitamente un tenant y su cuenta ADMIN con `GLOBALMART_BOOTSTRAP_TENANT_ID`, `GLOBALMART_BOOTSTRAP_TENANT_NAME`, `GLOBALMART_BOOTSTRAP_ADMIN_EMAIL` y `GLOBALMART_BOOTSTRAP_ADMIN_PASSWORD`. Ejecución: `dotnet run --project src/TenantIdentityService -- --bootstrap-admin` contra la base de MS-1. Aplica migraciones y guarda la contraseña con BCrypt; no hay endpoint público de aprovisionamiento.
+
+`POST /users` acepta `tenantId` solo si coincide con el JWT y `sucursalId` opcional del tenant. `PUT /users/{id}` y `DELETE /users/{id}` ahora modifican la tabla `Usuarios` usada por login; el listado incluye inactivos. `GET /users/roles` enumera CAJERO, REPONEDOR y ADMIN. `POST /users/{id}/roles` evita quitarse el rol ADMIN. La revocación inmediata de JWT ya emitidos no está implementada.
 
 > Responsable de autenticación, gestión de usuarios/roles, configuración del tenant y (en diseño) tipos de cambio FX. Es el único microservicio que no requiere JWT para su endpoint de login. Todos los demás microservicios dependen de él para obtener config de tenant. Ver [[matriz-rutas]] para el inventario de puertos y prefijos.
 
@@ -54,8 +60,8 @@ src/TenantIdentityService/
 - Request `ActualizarUsuarioDto`: `Email` obligatorio, formato email y máximo 200 caracteres; `SucursalId` nullable. Omitirlo o enviar `null` borra la asignación. No acepta `Nombre` como campo editable.
 - `200`: devuelve `id`, `tenantId`, `email`, `sucursalId` tras persistir. `404`: ID inexistente o de otro tenant. `409`: violación PostgreSQL `23505` del índice/restricción `uq_users_tenant_email`. Otros errores de base no se convierten en duplicados.
 - `UsuarioRepository.UpdateBasicAsync` filtra lectura y UPDATE por ID y tenant. La restricción de base garantiza unicidad incluso bajo concurrencia; conservar el email propio está permitido.
-- El PUT usa `UsuarioCuenta`, una proyección EF de `users` con `id`, `tenant_id`, `email`, `sucursal_id` e `is_active`, excluida de migraciones. Solo actualiza email y sucursal; no toca contraseña, rol, estado ni fechas.
-- **Discrepancia de esquemas:** PUT y DELETE usan `users`; creación, listado y autenticación conservan el modelo anterior `Usuario` / `Usuarios` con `Nombre` y relaciones de roles/sucursales. `users` y `uq_users_tenant_email` deben existir en la base de destino; las migraciones actuales no los crean. El esquema fue proporcionado por el usuario y reproducido en PostgreSQL aislado; su presencia y FKs en `postgres-tenant` siguen [NO VERIFICADO]. La pertenencia de `SucursalId` a un tenant no se valida en este cambio.
+- El PUT usa `Usuario`/`Usuarios` y conserva la sucursal cuando se omite `sucursalId`; si se especifica, valida que sea una sucursal activa del tenant. No toca contraseña, rol, estado ni fechas.
+- **Discrepancia resuelta en código el 2026-10-27:** PUT y DELETE usan `Usuarios` como creación/listado/login. La proyección legacy `UsuarioCuenta` permanece en el modelo pero no participa en esas operaciones. Integración de este cambio con PostgreSQL [NO VERIFICADA].
 - [ActualizarUsuarioIntegrationTests](../../../tests/GlobalMart.IntegrationTests/ActualizarUsuarioIntegrationTests.cs): exactamente tres tests con `Ms1WebApplicationFactory`, JWT real y PostgreSQL: 200 con persistencia, 409 duplicado sin cambios, 404 otro tenant sin cambios. Los tres pasaron el 2026-10-06. El caso 200 cubre email repetido entre tenants, conservación del email propio y sucursal nullable.
 - Ejecución: usa `DefaultConnection` desde `Ms1WebApplicationFactory`, sin variables específicas del test. Cada prueba crea y elimina su propio esquema; el host derivado usa entorno `Testing` para evitar migraciones/seed sobre ese esquema.
 
@@ -63,17 +69,17 @@ src/TenantIdentityService/
 
 - Alias existentes: `/users/{id}` y `/api/users/{id}`. Requiere JWT válido y rol `ADMIN`.
 - `tenant_id` y la identidad (`NameIdentifier`/`sub`) proceden del JWT. Si el ID coincide con el administrador autenticado devuelve `400` antes de escribir; claims ausentes o inválidos devuelven `401`.
-- `UsuarioRepository.DeactivateAsync` ejecuta un UPDATE de `users.is_active = false` filtrado por `tenant_id` e `id`, manteniendo el filtro global. No elimina filas ni altera otros campos.
+- `UsuarioRepository.DeactivateAsync` ejecuta un UPDATE de `Usuarios.Activo = false` filtrado por tenant e ID. No elimina filas ni altera otros campos.
 - `204` para usuario existente, incluso ya inactivo; `404` para ID inexistente o de otro tenant; `401` sin JWT y `403` sin rol ADMIN.
 - [DesactivarUsuarioIntegrationTests](../../../tests/GlobalMart.IntegrationTests/DesactivarUsuarioIntegrationTests.cs): seis métodos, siete casos (la teoría 404 distingue otro tenant e ID inexistente). Verifican fila conservada, otros campos intactos, autodesactivación rechazada, idempotencia y autorización. Conexión estándar de la factoría y esquema PostgreSQL aislado por caso.
-- Verificado el 2026-10-06 en .NET 8 / Release: siete casos DELETE y tres de regresión PUT aprobados. No implica que login/listado legacy consulten `users.is_active`.
+- Las pruebas del 2026-10-06 cubrían el esquema antiguo `users`; el flujo unificado del 2026-10-27 compila, pero su integración PostgreSQL está [NO VERIFICADA].
 
 ### Contrato de Administración TI3-672
 
 - La pantalla `/admin/*` queda disponible solo para claims `ADMIN` o `SUPER_ADMIN`. CAJERO no ve su acceso y es redirigido a `/pos`; la autorización del controlador conserva `403` como defensa independiente del frontend [IMPLEMENTADO].
 - La UI permite listar y crear usuarios. `PUT /users/{id}` y la baja lógica `DELETE /users/{id}` existen en MS-1, pero edición, desactivación y reactivación todavía no se exponen en la pantalla.
 - Errores vigentes: `400` para datos inválidos o autodesactivación según la operación; `401` sin autenticación o claims requeridos; `403` sin rol autorizado; `404` para ID inexistente o perteneciente a otro tenant; `409` para email duplicado al editar.
-- `UserRepository.FindByEmailAsync` exige `Usuario.Activo=true`; un usuario inactivo en el modelo legacy recibe el mismo `401 Credenciales incorrectas` que otras credenciales inválidas. DELETE actualiza `UsuarioCuenta.Activo` en `users.is_active`, mientras login/listado usan `Usuario`/`Usuarios`; la sincronización entre ambos estados permanece [NO VERIFICADO]. No se implementó revocación de JWT emitidos.
+- `UserRepository.FindByEmailAsync` exige `Usuario.Activo=true`; DELETE marca inactivo ese mismo registro, de modo que el siguiente login falla con el mismo 401 genérico. No se implementó revocación de JWT emitidos.
 
 ### PUT /tenants/{id}/config — TI3-458 / TI3-459
 
@@ -284,7 +290,7 @@ GET/POST/PUT/DELETE /api/tenants
 |--------|---------|
 | Sin endpoint `/auth/refresh` | Sesiones no renovables |
 | No hay `PUT`/`DELETE /sucursales/{id}` | No se puede editar ni desactivar una sucursal ya creada. `Activa` solo se puede leer |
-| Sin asignación de usuarios a sucursales | No existe `POST /sucursales/{id}/usuarios`; la tabla `UsuarioSucursales` no tiene endpoint |
+| Asignación de usuarios a sucursales parcial | POST y PUT de usuarios admiten una sucursal inicial/seleccionada del mismo tenant; no hay pantalla de reasignación ni endpoint dedicado multi-sucursal |
 | `sucursal_id` en JWT es campo libre | No lo emite el token (D-04). Un cajero no puede indicar su sucursal al autenticar |
 | Sin integración FX (Fixer.io) | TI-15..19 no implementados |
 | `sucursal_id` falta en JWT | RN-08 no cumplido al 100% |

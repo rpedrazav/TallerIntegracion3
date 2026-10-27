@@ -5,7 +5,7 @@ titulo: Matriz Integral de Rutas, Puertos y Endpoints
 estado: implementado
 fuentes: [Docker/config/kong.yaml, src/*/Controllers/*.cs, src/*/Properties/launchSettings.json, globalmart-frontend/src/, new-ingresses.yaml]
 verificado_contra_codigo: true
-ultima_revision: 2026-10-18
+ultima_revision: 2026-10-27
 depende_de: [ms1-identity, ms2-tax, ms3-catalog, ms4-warehouse, ms5-pos, kong]
 publica: []
 consume: []
@@ -13,6 +13,8 @@ reglas: [RN-01, RN-06, RN-07]
 ---
 
 # Matriz Integral de Rutas, Puertos y Endpoints — GlobalMart OS
+
+MS-4 añade `GET /stock`, `POST /stock/ajuste` y `GET /health`. El frontend usa `INVENTORY_API_URL`/`REACT_APP_INVENTORY_API_URL` o `https://inventory-rpedraza.dev.censei.cl` en modo remoto. El manifiesto de ese host está en `k8s/manifests/warehouse-inventory.yaml`; aplicación en clúster [NO VERIFICADO].
 
 > Tarea: **TI3-657 (Plan ID: S2-026)**  
 > Este documento consolida el inventario auditado y verificado de todos los endpoints de la plataforma, comparando las rutas expuestas por el API Gateway (Kong), los atributos de enrutamiento en controladores ASP.NET Core 8, los puertos locales de desarrollo, los puertos internos de contenedor y los componentes consumidores del frontend de escritorio (Electron + React).

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 // Roles asignables por un ADMIN de tenant (SUPER_ADMIN está prohibido en MS-1).
 export const ROLES_ASIGNABLES = ['CAJERO', 'REPONEDOR', 'ADMIN'] as const;
@@ -9,6 +9,7 @@ export interface CrearUsuarioValues {
   email: string;
   password: string;
   rol: RolAsignable;
+  sucursalId?: string;
 }
 
 interface FormState extends CrearUsuarioValues {
@@ -19,6 +20,8 @@ type Errors = Partial<Record<keyof FormState, string>>;
 
 interface Props {
   isOpen: boolean;
+  tenantId: string;
+  sucursales: Array<{ id: string; nombre: string }>;
   onClose: () => void;
   /** Recibe los valores ya validados. Puede lanzar un Error para mostrar un mensaje del servidor. */
   onSubmit: (values: CrearUsuarioValues) => Promise<void> | void;
@@ -33,7 +36,14 @@ const FORM_INICIAL: FormState = {
   password: '',
   confirmarPassword: '',
   rol: 'CAJERO',
+  sucursalId: '',
 };
+
+function generarPasswordInicial(): string {
+  const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%';
+  const bytes = crypto.getRandomValues(new Uint8Array(14));
+  return 'Gm7!' + Array.from(bytes, b => alphabet[b % alphabet.length]).join('');
+}
 
 export function validarUsuario(f: FormState): Errors {
   const e: Errors = {};
@@ -88,12 +98,20 @@ const btnSecondary: React.CSSProperties = {
   ...btnBase, background: 'transparent', color: 'var(--color-ink)', border: '1px solid var(--color-line)',
 };
 
-const CrearUsuarioModal: React.FC<Props> = ({ isOpen, onClose, onSubmit }) => {
+const CrearUsuarioModal: React.FC<Props> = ({ isOpen, tenantId, sucursales, onClose, onSubmit }) => {
   const [form, setForm] = useState<FormState>(FORM_INICIAL);
   const [touched, setTouched] = useState<Partial<Record<keyof FormState, boolean>>>({});
   const [submitted, setSubmitted] = useState(false);
   const [saving, setSaving] = useState(false);
   const [serverError, setServerError] = useState('');
+  const [mostrarPassword, setMostrarPassword] = useState(false);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const password = generarPasswordInicial();
+    setForm({ ...FORM_INICIAL, password, confirmarPassword: password });
+    setMostrarPassword(false);
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -125,6 +143,7 @@ const CrearUsuarioModal: React.FC<Props> = ({ isOpen, onClose, onSubmit }) => {
         email: form.email.trim().toLowerCase(),
         password: form.password,
         rol: form.rol,
+        sucursalId: form.sucursalId || undefined,
       });
       setSaving(false);
       cerrar();
@@ -169,7 +188,12 @@ const CrearUsuarioModal: React.FC<Props> = ({ isOpen, onClose, onSubmit }) => {
 
         {campo('nombre', 'Nombre', 'text', 'name')}
         {campo('email', 'Correo electrónico', 'email', 'email')}
-        {campo('password', 'Contraseña', 'password', 'new-password')}
+        <div style={{ marginBottom: '0.9rem' }}><label htmlFor="cu-tenant" style={labelStyle}>Tenant ID</label>
+          <input id="cu-tenant" value={tenantId} readOnly style={inputStyle(false)} />
+          <small>El usuario pertenece al tenant de esta sesión.</small>
+        </div>
+        {campo('password', 'Contraseña inicial', mostrarPassword ? 'text' : 'password', 'new-password')}
+        <button type="button" onClick={() => setMostrarPassword(v => !v)} style={btnSecondary}>{mostrarPassword ? 'Ocultar' : 'Mostrar'} contraseña</button>
         <small style={{ color: 'var(--color-ink-soft)', fontSize: '0.75rem', display: 'block', marginTop: '-0.5rem', marginBottom: '0.7rem' }}>
           Mínimo 8 caracteres, al menos una mayúscula, minúscula, número y símbolo.
         </small>
@@ -187,6 +211,14 @@ const CrearUsuarioModal: React.FC<Props> = ({ isOpen, onClose, onSubmit }) => {
             {ROLES_ASIGNABLES.map(r => <option key={r} value={r}>{r}</option>)}
           </select>
           {show('rol') && <div role="alert" style={errorStyle}>{errors.rol}</div>}
+        </div>
+
+        <div style={{ marginBottom: '0.9rem' }}>
+          <label htmlFor="cu-sucursal" style={labelStyle}>Sucursal inicial</label>
+          <select id="cu-sucursal" value={form.sucursalId} onChange={e => set('sucursalId', e.target.value)} style={inputStyle(false)}>
+            <option value="">Sin asignar</option>
+            {sucursales.map(s => <option key={s.id} value={s.id}>{s.nombre}</option>)}
+          </select>
         </div>
 
         {serverError && <div role="alert" style={{ ...errorStyle, marginBottom: '0.75rem' }}>{serverError}</div>}

@@ -13,6 +13,10 @@ reglas: []
 ---
 # Pantallas del Frontend — GlobalMart OS
 
+## Panel administrativo (2026-10-27)
+
+`AdminLayout` separa administración de caja. `/admin/usuarios` crea cuentas con correo, rol, sucursal opcional y contraseña inicial editable; tras crear ofrece los datos de acceso para copiar. `/admin/roles` modifica asignaciones. `/admin/sucursales` crea y lista sucursales. `/admin/inventario` consulta stock y registra ajustes con motivo contra MS-4. `/admin/productos` y `/admin/configuracion` reutilizan las funciones existentes. Funcionamiento remoto de inventario [NO VERIFICADO] hasta desplegar MS-4.
+
 > Estado real de las pantallas implementadas en el frontend Electron + React.
 
 Los clientes tipados en `src/api/client.ts` cubren login (MS-1), catálogo del POS (MS-3) y turnos (MS-5). Centralizan las URL, el JWT y el timeout de 15 s. En peticiones protegidas, un 401 cierra la sesión y redirige al login [IMPLEMENTADO].
@@ -145,9 +149,9 @@ Ruta `/admin`. Panel de administración con pestañas ("Usuarios" y "Configuraci
 
 La UI expone edición de email y baja lógica; todavía no expone reactivación. MS-1 dispone de PUT y DELETE lógico. Su contrato actual contempla `400` por datos inválidos o autodesactivación según la operación, `401` sin autenticación, `403` para rol no autorizado, `404` para usuario inexistente o de otro tenant y `409` por email duplicado en edición.
 
-**Dependencia pendiente TI3-673:** `GET /users` no entrega `sucursalId` y no existe `GET /users/{id}`. Por ello el modal no muestra ni inventa ese campo y el payload frontend contiene solo `email`. El contrato actual de MS-1 interpreta `sucursalId` omitido como `null` y puede borrar una asignación existente; resolver la lectura/preservación segura de `sucursalId` requiere un cambio posterior del contrato backend [NO VERIFICADO en integración frontend-backend].
+**Edición de usuario:** `GET /users` aún no entrega `sucursalId` y el modal de edición muestra solo email. El backend conserva la asignación existente cuando se omite `sucursalId`; la creación sí admite sucursal inicial.
 
-**Dependencia pendiente TI3-674:** tras un DELETE 204, la pantalla no llama `recargar()`: actualiza la colección local y conserva la fila con `activo=false`, mostrando el badge **Inactivo**. Una recarga posterior ejecuta `GET /users`, que filtra `Activo=true`, por lo que no puede garantizar que el usuario inactivo siga visible. Tampoco existe una vista/API de auditoría consultable; solo está confirmada la conservación física de la fila en el backend.
+**Baja lógica:** tras un DELETE 204, la pantalla conserva la fila con `activo=false`; `GET /users` ahora incluye inactivos al recargar. No existe vista/API de auditoría consultable.
 
 Usa los tokens de color de la [[guia-estilo]] definidos en `index.css`. No hay reactivación individual de usuarios en UI todavía.
 

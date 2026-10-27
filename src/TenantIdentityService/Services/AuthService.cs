@@ -43,6 +43,8 @@ public class AuthService : IAuthService
             return null;
         }
 
+        if (!usuario.UsuarioRoles.Any()) return null;
+
         // 3. Verificar la contraseña con BCrypt
         //    BCrypt.Verify compara el texto plano contra el hash almacenado en la BD.
         //    Es resistente a timing attacks por diseño del algoritmo.

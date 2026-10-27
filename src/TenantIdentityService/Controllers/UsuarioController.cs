@@ -3,8 +3,10 @@ using System.Security.Claims;
 using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using TenantIdentityService.DTOs;
+using TenantIdentityService.Data;
 using TenantIdentityService.Exceptions;
 using TenantIdentityService.Models;
 using TenantIdentityService.Repositories;
@@ -20,13 +22,27 @@ public class UsuarioController : ControllerBase
 {
     private readonly IUsuarioRepository _usuarioRepository;
     private readonly IValidator<CrearUsuarioDto> _crearUsuarioValidator;
+    private readonly TenantDbContext _db;
 
     public UsuarioController(
         IUsuarioRepository usuarioRepository,
-        IValidator<CrearUsuarioDto> crearUsuarioValidator)
+        IValidator<CrearUsuarioDto> crearUsuarioValidator,
+        TenantDbContext db)
     {
         _usuarioRepository = usuarioRepository;
         _crearUsuarioValidator = crearUsuarioValidator;
+        _db = db;
+    }
+
+    [HttpGet("roles")]
+    public async Task<IActionResult> GetAssignableRoles()
+    {
+        var roles = await _db.Roles.AsNoTracking()
+            .Where(r => r.Nombre == "CAJERO" || r.Nombre == "REPONEDOR" || r.Nombre == "ADMIN")
+            .OrderBy(r => r.Nombre)
+            .Select(r => new { r.Id, r.Nombre, r.Descripcion })
+            .ToListAsync();
+        return Ok(roles);
     }
 
     /// <summary>
@@ -93,6 +109,14 @@ public class UsuarioController : ControllerBase
             return Unauthorized(new { message = "El token no contiene un tenant_id válido." });
 
         // 3. Validar roles solicitados antes de crear el usuario
+        if (request.TenantId.HasValue && request.TenantId.Value != tenantId)
+            return StatusCode(StatusCodes.Status403Forbidden,
+                new { message = "Un administrador solo puede crear usuarios en su propio tenant." });
+
+        if (request.SucursalId.HasValue && !await _db.Sucursales.AnyAsync(s =>
+            s.Id == request.SucursalId.Value && s.TenantId == tenantId && s.Activa))
+            return BadRequest(new { message = "La sucursal no existe o no está activa en este tenant." });
+
         List<string>? roleNames = null;
         if (request.Roles is { Count: > 0 })
         {
@@ -129,10 +153,17 @@ public class UsuarioController : ControllerBase
             Activo = true,
             CreadoEn = DateTime.UtcNow
         };
+        if (request.SucursalId.HasValue)
+            usuario.UsuarioSucursales.Add(new UsuarioSucursal
+            {
+                UsuarioId = usuario.Id,
+                SucursalId = request.SucursalId.Value
+            });
 
         // 5. Guardar en BD y asignar roles
         try
         {
+            await using var transaction = await _db.Database.BeginTransactionAsync();
             var usuarioCreado = await _usuarioRepository.CreateAsync(usuario);
 
             if (roleNames is { Count: > 0 })
@@ -140,7 +171,6 @@ public class UsuarioController : ControllerBase
                 var assignResult = await _usuarioRepository.AssignRolesAsync(usuarioCreado.Id, roleNames, tenantId);
                 if (assignResult.InvalidRoles.Count > 0)
                 {
-                    await _usuarioRepository.DeletePermanentlyAsync(usuarioCreado.Id, tenantId);
                     return BadRequest(new
                     {
                         message = "Uno o más roles no existen.",
@@ -150,11 +180,13 @@ public class UsuarioController : ControllerBase
 
                 if (assignResult.Usuario != null)
                 {
+                    await transaction.CommitAsync();
                     return Created($"/users/{usuarioCreado.Id}", MapToDto(assignResult.Usuario));
                 }
             }
 
             var usuarioDto = MapToDto(usuarioCreado);
+            await transaction.CommitAsync();
             return Created($"/users/{usuarioCreado.Id}", usuarioDto);
         }
         catch (DuplicateUserEmailException ex)
@@ -196,11 +228,17 @@ public class UsuarioController : ControllerBase
                 ? NotFound(new { message = "Usuario no encontrado." })
                 : Ok(usuario);
         }
-        catch (PostgresException ex) when (
-            ex.SqlState == PostgresErrorCodes.UniqueViolation &&
-            ex.ConstraintName == "uq_users_tenant_email")
+        catch (PostgresException ex) when (ex.SqlState == PostgresErrorCodes.UniqueViolation)
         {
             return Conflict(new { message = "El email ya pertenece a otro usuario del tenant." });
+        }
+        catch (DbUpdateException ex) when (ex.InnerException is PostgresException { SqlState: PostgresErrorCodes.UniqueViolation })
+        {
+            return Conflict(new { message = "El email ya pertenece a otro usuario del tenant." });
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
         }
     }
 
@@ -283,6 +321,12 @@ public class UsuarioController : ControllerBase
         var tenantClaim = User.FindFirst("tenant_id")?.Value;
         if (!Guid.TryParse(tenantClaim, out var tenantId))
             return Unauthorized(new { message = "El token no contiene un tenant_id válido." });
+
+        var actorIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                        ?? User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
+        if (Guid.TryParse(actorIdClaim, out var actorId) && actorId == id &&
+            !requestedRoles.Contains(Guid.Parse("11111111-0000-0000-0000-000000000003")))
+            return BadRequest(new { message = "No puedes quitar tu propio rol ADMIN." });
 
         var usuario = await _usuarioRepository.GetByIdAsync(id, tenantId);
         if (usuario is null)
