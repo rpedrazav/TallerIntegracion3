@@ -17,6 +17,7 @@ const simulatedScenarios: readonly SimulatedTerminalScenario[] = [
   'approved',
   'declined',
   'cancelled',
+  'timeout',
   'disconnected',
 ];
 const mockTerminalScenario: SimulatedTerminalScenario = simulatedScenarios.includes(

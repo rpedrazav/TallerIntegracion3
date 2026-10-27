@@ -74,7 +74,7 @@ export class SimulatedTerminalAdapter implements TerminalPort {
       intento.referenciaOpaca = createOpaqueReference(intento.referenciaIntento ?? solicitud.ventaId);
     } else if (this.scenario === 'declined') {
       intento.estado = transitionTerminalState(intento.estado, 'DECLINE');
-    } else {
+    } else if (this.scenario === 'timeout' || this.scenario === 'disconnected') {
       intento.estado = transitionTerminalState(intento.estado, 'MARK_UNCERTAIN');
     }
 
