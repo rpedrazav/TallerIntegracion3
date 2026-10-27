@@ -5,7 +5,7 @@ titulo: Estado Real de Implementación — GlobalMart OS
 estado: vigente
 fuentes: [docs/context/_reports/inventario.md, src/, globalmart-frontend/src/api/client.ts, globalmart-frontend/src/hardware/simulated-scale-adapter.ts, globalmart-frontend/src/hardware/serial-scale-adapter.ts, globalmart-frontend/src/hardware/scale-adapter-factory.ts, globalmart-frontend/src/hardware/scale-ipc.ts, globalmart-frontend/src/payments/terminal-ipc.ts, globalmart-frontend/src/payments/synchronizeCardPayment.ts, globalmart-frontend/src/preload.ts, globalmart-frontend/tests/simulated-scale-adapter.test.cjs, globalmart-frontend/tests/serial-scale-adapter.test.cjs, globalmart-frontend/tests/scale-ipc.test.cjs, globalmart-frontend/tests/terminal-ipc.test.cjs, globalmart-frontend/tests/synchronized-card-payment.test.cjs, git log, docs/context/_reports/preguntas-abiertas.md, tests/GlobalMart.IntegrationTests/CobroSeguroIntegrationTests.cs, docs/qa/S2-035/reporte.md, new-ingresses.yaml]
 verificado_contra_codigo: true
-ultima_revision: 2026-10-26
+ultima_revision: 2026-10-27
 depende_de: []
 publica: []
 consume: []
@@ -424,6 +424,8 @@ Validación del 2026-10-26: **84/84 pruebas Release aprobadas**, sin fallos ni o
 1. *Aprobado:* La venta transiciona a `COMPLETADA`, persiste el pago `TARJETA` y emite el evento en outbox.
 2. *Rechazado:* Retorna HTTP 422 y conserva la venta en estado `PENDIENTE`.
 3. *Timeout / No disponible:* Retorna HTTP 504 / 503 y conserva la venta en estado `PENDIENTE` sin registrar pagos no confirmados.
+
+S2-076 [IMPLEMENTADO — interfaz]: el POS presenta `PesoProducto` y controles del simulador solo al capturar productos pesables, con origen simulado, kg y estados de lectura estable/error.
 
 ## S2-086 / TI3-717 — Definir límites del terminal simulado
 

@@ -4,6 +4,7 @@ import axios from 'axios';
 import { catalogApi, CatalogProduct, posApi, VentaPendiente } from '../api/client';
 import BarcodeInput from '../components/pos/BarcodeInput';
 import CartItem from '../components/pos/CartItem';
+import PesoProducto, { PesoEstado } from '../components/pos/PesoProducto';
 import PaymentModal, { PaymentMethod, PaymentState } from '../components/pos/PaymentModal';
 import { readStableWeightForCart } from '../hardware/scale-cart';
 import {
@@ -62,6 +63,7 @@ export default function Pos() {
   const paymentAttemptReference = useRef<string | null>(null);
   const scaleReadInFlight = useRef(false);
   const [isReadingScale, setIsReadingScale] = useState(false);
+  const [capturaPeso, setCapturaPeso] = useState<{ nombre: string; estado: PesoEstado; pesoKg?: number; error?: string } | null>(null);
   const [pendingMutations, setPendingMutations] = useState(0);
   const [saleNeedsRefresh, setSaleNeedsRefresh] = useState(false);
   const saleRef = useRef<VentaPendiente | null>(null);
@@ -268,14 +270,17 @@ export default function Pos() {
       if (scaleReadInFlight.current) return false;
       scaleReadInFlight.current = true;
       setIsReadingScale(true);
+      setCapturaPeso({ nombre: product.nombre, estado: 'leyendo' });
       setVentaError('');
       try {
         const reading = await readStableWeightForCart(window.api.scale);
         if (!reading.ok) {
+          setCapturaPeso({ nombre: product.nombre, estado: 'error', error: reading.message });
           setVentaError(`No se agregó ${product.nombre}: ${reading.message}`);
           return false;
         }
         weightKg = reading.weightKg;
+        setCapturaPeso({ nombre: product.nombre, estado: 'estable', pesoKg: reading.weightKg });
       } finally {
         scaleReadInFlight.current = false;
         setIsReadingScale(false);
@@ -829,8 +834,17 @@ export default function Pos() {
           )}
         </div>
 
-        {/* Simulador de Balanza Integrado (S2-087 / S2-089) */}
-        <div style={{ marginTop: '0.75rem', padding: '0.75rem', backgroundColor: 'var(--color-bg)', borderRadius: '8px', border: '1px solid var(--color-line)' }}>
+        {capturaPeso && <PesoProducto
+          nombre={capturaPeso.nombre}
+          estado={capturaPeso.estado}
+          origen="simulado"
+          pesoKg={capturaPeso.pesoKg}
+          error={capturaPeso.error}
+          onCancelar={() => setCapturaPeso(null)}
+        />}
+
+        {/* Controles del simulador solo durante la captura de un pesable. */}
+        {capturaPeso && <div style={{ marginTop: '0.75rem', padding: '0.75rem', backgroundColor: 'var(--color-bg)', borderRadius: '8px', border: '1px solid var(--color-line)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
             <span style={{ fontWeight: 600, fontSize: '0.85rem', color: 'var(--color-ink)' }}>⚖️ Balanza Simulada</span>
             <span style={{ fontSize: '0.8rem', color: pesoEstable ? 'var(--color-success)' : 'var(--color-muted)' }}>
@@ -876,7 +890,7 @@ export default function Pos() {
               </button>
             ))}
           </div>
-        </div>
+        </div>}
       </div>
 
       {/* Columna Central: Tabla del Carrito */}
