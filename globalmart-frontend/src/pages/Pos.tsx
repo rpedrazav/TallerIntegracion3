@@ -63,7 +63,7 @@ export default function Pos() {
   const paymentAttemptReference = useRef<string | null>(null);
   const scaleReadInFlight = useRef(false);
   const [isReadingScale, setIsReadingScale] = useState(false);
-  const [capturaPeso, setCapturaPeso] = useState<{ nombre: string; estado: PesoEstado; pesoKg?: number; error?: string } | null>(null);
+  const [capturaPeso, setCapturaPeso] = useState<{ product: CatalogProduct; estado: PesoEstado; pesoKg?: number; error?: string } | null>(null);
   const [pendingMutations, setPendingMutations] = useState(0);
   const [saleNeedsRefresh, setSaleNeedsRefresh] = useState(false);
   const saleRef = useRef<VentaPendiente | null>(null);
@@ -262,31 +262,7 @@ export default function Pos() {
     }
   };
 
-  const addProductToCart = useCallback(async (product: CatalogProduct): Promise<boolean> => {
-    if (isStartingSale || saleNeedsRefresh || paymentState === 'uncertain' || paymentState === 'processing') return false;
-
-    let weightKg: number | undefined;
-    if (product.esPesoVariable) {
-      if (scaleReadInFlight.current) return false;
-      scaleReadInFlight.current = true;
-      setIsReadingScale(true);
-      setCapturaPeso({ nombre: product.nombre, estado: 'leyendo' });
-      setVentaError('');
-      try {
-        const reading = await readStableWeightForCart(window.api.scale);
-        if (!reading.ok) {
-          setCapturaPeso({ nombre: product.nombre, estado: 'error', error: reading.message });
-          setVentaError(`No se agregó ${product.nombre}: ${reading.message}`);
-          return false;
-        }
-        weightKg = reading.weightKg;
-        setCapturaPeso({ nombre: product.nombre, estado: 'estable', pesoKg: reading.weightKg });
-      } finally {
-        scaleReadInFlight.current = false;
-        setIsReadingScale(false);
-      }
-    }
-
+  const commitProductToCart = useCallback((product: CatalogProduct, weightKg?: number): boolean => {
     if (venta) {
       void queueSaleMutation(async (current) => {
         const existing = current.items.find((item) => item.producto_id === product.id);
@@ -341,7 +317,40 @@ export default function Pos() {
     setSearchResults([]);
     setClearSearchSignal((value) => value + 1);
     return true;
-  }, [venta, isStartingSale, saleNeedsRefresh, paymentState, queueSaleMutation]);
+  }, [venta, queueSaleMutation]);
+
+  const readProductWeight = useCallback(async (product: CatalogProduct): Promise<boolean> => {
+    if (scaleReadInFlight.current) return false;
+    scaleReadInFlight.current = true;
+    setIsReadingScale(true);
+    setCapturaPeso({ product, estado: 'leyendo' });
+    setVentaError('');
+    try {
+      const reading = await readStableWeightForCart(window.api.scale);
+      if (!reading.ok) {
+        setCapturaPeso({ product, estado: 'error', error: reading.message });
+        return false;
+      }
+      setCapturaPeso({ product, estado: 'estable', pesoKg: reading.weightKg });
+      return true;
+    } finally {
+      scaleReadInFlight.current = false;
+      setIsReadingScale(false);
+    }
+  }, []);
+
+  const addProductToCart = useCallback(async (product: CatalogProduct): Promise<boolean> => {
+    if (isStartingSale || saleNeedsRefresh || capturaPeso || paymentState === 'uncertain' || paymentState === 'processing') return false;
+    if (product.esPesoVariable) return readProductWeight(product);
+    return commitProductToCart(product);
+  }, [isStartingSale, saleNeedsRefresh, capturaPeso, paymentState, readProductWeight, commitProductToCart]);
+
+  const confirmWeight = () => {
+    if (!capturaPeso || capturaPeso.estado !== 'estable' || capturaPeso.pesoKg === undefined
+      || isStartingSale || saleNeedsRefresh || paymentState === 'uncertain' || paymentState === 'processing') return;
+    commitProductToCart(capturaPeso.product, capturaPeso.pesoKg);
+    setCapturaPeso(null);
+  };
 
   const handleTypingSearch = useCallback(async (query: string) => {
     const request = ++searchRequest.current;
@@ -785,7 +794,7 @@ export default function Pos() {
         {/* Columna Izquierda: Búsqueda y Escaneo */}
         <div style={{ flex: '0 0 320px', display: 'flex', flexDirection: 'column', background: 'var(--color-surface)', padding: '1rem', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
                 <h3 style={{ marginTop: 0, color: 'var(--color-primary)', fontSize: '1.25rem' }}>Buscar Producto</h3>
-        {isStartingSale || isReadingScale || saleNeedsRefresh || paymentState === 'uncertain' || paymentState === 'processing' || (venta && venta.estado !== 'PENDIENTE') ? (
+        {isStartingSale || isReadingScale || capturaPeso || saleNeedsRefresh || paymentState === 'uncertain' || paymentState === 'processing' || (venta && venta.estado !== 'PENDIENTE') ? (
           <p style={{ color: 'var(--color-ink-soft)' }}>{isStartingSale ? 'Iniciando venta...' : isReadingScale ? 'Leyendo balanza...' : 'Actualiza la venta para seguir agregando productos.'}</p>
         ) : (
           <BarcodeInput onSearch={handleSearch} onTyping={handleTypingSearch} clearSignal={clearSearchSignal} />
@@ -835,11 +844,13 @@ export default function Pos() {
         </div>
 
         {capturaPeso && <PesoProducto
-          nombre={capturaPeso.nombre}
+          nombre={capturaPeso.product.nombre}
           estado={capturaPeso.estado}
           origen="simulado"
           pesoKg={capturaPeso.pesoKg}
           error={capturaPeso.error}
+          onConfirmar={confirmWeight}
+          onReintentar={capturaPeso.estado === 'error' ? () => { void readProductWeight(capturaPeso.product); } : undefined}
           onCancelar={() => setCapturaPeso(null)}
         />}
 
