@@ -3,7 +3,7 @@ id: pantallas
 tipo: frontend
 titulo: Pantallas del Frontend — GlobalMart OS
 estado: parcial
-fuentes: [globalmart-frontend/src/pages/, globalmart-frontend/src/components/, globalmart-frontend/src/api/client.ts, globalmart-frontend/src/hardware/scale-cart.ts, globalmart-frontend/src/payments/SimulatedTerminalAdapter.ts, globalmart-frontend/src/payments/terminal-ipc.ts, globalmart-frontend/src/payments/synchronizeCardPayment.ts, globalmart-frontend/src/preload.ts, globalmart-frontend/tests/scale-main-preload.integration.test.cjs, globalmart-frontend/tests/terminal-port.test.cjs, globalmart-frontend/tests/terminal-ipc.test.cjs, globalmart-frontend/tests/synchronized-card-payment.test.cjs]
+fuentes: [globalmart-frontend/src/pages/, globalmart-frontend/src/components/, globalmart-frontend/src/api/client.ts, globalmart-frontend/src/hardware/scale-cart.ts, globalmart-frontend/src/payments/SimulatedTerminalAdapter.ts, globalmart-frontend/src/payments/terminal-ipc.ts, globalmart-frontend/src/payments/synchronizeCardPayment.ts, globalmart-frontend/src/preload.ts, globalmart-frontend/tests/scale-main-preload.integration.test.cjs, globalmart-frontend/e2e/weight-cart.spec.ts, globalmart-frontend/tests/terminal-port.test.cjs, globalmart-frontend/tests/terminal-ipc.test.cjs, globalmart-frontend/tests/synchronized-card-payment.test.cjs]
 verificado_contra_codigo: true
 ultima_revision: 2026-10-27
 depende_de: [estructura, ms1-identity, ms5-pos, guia-estilo]
@@ -69,6 +69,8 @@ S2-077: la selección de un pesable solicita lectura estable por preload y muest
 S2-078: ante fallo o desconexión se ofrece ingreso manual identificado. La misma validación exige al menos 0,010 kg y pasos de 0,001 kg; texto no numérico, cero o negativo no habilita confirmar ni envía ítems.
 
 S2-079: cada línea pesable identifica kg y precio por kg. Antes de iniciar venta se muestra solo un subtotal estimado; impuestos y total esperan la respuesta de MS-5. Después de crear o mutar la venta, subtotal de línea, subtotal general, impuestos y total se muestran desde `VentaPendiente`, sin tasa fija de IVA en la interfaz.
+
+S2-080: tres pruebas E2E controladas recorren lectura estable y confirmación, modificación acumulada en una sola línea, recuperación tras recarga, desconexión, respaldo manual y producto unitario. Verifican que valores inválidos no crean líneas ni peticiones, que los controles de balanza no aparecen para unitarios y que el total mostrado coincide con la respuesta simulada de MS-5 (IVA de prueba 20 %).
 
 Al seleccionar un producto con `esPesoVariable`, el POS llama exclusivamente a `readStableWeightForCart(window.api.scale)`. Mientras espera bloquea otra lectura y muestra estado; solo ofrece confirmar cuando recibe un peso estable, positivo, en kg, de al menos 10 g y con precisión de 1 g. Un dato corrupto, error o desconexión deja el carrito sin cambios y presenta un mensaje. El intento siguiente consulta el estado y reconecta antes de leer cuando corresponde.
 

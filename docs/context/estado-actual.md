@@ -3,7 +3,7 @@ id: estado-actual
 tipo: indice
 titulo: Estado Real de Implementación — GlobalMart OS
 estado: vigente
-fuentes: [docs/context/_reports/inventario.md, src/, globalmart-frontend/src/api/client.ts, globalmart-frontend/src/hardware/simulated-scale-adapter.ts, globalmart-frontend/src/hardware/serial-scale-adapter.ts, globalmart-frontend/src/hardware/scale-adapter-factory.ts, globalmart-frontend/src/hardware/scale-ipc.ts, globalmart-frontend/src/payments/terminal-ipc.ts, globalmart-frontend/src/payments/synchronizeCardPayment.ts, globalmart-frontend/src/preload.ts, globalmart-frontend/tests/simulated-scale-adapter.test.cjs, globalmart-frontend/tests/serial-scale-adapter.test.cjs, globalmart-frontend/tests/scale-ipc.test.cjs, globalmart-frontend/tests/terminal-ipc.test.cjs, globalmart-frontend/tests/synchronized-card-payment.test.cjs, git log, docs/context/_reports/preguntas-abiertas.md, tests/GlobalMart.IntegrationTests/CobroSeguroIntegrationTests.cs, docs/qa/S2-035/reporte.md, new-ingresses.yaml]
+fuentes: [docs/context/_reports/inventario.md, src/, globalmart-frontend/src/api/client.ts, globalmart-frontend/src/hardware/simulated-scale-adapter.ts, globalmart-frontend/src/hardware/serial-scale-adapter.ts, globalmart-frontend/src/hardware/scale-adapter-factory.ts, globalmart-frontend/src/hardware/scale-ipc.ts, globalmart-frontend/src/payments/terminal-ipc.ts, globalmart-frontend/src/payments/synchronizeCardPayment.ts, globalmart-frontend/src/preload.ts, globalmart-frontend/e2e/weight-cart.spec.ts, globalmart-frontend/tests/simulated-scale-adapter.test.cjs, globalmart-frontend/tests/serial-scale-adapter.test.cjs, globalmart-frontend/tests/scale-ipc.test.cjs, globalmart-frontend/tests/terminal-ipc.test.cjs, globalmart-frontend/tests/synchronized-card-payment.test.cjs, git log, docs/context/_reports/preguntas-abiertas.md, tests/GlobalMart.IntegrationTests/CobroSeguroIntegrationTests.cs, docs/qa/S2-035/reporte.md, new-ingresses.yaml]
 verificado_contra_codigo: true
 ultima_revision: 2026-10-27
 depende_de: []
@@ -432,6 +432,8 @@ S2-077 [IMPLEMENTADO — flujo simulado]: al seleccionar un pesable se consulta 
 S2-078 [IMPLEMENTADO — respaldo manual]: si falla la lectura se puede ingresar un peso manual identificado. Se aplican mínimo 10 g y precisión de 1 g; entradas cero, negativas o no numéricas no se envían.
 
 S2-079 [IMPLEMENTADO — vista POS]: las líneas pesables muestran kg y precio por kg; IVA y total se presentan solo desde la venta retornada por MS-5. El borrador indica subtotal estimado y no calcula IVA con una tasa local.
+
+S2-080 [IMPLEMENTADO — pruebas E2E controladas]: tres escenarios de Playwright prueban lectura estable, desconexión, captura manual válida e inválida, modificación, producto unitario sin controles de balanza y recuperación tras recarga. Verifican una sola línea pesable, cantidad y total de la respuesta simulada de MS-5. Integración contra servicios desplegados y hardware físico [NO VERIFICADA].
 
 ## S2-086 / TI3-717 — Definir límites del terminal simulado
 
