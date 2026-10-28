@@ -52,3 +52,11 @@ jobs:
         file: ./src/POSCartService/Dockerfile
         push: true
         tags: ${{ secrets.DOCKER_USERNAME }}/poscartservice:latest
+
+    - name: Construir y Subir WarehouseInventoryService
+      uses: docker/build-push-action@v5
+      with:
+        context: ./src/WarehouseInventoryService
+        file: ./src/WarehouseInventoryService/Dockerfile
+        push: true
+        tags: ${{ secrets.DOCKER_USERNAME }}/warehouseinventoryservice:latest

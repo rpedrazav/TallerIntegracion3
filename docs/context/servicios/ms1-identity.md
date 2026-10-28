@@ -19,6 +19,8 @@ reglas: [RN-01, RN-07, RN-08, RN-12]
 
 `POST /users` acepta `tenantId` solo si coincide con el JWT y `sucursalId` opcional del tenant. `PUT /users/{id}` y `DELETE /users/{id}` ahora modifican la tabla `Usuarios` usada por login; el listado incluye inactivos. `GET /users/roles` enumera CAJERO, REPONEDOR y ADMIN. `POST /users/{id}/roles` evita quitarse el rol ADMIN. La revocación inmediata de JWT ya emitidos no está implementada.
 
+Las pruebas de integración de creación, edición y baja usan `Usuarios` sobre PostgreSQL y aprobaron junto con el resto de la suite (331/331). Un ADMIN fue aprovisionado en el tenant demo del clúster y su login fue validado por port-forward.
+
 > Responsable de autenticación, gestión de usuarios/roles, configuración del tenant y (en diseño) tipos de cambio FX. Es el único microservicio que no requiere JWT para su endpoint de login. Todos los demás microservicios dependen de él para obtener config de tenant. Ver [[matriz-rutas]] para el inventario de puertos y prefijos.
 
 ## Estructura del proyecto

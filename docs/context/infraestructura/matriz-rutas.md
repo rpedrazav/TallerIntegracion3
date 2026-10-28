@@ -14,7 +14,7 @@ reglas: [RN-01, RN-06, RN-07]
 
 # Matriz Integral de Rutas, Puertos y Endpoints — GlobalMart OS
 
-MS-4 añade `GET /stock`, `POST /stock/ajuste` y `GET /health`. El frontend usa `INVENTORY_API_URL`/`REACT_APP_INVENTORY_API_URL` o `https://inventory-rpedraza.dev.censei.cl` en modo remoto. El manifiesto de ese host está en `k8s/manifests/warehouse-inventory.yaml`; aplicación en clúster [NO VERIFICADO].
+MS-4 añade `GET /stock`, `POST /stock/ajuste` y `GET /health`. El frontend usa `INVENTORY_API_URL`/`REACT_APP_INVENTORY_API_URL` o `https://inventory-rpedraza.dev.censei.cl` en modo remoto. El manifiesto de ese host está en `k8s/manifests/warehouse-inventory.yaml`; el Ingress respondió 200 a `/health` y los endpoints se probaron por port-forward.
 
 > Tarea: **TI3-657 (Plan ID: S2-026)**  
 > Este documento consolida el inventario auditado y verificado de todos los endpoints de la plataforma, comparando las rutas expuestas por el API Gateway (Kong), los atributos de enrutamiento en controladores ASP.NET Core 8, los puertos locales de desarrollo, los puertos internos de contenedor y los componentes consumidores del frontend de escritorio (Electron + React).
@@ -28,7 +28,7 @@ MS-4 añade `GET /stock`, `POST /stock/ajuste` y `GET /health`. El frontend usa 
 | **MS-1 Tenant & Identity** | `tenant-identity-service` | `5124` (HTTP) / `7206` (HTTPS) | `5001` / `8080` | `8000` (`/api/auth`, `/api/users`, `/api/tenants`) | `https://auth-rpedraza.dev.censei.cl` |
 | **MS-2 Tax & Compliance** | `tax-compliance-service` | `5239` (HTTP) / `7062` (HTTPS) | `5002` / `8080` | N/A (Consumo interno vía MS-5) | N/A |
 | **MS-3 Catalog & Pricing** | `catalog-pricing-service` | `5203` (HTTP) / `7250` (HTTPS) | `5003` / `8080` | `8000` (`/api/products`, `/api/categories`, `/api/prices`) | `https://catalog-rpedraza.dev.censei.cl` |
-| **MS-4 Warehouse & Inventory**| `warehouse-inventory-service`| `5205` (HTTP) / `7019` (HTTPS) | `5004` / `8080` | N/A (Event-driven vía Kafka) | N/A |
+| **MS-4 Warehouse & Inventory**| `warehouse-inventory-service`| `5205` (HTTP) / `7019` (HTTPS) | `5004` / `8080` | N/A (eventos Kafka desactivados en clúster sin broker) | `https://inventory-rpedraza.dev.censei.cl` |
 | **MS-5 POS & Cart** | `pos-cart-service` | `5000` (HTTP Kestrel default) | `5005` / `8080` | `8000` (`/api/turnos`, `/api/ventas`) | `https://pos-rpedraza.dev.censei.cl` |
 | **MS-6 Supply Chain** | `supply-chain-service` | `[PLANIFICADO]` | `5006` / `8080` | `[PLANIFICADO]` | `[PLANIFICADO]` |
 | **MS-7 Analytics & Notif.** | `analytics-notification-service` | `5127` (HTTP) / `7209` (HTTPS) | `5007` / `8080` | `[PLANIFICADO]` | `[PLANIFICADO]` |

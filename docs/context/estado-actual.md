@@ -15,7 +15,7 @@ reglas: []
 
 ## Avance administrativo del 2026-10-27
 
-[IMPLEMENTADO EN CÓDIGO] MS-1 permite aprovisionar un tenant y su administrador mediante `--bootstrap-admin` y variables de entorno explícitas; la creación de usuarios valida el tenant del JWT, acepta sucursal inicial del mismo tenant y entrega correo, contraseña inicial y tenant ID para copiar en la UI. Edición y baja lógica ahora actúan sobre `Usuarios`, la tabla que consulta el login; las desactivaciones impiden nuevos inicios de sesión. La vista ADMIN tiene navegación propia para usuarios, asignación de roles existentes, sucursales, inventario, catálogo y configuración. MS-4 agrega listado y ajuste de stock por sucursal con validación remota de producto y sucursal y registro de movimiento. Builds de MS-1/MS-4 y typecheck de React aprobados. [NO VERIFICADO] E2E con PostgreSQL/Kafka y funcionamiento remoto: Docker y contexto Kubernetes no estaban disponibles en este equipo. Roles personalizados, revocación de JWT ya emitidos y despliegue del manifiesto de inventario permanecen pendientes.
+[IMPLEMENTADO Y PROBADO] MS-1 permite aprovisionar un tenant y su administrador mediante `--bootstrap-admin` y variables de entorno explícitas; la creación de usuarios valida el tenant del JWT, acepta sucursal inicial del mismo tenant y entrega correo, contraseña inicial y tenant ID para copiar en la UI. Edición y baja lógica actúan sobre `Usuarios`, la tabla que consulta el login; las desactivaciones impiden nuevos inicios de sesión. La vista ADMIN tiene navegación propia para usuarios, asignación de roles existentes, sucursales, inventario, catálogo y configuración. MS-4 agrega listado y ajuste de stock por sucursal con validación remota de producto y sucursal y registro de movimiento. La suite .NET aprobó 331/331 pruebas con PostgreSQL local; el flujo ADMIN aprobó 3/3 pruebas E2E en Edge, `npm run typecheck` y el empaquetado Electron aprobaron. En el clúster se aprovisionó el ADMIN demo; pasaron login, listado de usuarios/roles, creación, edición y baja de usuario, creación de sucursal, ajuste/listado de stock y rechazos 401/403/400. MS-4 corre en `student-rpedraza` con `warehouse_db` independiente en la instancia PostgreSQL del POS porque la cuota global de PVC está completa. Kafka no está disponible en ese namespace y el consumidor de MS-4 se desactivó por configuración; la sincronización de stock vía eventos queda [NO VERIFICADO]. Roles personalizados y revocación de JWT ya emitidos permanecen pendientes.
 
 > Nodo más importante para cualquier IA nueva. Refleja el estado REAL del código al 29-09-2026, validado contra el repositorio y las aclaraciones del equipo de desarrollo.
 
@@ -32,10 +32,10 @@ S2-052 — 2026-10-19: **2/2 pruebas de integración HTTP locales aprobadas** pa
 
 | Microservicio | Controllers | Kafka | Tests | Estado General |
 |---------------|-------------|-------|-------|----------------|
-| MS-1 Identity | ✅ 3 controllers | ❌ No Kafka | ❌ Solo seed | **PARCIAL** |
+| MS-1 Identity | ✅ 3 controllers | ❌ No Kafka | ✅ Integración PostgreSQL y prueba remota ADMIN | **PARCIAL** |
 | MS-2 Tax | ✅ 1 controller | ❌ No Kafka | ✅ ManualTest | **PARCIAL** |
 | MS-3 Catalog | ✅ 2 controllers | ❌ No Kafka | ✅ Manual .http + baja/PUT TI3-642 + 9 casos RN-01 S2-023 | **PARCIAL** |
-| MS-4 Warehouse | ✅ 1 controller | ✅ Consumer sale.completed | ❌ No tests | **PARCIAL** |
+| MS-4 Warehouse | ✅ 1 controller | ✅ Consumer sale.completed (desactivado en clúster sin broker) | ✅ Integración PostgreSQL y prueba remota de ajuste | **PARCIAL** |
 | MS-5 POS | ✅ 2 controllers | ✅ OutboxPublisherWorker sale.completed | ✅ AgregarItemTest + CobroCuadreTest + S2-008/S2-009/S2-010/S2-037/S2-038/S2-039 + contrato S2-040 + 10 HTTP y 13 directos RN-01 S2-023 | **PARCIAL** |
 | MS-6 SupplyChain | ❌ Sin controllers | ❌ Sin Kafka | ❌ Sin tests | **PLANIFICADO** |
 | MS-7 Analytics | ❌ Sin controllers | ❌ Sin consumers | ❌ Sin tests | **PLANIFICADO** |
@@ -49,7 +49,7 @@ S2-052 — 2026-10-19: **2/2 pruebas de integración HTTP locales aprobadas** pa
 **Implementado:**
 - `POST /auth/login` — genera JWT con tenant_id, roles, active_role (expiración: 8 horas por defecto en appsettings.json) [IMPLEMENTADO]
 - `GET/POST/PUT/DELETE /users` (alias `/api/v1/users`, `/api/users`) — CRUD usuarios con RBAC [IMPLEMENTADO]
-- `DELETE /api/v1/users/{id}` (mismos alias) actualiza `Usuarios.Activo=false`, filtrando ID y tenant del JWT; retorna 204 también si ya estaba inactivo, 400 ante autodesactivación y 404 para ID inexistente/ajeno. Desde 2026-10-27 creación, listado, edición, baja y login usan `Usuarios`; el antiguo comportamiento sobre `users` quedó reemplazado. La integración PostgreSQL del nuevo flujo está [NO VERIFICADO]. Ver [MS-1](servicios/ms1-identity.md).
+- `DELETE /api/v1/users/{id}` (mismos alias) actualiza `Usuarios.Activo=false`, filtrando ID y tenant del JWT; retorna 204 también si ya estaba inactivo, 400 ante autodesactivación y 404 para ID inexistente/ajeno. Desde 2026-10-27 creación, listado, edición, baja y login usan `Usuarios`; el antiguo comportamiento sobre `users` quedó reemplazado. Flujo de integración PostgreSQL probado en la suite .NET. Ver [MS-1](servicios/ms1-identity.md).
 - `POST /users/{id}/roles` (alias `/api/v1/users/{id}/roles`) — asignar roles (sin SUPER_ADMIN). Actualización atómica de tabla intermedia mediante EF Core Change Tracker y 3 tests de integración validados (TI3-456) [IMPLEMENTADO]
 - `GET/PUT /tenants/{id}/config` — config de tenant (país, moneda, IVA), validación con FluentValidation (TI3-459), tracking EF Core y rol ADMIN del mismo tenant (TI3-458) [IMPLEMENTADO]
 - `GET /sucursales` — lista sucursales del tenant del JWT, con zona horaria efectiva [IMPLEMENTADO]

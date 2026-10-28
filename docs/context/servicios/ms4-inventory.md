@@ -15,7 +15,7 @@ reglas: [RN-04, RN-05, RF-09, RF-10, WI-04, WI-05, WI-13, WI-14]
 
 ## Administración de stock (2026-10-27)
 
-`GET /stock?sucursal_id=` lista existencias del tenant. `POST /stock/ajuste` exige ADMIN o REPONEDOR, valida cantidad no negativa y cuatro decimales, comprueba producto en MS-3 y sucursal activa en MS-1 con el JWT original, y registra el delta en `MovimientoStock`. `GET /health` comprueba disponibilidad HTTP. JWT usa issuer/audience/firma compatibles con MS-1. El manifiesto `k8s/manifests/warehouse-inventory.yaml` prepara Postgres, MS-4 e Ingress; despliegue real [NO VERIFICADO] porque falta contexto Kubernetes.
+`GET /stock?sucursal_id=` lista existencias del tenant. `POST /stock/ajuste` exige ADMIN o REPONEDOR, valida cantidad no negativa y cuatro decimales, comprueba producto en MS-3 y sucursal activa en MS-1 con el JWT original, y registra el delta en `MovimientoStock`. `GET /health` comprueba disponibilidad HTTP. JWT usa issuer/audience/firma compatibles con MS-1. Pruebas de integración PostgreSQL de ajuste y aislamiento de tenant aprobadas. En `student-rpedraza`, MS-4 está desplegado y probó ajuste/listado remoto, 401 sin JWT, 403 para CAJERO y 400 para cantidad negativa. `warehouse_db` es una base independiente en el PostgreSQL existente del POS porque el clúster agotó su cuota global de PVC y la cuota de servicios del namespace. Allí no hay broker Kafka: `Kafka__Enabled=false` desactiva el consumidor y la sincronización de stock por eventos queda [NO VERIFICADO].
 
 > Gestiona el stock de productos por sucursal. La función más avanzada implementada es el consumidor Kafka de `sale.completed` con garantía de idempotencia (tabla EventosKafkaProcesados). FEFO, recepciones, mermas y alertas son PLANIFICADOS.
 
@@ -46,10 +46,11 @@ src/WarehouseInventoryService/
 | Método | Ruta | Auth | Estado |
 |--------|------|------|--------|
 | GET | `/stock/{productId}?sucursal_id=` | JWT | [IMPLEMENTADO] |
+| GET | `/stock?sucursal_id=` | JWT | [IMPLEMENTADO] |
+| POST | `/stock/ajuste` | JWT + ADMIN/REPONEDOR | [IMPLEMENTADO] |
 | GET | `/health` | Público | [IMPLEMENTADO] |
 
 ### No implementados
-- `POST /stock/ajuste` — ajuste manual [PLANIFICADO]
 - `POST /recepciones` — recepción de mercancía [PLANIFICADO]
 - `GET /lotes` — gestión de lotes y fechas de caducidad [PLANIFICADO]
 - `POST /mermas` — registrar merma [PLANIFICADO]

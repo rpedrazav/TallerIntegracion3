@@ -3,15 +3,17 @@ id: ci-cd
 tipo: infra
 titulo: CI/CD — GitHub Actions
 estado: implementado
-fuentes: [.github/workflows/ci.yml]
+fuentes: [.github/workflows/ci.yml, .github/workflows/docker-build.yml]
 verificado_contra_codigo: true
-ultima_revision: 2026-10-16
+ultima_revision: 2026-10-27
 depende_de: [docker-compose, testing]
 publica: []
 consume: []
 reglas: []
 ---
 # CI/CD — GitHub Actions
+
+`docker-build.yml` construye y publica también `WarehouseInventoryService` en Docker Hub en push a `dev` o `main`, junto con MS-1, MS-2, MS-3 y MS-5.
 
 > Pipeline de build y test automatizado. Se ejecuta en cada push a `main` o `dev` y en pull requests hacia esas ramas. Incluye gate de validación estricta de tipos TypeScript para el frontend antes de empaquetado y tests de backend con infraestructura.
 

@@ -67,7 +67,7 @@ spec:
     spec:
       containers:
       - name: tenantidentityservice
-        image: rpedrazav/tenantidentityservice:latest
+        image: rpedrazav/tenantidentityservice:admin-bfd46b0
         imagePullPolicy: Always
         env:
         - name: ConnectionStrings__DefaultConnection

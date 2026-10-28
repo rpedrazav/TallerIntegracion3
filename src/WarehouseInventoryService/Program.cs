@@ -18,7 +18,8 @@ builder.Services.AddDbContext<WarehouseInventoryService.Data.WarehouseDbContext>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddScoped<IStockRepository, StockRepository>();
 builder.Services.AddHttpClient();
-builder.Services.AddHostedService<WarehouseInventoryService.Messaging.KafkaConsumerService>();
+if (builder.Configuration.GetValue("Kafka:Enabled", true))
+    builder.Services.AddHostedService<WarehouseInventoryService.Messaging.KafkaConsumerService>();
 
 // Inyección de Autenticación JWT Stateless
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)

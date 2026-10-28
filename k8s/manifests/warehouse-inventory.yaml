@@ -1,66 +1,7 @@
 # Requiere Secret globalmart-warehouse-config en student-rpedraza con las claves
-# db-password, connection-string, jwt-key y kafka-bootstrap-servers.
-# jwt-key debe ser idéntica a Jwt:Key de MS-1 y el servidor Kafka debe existir.
-apiVersion: v1
-kind: Service
-metadata:
-  name: postgres-warehouseinventoryservice
-  namespace: student-rpedraza
-spec:
-  selector:
-    app: postgres-warehouseinventoryservice
-  ports:
-    - port: 5432
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: postgres-warehouseinventoryservice
-  namespace: student-rpedraza
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: postgres-warehouseinventoryservice
-  template:
-    metadata:
-      labels:
-        app: postgres-warehouseinventoryservice
-    spec:
-      containers:
-        - name: postgres
-          image: postgres:16-alpine
-          env:
-            - name: POSTGRES_USER
-              value: postgres
-            - name: POSTGRES_DB
-              value: warehouse_db
-            - name: POSTGRES_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: globalmart-warehouse-config
-                  key: db-password
-          ports:
-            - containerPort: 5432
-          volumeMounts:
-            - name: data
-              mountPath: /var/lib/postgresql/data
-      volumes:
-        - name: data
-          persistentVolumeClaim:
-            claimName: postgres-warehouse-data
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: postgres-warehouse-data
-  namespace: student-rpedraza
-spec:
-  accessModes: [ReadWriteOnce]
-  resources:
-    requests:
-      storage: 1Gi
----
+# connection-string, jwt-key y kafka-bootstrap-servers. jwt-key debe coincidir
+# con MS-1. warehouse_db es una base independiente en el PostgreSQL existente
+# del POS: el clúster no permite crear otro PVC ni otro Service en el namespace.
 apiVersion: v1
 kind: Service
 metadata:
@@ -80,6 +21,8 @@ metadata:
   namespace: student-rpedraza
 spec:
   replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: warehouseinventoryservice
@@ -90,7 +33,7 @@ spec:
     spec:
       containers:
         - name: warehouseinventoryservice
-          image: rpedrazav/warehouseinventoryservice:latest
+          image: rpedrazav/warehouseinventoryservice:admin-20261027-2
           imagePullPolicy: Always
           env:
             - name: ASPNETCORE_HTTP_PORTS
@@ -110,6 +53,8 @@ spec:
                 secretKeyRef:
                   name: globalmart-warehouse-config
                   key: kafka-bootstrap-servers
+            - name: Kafka__Enabled
+              value: "false"
             - name: Services__CatalogUrl
               value: http://catalogpricingservice
             - name: Services__IdentityUrl

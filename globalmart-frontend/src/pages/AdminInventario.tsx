@@ -25,15 +25,25 @@ export default function AdminInventario() {
   useEffect(() => {
     if (!token) return;
     let active = true;
+    const cargarProductos = async () => {
+      const first = await catalogApi.listProducts(1, 500);
+      const all = [...first.data];
+      for (let page = 2; all.length < first.totalCount; page++) {
+        const next = await catalogApi.listProducts(page, 500);
+        if (!next.data.length) break;
+        all.push(...next.data);
+      }
+      return all;
+    };
     Promise.all([
-      catalogApi.listProducts(1, 500),
+      cargarProductos(),
       axios.get<Sucursal[]>(buildServiceUrl('identity', '/sucursales'), { headers }),
     ]).then(([products, branches]) => {
       if (!active) return;
-      setProductos(products.data);
+      setProductos(products);
       setSucursales(branches.data);
       setSucursalId(branches.data[0]?.id ?? '');
-      setProductoId(products.data[0]?.id ?? '');
+      setProductoId(products[0]?.id ?? '');
     }).catch(() => { if (active) setError('No se pudo cargar el catálogo o las sucursales.'); });
     return () => { active = false; };
   }, [token]);

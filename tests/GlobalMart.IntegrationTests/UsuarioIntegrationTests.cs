@@ -66,7 +66,8 @@ public class UsuarioIntegrationTests : IClassFixture<Ms1WebApplicationFactory>
         Assert.True(json.RootElement.TryGetProperty("items", out var itemsElement));
         Assert.True(itemsElement.GetArrayLength() >= 1);
 
-        var primerUsuario = itemsElement[0];
+        var primerUsuario = itemsElement.EnumerateArray()
+            .First(item => item.GetProperty("activo").GetBoolean() && item.GetProperty("roles").GetArrayLength() > 0);
         Assert.True(primerUsuario.TryGetProperty("id", out _));
         Assert.True(primerUsuario.TryGetProperty("nombre", out _));
         Assert.True(primerUsuario.TryGetProperty("email", out _));
