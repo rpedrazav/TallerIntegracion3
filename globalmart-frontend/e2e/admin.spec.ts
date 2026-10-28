@@ -79,3 +79,55 @@ test('inventario muestra productos de páginas posteriores del catálogo', async
   await page.goto('/?component=app#/admin/inventario');
   await expect(page.getByLabel('Producto')).toContainText('Leche');
 });
+
+test('ADMIN crea y elimina un rol propio del tenant', async ({ page }) => {
+  const roles = [
+    { id: '11111111-0000-0000-0000-000000000001', nombre: 'CAJERO', descripcion: 'Caja', tenantId: null, rolBase: null },
+    { id: '11111111-0000-0000-0000-000000000003', nombre: 'ADMIN', descripcion: 'Admin', tenantId: null, rolBase: null },
+  ];
+  await page.route('**/users*', route => route.fulfill({ json: { items: [], totalPages: 1 } }));
+  await page.route('**/users/roles**', async route => {
+    if (route.request().method() === 'POST') {
+      const body = route.request().postDataJSON();
+      roles.push({ id: '66666666-6666-6666-6666-666666666666', nombre: body.nombre, descripcion: body.descripcion, tenantId, rolBase: body.rolBase });
+      return route.fulfill({ status: 201, json: roles.at(-1) });
+    }
+    if (route.request().method() === 'DELETE') {
+      roles.pop();
+      return route.fulfill({ status: 204 });
+    }
+    return route.fulfill({ json: roles });
+  });
+
+  await page.goto('/?component=app#/admin/roles');
+  await page.getByLabel('Nombre del rol').fill('SUPERVISOR_CAJA');
+  await page.getByLabel('Descripción').fill('Supervisa caja');
+  await page.getByLabel('Permisos base').selectOption('ADMIN');
+  await page.getByRole('button', { name: 'Crear rol' }).click();
+  await expect(page.getByText('SUPERVISOR_CAJA', { exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Eliminar rol' }).click();
+  await expect(page.getByText('SUPERVISOR_CAJA', { exact: true })).toHaveCount(0);
+});
+
+test('ADMIN asigna un rol propio al crear un usuario', async ({ page }) => {
+  let createBody: Record<string, unknown> | undefined;
+  await page.route('**/users*', route => {
+    if (route.request().method() === 'POST') {
+      createBody = route.request().postDataJSON();
+      return route.fulfill({ status: 201, json: { id: '77777777-7777-7777-7777-777777777777', roles: ['SUPERVISOR_CAJA'] } });
+    }
+    return route.fulfill({ json: { items: [], totalPages: 1 } });
+  });
+  await page.route('**/users/roles', route => route.fulfill({ json: [
+    { id: '11111111-0000-0000-0000-000000000001', nombre: 'CAJERO' },
+    { id: '66666666-6666-6666-6666-666666666666', nombre: 'SUPERVISOR_CAJA' },
+  ] }));
+
+  await page.goto('/?component=app#/admin/usuarios');
+  await page.getByRole('button', { name: 'Crear usuario' }).click();
+  await page.getByLabel('Nombre', { exact: true }).fill('Supervisor Nuevo');
+  await page.getByLabel('Correo electrónico').fill('supervisor@example.cl');
+  await page.getByLabel('Rol', { exact: true }).selectOption('SUPERVISOR_CAJA');
+  await page.getByRole('dialog').getByRole('button', { name: 'Crear usuario' }).click();
+  await expect.poll(() => createBody?.roles).toEqual(['SUPERVISOR_CAJA']);
+});

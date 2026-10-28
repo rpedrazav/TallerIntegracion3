@@ -56,7 +56,11 @@ public class JwtService : IJwtService
 
         // ── 2. Construir la lista de roles del usuario ────────────────────────
         var roles = usuario.UsuarioRoles
-            .Select(ur => ur.Rol.Nombre)
+            .Where(ur => ur.Rol.TenantId is null || ur.Rol.TenantId == usuario.TenantId)
+            .SelectMany(ur => ur.Rol.RolBase is { Length: > 0 } baseRole
+                ? new[] { ur.Rol.Nombre, baseRole }
+                : new[] { ur.Rol.Nombre })
+            .Distinct(StringComparer.Ordinal)
             .ToList();
 
         // ── 3. Determinar el active_role (rol de mayor prioridad) ─────────────

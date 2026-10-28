@@ -3,7 +3,7 @@ id: auth-y-roles
 tipo: frontend
 titulo: Autenticación y Roles en el Frontend
 estado: parcial
-fuentes: [globalmart-frontend/src/hooks/useAuth.ts, globalmart-frontend/src/pages/Login.tsx, globalmart-frontend/src/api/client.ts]
+fuentes: [globalmart-frontend/src/hooks/useAuth.ts, globalmart-frontend/src/pages/Login.tsx, globalmart-frontend/src/api/client.ts, globalmart-frontend/src/pages/AdminRoles.tsx, globalmart-frontend/src/components/admin/CrearUsuarioModal.tsx]
 verificado_contra_codigo: true
 ultima_revision: 2026-10-27
 depende_de: [estructura, rbac-multirol, ms1-identity]
@@ -13,7 +13,7 @@ reglas: [RN-07, RN-08]
 ---
 # Autenticación y Roles en el Frontend
 
-ADMIN/SUPER_ADMIN entran en `/admin` y los demás roles en `/pos`. `AdminLayout` ofrece navegación propia y `AdminRoute` protege usuarios, roles, sucursales, inventario, productos y configuración. La cuenta nueva muestra tenant ID, correo, contraseña inicial y rol para copiar durante la sesión de creación.
+ADMIN/SUPER_ADMIN entran en `/admin` y los demás roles en `/pos`. Los roles propios del tenant heredan permisos de CAJERO, REPONEDOR o ADMIN; MS-1 incluye el rol base y el nombre propio en el JWT y `active_role` refleja el permiso base. `AdminLayout` ofrece navegación propia y `AdminRoute` protege usuarios, roles, sucursales, inventario, productos y configuración. La cuenta nueva muestra tenant ID, correo, contraseña inicial y rol para copiar durante la sesión de creación.
 
 > Manejo del JWT en el frontend: login, almacenamiento con electron-store, y protección de rutas. El RoleSwitcher multi-rol NO está implementado.
 

@@ -15,9 +15,9 @@ reglas: []
 
 ## Panel administrativo (2026-10-27)
 
-`AdminLayout` separa administración de caja. `/admin/usuarios` crea cuentas con correo, rol, sucursal opcional y contraseña inicial editable; tras crear ofrece los datos de acceso para copiar. `/admin/roles` modifica asignaciones. `/admin/sucursales` crea y lista sucursales. `/admin/inventario` carga todas las páginas del catálogo, consulta stock y registra ajustes con motivo contra MS-4. `/admin/productos` y `/admin/configuracion` reutilizan las funciones existentes. Los endpoints remotos de inventario fueron probados con el ADMIN demo; la pantalla fue probada con APIs simuladas en E2E.
+`AdminLayout` separa administración de caja. `/admin/usuarios` crea cuentas con correo, rol base o propio, sucursal opcional y contraseña inicial editable; tras crear ofrece los datos de acceso para copiar. `/admin/roles` crea y elimina roles propios con permisos heredados y modifica asignaciones; exige desasignar un rol antes de borrarlo. `/admin/sucursales` crea y lista sucursales. `/admin/inventario` carga todas las páginas del catálogo, consulta stock y registra ajustes con motivo contra MS-4. `/admin/productos` y `/admin/configuracion` reutilizan las funciones existentes. Los endpoints remotos de inventario fueron probados con el ADMIN demo; la pantalla fue probada con APIs simuladas en E2E.
 
-El flujo ADMIN, la creación de cajero con datos copiables, el ajuste de inventario y la carga de páginas posteriores del catálogo aprobaron 3/3 pruebas E2E en Edge (`globalmart-frontend/e2e/admin.spec.ts`); `npm run typecheck` y `npm run package` aprobaron.
+El flujo ADMIN, la creación de cajero con datos copiables, el ajuste de inventario, la carga de páginas posteriores del catálogo y la gestión de roles propios aprobaron 5/5 pruebas E2E en Edge (`globalmart-frontend/e2e/admin.spec.ts`); `npm run typecheck` y `npm run package` aprobaron.
 
 > Estado real de las pantallas implementadas en el frontend Electron + React.
 

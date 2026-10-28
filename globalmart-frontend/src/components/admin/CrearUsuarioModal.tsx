@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 
 // Roles asignables por un ADMIN de tenant (SUPER_ADMIN está prohibido en MS-1).
 export const ROLES_ASIGNABLES = ['CAJERO', 'REPONEDOR', 'ADMIN'] as const;
-export type RolAsignable = (typeof ROLES_ASIGNABLES)[number];
+export type RolAsignable = string;
 
 export interface CrearUsuarioValues {
   nombre: string;
@@ -22,6 +22,7 @@ interface Props {
   isOpen: boolean;
   tenantId: string;
   sucursales: Array<{ id: string; nombre: string }>;
+  roles?: string[];
   onClose: () => void;
   /** Recibe los valores ya validados. Puede lanzar un Error para mostrar un mensaje del servidor. */
   onSubmit: (values: CrearUsuarioValues) => Promise<void> | void;
@@ -45,7 +46,7 @@ function generarPasswordInicial(): string {
   return 'Gm7!' + Array.from(bytes, b => alphabet[b % alphabet.length]).join('');
 }
 
-export function validarUsuario(f: FormState): Errors {
+export function validarUsuario(f: FormState, roles: readonly string[] = ROLES_ASIGNABLES): Errors {
   const e: Errors = {};
   if (!f.nombre.trim()) e.nombre = 'El nombre es obligatorio.';
   else if (f.nombre.trim().length < 2) e.nombre = 'El nombre debe tener al menos 2 caracteres.';
@@ -68,7 +69,7 @@ export function validarUsuario(f: FormState): Errors {
   if (!f.confirmarPassword) e.confirmarPassword = 'Confirma la contraseña.';
   else if (f.confirmarPassword !== f.password) e.confirmarPassword = 'Las contraseñas no coinciden.';
 
-  if (!ROLES_ASIGNABLES.includes(f.rol)) e.rol = 'Selecciona un rol válido.';
+  if (!roles.includes(f.rol)) e.rol = 'Selecciona un rol válido.';
   return e;
 }
 
@@ -98,7 +99,7 @@ const btnSecondary: React.CSSProperties = {
   ...btnBase, background: 'transparent', color: 'var(--color-ink)', border: '1px solid var(--color-line)',
 };
 
-const CrearUsuarioModal: React.FC<Props> = ({ isOpen, tenantId, sucursales, onClose, onSubmit }) => {
+const CrearUsuarioModal: React.FC<Props> = ({ isOpen, tenantId, sucursales, roles = [...ROLES_ASIGNABLES], onClose, onSubmit }) => {
   const [form, setForm] = useState<FormState>(FORM_INICIAL);
   const [touched, setTouched] = useState<Partial<Record<keyof FormState, boolean>>>({});
   const [submitted, setSubmitted] = useState(false);
@@ -115,7 +116,7 @@ const CrearUsuarioModal: React.FC<Props> = ({ isOpen, tenantId, sucursales, onCl
 
   if (!isOpen) return null;
 
-  const errors = validarUsuario(form);
+  const errors = validarUsuario(form, roles);
   const show = (k: keyof FormState) => (submitted || touched[k]) && errors[k];
 
   const set = <K extends keyof FormState>(k: K, v: FormState[K]) => {
@@ -205,10 +206,10 @@ const CrearUsuarioModal: React.FC<Props> = ({ isOpen, tenantId, sucursales, onCl
             id="cu-rol"
             value={form.rol}
             disabled={saving}
-            onChange={e => set('rol', e.target.value as RolAsignable)}
+            onChange={e => set('rol', e.target.value)}
             style={inputStyle(!!show('rol'))}
           >
-            {ROLES_ASIGNABLES.map(r => <option key={r} value={r}>{r}</option>)}
+            {roles.map(r => <option key={r} value={r}>{r}</option>)}
           </select>
           {show('rol') && <div role="alert" style={errorStyle}>{errors.rol}</div>}
         </div>

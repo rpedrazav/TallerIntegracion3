@@ -24,6 +24,7 @@ export default function Admin() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [sucursales, setSucursales] = useState<Array<{ id: string; nombre: string }>>([]);
+  const [roles, setRoles] = useState<string[]>(['CAJERO', 'REPONEDOR', 'ADMIN']);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [modalAbierto, setModalAbierto] = useState(false);
@@ -76,6 +77,10 @@ export default function Admin() {
       { headers: { Authorization: `Bearer ${token}` } })
       .then(response => setSucursales(response.data.filter(s => s.activa)))
       .catch(() => setSucursales([]));
+    void axios.get<Array<{ nombre: string }>>(buildServiceUrl('identity', '/users/roles'),
+      { headers: { Authorization: `Bearer ${token}` } })
+      .then(response => setRoles(response.data.map(role => role.nombre)))
+      .catch(() => setRoles(['CAJERO', 'REPONEDOR', 'ADMIN']));
   }, [token]);
 
   const crearUsuario = async (v: CrearUsuarioValues) => {
@@ -352,6 +357,7 @@ export default function Admin() {
             isOpen={modalAbierto}
             tenantId={tenantId}
             sucursales={sucursales}
+            roles={roles}
             onClose={() => setModalAbierto(false)}
             onSubmit={crearUsuario}
           />

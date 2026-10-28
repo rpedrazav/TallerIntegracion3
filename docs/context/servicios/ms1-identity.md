@@ -17,9 +17,9 @@ reglas: [RN-01, RN-07, RN-08, RN-12]
 
 `--bootstrap-admin` aprovisiona explícitamente un tenant y su cuenta ADMIN con `GLOBALMART_BOOTSTRAP_TENANT_ID`, `GLOBALMART_BOOTSTRAP_TENANT_NAME`, `GLOBALMART_BOOTSTRAP_ADMIN_EMAIL` y `GLOBALMART_BOOTSTRAP_ADMIN_PASSWORD`. Ejecución: `dotnet run --project src/TenantIdentityService -- --bootstrap-admin` contra la base de MS-1. Aplica migraciones y guarda la contraseña con BCrypt; no hay endpoint público de aprovisionamiento.
 
-`POST /users` acepta `tenantId` solo si coincide con el JWT y `sucursalId` opcional del tenant. `PUT /users/{id}` y `DELETE /users/{id}` ahora modifican la tabla `Usuarios` usada por login; el listado incluye inactivos. `GET /users/roles` enumera CAJERO, REPONEDOR y ADMIN. `POST /users/{id}/roles` evita quitarse el rol ADMIN. La revocación inmediata de JWT ya emitidos no está implementada.
+`POST /users` acepta `tenantId` solo si coincide con el JWT y `sucursalId` opcional del tenant. `PUT /users/{id}` y `DELETE /users/{id}` modifican la tabla `Usuarios` usada por login; el listado incluye inactivos. `GET /users/roles` enumera los roles base y los propios del tenant. `POST /users/roles` crea un rol con permisos heredados de CAJERO, REPONEDOR o ADMIN; `DELETE /users/roles/{id}` elimina solo roles propios no asignados. La migración `AddTenantCustomRoles` añade `TenantId` y `RolBase` a `Roles`; el filtro de EF evita consultar roles de otros tenants. `POST /users/{id}/roles` evita quitarse todos los roles con permisos ADMIN. El JWT incluye nombre y rol base, de modo que las políticas existentes funcionen con el rol propio. La revocación inmediata de JWT ya emitidos no está implementada.
 
-Las pruebas de integración de creación, edición y baja usan `Usuarios` sobre PostgreSQL y aprobaron junto con el resto de la suite (331/331). Un ADMIN fue aprovisionado en el tenant demo del clúster y su login fue validado por port-forward.
+Las pruebas de integración de creación, edición y baja usan `Usuarios` sobre PostgreSQL y aprobaron junto con el resto de la suite (334/334). Un ADMIN fue aprovisionado en el tenant demo del clúster y su login fue validado por port-forward y por el Ingress. La creación, asignación y eliminación de un rol propio se verificaron por el Ingress; las tres pruebas nuevas de roles propios cubren permisos heredados, aislamiento entre tenants y bloqueo de eliminación mientras está asignado.
 
 > Responsable de autenticación, gestión de usuarios/roles, configuración del tenant y (en diseño) tipos de cambio FX. Es el único microservicio que no requiere JWT para su endpoint de login. Todos los demás microservicios dependen de él para obtener config de tenant. Ver [[matriz-rutas]] para el inventario de puertos y prefijos.
 
@@ -50,6 +50,8 @@ src/TenantIdentityService/
 | PUT | `/users/{id}` (alias `/api/v1/users/{id}`, `/api/users/{id}`) | JWT + ADMIN | [IMPLEMENTADO] |
 | DELETE | `/users/{id}` (alias `/api/v1/users/{id}`, `/api/users/{id}`) | JWT + ADMIN | [IMPLEMENTADO] |
 | POST | `/users/{id}/roles` (alias `/api/v1/users/{id}/roles`) | JWT + ADMIN | [IMPLEMENTADO] |
+| GET/POST | `/users/roles` (mismos alias) | JWT + ADMIN | [IMPLEMENTADO] |
+| DELETE | `/users/roles/{id}` (mismos alias) | JWT + ADMIN | [IMPLEMENTADO] |
 | GET | `/tenants/{id}/config` (alias `/api/tenants`, `/api/v1/tenants`) | JWT | [IMPLEMENTADO] |
 | PUT | `/tenants/{id}/config` (alias `/api/tenants`, `/api/v1/tenants`) | JWT + ADMIN | [IMPLEMENTADO] |
 | GET | `/sucursales` (alias `/api/sucursales`) | JWT | [IMPLEMENTADO] |

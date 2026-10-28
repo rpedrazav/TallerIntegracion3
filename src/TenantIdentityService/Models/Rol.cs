@@ -1,8 +1,7 @@
 namespace TenantIdentityService.Models;
 
 /// <summary>
-/// Rol del sistema RBAC. Los roles son globales (no por tenant).
-/// Valores posibles: CAJERO, REPONEDOR, ADMIN, SUPER_ADMIN, CLIENTE_AFILIADO.
+/// Rol RBAC global o personalizado para un tenant.
 /// </summary>
 public class Rol
 {
@@ -12,6 +11,12 @@ public class Rol
     public string Nombre { get; set; } = string.Empty;
 
     public string Descripcion { get; set; } = string.Empty;
+
+    /// <summary>Null para roles base del sistema; identificador del tenant para roles propios.</summary>
+    public Guid? TenantId { get; set; }
+
+    /// <summary>Capacidad heredada por un rol personalizado: ADMIN, CAJERO o REPONEDOR.</summary>
+    public string? RolBase { get; set; }
 
     // Relaciones de navegación
     public ICollection<UsuarioRol> UsuarioRoles { get; set; } = new List<UsuarioRol>();

@@ -90,14 +90,14 @@ internal sealed class AdminUsersTestData : IAsyncDisposable
         Authenticate(AdminId, "ADMIN");
     }
 
-    public void Authenticate(Guid userId, string role)
+    public void Authenticate(Guid userId, string role, Guid? tenantId = null)
     {
         var jwt = new JwtSecurityToken(
             issuer: "AdminUsersTests", audience: "AdminUsersTests",
             claims: new[]
             {
                 new Claim(JwtRegisteredClaimNames.Sub, userId.ToString()),
-                new Claim("tenant_id", TenantA.ToString()),
+                new Claim("tenant_id", (tenantId ?? TenantA).ToString()),
                 new Claim(ClaimTypes.Role, role)
             },
             expires: DateTime.UtcNow.AddMinutes(10),

@@ -1,5 +1,6 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Text.RegularExpressions;
 using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -37,12 +38,49 @@ public class UsuarioController : ControllerBase
     [HttpGet("roles")]
     public async Task<IActionResult> GetAssignableRoles()
     {
+        if (!Guid.TryParse(User.FindFirst("tenant_id")?.Value, out var tenantId)) return Unauthorized();
         var roles = await _db.Roles.AsNoTracking()
-            .Where(r => r.Nombre == "CAJERO" || r.Nombre == "REPONEDOR" || r.Nombre == "ADMIN")
+            .Where(r => r.TenantId == tenantId || r.Nombre == "CAJERO" || r.Nombre == "REPONEDOR" || r.Nombre == "ADMIN")
             .OrderBy(r => r.Nombre)
-            .Select(r => new { r.Id, r.Nombre, r.Descripcion })
+            .Select(r => new { r.Id, r.Nombre, r.Descripcion, r.TenantId, r.RolBase })
             .ToListAsync();
         return Ok(roles);
+    }
+
+    public sealed record CrearRolRequest(string Nombre, string Descripcion, string RolBase);
+
+    [HttpPost("roles")]
+    public async Task<IActionResult> CreateRole([FromBody] CrearRolRequest request)
+    {
+        if (!Guid.TryParse(User.FindFirst("tenant_id")?.Value, out var tenantId)) return Unauthorized();
+        var name = request.Nombre?.Trim().ToUpperInvariant() ?? "";
+        var baseRole = request.RolBase?.Trim().ToUpperInvariant() ?? "";
+        if (!Regex.IsMatch(name, "^[A-Z][A-Z0-9_]{2,49}$") ||
+            !new[] { "CAJERO", "REPONEDOR", "ADMIN" }.Contains(baseRole) ||
+            request.Descripcion is null || request.Descripcion.Length > 200)
+            return BadRequest(new { message = "Nombre (3-50 letras, números o _), descripción o rol base inválido." });
+        if (await _db.Roles.AnyAsync(r => r.Nombre == name))
+            return Conflict(new { message = "Ya existe un rol con ese nombre en el tenant." });
+        var role = new Rol { TenantId = tenantId, Nombre = name, RolBase = baseRole, Descripcion = request.Descripcion.Trim() };
+        _db.Roles.Add(role);
+        try { await _db.SaveChangesAsync(); }
+        catch (DbUpdateException ex) when (ex.InnerException is PostgresException { SqlState: PostgresErrorCodes.UniqueViolation })
+        { return Conflict(new { message = "Ya existe un rol con ese nombre en el tenant." }); }
+        return Created($"/users/roles/{role.Id}", new { role.Id, role.Nombre, role.Descripcion, role.TenantId, role.RolBase });
+    }
+
+    [HttpDelete("roles/{roleId:guid}")]
+    public async Task<IActionResult> DeleteRole(Guid roleId)
+    {
+        if (!Guid.TryParse(User.FindFirst("tenant_id")?.Value, out var tenantId)) return Unauthorized();
+        var role = await _db.Roles.SingleOrDefaultAsync(r => r.Id == roleId && r.TenantId == tenantId);
+        if (role is null) return NotFound(new { message = "Rol del tenant no encontrado." });
+        if (await _db.UsuarioRoles.AnyAsync(ur => ur.RolId == roleId))
+            return Conflict(new { message = "Quita este rol de sus usuarios antes de eliminarlo." });
+        _db.Roles.Remove(role);
+        try { await _db.SaveChangesAsync(); }
+        catch (DbUpdateException) { return Conflict(new { message = "El rol está asignado a un usuario." }); }
+        return NoContent();
     }
 
     /// <summary>
@@ -325,7 +363,8 @@ public class UsuarioController : ControllerBase
         var actorIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
                         ?? User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
         if (Guid.TryParse(actorIdClaim, out var actorId) && actorId == id &&
-            !requestedRoles.Contains(Guid.Parse("11111111-0000-0000-0000-000000000003")))
+            !await _db.Roles.AnyAsync(r => requestedRoles.Contains(r.Id) &&
+                (r.Nombre == "ADMIN" || r.RolBase == "ADMIN")))
             return BadRequest(new { message = "No puedes quitar tu propio rol ADMIN." });
 
         var usuario = await _usuarioRepository.GetByIdAsync(id, tenantId);
@@ -357,7 +396,7 @@ public class UsuarioController : ControllerBase
             CreadoEn = usuario.CreadoEn,
             UltimoLogin = usuario.UltimoLogin,
             Roles = usuario.UsuarioRoles
-                .Where(ur => ur.Rol != null)
+                .Where(ur => ur.Rol != null && (ur.Rol.TenantId is null || ur.Rol.TenantId == usuario.TenantId))
                 .Select(ur => ur.Rol.Nombre)
                 .OrderBy(nombre => nombre)
                 .ToList()
