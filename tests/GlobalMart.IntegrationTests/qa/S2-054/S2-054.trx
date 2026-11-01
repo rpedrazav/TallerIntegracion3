@@ -1,0 +1,74 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="b4e4501a-c326-4c54-a700-4c43d0b4d00f" name="dp877@DANI 2026-10-24 14:26:31" runUser="DANI\dp877" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2026-10-24T14:26:31.7549295-03:00" queuing="2026-10-24T14:26:31.7549300-03:00" start="2026-10-24T14:26:24.0174092-03:00" finish="2026-10-24T14:26:36.2668369-03:00" />
+  <TestSettings name="default" id="dc9a61fc-dd44-4efa-b73f-b1f8d6ee439a">
+    <Deployment runDeploymentRoot="dp877_DANI_2026-10-24_14_26_31" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="9fc9bdde-58f4-44fa-97b6-295db216d8fd" testId="c9cc6cda-70b7-eaa9-3c3e-ed67259d367c" testName="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests.AislamientoCobro_RechazaSinTraficoNiMutaciones(scenario: &quot;sin-turno&quot;, expectedStatus: 409)" computerName="DANI" duration="00:00:00.0875282" startTime="2026-10-24T14:26:33.0457790-03:00" endTime="2026-10-24T14:26:33.0457793-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="9fc9bdde-58f4-44fa-97b6-295db216d8fd" />
+    <UnitTestResult executionId="85e7e127-fb62-42dd-89fb-4f283c99d1b4" testId="413ec17d-1f9f-84c9-f479-64d2ad863d76" testName="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests.AislamientoCobro_RechazaSinTraficoNiMutaciones(scenario: &quot;turno-cerrado&quot;, expectedStatus: 409)" computerName="DANI" duration="00:00:00.5698308" startTime="2026-10-24T14:26:31.7170433-03:00" endTime="2026-10-24T14:26:31.7170525-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="85e7e127-fb62-42dd-89fb-4f283c99d1b4" />
+    <UnitTestResult executionId="e2aa5d22-7740-4e40-8df3-34680eac4fb5" testId="795cc2c5-7893-6d00-580c-14101d2625c7" testName="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests.AislamientoCobro_ControlAutorizado_ObservaSimuladorYPersistencia" computerName="DANI" duration="00:00:00.4626393" startTime="2026-10-24T14:26:36.1524800-03:00" endTime="2026-10-24T14:26:36.1524803-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="e2aa5d22-7740-4e40-8df3-34680eac4fb5" />
+    <UnitTestResult executionId="08f37c80-3f4c-489f-ba1d-e84256354aa7" testId="a399f0d0-1443-2a5d-e52c-a8a5169006c7" testName="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests.AislamientoCobro_RechazaSinTraficoNiMutaciones(scenario: &quot;otro-tenant&quot;, expectedStatus: 404)" computerName="DANI" duration="00:00:00.1644077" startTime="2026-10-24T14:26:34.4440316-03:00" endTime="2026-10-24T14:26:34.4440318-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="08f37c80-3f4c-489f-ba1d-e84256354aa7" />
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests.AislamientoCobro_RechazaSinTraficoNiMutaciones(scenario: &quot;sin-turno&quot;, expectedStatus: 409)" storage="c:\users\dp877\desktop\universidad\semestre 6\tallerintegra3\tallerintegracion3\tests\globalmart.integrationtests\.artifacts-s2054\bin\globalmart.integrationtests\release\globalmart.integrationtests.dll" id="c9cc6cda-70b7-eaa9-3c3e-ed67259d367c">
+      <Execution id="9fc9bdde-58f4-44fa-97b6-295db216d8fd" />
+      <TestMethod codeBase="C:\Users\dp877\Desktop\Universidad\Semestre 6\TallerIntegra3\TallerIntegracion3\tests\GlobalMart.IntegrationTests\.artifacts-s2054\bin\GlobalMart.IntegrationTests\release\GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests" name="AislamientoCobro_RechazaSinTraficoNiMutaciones" />
+    </UnitTest>
+    <UnitTest name="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests.AislamientoCobro_ControlAutorizado_ObservaSimuladorYPersistencia" storage="c:\users\dp877\desktop\universidad\semestre 6\tallerintegra3\tallerintegracion3\tests\globalmart.integrationtests\.artifacts-s2054\bin\globalmart.integrationtests\release\globalmart.integrationtests.dll" id="795cc2c5-7893-6d00-580c-14101d2625c7">
+      <Execution id="e2aa5d22-7740-4e40-8df3-34680eac4fb5" />
+      <TestMethod codeBase="C:\Users\dp877\Desktop\Universidad\Semestre 6\TallerIntegra3\TallerIntegracion3\tests\GlobalMart.IntegrationTests\.artifacts-s2054\bin\GlobalMart.IntegrationTests\release\GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests" name="AislamientoCobro_ControlAutorizado_ObservaSimuladorYPersistencia" />
+    </UnitTest>
+    <UnitTest name="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests.AislamientoCobro_RechazaSinTraficoNiMutaciones(scenario: &quot;otro-tenant&quot;, expectedStatus: 404)" storage="c:\users\dp877\desktop\universidad\semestre 6\tallerintegra3\tallerintegracion3\tests\globalmart.integrationtests\.artifacts-s2054\bin\globalmart.integrationtests\release\globalmart.integrationtests.dll" id="a399f0d0-1443-2a5d-e52c-a8a5169006c7">
+      <Execution id="08f37c80-3f4c-489f-ba1d-e84256354aa7" />
+      <TestMethod codeBase="C:\Users\dp877\Desktop\Universidad\Semestre 6\TallerIntegra3\TallerIntegracion3\tests\GlobalMart.IntegrationTests\.artifacts-s2054\bin\GlobalMart.IntegrationTests\release\GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests" name="AislamientoCobro_RechazaSinTraficoNiMutaciones" />
+    </UnitTest>
+    <UnitTest name="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests.AislamientoCobro_RechazaSinTraficoNiMutaciones(scenario: &quot;turno-cerrado&quot;, expectedStatus: 409)" storage="c:\users\dp877\desktop\universidad\semestre 6\tallerintegra3\tallerintegracion3\tests\globalmart.integrationtests\.artifacts-s2054\bin\globalmart.integrationtests\release\globalmart.integrationtests.dll" id="413ec17d-1f9f-84c9-f479-64d2ad863d76">
+      <Execution id="85e7e127-fb62-42dd-89fb-4f283c99d1b4" />
+      <TestMethod codeBase="C:\Users\dp877\Desktop\Universidad\Semestre 6\TallerIntegra3\TallerIntegracion3\tests\GlobalMart.IntegrationTests\.artifacts-s2054\bin\GlobalMart.IntegrationTests\release\GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.CobroSeguroIntegrationTests" name="AislamientoCobro_RechazaSinTraficoNiMutaciones" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="c9cc6cda-70b7-eaa9-3c3e-ed67259d367c" executionId="9fc9bdde-58f4-44fa-97b6-295db216d8fd" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="413ec17d-1f9f-84c9-f479-64d2ad863d76" executionId="85e7e127-fb62-42dd-89fb-4f283c99d1b4" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="795cc2c5-7893-6d00-580c-14101d2625c7" executionId="e2aa5d22-7740-4e40-8df3-34680eac4fb5" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="a399f0d0-1443-2a5d-e52c-a8a5169006c7" executionId="08f37c80-3f4c-489f-ba1d-e84256354aa7" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="Resultados sin formato de lista" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="Todos los resultados cargados" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Completed">
+    <Counters total="4" executed="4" passed="4" failed="0" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Output>
+      <StdOut>[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v2.8.2+699d445a1a (64-bit .NET 8.0.31)&#xD;
+[xUnit.net 00:00:01.65]   Discovering: GlobalMart.IntegrationTests&#xD;
+[xUnit.net 00:00:01.75]   Discovered:  GlobalMart.IntegrationTests&#xD;
+[xUnit.net 00:00:01.75]   Starting:    GlobalMart.IntegrationTests&#xD;
+info: POSCartService.Services.OutboxPublisherWorker[0]&#xD;
+      Worker de outbox deshabilitado por configuraci�n&#xD;
+info: POSCartService.Services.OutboxPublisherWorker[0]&#xD;
+      Worker de outbox deshabilitado por configuraci�n&#xD;
+info: POSCartService.Services.OutboxPublisherWorker[0]&#xD;
+      Worker de outbox deshabilitado por configuraci�n&#xD;
+info: POSCartService.Services.OutboxPublisherWorker[0]&#xD;
+      Worker de outbox deshabilitado por configuraci�n&#xD;
+info: POSCartService.Services.PaymentGatewayClient[0]&#xD;
+      Iniciando pago por pasarela RequestId=004b5be1-1a4e-434b-b090-4a3d3891f87d TenantId=bbfb3b30-16cf-4347-a0c8-0bb96923ae7a SaleId=18c02b7c-1a7d-4cac-9b57-e2a2c8d878d0 ScenarioId=sim-approved-v1&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[100]&#xD;
+      Start processing HTTP request POST http://127.0.0.1:60120/simulator/payments&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[100]&#xD;
+      Sending HTTP request POST http://127.0.0.1:60120/simulator/payments&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[101]&#xD;
+      Received HTTP response headers after 51.8317ms - 200&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[101]&#xD;
+      End processing HTTP request after 71.8276ms - 200&#xD;
+info: POSCartService.Services.PaymentGatewayClient[0]&#xD;
+      Pago procesado por pasarela RequestId=004b5be1-1a4e-434b-b090-4a3d3891f87d TenantId=bbfb3b30-16cf-4347-a0c8-0bb96923ae7a SaleId=18c02b7c-1a7d-4cac-9b57-e2a2c8d878d0 ScenarioId=sim-approved-v1 Status=APPROVED TransactionId=SIM-TXN-523CD67FF27498E9A9057ADF ElapsedMs=73.574&#xD;
+info: POSCartService.Controllers.VentasController[0]&#xD;
+      Venta 18c02b7c-1a7d-4cac-9b57-e2a2c8d878d0 cobrada con tarjeta. Ref: SIM-REF-523CD67FF27498E9A9057ADF, Auth: SIM-APPROVED&#xD;
+[xUnit.net 00:00:10.75]   Finished:    GlobalMart.IntegrationTests&#xD;
+</StdOut>
+    </Output>
+  </ResultSummary>
+</TestRun>

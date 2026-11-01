@@ -130,8 +130,8 @@ namespace POSCartService.Data.Migrations
                         .HasColumnType("numeric");
 
                     b.Property<decimal>("PrecioUnitario")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("numeric(18,2)");
+                        .HasPrecision(20, 4)
+                        .HasColumnType("numeric(20,4)");
 
                     b.Property<Guid>("ProductoId")
                         .HasColumnType("uuid");

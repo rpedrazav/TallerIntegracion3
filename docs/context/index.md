@@ -5,7 +5,7 @@ titulo: Índice del Grafo de Conocimiento — GlobalMart OS
 estado: vigente
 fuentes: [docs/context/_reports/inventario.md, GlobalMart_ContextMaster.md]
 verificado_contra_codigo: true
-ultima_revision: 2026-10-13
+ultima_revision: 2026-10-23
 depende_de: []
 publica: []
 consume: []
@@ -62,6 +62,7 @@ reglas: []
 | `[[requerimientos-no-funcionales]]` | Para restricciones de calidad |
 | `[[rbac-multirol]]` | Para todo lo relacionado con roles y permisos |
 | `[[multi-tenant]]` | Para lógica de aislamiento de datos |
+| [peso-variable](dominio/peso-variable.md) | Contrato S2-061: kg, precisión, mínimo, cantidad y precio de ítems pesables |
 | `[[fefo]]` | Para inventario de perecederos |
 | `[[costo-landed]]` | Para cálculo de costos de importación |
 | `[[fiscal-por-pais]]` | Para lógica fiscal (SII, AFIP, IRS) |

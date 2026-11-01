@@ -98,7 +98,13 @@ public class AuthController : ControllerBase
         var expiresAt = DateTime.UtcNow.AddHours(horasExp);
 
         // â”€â”€ 5. Construir la respuesta â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-        var roles = usuario.UsuarioRoles.Select(ur => ur.Rol.Nombre).ToList();
+        var roles = usuario.UsuarioRoles
+            .Where(ur => ur.Rol.TenantId is null || ur.Rol.TenantId == usuario.TenantId)
+            .SelectMany(ur => ur.Rol.RolBase is { Length: > 0 } baseRole
+                ? new[] { ur.Rol.Nombre, baseRole }
+                : new[] { ur.Rol.Nombre })
+            .Distinct(StringComparer.Ordinal)
+            .ToList();
 
         // El active_role en la respuesta debe coincidir con el que se grabÃ³ en el JWT.
         // Usamos la misma lÃ³gica de prioridad que JwtService.

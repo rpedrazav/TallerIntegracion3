@@ -5,7 +5,7 @@ titulo: MS-5 · POS & Cart Service
 estado: parcial
 fuentes: [src/POSCartService/, Docker/simulator/server.js, tests/GlobalMart.IntegrationTests/PaymentSimulatorIntegrationTests.cs, tests/GlobalMart.IntegrationTests/PaymentRetrySafetyTests.cs, tests/GlobalMart.IntegrationTests/CobroSeguroIntegrationTests.cs, docs/qa/S2-035/reporte.md, tests/GlobalMart.IntegrationTests/CobrarTarjetaIntegrationTests.cs, tests/GlobalMart.IntegrationTests/PaymentEventSequenceContractTests.cs]
 verificado_contra_codigo: true
-ultima_revision: 2026-10-18
+ultima_revision: 2026-10-26
 depende_de: [ms1-identity, ms2-tax, ms3-catalog]
 publica: [sale.completed]
 consume: []
@@ -23,8 +23,8 @@ reglas: [RN-01, RN-02, RN-03, RN-06, RF-02, RF-03, RF-04, RF-05, RF-06, RF-07]
 | Campo | Origen / Aceptado | Fuente de Verdad / Cálculo |
 |---|---|---|
 | `producto_id` | **Cliente (Request)** | Obligatorio. UUID del producto. Validado contra MS-3 (activo y perteneciente al catálogo). |
-| `cantidad` | **Cliente (Request)** | Obligatorio para venta unitaria ($> 0$, default 1). Si se provee `peso_kg`, MS-5 asigna `cantidad = peso_kg`. |
-| `peso_kg` | **Cliente (Request)** | Opcional. Capturado desde balanza para productos a granel (`EsPesoVariable`). |
+| `cantidad` | **Cliente (Request)** | En no pesables: positivo, omisión/null usa 1 al crear/agregar. En pesables: opcional; si tiene valor debe coincidir con `peso_kg` (S2-065). |
+| `peso_kg` | **Cliente (Request)** | Obligatorio en pesables, mínimo 0.010 kg e incrementos de 0.001; ausente/null en no pesables (S2-065). |
 | `precio_unitario` | **MS-5 (Calculado)** | Resuelto autoritativamente desde MS-3 (`precioBase`). Si el cliente lo envía, MS-5 **lo ignora/sobreescribe**. |
 | `nombre_producto` | **MS-5 (Calculado)** | Obtenido autoritativamente desde MS-3 al momento de la venta para snapshot histórico inmutable. |
 | `subtotal` | **MS-5 (Calculado)** | $\text{precio\_unitario} \times \text{cantidad}$ calculado por MS-5. |
@@ -79,7 +79,7 @@ Antes de autorizar tarjeta, MS-5 persiste un `IntentoPago PENDIENTE` con clave d
    → Crea Venta con subtotal, impuestos (IVA) y total de MS-2
    → Estado: PENDIENTE
 
-3. POST /ventas/{id}/items  { productoId, cantidad, pesoKg? }
+3. POST /ventas/{id}/items  { producto_id, cantidad?, peso_kg? }
    → Llama CatalogClient→MS-3 para obtener nombre y precio del producto
    → Llama TaxClient→MS-2 para recalcular IVA con todos los ítems
    → Actualiza Venta.Subtotal / .Impuestos / .Total
@@ -191,6 +191,8 @@ await _ventaRepository.CompletarConOutboxAsync(venta.Id, pago, outboxMessage);
 `KafkaProducerService` permanece como adaptador registrado, pero el cobro no lo invoca directamente. `OutboxPublisherWorker` reserva filas elegibles con lease, publica el JSON persistido y marca `PUBLICADO`; ante un fallo conserva la fila y programa el siguiente intento según [[sale-completed-outbox]].
 
 ## Tests de integración
+
+- S2-052: dos casos `RechazoOTimeoutHttp_NoCompletaNiGeneraPagoOEvento` en `CobroSeguroIntegrationTests`, **2/2 aprobados** el 2026-10-19 con PostgreSQL temporal y simulador Node real. Verifican 422/504, venta PENDIENTE, intento RECHAZADO/PENDIENTE, cero pagos/outbox, lectura tras 36 s para timeout y bloqueo de reintentos sin otro POST externo. [Evidencia y límites](../../qa/S2-052/reporte.md). El despliegue remoto no alcanzó cobro: creación de venta retornó 502 por conexión de MS-5 a catálogo en `localhost:5203`; aceptación remota [NO VERIFICADO].
 
 - `TurnoIntegrationTests`: abre un turno con JWT de cajero y verifica que se persiste en estado `ABIERTO`.
 - `VentaIntegrationTests`: cubre creación de venta con resolución autoritativa en MS-3 e IVA real en MS-2, agregado de ítems, rechazo de productos inexistentes (404) e inactivos (400). Incluye los escenarios S2-005: (1) `CrearVenta_SinTurnoAbierto_Retorna409SinPersistir` — sin turno ABIERTO la venta no se crea; (2) `CrearVenta_PrecioFalsificadoEsIgnorado_UsaPrecioDeMS3` — el `precio_unitario` del request es ignorado y el precio persistido viene de MS-3.
@@ -345,3 +347,48 @@ Validación posterior del merge, 2026-10-18: **5/5 casos S2-040 aprobados** dent
 [IMPLEMENTADO] Se unificó la reserva previa de S2-035 con `IniciarIntentoPagoAsync`, preservando el bloqueo por venta y tenant, la validación de clave y la referencia en `Pago`. Timeout/error/estado desconocido conserva `IntentoPago.PENDIENTE` (incierto), compatible con la consulta de S2-049. La actualización condicional solo admite reservas pendientes/fallidas del mismo tenant, venta, clave, monto y moneda; una aprobación no inserta un intento nuevo. La reserva se separa del seguimiento EF para no sobrescribir una reconciliación concurrente.
 
 Validación: **54/54 pruebas backend**, incluidas **17 S2-035** y **5 S2-040**, más typecheck, **2/2 archivos de pruebas de usuarios** y **7/7 pruebas de interfaz de cobro/búsqueda**. El caso de fallo de commit local verifica ahora recuperación mediante GET, segunda consulta estable y un solo POST externo. Las pruebas de navegador usan APIs controladas; no acreditan E2E contra un despliegue. [Resolución y evidencia](../../qa/S2-035/merge.md).
+
+## S2-053 / TI3-684 — Autorización e idempotencia
+
+[IMPLEMENTADO y VERIFICADO localmente] Tres casos con filtro `Plan=S2-053` aprobados en Release el 2026-10-19 con simulador Node real; los dos casos HTTP de MS-5 usan JWT y PostgreSQL 16 temporal. Repetir la misma clave tras aprobación o con respuesta pendiente devuelve 409 sin otro POST externo: una autorización lógica, un intento APROBADO, un Pago TARJETA de 119 CLP con referencia coincidente y un outbox pendiente. Dos POST idénticos directos al simulador conservan transacción, referencia y fecha de procesamiento. No acredita Electron, entrega Kafka ni despliegue remoto; el bloqueo remoto descrito en S2-052 no fue reevaluado. [Evidencia y reproducción](../../qa/S2-053/reporte.md).
+
+## S2-061 — Contrato de peso variable
+
+[CONTRATO DEFINIDO] El [contrato de ítem pesable](../dominio/peso-variable.md) fija kg, precisión de 0.001 kg, mínimo de 0.010 kg y `Cantidad = PesoKg`, con conversión explícita desde gramos y ejemplos de aceptación/rechazo. Especifica precio por kg autoritativo y snapshot con cuatro decimales. **La tabla S2-001 anterior describe el comportamiento actual; no acredita estas nuevas validaciones.** S2-062 implementa tipo, mínimo, precisión y coherencia cantidad/peso al agregar. S2-064 completa las reglas al modificar. S2-065 completa las reglas en crear; sigue pendiente la unidad de catálogo; S2-063 resuelve la precisión persistida del precio.
+
+## S2-062 — Validar peso al agregar ítem
+
+[IMPLEMENTADO] `POST /ventas/{id}/items` y su alias `/api` usan `EsPesoVariable` consultado en MS-3. Un pesable exige `peso_kg >= 0.010`, múltiplo de `0.001`, y cantidad coincidente si se envía. Peso ausente/null, cero, negativo, insuficiente, con fracción de gramo o cantidad contradictoria devuelve 400 antes de MS-2 y de la persistencia. No pesables rechazan peso no nulo. `AgregarItemRequest.Cantidad` es nullable; omisión/null deriva del peso para pesables o conserva default 1 para no pesables. No se modifican crear venta, modificar ítem, migraciones ni el simulador.
+
+Validación local del 2026-10-24: **32/32 pruebas Release aprobadas**, 20 de S2-062 y 12 de regresión, con JWT, HTTP y PostgreSQL 16 temporal. MS-3/MS-2 simulados mediante handlers HTTP. Rechazos sin cambios en ítems, estado o totales y sin llamada fiscal adicional. [Evidencia y reproducción](../../qa/S2-062/reporte.md).
+
+## S2-063 — Cálculo pesable autoritativo
+
+[IMPLEMENTADO] Agregar usa el peso validado de S2-062 como cantidad y `PrecioBase` de MS-3 como precio por kg según S2-061; el request no controla precio, subtotal ni IVA. El snapshot `PrecioUnitario` pasa a `numeric(20,4)` mediante `20261024142752_PreserveItemPricePrecision`, conservando los 16 dígitos enteros anteriores. MS-5 redondea subtotal a dos decimales ToEven y MS-2 aplica el mismo redondeo por línea a subtotal e IVA, sumando las líneas para la venta. Crear/agregar rechazan precio de catálogo negativo. La unidad UUID de catálogo sigue sin correspondencia verificable; se aplica la convención `EsPesoVariable => precio por kg`, sin acreditar validación de `UomBaseId`.
+
+Validación S2-063 del 2026-10-24: **42/42 pruebas Release aprobadas** (10 nuevas, 32 de regresión), con PostgreSQL temporal, HTTP MS-5 y calculador productivo MS-2 a través de handler HTTP. Regresión manual TC-01 aprobada. [Evidencia y límites](../../qa/S2-063/reporte.md).
+
+## S2-064 — Editar peso o cantidad por tipo
+
+[IMPLEMENTADO] PUT `/ventas/{id}/items/{itemId}` y alias `/api` consultan `EsPesoVariable` de MS-3. Pesables exigen peso mínimo de 0.010 kg, incrementos de 0.001 y cantidad coincidente si tiene valor; no pesables exigen cantidad positiva y rechazan peso no nulo. El DTO de edición usa cantidad nullable. Conserva precio snapshot e identidad del ítem y recalcula con MS-2 antes de modificar el carrito. Validación 400, producto ausente 404, fallo de catálogo 502 o fiscal 503 no modifican ítems ni totales. El tipo proviene del catálogo actual; el precio actualizado del catálogo no reemplaza al histórico. [Reporte](../../qa/S2-064/reporte.md).
+
+Validación S2-064 del 2026-10-24: **75/75 pruebas Release aprobadas**, incluidas 23 nuevas de edición y 10 de aislamiento de ventas entre tenants, con HTTP/JWT y PostgreSQL temporal. [Evidencia](../../qa/S2-064/reporte.md).
+
+Verificación final S2-064: recompilación Release y **33/33 casos S2-064/S2-063 aprobados**, sin fallos ni omisiones; evidencia adicional en el reporte S2-064.
+
+## S2-065 — Fronteras de peso y tenant
+
+[IMPLEMENTADO — backend] Crear, agregar y editar comparten `ReglasCantidadItem`. Crear ya no convierte la ausencia de peso pesable en cantidad 1: rechaza con 400 sin persistir; el DTO de creación usa cantidad nullable. Las pruebas usan catálogo MS-3 real para productos pesables propios/ajenos, JWT firmado y PostgreSQL aislado. La conversión del adaptador se incorpora con S2-067/S2-069/S2-070; la validación de UUID de unidad sigue pendiente. [Matriz y evidencia](../../qa/S2-065/reporte.md).
+
+Validación del 2026-10-26: **84/84 pruebas Release aprobadas**, sin fallos ni omisiones (nueve nuevas con matrices, 75 de regresión). Diagnóstico previo: 7/8 aprobadas y fallo reproducido de creación sin peso. [Evidencia y límites](../../qa/S2-065/reporte.md).
+
+## S2-059 — Logs estructurados de correlación de cobro [IMPLEMENTADO]
+
+[IMPLEMENTADO] Se integró registro de correlación en `VentasController.cs` y `PaymentGatewayClient.cs` bajo la etiqueta unificada `[COBRO_CORRELATION]`. Traza cada fase del cobro (`Entrada`, `Llamada pasarela`, `Respuesta pasarela`) asociando `CorrelationId`, `IntentoId`, `VentaId` y `TenantId`. Prohíbe y excluye de forma estricta cualquier dato confidencial de tarjeta (PAN, CVV, secretos), validado mediante la suite `CobroTarjetaCorrelationIntegrationTests`.
+
+## S2-060 — Smoke de despliegue de cobro con tarjeta [IMPLEMENTADO]
+
+[IMPLEMENTADO] Suite automatizada y script `scripts/smoke-tarjeta.sh` que comprueba los tres estados fundamentales del simulador de pasarela:
+1. **Aprobado:** Transiciona la venta a estado `COMPLETADA`, persiste el `Pago` de tipo `TARJETA` y genera el evento `sale.completed` en el outbox.
+2. **Rechazado:** Devuelve HTTP 422 y mantiene la venta en estado `PENDIENTE`.
+3. **Pérdida temporal / Timeout:** Devuelve HTTP 504 / 503 y mantiene la venta en estado `PENDIENTE` sin registrar pagos espurios.

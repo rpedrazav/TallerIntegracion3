@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { HashRouter } from 'react-router-dom';
 import Pos from '../src/pages/Pos';
 import TenantConfig from '../src/components/admin/TenantConfig';
+import App from '../src/App';
 import '../src/index.css';
 
 // Renderer real; el puente de sesión se inyecta desde Playwright.
@@ -15,7 +16,9 @@ const tenantConfigToken = [
 const component = new URLSearchParams(window.location.search).get('component');
 
 createRoot(document.getElementById('root')!).render(
-  component === 'tenant-config'
+  component === 'app'
+    ? <App />
+    : component === 'tenant-config'
     ? <TenantConfig token={tenantConfigToken} />
     : <HashRouter><Pos /></HashRouter>
 );

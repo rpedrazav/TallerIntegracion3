@@ -37,10 +37,10 @@ public sealed record ItemVentaRequest
 
     /// <summary>
     /// Cantidad a vender para productos unitarios (por defecto 1).
-    /// Para productos de peso variable, si se envía peso_kg, MS-5 toma peso_kg como cantidad a facturar.
+    /// Para pesables, peso_kg es obligatorio y cantidad, si se envía, debe coincidir.
     /// </summary>
     [JsonPropertyName("cantidad")]
-    public decimal Cantidad { get; init; } = 1;
+    public decimal? Cantidad { get; init; }
 
     /// <summary>
     /// Solo para productos de peso variable (balanza). Null para productos por unidad.

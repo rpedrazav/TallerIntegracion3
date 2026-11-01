@@ -140,10 +140,10 @@ public class StockConsumerIntegrationTests : IClassFixture<Ms4WebApplicationFact
 
     private static string CreateReponedorToken(IConfiguration configuration, Guid tenantId)
     {
-        var secretKey = configuration["Jwt:SecretKey"]
+        var secretKey = configuration["Jwt:Key"]
             ?? "TuSuperSecretoDeDesarrollo1234567890!";
         var issuer = configuration["Jwt:Issuer"] ?? "GlobalMart";
-        var audience = configuration["Jwt:Audience"] ?? "GlobalMartUsers";
+        var audience = configuration["Jwt:Audience"] ?? "GlobalMartOS_Clients";
 
         var claims = new[]
         {

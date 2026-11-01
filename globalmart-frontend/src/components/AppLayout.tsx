@@ -15,7 +15,10 @@ export default function AppLayout() {
 
   const handleLogout = async () => {
     await logout();
-    navigate('/login');
+    localStorage.removeItem('token');
+    localStorage.removeItem('tenant');
+    useTenantStore.getState().clear();
+    navigate('/login', { replace: true });
   };
 
   return (
@@ -37,14 +40,13 @@ export default function AppLayout() {
             <Link to="/pos" style={{ color: 'var(--color-on-primary)', textDecoration: 'none', fontWeight: 500, opacity: 0.9, transition: 'opacity 0.2s' }} onMouseOver={(e) => e.currentTarget.style.opacity = '1'} onMouseOut={(e) => e.currentTarget.style.opacity = '0.9'}>Punto de Venta</Link>
             <Link to="/abrir-turno" style={{ color: 'var(--color-on-primary)', textDecoration: 'none', fontWeight: 500, opacity: 0.9, transition: 'opacity 0.2s' }} onMouseOver={(e) => e.currentTarget.style.opacity = '1'} onMouseOut={(e) => e.currentTarget.style.opacity = '0.9'}>Abrir Turno</Link>
             <Link to="/cerrar-turno" style={{ color: 'var(--color-on-primary)', textDecoration: 'none', fontWeight: 500, opacity: 0.9, transition: 'opacity 0.2s' }} onMouseOver={(e) => e.currentTarget.style.opacity = '1'} onMouseOut={(e) => e.currentTarget.style.opacity = '0.9'}>Cerrar Turno</Link>
-            <Link to="/admin/productos" style={{ color: 'var(--color-on-primary)', textDecoration: 'none', fontWeight: 500, opacity: 0.9, transition: 'opacity 0.2s' }} onMouseOver={(e) => e.currentTarget.style.opacity = '1'} onMouseOut={(e) => e.currentTarget.style.opacity = '0.9'}>Productos</Link>
             {canAccessAdmin(esAdmin) && (
-              <Link to="/admin" style={{ color: 'var(--color-on-primary)', textDecoration: 'none', fontWeight: 500, opacity: 0.9, transition: 'opacity 0.2s' }} onMouseOver={(e) => e.currentTarget.style.opacity = '1'} onMouseOut={(e) => e.currentTarget.style.opacity = '0.9'}>Administración</Link>
+              <Link to="/admin" style={{ color: 'var(--color-on-primary)', textDecoration: 'none', fontWeight: 500, opacity: 0.9, transition: 'opacity 0.2s' }}>Volver a administración</Link>
             )}
           </div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          <span style={{ fontWeight: 500 }}>Cajero Demo</span>
+          <span style={{ fontWeight: 500 }}>{esAdmin ? 'Administrador' : 'Caja'}</span>
           <button 
             onClick={handleLogout}
             style={{

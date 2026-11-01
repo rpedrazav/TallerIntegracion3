@@ -1,0 +1,13 @@
+{
+  "plan": "S2-053",
+  "started_at": "2026-10-19T16:43:55.8091336+00:00",
+  "pos_url": "https://pos-rpedraza.dev.censei.cl",
+  "tenant_id": "aaaaaaaa-0000-0000-0000-000000000001",
+  "result": "BLOCKED",
+  "persistence": "NO VERIFICADO",
+  "logical_authorizations": "NO VERIFICADO",
+  "checks": [],
+  "health": [],
+  "error": "Host desconocido. (auth-rpedraza.dev.censei.cl:443)",
+  "finished_at": "2026-10-19T16:43:56.1288182+00:00"
+}

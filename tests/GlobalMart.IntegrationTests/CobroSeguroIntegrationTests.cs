@@ -106,6 +106,121 @@ public sealed class CobroSeguroIntegrationTests : IAsyncLifetime
     }
 
     [Theory]
+    [Trait("Plan", "S2-053")]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task DuplicarAprobacionHttp_UnaAutorizacionYUnPagoTarjeta(bool responsePending)
+    {
+        var key = Guid.NewGuid();
+        _traffic.HoldFirstResponse = responsePending;
+        var firstTask = Charge(_sale, key, "sim-approved-v1");
+        Pos.DTOs.PaymentGatewayResponse? original;
+        try
+        {
+            if (responsePending)
+                await _traffic.ResponseArrived.Task.WaitAsync(TimeSpan.FromSeconds(5));
+            else
+                await firstTask;
+
+            original = await GatewayStatus(_tenant, key);
+            Assert.NotNull(original);
+            Assert.Equal("APPROVED", original.Status);
+            Assert.Equal(key, original.RequestId);
+            Assert.False(string.IsNullOrWhiteSpace(original.TransactionId));
+            Assert.False(string.IsNullOrWhiteSpace(original.GatewayReference));
+            Assert.False(string.IsNullOrWhiteSpace(original.AuthorizationCode));
+
+            using var repeated = await Charge(_sale, key, "sim-approved-v1");
+            Assert.Equal(HttpStatusCode.Conflict, repeated.StatusCode);
+            Assert.Equal(1, _traffic.Posts);
+            // Mientras la respuesta está retenida solo existe la reserva durable.
+            await Verify(_tenant, _sale, !responsePending, 1);
+        }
+        finally { _traffic.Release.TrySetResult(); }
+
+        using var first = await firstTask;
+        Assert.Equal(HttpStatusCode.OK, first.StatusCode);
+        var body = await first.Content.ReadFromJsonAsync<System.Text.Json.JsonElement>();
+        Assert.Equal("APPROVED", body.GetProperty("status").GetString());
+        Assert.Equal(_sale, body.GetProperty("venta").GetProperty("id").GetGuid());
+        Assert.Equal(original.TransactionId, body.GetProperty("transaction_id").GetString());
+        Assert.Equal(original.AuthorizationCode, body.GetProperty("authorization_code").GetString());
+        Assert.Equal(original.GatewayReference, body.GetProperty("gateway_reference").GetString());
+        await Verify(_tenant, _sale, true, 1);
+
+        await using var db = Db(_tenant);
+        var attempt = await db.IntentosPago.SingleAsync(i => i.VentaId == _sale);
+        var payment = await db.Pagos.SingleAsync(p => p.VentaId == _sale);
+        Assert.Equal(key.ToString(), attempt.IdempotencyKey);
+        Assert.Equal(Pos.Models.EstadoIntentoPago.APROBADO, attempt.Estado);
+        Assert.Equal(119m, attempt.Monto);
+        Assert.Equal("CLP", attempt.Moneda);
+        Assert.Equal(original.AuthorizationCode, attempt.AuthorizationCode);
+        Assert.Equal(original.GatewayReference, attempt.Referencia);
+        Assert.Equal(original.GatewayReference, payment.Referencia);
+        // Incluye identidad, referencia y processed_at: la autorización no se recreó.
+        Assert.Equal(original, await GatewayStatus(_tenant, key));
+        Assert.Equal(1, _traffic.Posts);
+    }
+
+    [Theory]
+    [Trait("Plan", "S2-052")]
+    [InlineData("sim-declined-v1", 422, "DECLINED")]
+    [InlineData("sim-timeout-v1", 504, "UNCERTAIN")]
+    public async Task RechazoOTimeoutHttp_NoCompletaNiGeneraPagoOEvento(
+        string scenario, int expectedCode, string expectedStatus)
+    {
+        var key = Guid.NewGuid();
+        using var response = await Charge(_sale, key, scenario);
+        Assert.Equal(expectedCode, (int)response.StatusCode);
+        var body = await response.Content.ReadFromJsonAsync<System.Text.Json.JsonElement>();
+        Assert.Equal(_sale, body.GetProperty("sale_id").GetGuid());
+        Assert.Equal(key, body.GetProperty("request_id").GetGuid());
+        if (expectedStatus == "DECLINED")
+        {
+            Assert.Equal("DECLINED", body.GetProperty("status").GetString());
+            Assert.Equal("DO_NOT_HONOR", body.GetProperty("decline_code").GetString());
+        }
+        Assert.Equal(1, _traffic.Posts);
+        Assert.Equal(expectedStatus == "UNCERTAIN" ? 1 : 0, _traffic.Gets);
+
+        for (var observation = 0; observation < 2; observation++)
+        {
+            // Supera el retardo real de 35 s del simulador; verifica que su respuesta
+            // tardía no complete la venta. El primer chequeo es inmediato.
+            if (observation == 1 && expectedStatus == "UNCERTAIN")
+                await Task.Delay(TimeSpan.FromSeconds(36));
+            using var read = await _client.GetAsync($"/ventas/{_sale}");
+            Assert.Equal(HttpStatusCode.OK, read.StatusCode);
+            var sale = await read.Content.ReadFromJsonAsync<System.Text.Json.JsonElement>();
+            Assert.Equal("PENDIENTE", sale.GetProperty("estado").GetString());
+            Assert.Equal(119m, sale.GetProperty("total").GetDecimal());
+            using var status = await _client.GetAsync($"/ventas/{_sale}/intento-tarjeta");
+            Assert.Equal(HttpStatusCode.OK, status.StatusCode);
+            var attemptBody = await status.Content.ReadFromJsonAsync<System.Text.Json.JsonElement>();
+            Assert.Equal(expectedStatus, attemptBody.GetProperty("status").GetString());
+            Assert.Equal(key.ToString(), attemptBody.GetProperty("request_id").GetString());
+            await Verify(_tenant, _sale, false, 1);
+            await using var db = Db(_tenant);
+            var attempt = await db.IntentosPago.SingleAsync(i => i.VentaId == _sale);
+            Assert.Equal(expectedStatus == "DECLINED" ? Pos.Models.EstadoIntentoPago.RECHAZADO
+                : Pos.Models.EstadoIntentoPago.PENDIENTE, attempt.Estado);
+            Assert.Equal(key.ToString(), attempt.IdempotencyKey);
+            Assert.Null(attempt.AuthorizationCode);
+        }
+
+        using var repeated = await Charge(_sale, key, scenario);
+        Assert.Equal(HttpStatusCode.Conflict, repeated.StatusCode);
+        if (expectedStatus == "UNCERTAIN")
+        {
+            using var newKey = await Charge(_sale, Guid.NewGuid(), "sim-approved-v1");
+            Assert.Equal(HttpStatusCode.Conflict, newKey.StatusCode);
+        }
+        Assert.Equal(1, _traffic.Posts);
+        await Verify(_tenant, _sale, false, 1);
+    }
+
+    [Theory]
     [InlineData("sim-approved-v1", 200, true)]
     [InlineData("sim-declined-v1", 422, false)]
     [InlineData("sim-timeout-v1", 504, false)]
@@ -295,6 +410,75 @@ public sealed class CobroSeguroIntegrationTests : IAsyncLifetime
         await using var db = Db(_tenant);
         Assert.Equal(key.ToString(), (await db.IntentosPago.SingleAsync()).IdempotencyKey);
         Assert.Equal("APPROVED", (await GatewayStatus(_tenant, key))!.Status);
+    }
+
+    [Theory]
+    [Trait("Plan", "S2-054")]
+    [InlineData("otro-tenant", 404)]
+    [InlineData("sin-turno", 409)]
+    [InlineData("turno-cerrado", 409)]
+    public async Task AislamientoCobro_RechazaSinTraficoNiMutaciones(string scenario, int expectedStatus)
+    {
+        var requestTenant = _tenant;
+        var requestCashier = _cashier;
+        if (scenario == "otro-tenant")
+        {
+            requestTenant = Guid.NewGuid();
+            requestCashier = Guid.NewGuid();
+            await SeedSale(requestTenant, requestCashier); // Turno propio abierto: alcanza RN-01.
+        }
+        else if (scenario == "sin-turno")
+            requestCashier = Guid.NewGuid(); // La venta y el turno del dueño sí existen.
+        else
+        {
+            await using var db = Db(_tenant);
+            var shift = await db.Turnos.SingleAsync(t => t.CajeroId == _cashier);
+            shift.Estado = Pos.Models.EstadoTurno.CERRADO;
+            await db.SaveChangesAsync();
+        }
+
+        Authorize(requestTenant, requestCashier);
+        var before = await SnapshotPaymentState();
+        using var response = await Charge(_sale, Guid.NewGuid(), "sim-approved-v1");
+        Assert.Equal(expectedStatus, (int)response.StatusCode);
+        var body = await response.Content.ReadFromJsonAsync<System.Text.Json.JsonElement>();
+        Assert.Equal(scenario == "otro-tenant"
+            ? $"Venta {_sale} no encontrada."
+            : "El cajero no tiene un turno abierto. Debe abrir un turno antes de cobrar ventas.",
+            body.GetProperty("error").GetString());
+        Assert.Equal(0, _traffic.Posts);
+        Assert.Equal(0, _traffic.Gets);
+        Assert.Equal(before, await SnapshotPaymentState());
+        await Verify(_tenant, _sale, false, 0);
+    }
+
+    [Fact]
+    [Trait("Plan", "S2-054")]
+    public async Task AislamientoCobro_ControlAutorizado_ObservaSimuladorYPersistencia()
+    {
+        using var response = await Charge(_sale, Guid.NewGuid(), "sim-approved-v1");
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var body = await response.Content.ReadFromJsonAsync<System.Text.Json.JsonElement>();
+        Assert.Equal("APPROVED", body.GetProperty("status").GetString());
+        Assert.Equal(1, _traffic.Posts);
+        Assert.Equal(0, _traffic.Gets);
+        await Verify(_tenant, _sale, true, 1);
+    }
+
+    // Lectura independiente de todas las columnas y tenants del esquema exclusivo del caso.
+    // Evita que los filtros del atacante oculten una escritura sobre la venta víctima.
+    private async Task<string> SnapshotPaymentState()
+    {
+        await using var connection = new NpgsqlConnection(_connection);
+        await connection.OpenAsync();
+        var snapshot = new StringBuilder();
+        foreach (var table in new[] { "Ventas", "ItemsVenta", "Turnos", "Pagos", "IntentosPago", "OutboxMessages", "Anulaciones" })
+        {
+            await using var command = new NpgsqlCommand(
+                $"SELECT COALESCE(jsonb_agg(row_data ORDER BY row_data::text), '[]'::jsonb)::text FROM (SELECT to_jsonb(t) AS row_data FROM \"{table}\" t) rows", connection);
+            snapshot.Append(table).Append(':').Append(await command.ExecuteScalarAsync()).AppendLine();
+        }
+        return snapshot.ToString();
     }
 
     private Task<HttpResponseMessage> Charge(Guid sale, Guid key, string scenario) =>

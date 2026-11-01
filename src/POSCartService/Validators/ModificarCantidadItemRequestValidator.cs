@@ -11,6 +11,8 @@ public sealed class ModificarCantidadItemRequestValidator : AbstractValidator<Mo
     public ModificarCantidadItemRequestValidator()
     {
         RuleFor(x => x.Cantidad)
+            .NotNull()
+            .WithMessage("cantidad es obligatoria cuando no se especifica peso_kg.")
             .GreaterThan(0)
             .When(x => !x.PesoKg.HasValue)
             .WithMessage("cantidad debe ser mayor a 0 cuando no se especifica peso_kg.");

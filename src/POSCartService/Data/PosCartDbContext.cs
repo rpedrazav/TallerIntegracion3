@@ -88,7 +88,8 @@ public class PosCartDbContext : DbContext
         {
             e.HasKey(i => i.Id);
             e.Property(i => i.NombreProducto).IsRequired().HasMaxLength(200);
-            e.Property(i => i.PrecioUnitario).HasPrecision(18, 2);
+            // Conserva los cuatro decimales de catálogo y el rango entero histórico.
+            e.Property(i => i.PrecioUnitario).HasPrecision(20, 4);
             e.Property(i => i.Subtotal).HasPrecision(18, 2);
             e.HasIndex(i => i.ProductoId);
 

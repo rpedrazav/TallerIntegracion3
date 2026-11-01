@@ -1,4 +1,5 @@
 extern alias POSCartServiceAlias;
+extern alias TaxComplianceServiceAlias;
 
 using System.Net;
 using System.Net.Http.Json;
@@ -18,7 +19,7 @@ namespace GlobalMart.IntegrationTests;
 /// <summary>S2-023: real JWT middleware, HTTP controllers and PostgreSQL for both POS and catalog.</summary>
 [Trait("Category", "RN01")]
 [Trait("Plan", "S2-023")]
-public sealed class VentaTenantIsolationTests : IAsyncLifetime
+public sealed partial class VentaTenantIsolationTests : IAsyncLifetime
 {
     private TwoTenantFixture _fixture = null!;
     private Rn01CatalogFactory _catalog = null!;
@@ -215,13 +216,12 @@ public sealed class VentaTenantIsolationTests : IAsyncLifetime
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
             using var json = JsonDocument.Parse(await request.Content!.ReadAsStringAsync(cancellationToken));
-            var subtotal = json.RootElement.GetProperty("items").EnumerateArray()
-                .Sum(i => i.GetProperty("precio").GetDecimal() * i.GetProperty("cantidad").GetDecimal());
-            var iva = Math.Round(subtotal * .19m, 2);
-            return new HttpResponseMessage(HttpStatusCode.OK)
-            {
-                Content = JsonContent.Create(new { subtotal, iva, total = subtotal + iva, porcentajeIva = 19m, items = Array.Empty<object>() })
-            };
+            var items = json.RootElement.GetProperty("items").EnumerateArray().Select(i =>
+                new TaxComplianceServiceAlias::TaxComplianceService.Services.TaxItem(
+                    i.GetProperty("precio").GetDecimal(), i.GetProperty("cantidad").GetDecimal(),
+                    i.GetProperty("nombre").GetString())).ToList();
+            var result = TaxComplianceServiceAlias::TaxComplianceService.Services.TaxCalculatorService.Calculate(items, 19m);
+            return new HttpResponseMessage(HttpStatusCode.OK) { Content = JsonContent.Create(result) };
         }
     }
 }

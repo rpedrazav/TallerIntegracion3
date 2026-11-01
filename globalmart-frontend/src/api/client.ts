@@ -63,6 +63,7 @@ export interface CatalogProduct {
   nombre: string;
   codigoBarras: string;
   precioBase: number;
+  esPesoVariable: boolean;
 }
 
 interface ProductPage {
@@ -120,12 +121,14 @@ export interface VentaPendiente {
     cantidad: number;
     precio_unitario: number;
     subtotal: number;
+    peso_kg?: number | null;
   }>;
 }
 
 export interface CrearVentaItem {
   producto_id: string;
-  cantidad: number;
+  cantidad?: number;
+  peso_kg?: number;
 }
 
 export interface CobrarEfectivoResponse {
@@ -178,11 +181,28 @@ export const posApi = {
     const response = await pos.get<VentaPendiente>(`/ventas/${saleId}`);
     return response.data;
   },
-  addSaleItem: async (saleId: string, productId: string, quantity: number): Promise<void> => {
-    await pos.post(`/ventas/${saleId}/items`, { producto_id: productId, cantidad: quantity });
+  addSaleItem: async (
+    saleId: string,
+    productId: string,
+    quantity?: number,
+    weightKg?: number,
+  ): Promise<void> => {
+    await pos.post(`/ventas/${saleId}/items`, {
+      producto_id: productId,
+      cantidad: quantity,
+      peso_kg: weightKg,
+    });
   },
-  updateSaleItem: async (saleId: string, itemId: string, quantity: number): Promise<void> => {
-    await pos.put(`/ventas/${saleId}/items/${itemId}`, { cantidad: quantity });
+  updateSaleItem: async (
+    saleId: string,
+    itemId: string,
+    quantity?: number,
+    weightKg?: number,
+  ): Promise<void> => {
+    await pos.put(`/ventas/${saleId}/items/${itemId}`, {
+      cantidad: quantity,
+      peso_kg: weightKg,
+    });
   },
   deleteSaleItem: async (saleId: string, itemId: string): Promise<void> => {
     await pos.delete(`/ventas/${saleId}/items/${itemId}`);

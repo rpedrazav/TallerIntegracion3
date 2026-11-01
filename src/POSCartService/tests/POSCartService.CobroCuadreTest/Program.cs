@@ -10,11 +10,14 @@ using POSCartService.Models;
 using POSCartService.Repositories;
 using POSCartService.Services;
 
+using Microsoft.EntityFrameworkCore.Diagnostics;
+
 var tenantId = Guid.NewGuid();
 var cajeroId = Guid.NewGuid();
 var sucursalId = Guid.NewGuid();
 var options = new DbContextOptionsBuilder<PosCartDbContext>()
     .UseInMemoryDatabase($"CobroCuadre_{Guid.NewGuid()}")
+    .ConfigureWarnings(w => w.Ignore(InMemoryEventId.TransactionIgnoredWarning))
     .Options;
 
 await using var db = new PosCartDbContext(options) { CurrentTenantId = tenantId };

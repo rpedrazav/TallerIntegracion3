@@ -29,7 +29,7 @@ export default function Login() {
       await window.api.setToken(token);
       localStorage.setItem('token', token);
       localStorage.setItem('tenant', tenantId);
-      navigate('/pos');
+      navigate(['ADMIN', 'SUPER_ADMIN'].includes(response.usuario.activeRole?.toUpperCase()) ? '/admin' : '/pos', { replace: true });
     } catch (err: unknown) {
       // TI3-471: Manejo de errores específico según tipo de fallo
       const axiosErr = err as AxiosError<{ message?: string; error?: string }>;
