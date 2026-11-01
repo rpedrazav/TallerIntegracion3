@@ -482,3 +482,7 @@ S2-080 [IMPLEMENTADO — pruebas E2E controladas]: tres escenarios de Playwright
 ## S2-089 / TI3-720 — Integrar smoke de simuladores
 
 [IMPLEMENTADO] Flujo de prueba automatizado mediante `scripts/smoke-simuladores-frontend.sh` y `globalmart-frontend/tests/smoke-simulators.ts`, ejecutable en CI o local sin periféricos conectados. Comprueba lecturas de balanza, pesaje, tara y el ciclo de vida del terminal (inicio, aprobación con token opaco, rechazo y cancelación). Incluye widget interactivo de balanza integrado en la interfaz POS (`Pos.tsx`).
+
+## Integración de ramas — 2026-11-01
+
+Integrados los historiales de todas las ramas remotas existentes: dev, local, Diego, copilot/fix-github-actions-job-failure, docs/context-graph y feat/kong-routes-ms1. Resueltos conflictos conservando administración y migraciones actuales. Se corrigen configuración JWT duplicada, puerto local de MS-2 y aislamiento del borrador POS por tenant/usuario. El seed de inventario exige ADMIN del tenant demo y Development. Ver el reporte de integración en `docs/qa/integracion-main-2026-11-01.md` para resultados y límites de verificación.

@@ -77,3 +77,7 @@ Los tests actuales son console apps de smoke testing (no xUnit con assertions). 
 
 ## Fuentes
 - `.github/workflows/ci.yml`
+
+## Integración de ramas — 2026-11-01
+
+CI compila también `GlobalMart.Tests`, incorporado a la solución, antes de ejecutar `dotnet test --no-build`. El gate frontend ejecuta las pruebas Node y la regresión Playwright con Chromium y fixtures HTTP. La integración real de Electron/tarjeta conserva su ejecución específica.

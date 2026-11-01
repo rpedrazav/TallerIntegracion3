@@ -170,3 +170,7 @@ EventoKafkaProcesado
 - `src/WarehouseInventoryService/Controllers/SeedController.cs`
 - `src/WarehouseInventoryService/Data/SeedData.cs`
 - `src/WarehouseInventoryService/Data/Migrations/20260927195722_AddEventosKafkaProcesados.cs`
+
+## Integración de ramas — 2026-11-01
+
+El consumidor delega en `ISaleEventProcessor` para idempotencia, movimientos y creación de stock faltante. `POST /seed` requiere JWT, rol ADMIN, tenant demo y entorno Development; fuera de Development devuelve 404 con autenticación válida. Se elimina el mapeo alternativo de `/seed` y se unifica la configuración JWT. `GET /stock/{productId}` rechaza IDs vacíos con 400.

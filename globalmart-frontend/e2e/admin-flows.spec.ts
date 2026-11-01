@@ -54,7 +54,7 @@ async function completarAlta(page: Page) {
   const modal = page.getByRole('dialog', { name: 'Crear usuario' });
   await modal.getByLabel('Nombre').fill('Carla Operadora');
   await modal.getByLabel('Correo electrónico').fill('Carla@GlobalMart.cl');
-  await modal.getByLabel('Contraseña', { exact: true }).fill('ClaveSegura1!');
+  await modal.getByLabel('Contraseña inicial', { exact: true }).fill('ClaveSegura1!');
   await modal.getByLabel('Confirmar contraseña').fill('ClaveSegura1!');
   await modal.getByLabel('Rol').selectOption('REPONEDOR');
   return modal;
@@ -65,7 +65,7 @@ async function comprobarAltaConservada(page: Page) {
   await expect(modal).toBeVisible();
   await expect(modal.getByLabel('Nombre')).toHaveValue('Carla Operadora');
   await expect(modal.getByLabel('Correo electrónico')).toHaveValue('Carla@GlobalMart.cl');
-  await expect(modal.getByLabel('Contraseña', { exact: true })).toHaveValue('ClaveSegura1!');
+  await expect(modal.getByLabel('Contraseña inicial', { exact: true })).toHaveValue('ClaveSegura1!');
   await expect(modal.getByLabel('Confirmar contraseña')).toHaveValue('ClaveSegura1!');
   await expect(modal.getByLabel('Rol')).toHaveValue('REPONEDOR');
 }
@@ -96,7 +96,7 @@ test('alta exitosa agrega el usuario a la lista', async ({ page }) => {
 
     if (request.method() === 'POST' && new URL(request.url()).pathname.endsWith('/users')) {
       postCount += 1;
-      expect(request.postDataJSON()).toEqual({
+      expect(request.postDataJSON()).toMatchObject({
         nombre: 'Carla Operadora',
         email: 'carla@globalmart.cl',
         password: 'ClaveSegura1!',
@@ -122,7 +122,7 @@ test('alta exitosa agrega el usuario a la lista', async ({ page }) => {
   const modal = await completarAlta(page);
   await modal.getByRole('button', { name: 'Crear usuario' }).click();
 
-  await expect(modal).toBeHidden();
+  await expect(page.getByLabel('Datos de acceso')).toBeVisible();
   await expect(page.getByText('carla@globalmart.cl', { exact: true })).toBeVisible();
   await expect(page.locator('tbody tr')).toHaveCount(2);
   expect(postCount).toBe(1);

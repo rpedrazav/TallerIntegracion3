@@ -1,3 +1,5 @@
+import { useAuth } from '../hooks/useAuth';
+import { parseJwt } from '../utils/jwt';
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
@@ -168,23 +170,27 @@ export default function Pos() {
     return () => { active = false; };
   }, [navigate, turnoRetry]);
 
-  // Inicializar leyendo de localStorage
-  const [draftItems, setDraftItems] = useState<ProductItem[]>(() => {
-    const saved = localStorage.getItem('pos_cart');
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch (e) {
-        console.error('Error al leer carrito:', e);
-      }
-    }
-    return [];
-  });
+  const { token } = useAuth();
+  const cartOwner = parseJwt(token);
+  const cartStorageKey = cartOwner?.tenant_id && cartOwner?.sub
+    ? `pos_cart:${cartOwner.tenant_id}:${cartOwner.sub}` : null;
 
-  // Guardar en localStorage cada vez que cambie
+  // Inicializar leyendo de localStorage
+  const [draftItems, setDraftItems] = useState<ProductItem[]>([]);
+  const [loadedCartKey, setLoadedCartKey] = useState<string | null>(null);
   useEffect(() => {
-    localStorage.setItem('pos_cart', JSON.stringify(draftItems));
-  }, [draftItems]);
+    let items: ProductItem[] = [];
+    try {
+      const saved = cartStorageKey ? localStorage.getItem(cartStorageKey) : null;
+      if (saved) { const parsed = JSON.parse(saved); if (Array.isArray(parsed)) items = parsed; }
+    } catch { /* Un borrador inválido se descarta. */ }
+    setDraftItems(items);
+    setLoadedCartKey(cartStorageKey);
+  }, [cartStorageKey]);
+  useEffect(() => {
+    if (cartStorageKey && loadedCartKey === cartStorageKey)
+      localStorage.setItem(cartStorageKey, JSON.stringify(draftItems));
+  }, [draftItems, cartStorageKey, loadedCartKey]);
 
   const cartItems: ProductItem[] = venta
     ? venta.items.map((item) => ({

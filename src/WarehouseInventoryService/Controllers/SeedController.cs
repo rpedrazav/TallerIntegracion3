@@ -9,6 +9,7 @@ namespace WarehouseInventoryService.Controllers;
 /// Solo disponible en entorno de desarrollo (IsDevelopment).
 /// Permite cargar datos iniciales de stock a través de un endpoint HTTP.
 /// </summary>
+[Microsoft.AspNetCore.Authorization.Authorize(Roles = "ADMIN")]
 [ApiController]
 [Route("seed")]
 public sealed class SeedController : ControllerBase
@@ -33,7 +34,11 @@ public sealed class SeedController : ControllerBase
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public IActionResult RunSeed()
     {
+        var environment = HttpContext.RequestServices.GetRequiredService<IWebHostEnvironment>();
+        if (!environment.IsDevelopment()) return NotFound();
+        if (!Guid.TryParse(User.FindFirst("tenant_id")?.Value, out var callerTenant)) return Unauthorized();
         var tenantId = SeedData.DemoTenantId;
+        if (callerTenant != tenantId) return Forbid();
 
         // Verificar si ya existen datos del seed
         var existeAntes = _context.Stocks

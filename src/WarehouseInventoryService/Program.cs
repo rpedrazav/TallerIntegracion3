@@ -71,19 +71,6 @@ app.UseMiddleware<WarehouseInventoryService.Middleware.TenantMiddleware>();
 app.MapControllers();
 app.MapGet("/health", () => Results.Ok(new { status = "ok" }));
 
-// TI3-258: El endpoint POST /seed (SeedController) no requiere [Authorize]
-// y solo está disponible porque se mapea con MapControllers().
-// La protección real es que en producción no debería ejecutarse
-// (SeedData.Initialize es idempotente). Si se desea bloquear en producción,
-// se podría condicionar el mapeo, pero dado que la tarea pide que sea
-// "solo en IsDevelopment()", aplicamos un middleware/filtro:
-if (!app.Environment.IsDevelopment())
-{
-    // En producción, el SeedController responde 404 por convención.
-    // Se logra con un endpoint filter que deniega la ruta /seed.
-    app.Map("/seed", () => Results.NotFound(new { error = "Endpoint de seed no disponible en producción." }));
-}
-
 app.Run();
 
 public partial class Program { }

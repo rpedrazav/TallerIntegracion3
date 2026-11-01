@@ -11,7 +11,13 @@ const sale = {
 
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => {
-    window.api = { ping: async () => 'pong', getToken: async () => 'test-token', setToken: async () => undefined, logout: async () => undefined };
+    window.api = { ping: async () => 'pong', getToken: async () => 'test-token', setToken: async () => undefined, logout: async () => undefined,
+      terminal: {
+        iniciarCobro: async request => ({ ventaId: request.ventaId, monto: request.monto, referenciaIntento: request.claveIdempotencia, estado: 'approved', referenciaOpaca: 'terminal-fixture' }),
+        consultarEstado: async request => ({ ventaId: request.ventaId, monto: request.monto, referenciaIntento: request.referenciaIntento ?? null, estado: 'approved', referenciaOpaca: 'terminal-fixture' }),
+        cancelarIntento: async request => ({ soportada: false, codigo: 'CANCELACION_NO_SOPORTADA', ventaId: request.ventaId, monto: request.monto, referenciaIntento: request.referenciaIntento }),
+      },
+    };
   });
   await page.route('**/api/turnos/activo', route => route.fulfill({ json: { id: shiftId } }));
   await page.route('**/ventas/turno/**', route => route.fulfill({ json: [sale] }));
@@ -59,7 +65,12 @@ test('aprueba tarjeta y cierra el carrito con referencia opaca', async ({ page }
 });
 
 test('rechazo de tarjeta permite cambiar a efectivo', async ({ page }) => {
-  await page.route(`**/ventas/${saleId}/cobrar-tarjeta`, route => route.fulfill({ status: 422, json: { error: 'La pasarela rechazó el pago.', mensaje: 'Rechazado' } }));
+  let attempt = '';
+  await page.route(`**/ventas/${saleId}/intento-tarjeta`, route => route.fulfill({ json: { status: attempt ? 'DECLINED' : 'NONE', request_id: attempt || null, venta: sale } }));
+  await page.route(`**/ventas/${saleId}/cobrar-tarjeta`, route => {
+    attempt = route.request().postDataJSON().clave_idempotencia;
+    return route.fulfill({ status: 422, json: { error: 'La pasarela rechazó el pago.', mensaje: 'Rechazado' } });
+  });
   await page.route(`**/ventas/${saleId}/metodo-pago`, route => route.fulfill({ json: { ...sale, metodo_pago: 'EFECTIVO' } }));
   await page.goto('/');
   await page.getByRole('button', { name: 'COBRAR' }).click();
@@ -73,12 +84,14 @@ test('rechazo de tarjeta permite cambiar a efectivo', async ({ page }) => {
 
 test('timeout bloquea doble clic y exige consultar el intento antes de reintentar', async ({ page }) => {
   let posts = 0;
+  let attempt = ''; 
   let status: 'NONE' | 'UNCERTAIN' | 'DECLINED' = 'NONE';
   await page.route(`**/ventas/${saleId}/intento-tarjeta`, route => route.fulfill({
-    json: { status, venta: sale, message: status === 'DECLINED' ? 'Pago rechazado' : null },
+    json: { status, request_id: attempt || null, venta: sale, message: status === 'DECLINED' ? 'Pago rechazado' : null },
   }));
   await page.route(`**/ventas/${saleId}/cobrar-tarjeta`, async route => {
     posts += 1;
+    attempt = route.request().postDataJSON().clave_idempotencia;
     status = 'UNCERTAIN';
     await new Promise(resolve => setTimeout(resolve, 250));
     await route.fulfill({ status: 504, json: { error: 'Timeout', request_id: '55555555-5555-5555-5555-555555555555' } });

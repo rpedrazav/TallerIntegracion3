@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Configuration;
 using Moq;
 using WarehouseInventoryService.Controllers;
 using WarehouseInventoryService.Data;
@@ -38,7 +39,7 @@ public class StockController_Tests : IDisposable
         _repoMock = new Mock<IStockRepository>();
         _loggerMock = new Mock<ILogger<StockController>>();
 
-        _controller = new StockController(_repoMock.Object, _context, _loggerMock.Object);
+        _controller = new StockController(_repoMock.Object, _context, Mock.Of<IHttpClientFactory>(), new ConfigurationBuilder().Build());
 
         // Por defecto, configurar HttpContext con claim de tenant válido
         ConfigurarUserConTenant(TenantId);
@@ -46,6 +47,7 @@ public class StockController_Tests : IDisposable
 
     private void ConfigurarUserConTenant(Guid? tenantId)
     {
+        _context.CurrentTenantId = tenantId.GetValueOrDefault();
         var claims = new List<Claim>();
         if (tenantId.HasValue)
         {
@@ -150,7 +152,7 @@ public class StockController_Tests : IDisposable
         await _context.SaveChangesAsync();
 
         // Act
-        var result = await _controller.GetAll(null);
+        var result = await _controller.List(null);
 
         // Assert
         var okResult = result.Should().BeOfType<OkObjectResult>().Subject;
@@ -171,7 +173,7 @@ public class StockController_Tests : IDisposable
         await _context.SaveChangesAsync();
 
         // Act
-        var result = await _controller.GetAll(SucursalId);
+        var result = await _controller.List(SucursalId);
 
         // Assert
         var okResult = result.Should().BeOfType<OkObjectResult>().Subject;

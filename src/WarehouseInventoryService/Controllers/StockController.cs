@@ -129,6 +129,9 @@ public sealed class StockController : ControllerBase
         if (!Guid.TryParse(tenantClaim, out var tenantId))
             return Unauthorized(new { error = "Token inválido: falta tenant_id" });
 
+        if (productId == Guid.Empty || sucursalId == Guid.Empty)
+            return BadRequest(new { error = "Producto y sucursal son obligatorios." });
+
         var stock = await _stockRepository.GetByProducto(productId, sucursalId, tenantId);
         return stock is null
             ? NotFound(new { error = "No existe stock para ese producto en la sucursal indicada." })

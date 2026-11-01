@@ -17,5 +17,5 @@ const tenantConfigToken = [
 const component = new URLSearchParams(window.location.search).get('component');
 
 createRoot(document.getElementById('root')!).render(
-  component === 'app' ? <App /> : component === 'tenant-config' ? <TenantConfig token={tenantConfigToken} /> : component === 'admin' ? <Admin /> : <HashRouter><Pos /></HashRouter>
+  component === 'app' ? <App /> : component === 'tenant-config' ? <TenantConfig token={tenantConfigToken} /> : component === 'admin' ? <HashRouter><Admin /></HashRouter> : <HashRouter><Pos /></HashRouter>
 );
