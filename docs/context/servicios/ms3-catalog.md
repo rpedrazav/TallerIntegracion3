@@ -5,7 +5,7 @@ titulo: MS-3 · Catalog & Pricing Service
 estado: parcial
 fuentes: [src/CatalogPricingService/]
 verificado_contra_codigo: true
-ultima_revision: 2026-10-24
+ultima_revision: 2026-11-01
 depende_de: [ms1-identity]
 publica: []
 consume: []
@@ -14,6 +14,7 @@ reglas: [RN-01, RN-11, RF-04, RF-11, CP-01, CP-04, CP-05]
 # MS-3 · Catalog & Pricing Service
 
 > Gestiona el catálogo de productos del tenant con búsqueda por nombre (full-text) y lookup por código de barras. Soporta categorías jerárquicas y productos de peso variable. Precios dinámicos y promociones son PLANIFICADOS. Ver [[matriz-rutas]] para el inventario de puertos y prefijos.
+> Gestiona el catálogo de productos del tenant con búsqueda por nombre (full-text) y lookup por código de barras. Soporta categorías jerárquicas y productos de peso variable. Incluye seed de 30 productos variados con códigos de barras y precios (TI3-256). Precios dinámicos y promociones son PLANIFICADOS.
 
 ## Endpoints reales
 

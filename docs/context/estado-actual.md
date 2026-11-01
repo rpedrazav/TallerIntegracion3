@@ -5,7 +5,7 @@ titulo: Estado Real de Implementación — GlobalMart OS
 estado: vigente
 fuentes: [docs/context/_reports/inventario.md, src/, globalmart-frontend/src/api/client.ts, globalmart-frontend/src/hardware/simulated-scale-adapter.ts, globalmart-frontend/src/hardware/serial-scale-adapter.ts, globalmart-frontend/src/hardware/scale-adapter-factory.ts, globalmart-frontend/src/hardware/scale-ipc.ts, globalmart-frontend/src/payments/terminal-ipc.ts, globalmart-frontend/src/payments/synchronizeCardPayment.ts, globalmart-frontend/src/preload.ts, globalmart-frontend/e2e/weight-cart.spec.ts, globalmart-frontend/tests/simulated-scale-adapter.test.cjs, globalmart-frontend/tests/serial-scale-adapter.test.cjs, globalmart-frontend/tests/scale-ipc.test.cjs, globalmart-frontend/tests/terminal-ipc.test.cjs, globalmart-frontend/tests/synchronized-card-payment.test.cjs, git log, docs/context/_reports/preguntas-abiertas.md, tests/GlobalMart.IntegrationTests/CobroSeguroIntegrationTests.cs, docs/qa/S2-035/reporte.md, new-ingresses.yaml]
 verificado_contra_codigo: true
-ultima_revision: 2026-10-27
+ultima_revision: 2026-11-01
 depende_de: []
 publica: []
 consume: []
@@ -28,7 +28,7 @@ reglas: []
 
 
 **Contexto del proyecto:** Proyecto académico de Ingeniería Civil Informática, Universidad Católica de Temuco (UCT). Las integraciones externas que no puedan obtenerse legalmente (certificados digitales reales del SII, terminales de pago bancario físicos) serán simuladas.  
-**Sprint en curso:** **Sprint 1** (penúltimo día de la Semana 3 de un ciclo de 4 semanas, de miércoles a miércoles).
+**Sprint en curso:** **Sprint 1** (Semana 4).
 
 **Revisión del DoD:** completada. Ver [dod-sprint1-revision.md](dod-sprint1-revision.md) para el veredicto de los siete criterios y sus hallazgos técnicos.
 
@@ -120,9 +120,14 @@ S2-052 — 2026-10-19: **2/2 pruebas de integración HTTP locales aprobadas** pa
 
 ### MS-4 · Warehouse & Inventory Service [PARCIAL]
 **Implementado:**
-- `GET /stock/{productId}?sucursal_id=` — consulta stock [IMPLEMENTADO]
-- `KafkaConsumerService` — consume `sale.completed`, descuenta stock con idempotencia [IMPLEMENTADO]
-- Tabla `EventosKafkaProcesados` — garantiza exactly-once processing [IMPLEMENTADO]
+- `GET /stock/{productId}?sucursal_id=` — consulta stock por producto y sucursal [IMPLEMENTADO]
+- `GET /stock?sucursal_id=` — listado general de stock del tenant, con filtro opcional por sucursal (TI3-255) [IMPLEMENTADO]
+- `KafkaConsumerService` — consume `sale.completed`, descuenta stock con idempotencia y log estructurado de movimientos (TI3-253) [IMPLEMENTADO]
+- Manejo de caso borde en consumer: si producto no tiene registro de stock, `CrearYDescontar` crea el registro con stock negativo para reflejar discrepancia (TI3-254) [IMPLEMENTADO]
+- Tabla `EventosKafkaProcesados` — garantiza exactly-once processing (TI3-252) [IMPLEMENTADO]
+- Tabla `movimientos_stock` — auditoría de cada movimiento de stock [IMPLEMENTADO]
+- `SeedData.cs` — seed inicial de stock para los 30 productos de catálogo con cantidades aleatorias entre 10-100, stock_minimo=5 (TI3-256/TI3-257) [IMPLEMENTADO]
+- `POST /seed` — endpoint público (solo en Development) que ejecuta el seed manualmente, idempotente, retorna resumen detallado (TI3-258) [IMPLEMENTADO]
 - TenantMiddleware [IMPLEMENTADO]
 - Test de integración — publica `sale.completed`, espera el procesamiento asíncrono y verifica el descuento mediante `GET /stock/{productId}` [IMPLEMENTADO]
 

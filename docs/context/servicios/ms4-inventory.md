@@ -5,7 +5,7 @@ titulo: MS-4 · Warehouse & Inventory Service
 estado: parcial
 fuentes: [src/WarehouseInventoryService/]
 verificado_contra_codigo: true
-ultima_revision: 2026-10-27
+ultima_revision: 2026-11-01
 depende_de: [ms5-pos]
 publica: []
 consume: [sale.completed]
@@ -23,14 +23,18 @@ reglas: [RN-04, RN-05, RF-09, RF-10, WI-04, WI-05, WI-13, WI-14]
 
 ```
 src/WarehouseInventoryService/
-├── Controllers/  StockController.cs
+├── Controllers/
+│   ├── StockController.cs
+│   └── SeedController.cs            ← POST /seed (solo Development)
 ├── Data/
 │   ├── WarehouseDbContext.cs
+│   ├── SeedData.cs               ← Seed de stock sincronizado con catálogo
 │   └── Migrations/
 │       ├── 20260913033948_InitialCreate_Warehouse.cs
 │       └── 20260927195722_AddEventosKafkaProcesados.cs
 ├── Messaging/
 │   ├── KafkaConsumerService.cs   ← IHostedService, suscrito a "sale.completed"
+│   ├── SaleEventProcessor.cs     ← Procesador de eventos con idempotencia y auditoría
 │   └── SaleCompletedEvent.cs     ← DTO del evento
 ├── Middleware/  TenantMiddleware.cs
 ├── Models/
@@ -48,6 +52,7 @@ src/WarehouseInventoryService/
 | GET | `/stock/{productId}?sucursal_id=` | JWT | [IMPLEMENTADO] |
 | GET | `/stock?sucursal_id=` | JWT | [IMPLEMENTADO] |
 | POST | `/stock/ajuste` | JWT + ADMIN/REPONEDOR | [IMPLEMENTADO] |
+| POST | `/seed` | Público (solo Development) | [IMPLEMENTADO] TI3-258 |
 | GET | `/health` | Público | [IMPLEMENTADO] |
 
 ### No implementados
@@ -162,4 +167,6 @@ EventoKafkaProcesado
 ## Fuentes
 - `src/WarehouseInventoryService/Messaging/KafkaConsumerService.cs`
 - `src/WarehouseInventoryService/Controllers/StockController.cs`
+- `src/WarehouseInventoryService/Controllers/SeedController.cs`
+- `src/WarehouseInventoryService/Data/SeedData.cs`
 - `src/WarehouseInventoryService/Data/Migrations/20260927195722_AddEventosKafkaProcesados.cs`
