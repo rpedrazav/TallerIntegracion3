@@ -11,7 +11,7 @@ const { renderToStaticMarkup } = require(path.join(frontend, 'node_modules/react
 const options = { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.React, esModuleInterop: true };
 const filename = path.join(frontend, 'src/pages/Pos.tsx');
 const source = fs.readFileSync(filename, 'utf8'); const ast = ts.createSourceFile(filename, source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
-const wanted = new Set(['subtotal', 'tasaIva', 'iva', 'total']); const found = new Map();
+const wanted = new Set(['subtotal', 'iva', 'total']); const found = new Map();
 function visit(node) {
   if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name) && wanted.has(node.name.text)) {
     assert.ok(!found.has(node.name.text), `Ambiguous total declaration ${node.name.text}`);
@@ -19,7 +19,7 @@ function visit(node) {
   }
   ts.forEachChild(node, visit);
 }
-visit(ast); assert.equal(found.size, 4);
+visit(ast); assert.equal(found.size, 3);
 const context = { venta, draftSubtotal: 99999999, Math };
 vm.runInNewContext([...wanted].map(name => `const ${found.get(name)};`).join('\n') + '\nglobalThis.amounts = { subtotal, iva, total };', context);
 assert.equal(context.amounts.subtotal, venta.subtotal); assert.equal(context.amounts.iva, venta.impuestos); assert.equal(context.amounts.total, venta.total);

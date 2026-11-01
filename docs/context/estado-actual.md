@@ -127,7 +127,7 @@ S2-052 — 2026-10-19: **2/2 pruebas de integración HTTP locales aprobadas** pa
 - Tabla `EventosKafkaProcesados` — garantiza exactly-once processing (TI3-252) [IMPLEMENTADO]
 - Tabla `movimientos_stock` — auditoría de cada movimiento de stock [IMPLEMENTADO]
 - `SeedData.cs` — seed inicial de stock para los 30 productos de catálogo con cantidades aleatorias entre 10-100, stock_minimo=5 (TI3-256/TI3-257) [IMPLEMENTADO]
-- `POST /seed` — endpoint público (solo en Development) que ejecuta el seed manualmente, idempotente, retorna resumen detallado (TI3-258) [IMPLEMENTADO]
+- `POST /seed` — endpoint para ADMIN del tenant demo (solo en Development) que ejecuta el seed manualmente, idempotente, retorna resumen detallado (TI3-258) [IMPLEMENTADO]
 - TenantMiddleware [IMPLEMENTADO]
 - Test de integración — publica `sale.completed`, espera el procesamiento asíncrono y verifica el descuento mediante `GET /stock/{productId}` [IMPLEMENTADO]
 

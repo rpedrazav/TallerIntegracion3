@@ -103,8 +103,10 @@ dotnet sln GlobalMartOS.sln add src/POSCartService/tests/POSCartService.Tests/PO
 
 ## S2-025 — Regresión de carrito
 
-[PARCIAL] Suite Playwright sobre el renderer real de POS, con catálogo y puente de sesión controlados. Ejecución 2026-10-12: 1 aprobado (agregar, cantidad, eliminar y recargar), 2 fallidos (sin respuesta de ventas MS-5 y persistencia del carrito al cambiar sesión de tenant). Pos usa `pos_cart` sin partición por tenant y calcula IVA local al 19%. Igualdad con totales de MS-5 y aislamiento HTTP de backend [NO VERIFICADO]. No acredita E2E completo ni venta funcional. Reporte y capturas: [S2-025](../../qa/S2-025/reporte.md).
+[PARCIAL] Suite Playwright sobre el renderer real de POS, con catálogo y puente de sesión controlados. Ejecución 2026-10-12: 1 aprobado (agregar, cantidad, eliminar y recargar), 2 fallidos (sin respuesta de ventas MS-5 y persistencia del carrito al cambiar sesión de tenant). En aquella revisión, Pos usaba `pos_cart` sin partición por tenant y calculaba IVA local al 19%; esa descripción histórica fue superada por la integración del 2026-11-01. Igualdad con totales de MS-5 y aislamiento HTTP de backend [NO VERIFICADO]. No acredita E2E completo ni venta funcional. Reporte y capturas: [S2-025](../../qa/S2-025/reporte.md).
 
 ## Integración de ramas — 2026-11-01
 
 `GlobalMart.Tests` forma parte de la solución: 47 pruebas unitarias de Identity, Tax e inventario aprobadas. La suite administrativa previa se conserva en `admin-flows.spec.ts` y se adapta al formulario actual. `cart.spec.ts` valida el renderer con fixtures HTTP de turnos y ventas (IVA 20 %); no acredita integración real con MS-5. Los flujos reales se verifican en las suites .NET/Electron.
+
+S2-082/S2-083/S2-084: se adaptan los harness de extracción de callbacks al flujo actual `readProductWeight` → confirmación → `commitProductToCart`, y se leen subtotal, IVA y total vigentes sin exigir la variable retirada `tasaIva`. La conexión explícita `GLOBALMART_TEST_POSTGRES` también sirve para S2-084. Suite dirigida: 62/62 aprobadas.

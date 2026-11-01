@@ -52,7 +52,7 @@ src/WarehouseInventoryService/
 | GET | `/stock/{productId}?sucursal_id=` | JWT | [IMPLEMENTADO] |
 | GET | `/stock?sucursal_id=` | JWT | [IMPLEMENTADO] |
 | POST | `/stock/ajuste` | JWT + ADMIN/REPONEDOR | [IMPLEMENTADO] |
-| POST | `/seed` | Público (solo Development) | [IMPLEMENTADO] TI3-258 |
+| POST | `/seed` | JWT + ADMIN del tenant demo (solo Development) | [IMPLEMENTADO] TI3-258 |
 | GET | `/health` | Público | [IMPLEMENTADO] |
 
 ### No implementados

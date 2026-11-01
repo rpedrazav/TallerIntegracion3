@@ -34,7 +34,7 @@ async function prepare(page: Page) {
       sale.items.push({ id: product.id, producto_id: product.id, nombre_producto: product.nombre, cantidad, precio_unitario: product.precioBase, subtotal: cantidad * product.precioBase });
     }
     if (sale) { sale.subtotal = sale.items.reduce((sum: number, item: any) => sum + item.subtotal, 0); sale.impuestos = sale.subtotal * 0.2; sale.total = sale.subtotal + sale.impuestos; }
-    return route.fulfill({ status: method === 'DELETE' ? 204 : 200, ...(method === 'DELETE' ? {} : { json: sale }) });
+    return route.fulfill({ headers: { 'access-control-allow-origin': '*' }, status: method === 'DELETE' ? 204 : 200, ...(method === 'DELETE' ? {} : { json: sale }) });
   });
   await page.goto('/');
   await page.getByPlaceholder('Escanea o busca un producto...').fill('Producto');
@@ -55,6 +55,7 @@ test('agregar, cambiar cantidad, eliminar y recargar conservan el carrito', asyn
   await expect(row.getByRole('spinbutton')).toHaveValue('3');
   await page.locator('tbody tr').filter({ hasText: 'Producto B' }).getByTitle('Eliminar producto').click();
   await expect(page.locator('tbody tr')).toHaveCount(1);
+  await expect(page.locator('tbody tr')).toHaveCount(1);
   await page.reload();
   await expect(row.getByRole('spinbutton')).toHaveValue('3');
   await expect(page.locator('tbody tr')).toHaveCount(1);
@@ -70,14 +71,21 @@ test('el flujo obtiene IVA y totales de la respuesta HTTP de MS-5 (fixture)', as
   await prepare(page);
   await add(page, 'Producto A');
   await add(page, 'Producto B');
+  await page.getByRole('button', { name: 'INICIAR VENTA' }).click();
+  await expect(page.getByRole('button', { name: 'COBRAR' })).toBeVisible();
   await page.locator('tbody tr').filter({ hasText: 'Producto A' }).getByRole('spinbutton').fill('3');
+  await page.locator('tbody tr').filter({ hasText: 'Producto A' }).getByRole('spinbutton').press('Enter');
+  await expect(page.locator('tbody tr').filter({ hasText: 'Producto A' })).toContainText('$ 300');
+  await expect(page.locator('tbody tr').filter({ hasText: 'Producto A' }).getByRole('spinbutton')).toHaveValue('3');
+  await expect(page.getByText('Sincronizando ítems con MS-5...')).toBeHidden();
   await page.locator('tbody tr').filter({ hasText: 'Producto B' }).getByTitle('Eliminar producto').click();
+  await expect(page.locator('tbody tr')).toHaveCount(1);
   await page.reload();
   await expect(page.locator('tbody tr')).toHaveCount(1);
   // La tasa de fixture (20 %) comprueba que el renderer respeta los importes del servidor.
   await expect.poll(() => responses.length, { timeout: 3000, message: 'El carrito debe recibir totales desde MS-5' }).toBeGreaterThan(0);
   const sale = responses.at(-1);
-  for (const [label, value] of [['Subtotal:', sale.subtotal], [/^IVA/, sale.impuestos ?? sale.iva], ['TOTAL:', sale.total]] as const) {
+  for (const [label, value] of [['Subtotal:', sale.subtotal], ['Impuestos:', sale.impuestos ?? sale.iva], ['TOTAL:', sale.total]] as const) {
     expect(typeof value).toBe('number');
     await expect(page.getByText(label, { exact: typeof label === 'string' }).locator('..').locator('span').last())
       .toHaveText(`$ ${value.toLocaleString('es-CL')}`);
@@ -88,6 +96,7 @@ test('cambiar de tenant en el mismo navegador no recupera el carrito ajeno', asy
   await prepare(page);
   await add(page, 'Producto A');
   await page.evaluate(() => sessionStorage.setItem('tenant', 'tenant-b'));
+  await expect(page.locator('tbody tr')).toHaveCount(1);
   await page.reload();
   await expect(page.getByText('Carrito vacío', { exact: true })).toBeVisible();
   await expect(page.locator('tbody tr')).toHaveCount(0);

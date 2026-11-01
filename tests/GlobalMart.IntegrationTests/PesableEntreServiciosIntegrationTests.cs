@@ -149,7 +149,7 @@ public sealed class PesableEntreServiciosIntegrationTests
     }
     private static async Task<TwoTenantFixture> Fixture()
     {
-        var connection = Environment.GetEnvironmentVariable("S2084_TEST_CONNECTION");
+        var connection = Environment.GetEnvironmentVariable("S2084_TEST_CONNECTION") ?? Environment.GetEnvironmentVariable("GLOBALMART_TEST_POSTGRES");
         Assert.False(string.IsNullOrWhiteSpace(connection), "Set S2084_TEST_CONNECTION to an isolated PostgreSQL instance; defaults are forbidden.");
         var fixture = new TwoTenantFixture(connection!); await fixture.InitializeAsync(); return fixture;
     }

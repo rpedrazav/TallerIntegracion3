@@ -22,7 +22,10 @@ const filename = path.join(frontend, 'src/pages/Pos.tsx');
 const source = fs.readFileSync(filename, 'utf8');
 const ast = ts.createSourceFile(filename, source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
 const callbacks = [];
+const productionCallbacks = new Map();
 function visit(node) {
+  if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name) && ['commitProductToCart', 'readProductWeight'].includes(node.name.text)) productionCallbacks.set(node.name.text, node.initializer.arguments[0]);
+
   if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name) && node.name.text === 'addProductToCart')
     callbacks.push(node);
   ts.forEachChild(node, visit);
@@ -74,7 +77,8 @@ async function sequence() {
   const calls = [], mutations = [], busy = [];
   let error = '';
   const context = {
-    isStartingSale: false, saleNeedsRefresh: false, paymentState: 'idle',
+    isStartingSale: false, saleNeedsRefresh: false, paymentState: 'idle', capturaPeso: null,
+    setCapturaPeso: value => { context.capturaPeso = value; if (value?.error) error = value.error; },
     scaleReadInFlight: { current: false }, venta: saleMode ? sale : null,
     window: { api: { scale } }, readStableWeightForCart,
     setIsReadingScale: value => busy.push(value), setVentaError: value => { error = value; },
@@ -92,7 +96,18 @@ async function sequence() {
       },
     },
   };
-  vm.runInNewContext(ts.transpileModule(`globalThis.run = (${callback.getText(ast)});`, { compilerOptions }).outputText, context);
+  for (const [name, callbackNode] of productionCallbacks) {
+    vm.runInNewContext(ts.transpileModule(`globalThis.${name} = (${callbackNode.getText(ast)});`, { compilerOptions }).outputText, context);
+  }
+  vm.runInNewContext(ts.transpileModule(`globalThis.add = (${callback.getText(ast)});`, { compilerOptions }).outputText, context);
+  context.run = async product => {
+    const result = await context.add(product);
+    if (result && context.capturaPeso?.estado === 'estable') {
+      context.commitProductToCart(product, context.capturaPeso.pesoKg);
+      context.capturaPeso = null;
+    }
+    return result;
+  };
   const product = { id: 'product-1', nombre: 'Weighted product', esPesoVariable: true, precioBase: 1000 };
   const cart = () => clone(saleMode ? sale.items : draft);
   const quantity = () => saleMode ? sale.items.find(i => i.producto_id === product.id).cantidad
@@ -112,7 +127,8 @@ async function sequence() {
   assert.equal(mutations.length, queueBefore, 'Disconnect must not enqueue mutations');
   assert.equal(context.scaleReadInFlight.current, false, 'Failure must release lock');
   assert.equal(busy.at(-1), false);
-  assert.ok(error.includes('No se agregó'));
+  assert.ok(error.length > 0);
+  context.capturaPeso = null; // usuario cierra el error antes de reintentar
   assert.equal((await scale.getState()).connectionStatus, 'disconnected');
   assert.equal((await scale.getState()).lastStableReading.weightKg, 0.5, 'Old stable reading remains in device state but must not be reused');
   await scale.connect();

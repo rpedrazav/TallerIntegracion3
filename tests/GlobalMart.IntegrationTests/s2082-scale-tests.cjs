@@ -111,7 +111,9 @@ function productiveCallback(context) {
   const source = fs.readFileSync(filename, 'utf8');
   const ast = ts.createSourceFile(filename, source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
   const matches = [];
+  const helpers = new Map();
   function visit(node) {
+    if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name) && ['commitProductToCart', 'readProductWeight'].includes(node.name.text)) helpers.set(node.name.text, node.initializer.arguments[0]);
     if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name) && node.name.text === 'addProductToCart')
       matches.push(node);
     ts.forEachChild(node, visit);
@@ -125,7 +127,16 @@ function productiveCallback(context) {
   assert.ok(ts.isArrowFunction(callback), 'Expected the production async callback');
   const compiled = ts.transpileModule(`globalThis.run = (${callback.getText(ast)});`, { compilerOptions });
   vm.runInNewContext(compiled.outputText, context, { filename: 'production-addProductToCart.js' });
-  return context.run;
+  const add = context.run;
+  for (const [name, helper] of helpers) vm.runInNewContext(ts.transpileModule(`globalThis.${name} = (${helper.getText(ast)});`, { compilerOptions }).outputText, context);
+  return async product => {
+    const result = await add(product);
+    if (result && context.capturaPeso?.estado === 'estable') {
+      context.commitProductToCart(product, context.capturaPeso.pesoKg);
+      context.capturaPeso = null;
+    }
+    return result;
+  };
 }
 async function pos() {
   const suffix = scenario.slice(4);
@@ -144,7 +155,8 @@ async function pos() {
     ? [{ id: 'item-1', producto_id: 'product-1', cantidad: 0.25 }] : [] };
   let error = '';
   const context = {
-    isStartingSale: false, saleNeedsRefresh: false, paymentState: 'idle',
+    isStartingSale: false, saleNeedsRefresh: false, paymentState: 'idle', capturaPeso: null,
+    setCapturaPeso: value => { context.capturaPeso = value; if (value?.error) error = value.error; },
     scaleReadInFlight: { current: false }, venta: sale, window: { api: { scale } },
     readStableWeightForCart, setIsReadingScale: () => {}, setVentaError: value => { error = value; },
     queueSaleMutation: callback => { const pending = callback(sale); mutations.push(pending); return pending; },
