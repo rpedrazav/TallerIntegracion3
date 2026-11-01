@@ -200,7 +200,7 @@ public sealed class ElectronCardE2ETests
                     var data = login.RootElement;
                     if (data.GetProperty("tenantId").GetGuid() != tenant || data.GetProperty("email").GetString() != "cashier@example.test"
                         || data.GetProperty("password").GetString() != "dummy-e2e-only") { res.StatusCode = 401; continue; }
-                    fixture = new { token };
+                    fixture = new { token, usuario = new { activeRole = "CAJERO", roles = new[] { "CAJERO" } } };
                 }
                 else if (route.StartsWith("/products") && req.HttpMethod == "GET")
                 {

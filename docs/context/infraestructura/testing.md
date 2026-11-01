@@ -110,3 +110,5 @@ dotnet sln GlobalMartOS.sln add src/POSCartService/tests/POSCartService.Tests/PO
 `GlobalMart.Tests` forma parte de la solución: 47 pruebas unitarias de Identity, Tax e inventario aprobadas. La suite administrativa previa se conserva en `admin-flows.spec.ts` y se adapta al formulario actual. `cart.spec.ts` valida el renderer con fixtures HTTP de turnos y ventas (IVA 20 %); no acredita integración real con MS-5. Los flujos reales se verifican en las suites .NET/Electron.
 
 S2-082/S2-083/S2-084: se adaptan los harness de extracción de callbacks al flujo actual `readProductWeight` → confirmación → `commitProductToCart`, y se leen subtotal, IVA y total vigentes sin exigir la variable retirada `tasaIva`. La conexión explícita `GLOBALMART_TEST_POSTGRES` también sirve para S2-084. Suite dirigida: 62/62 aprobadas.
+
+Validación final 2026-11-01: solución Release con 445 aprobadas, cero fallos y 1 caso Electron opt-in omitido; StockConsumerIntegrationTests se excluyó por falta de Kafka local. Pruebas Electron de login/turno: 2/2 aprobadas. Evidencia y alcance en [reporte de integración](../../qa/integracion-main-2026-11-01.md).

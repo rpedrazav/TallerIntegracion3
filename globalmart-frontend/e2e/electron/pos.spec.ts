@@ -64,7 +64,7 @@ test('login → apertura de turno → POS con sesión IPC persistente', async ({
     if (url.pathname === '/auth/login' && req.method() === 'POST') {
       expect(req.postDataJSON()).toEqual(credentials);
       expect(req.headers()['x-tenant-id']).toBe(tenant);
-      return route.fulfill({ json: { token } });
+      return route.fulfill({ json: { token, usuario: { id: 'e2e-cashier', nombre: 'Cajero E2E', email: credentials.email, activeRole: 'CAJERO', roles: ['CAJERO'] } } });
     }
     expect(req.headers().authorization).toBe(`Bearer ${token}`);
     if (url.pathname === '/api/turnos/activo' && req.method() === 'GET') {
