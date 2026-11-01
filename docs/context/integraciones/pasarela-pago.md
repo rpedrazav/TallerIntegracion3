@@ -5,7 +5,7 @@ titulo: Integración con Pasarela de Pago
 estado: parcial
 fuentes: [GlobalMart_ContextMaster.md#sec12, src/POSCartService/Services/IPaymentGatewayClient.cs, src/POSCartService/Services/PaymentGatewayClient.cs, src/POSCartService/Exceptions/PaymentAuthorizationUncertainException.cs, src/POSCartService/DTOs/PaymentGatewayDtos.cs, src/POSCartService/Program.cs, Docker/simulator/server.js, tests/GlobalMart.IntegrationTests/PaymentGatewayClientTests.cs, tests/GlobalMart.IntegrationTests/PaymentSimulatorIntegrationTests.cs, tests/GlobalMart.IntegrationTests/PaymentRetrySafetyTests.cs, tareas/sprint2_youtrack_resultado.json, Docker/env.example, .env.example, src/POSCartService/appsettings.json, tests/GlobalMart.IntegrationTests/CobroSeguroIntegrationTests.cs, docs/qa/S2-035/reporte.md, src/POSCartService/Services/VentaService.cs, src/POSCartService/Repositories/VentaRepository.cs, src/POSCartService/Controllers/VentasController.cs, src/POSCartService/Models/Pago.cs, src/POSCartService/DTOs/CobrarTarjetaDTOs.cs, tests/GlobalMart.IntegrationTests/CobrarTarjetaIntegrationTests.cs, tests/GlobalMart.IntegrationTests/PaymentEventSequenceContractTests.cs, globalmart-frontend/src/payments/terminal-ipc.ts, globalmart-frontend/src/payments/synchronizeCardPayment.ts, globalmart-frontend/src/preload.ts, globalmart-frontend/tests/terminal-ipc.test.cjs, globalmart-frontend/tests/synchronized-card-payment.test.cjs]
 verificado_contra_codigo: true
-ultima_revision: 2026-10-26
+ultima_revision: 2026-10-27
 depende_de: [ms5-pos]
 publica: []
 consume: []
@@ -240,6 +240,12 @@ La aprobación del terminal es una condición preliminar, no la confirmación de
 MS-5 continúa como fuente de verdad: la UI muestra `approved` únicamente cuando recibe `status=APPROVED` y la venta está `COMPLETADA`, evidencia de que MS-5 confirmó la respuesta correlacionada de la pasarela y persistió el pago. `gateway_reference` es la referencia opaca emitida por la pasarela y mostrada tras esa confirmación; no sustituye la clave idempotente ni se confunde con la referencia opaca local del simulador de terminal.
 
 Ante una respuesta perdida, error o resultado no definitivo, el frontend consulta `GET /ventas/{id}/intento-tarjeta`. La reconciliación exige que `request_id` coincida con la referencia esperada y que MS-5 informe `APPROVED` con venta `COMPLETADA`; en cualquier otro caso conserva `uncertain` y no presenta la venta como cobrada. Recuperación y verificación solo consultan el intento existente, sin crear otro intento ni otra clave. Pruebas puras de coordinación **6/6** y TypeScript aprobados el 2026-10-26.
+
+## S2-075 / TI3-706 — Pruebas de estados e idempotencia del terminal [IMPLEMENTADO]
+
+Las pruebas dirigidas cubren `approved`, `declined`, `timeout` y `disconnected` en el adaptador real simulado y a través de los handlers IPC de inicio y consulta. Cada escenario comienza en `processing`, conserva `referenciaIntento` y expone solo venta, monto, referencia del intento, estado y referencia opaca. Timeout y desconexión usan la transición existente `MARK_UNCERTAIN`; no se agregó un estado `timeout`. Las transiciones inválidas desde estados terminales son rechazadas.
+
+La guarda single-flight usada por POS impide que dos clics inmediatos ejecuten dos flujos: la prueba acredita una sola inicialización de terminal, una sola consulta, una sola llamada `chargeCard`, una clave idempotente y un único cargo lógico. La igualdad entre `claveIdempotencia`, `referenciaIntento` y la clave enviada a MS-5 queda verificada. Evidencia: `terminal-port` **12/12**, `terminal-ipc` **7/7**, `synchronized-card-payment` **7/7**; total **26/26** y TypeScript aprobado el 2026-10-27.
 
 ## S2-056 / TI3-687 — Configuración segura del simulador [IMPLEMENTADO]
 
