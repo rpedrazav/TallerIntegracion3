@@ -9,3 +9,5 @@ Validación local: build Release sin errores, 47/47 pruebas unitarias, 47/47 pru
 Docker Desktop no habilitó el motor local durante la validación. Se usa PostgreSQL 18 temporal en puerto 5436; no se usan bases personales. El caso StockConsumerIntegrationTests que requiere Kafka se reserva para CI con Docker; entrega al broker local [NO VERIFICADO]. Las pruebas Electron con pasarela real simulada son opt-in y no están acreditadas por los fixtures del renderer.
 
 Comando backend: `dotnet test GlobalMartOS.sln -c Release --no-build --filter "FullyQualifiedName!~StockConsumerIntegrationTests" --logger "trx;LogFileName=main-final.trx"`, con `GLOBALMART_TEST_POSTGRES` y `ConnectionStrings__DefaultConnection` apuntando a la instancia temporal. No certifica el caso Kafka excluido ni el caso Electron/tarjeta opt-in omitido.
+
+CI inicial: Electron, frontend e imágenes Docker aprobados. Backend: 337 aprobadas, 62 fallidas por ausencia de TypeScript/React en su runner y 1 omitida. StockConsumerIntegrationTests aprobó con Kafka real en CI. Se corrige instalando las dependencias del frontend también en el job .NET; la ejecución posterior verifica la corrección.

@@ -81,3 +81,5 @@ Los tests actuales son console apps de smoke testing (no xUnit con assertions). 
 ## Integración de ramas — 2026-11-01
 
 CI compila también `GlobalMart.Tests`, incorporado a la solución, antes de ejecutar `dotnet test --no-build`. El gate frontend ejecuta las pruebas Node y la regresión Playwright con Chromium y fixtures HTTP. La integración real de Electron/tarjeta conserva su ejecución específica.
+
+El job `build-and-test` instala Node.js 22 y ejecuta `npm ci --ignore-scripts` en el frontend antes de las pruebas .NET: las suites S2-082/083/084 ejecutan TypeScript y React productivos desde Node. Los archivos `node_modules` del job frontend no se comparten entre runners. El primer CI de integración detectó esta dependencia faltante (62 fallos por módulo ausente); el consumidor Kafka aprobó en esa ejecución con infraestructura real.
