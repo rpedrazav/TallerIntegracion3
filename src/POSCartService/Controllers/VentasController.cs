@@ -43,6 +43,66 @@ public sealed class VentasController : ControllerBase
 
 
 
+    /// <summary>Anulación total de efectivo, autorizada por ADMIN del mismo tenant (S2-092).</summary>
+    [HttpPost("{id:guid}/anular")]
+    [Authorize(Roles = "ADMIN")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> Anular(Guid id, [FromBody] System.Text.Json.JsonElement request)
+    {
+        if (!TryGetClaims(out var adminId, out var tenantId) || adminId == Guid.Empty || tenantId == Guid.Empty)
+            return Unauthorized(new { codigo = "IDENTIDAD_INVALIDA", error = "Token sin identidad o tenant válido." });
+
+        // Contrato estricto: no ignorar una solicitud parcial ni identidad suministrada por cliente.
+        if (request.ValueKind != System.Text.Json.JsonValueKind.Object
+            || request.EnumerateObject().Count() != 1
+            || !request.TryGetProperty("motivo", out var motivoJson)
+            || motivoJson.ValueKind != System.Text.Json.JsonValueKind.String)
+            return BadRequest(new { codigo = "SOLICITUD_INVALIDA", error = "Se requiere únicamente motivo como texto." });
+        var motivo = motivoJson.GetString()!.Trim();
+        if (motivo.Length is < 1 or > 500)
+            return BadRequest(new { codigo = "SOLICITUD_INVALIDA", error = "motivo debe contener entre 1 y 500 caracteres." });
+
+        try
+        {
+            var venta = await _ventaService.AnularAsync(id, adminId, motivo);
+            return Ok(new
+            {
+                venta_id = venta.Id,
+                estado = venta.Estado.ToString(),
+                anulacion = new
+                {
+                    motivo = venta.Anulacion!.Motivo,
+                    autorizado_por = venta.Anulacion.AutorizadoPor,
+                    created_at = venta.Anulacion.CreatedAt
+                },
+                reembolso_tarjeta = "NO_APLICA",
+                devolucion_efectivo = "GESTION_MANUAL"
+            });
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound(new { codigo = "VENTA_NO_ENCONTRADA", error = "Venta no encontrada." });
+        }
+        catch (AnulacionConflictException ex)
+        {
+            return Conflict(new { codigo = ex.Codigo, error = ex.Message });
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Forbid();
+        }
+        catch (Exception ex)
+        {
+            _logger?.LogError(ex, "Error al anular venta {VentaId} del tenant {TenantId}", id, tenantId);
+            return StatusCode(500, new { codigo = "ERROR_PERSISTENCIA", error = "No se pudo confirmar la anulación." });
+        }
+    }
+
     // ── Helpers ────────────────────────────────────────────────────────────────
 
     private bool TryGetClaims(out Guid cajeroId, out Guid tenantId)

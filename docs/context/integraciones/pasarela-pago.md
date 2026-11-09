@@ -317,9 +317,9 @@ GlobalMart OS solo recibe la referencia de la transacción (RRN/código de autor
 
 ## Reembolsos (anulaciones)
 
-[CONTRATO S2-091 DEFINIDO; IMPLEMENTACIÓN PENDIENTE] Ver [anulación total](../dominio/anulacion-venta.md). El simulador y `IPaymentGatewayClient` solo autorizan/consultan pagos; no ofrecen refund/reversal. El endpoint futuro debe rechazar tarjeta aprobada con 409 `REEMBOLSO_NO_DISPONIBLE` sin cambiar la venta, e intentos inciertos con 409 `PAGO_INCIERTO`. No usar la respuesta APPROVED de autorización como confirmación de devolución.
+[CONTRATO S2-091; GUARDIAS IMPLEMENTADAS S2-092] Ver [anulación total](../dominio/anulacion-venta.md). El simulador y `IPaymentGatewayClient` solo autorizan/consultan pagos; no ofrecen refund/reversal. El endpoint rechaza tarjeta aprobada con 409 `REEMBOLSO_NO_DISPONIBLE` sin cambiar la venta, e intentos inciertos con 409 `PAGO_INCIERTO`. No usar la respuesta APPROVED de autorización como confirmación de devolución.
 
-`VentaService.AnularAsync` actualmente no consulta la pasarela ni impone esas guardias. Un futuro soporte de reembolsos necesitará una operación específica del simulador y respuesta definitiva verificable; enviar un código de autorización por sí solo no revierte el cargo. Devoluciones parciales se difieren a otro sprint.
+`VentaService.AnularAsync` exige ADMIN y delega las guardias transaccionales; no consulta la pasarela. Un futuro soporte de reembolsos necesitará una operación específica del simulador y respuesta definitiva verificable; enviar un código de autorización por sí solo no revierte el cargo. Devoluciones parciales se difieren a otro sprint.
 
 ## Casos de uso afectados
 

@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using System.Text.Json;
 using POSCartService.Messaging;
 using POSCartService.Models;
@@ -8,18 +9,21 @@ namespace POSCartService.Services;
 public class VentaService : IVentaService
 {
     private readonly IVentaRepository _ventaRepository;
+    private readonly IHttpContextAccessor? _httpContextAccessor;
     private readonly IItemVentaRepository? _itemVentaRepository;
 
     public VentaService(
         IVentaRepository ventaRepository,
         IItemVentaRepository? itemVentaRepository = null,
-        IKafkaProducerService? kafkaProducer = null)
+        IKafkaProducerService? kafkaProducer = null,
+        IHttpContextAccessor? httpContextAccessor = null)
     {
         _ventaRepository     = ventaRepository ?? throw new ArgumentNullException(nameof(ventaRepository));
         _itemVentaRepository = itemVentaRepository;
         // La publicación directa se reemplazó por outbox en S2-008. Se conserva el
         // parámetro opcional para no romper los ejecutables de prueba existentes.
         _ = kafkaProducer;
+        _httpContextAccessor = httpContextAccessor;
     }
 
 
@@ -140,22 +144,20 @@ public class VentaService : IVentaService
     /// <inheritdoc/>
     public async Task<Venta> AnularAsync(Guid ventaId, Guid cajeroId, string motivo)
     {
-        var venta = await _ventaRepository.GetByIdAsync(ventaId)
-            ?? throw new KeyNotFoundException($"Venta {ventaId} no encontrada.");
+        // Defensa también para llamadas internas: no aceptar una identidad enviada por el body.
+        var user = _httpContextAccessor?.HttpContext?.User;
+        var userId = user?.FindFirst("cajero_id")?.Value
+            ?? user?.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? user?.FindFirst("sub")?.Value;
+        if (user?.Identity?.IsAuthenticated != true || !user.IsInRole("ADMIN")
+            || !Guid.TryParse(userId, out var adminId) || adminId == Guid.Empty || adminId != cajeroId
+            || !Guid.TryParse(user.FindFirst("tenant_id")?.Value, out var tenantId) || tenantId == Guid.Empty)
+            throw new UnauthorizedAccessException("La anulación requiere un ADMIN autenticado del tenant.");
 
-        if (venta.Estado is EstadoVenta.ANULADA or EstadoVenta.CANCELADA)
-            throw new InvalidOperationException(
-                $"La venta ya se encuentra en estado {venta.Estado} y no puede anularse nuevamente.");
+        motivo = motivo?.Trim() ?? string.Empty;
+        if (motivo.Length is < 1 or > 500)
+            throw new ArgumentException("motivo debe contener entre 1 y 500 caracteres.", nameof(motivo));
 
-        venta.Estado    = EstadoVenta.ANULADA;
-        venta.Anulacion = new Anulacion
-        {
-            VentaId       = venta.Id,
-            AutorizadoPor = cajeroId,
-            Motivo        = motivo
-        };
-
-        return await _ventaRepository.ActualizarAsync(venta);
+        return await _ventaRepository.AnularTotalAsync(ventaId, tenantId, adminId, motivo);
     }
 
     /// <inheritdoc/>

@@ -57,9 +57,9 @@ public interface IVentaService
     Task<Venta> CompletarAsync(Guid ventaId, decimal montoRecibido, decimal vuelto);
 
     /// <summary>
-    /// Marca una venta como ANULADA y registra el motivo de anulación.
+    /// Anula totalmente efectivo completado, con ADMIN autenticado y turno original abierto.
     /// </summary>
-    /// <exception cref="InvalidOperationException">Si la venta ya está ANULADA o CANCELADA.</exception>
+    /// <exception cref="InvalidOperationException">Si el estado, turno o situación del pago impide anular.</exception>
     Task<Venta> AnularAsync(Guid ventaId, Guid cajeroId, string motivo);
 
     /// <summary>

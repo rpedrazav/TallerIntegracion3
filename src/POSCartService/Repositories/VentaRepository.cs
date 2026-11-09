@@ -14,6 +14,58 @@ public class VentaRepository : IVentaRepository
         _context = context;
     }
 
+    public async Task<Venta> AnularTotalAsync(Guid ventaId, Guid tenantId, Guid autorizadoPor, string motivo)
+    {
+        if (_context.CurrentTenantId != tenantId)
+            throw new KeyNotFoundException("Venta no encontrada.");
+
+        await using var transaction = await _context.Database.BeginTransactionAsync();
+        var turnoId = await _context.Ventas.Where(v => v.Id == ventaId && v.TenantId == tenantId)
+            .Select(v => (Guid?)v.TurnoId).SingleOrDefaultAsync()
+            ?? throw new KeyNotFoundException("Venta no encontrada.");
+
+        // Bloquear primero el turno: un cierre concurrente no puede pasar entre la
+        // comprobación de ABIERTO y la confirmación de la anulación.
+        var turnos = await _context.Turnos.FromSqlInterpolated(
+            $"SELECT * FROM \"Turnos\" WHERE \"Id\" = {turnoId} AND \"TenantId\" = {tenantId} FOR UPDATE")
+            .AsNoTracking().ToListAsync();
+        var ventas = await _context.Ventas.FromSqlInterpolated(
+            $"SELECT * FROM \"Ventas\" WHERE \"Id\" = {ventaId} AND \"TenantId\" = {tenantId} FOR UPDATE")
+            .ToListAsync();
+        var venta = ventas.SingleOrDefault() ?? throw new KeyNotFoundException("Venta no encontrada.");
+        await _context.Entry(venta).Collection(v => v.Pagos).LoadAsync();
+        await _context.Entry(venta).Collection(v => v.IntentosPago).LoadAsync();
+        await _context.Entry(venta).Reference(v => v.Anulacion).LoadAsync();
+
+        static void Rechazar(string codigo, string mensaje)
+            => throw new POSCartService.Exceptions.AnulacionConflictException(codigo, mensaje);
+
+        if (venta.Estado == EstadoVenta.ANULADA || venta.Anulacion is not null)
+            Rechazar("VENTA_YA_ANULADA", "La venta ya fue anulada.");
+        if (venta.Estado != EstadoVenta.COMPLETADA)
+            Rechazar("ESTADO_NO_ANULABLE", "Solo se puede anular una venta completada.");
+        if (venta.IntentosPago.Any(i => i.Estado is EstadoIntentoPago.PENDIENTE or EstadoIntentoPago.FALLIDO))
+            Rechazar("PAGO_INCIERTO", "Resuelva el intento de pago antes de anular.");
+        if (venta.MetodoPago == MetodoPagoVenta.MIXTO)
+            Rechazar("METODO_NO_SOPORTADO", "La anulación de pagos mixtos no está soportada.");
+        if (venta.MetodoPago == MetodoPagoVenta.TARJETA || venta.Pagos.Any(p => p.Metodo == MetodoPago.TARJETA)
+            || venta.IntentosPago.Any(i => i.Estado == EstadoIntentoPago.APROBADO))
+            Rechazar("REEMBOLSO_NO_DISPONIBLE", "No se puede anular el pago con tarjeta sin una devolución confirmada por la pasarela.");
+        if (venta.MetodoPago != MetodoPagoVenta.EFECTIVO || venta.Pagos.Count == 0
+            || venta.Pagos.Any(p => p.Metodo != MetodoPago.EFECTIVO || p.Monto < 0 || p.Vuelto < 0 || p.Vuelto > p.Monto)
+            || venta.Pagos.Sum(p => p.Monto - p.Vuelto) != venta.Total)
+            Rechazar("PAGO_INCONSISTENTE", "Los pagos no corresponden al total de la venta.");
+        if (turnos.SingleOrDefault()?.Estado != EstadoTurno.ABIERTO)
+            Rechazar("TURNO_NO_ANULABLE", "El turno original debe estar abierto.");
+
+        venta.Estado = EstadoVenta.ANULADA;
+        venta.Anulacion = new Anulacion { VentaId = venta.Id, AutorizadoPor = autorizadoPor, Motivo = motivo };
+        _context.Anulaciones.Add(venta.Anulacion);
+        await _context.SaveChangesAsync();
+        await transaction.CommitAsync();
+        return venta;
+    }
+
     /// <inheritdoc/>
     public async Task<Venta?> GetByIdAsync(Guid ventaId)
     {

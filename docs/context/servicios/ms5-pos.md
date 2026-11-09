@@ -54,7 +54,7 @@ reglas: [RN-01, RN-02, RN-03, RN-06, RF-02, RF-03, RF-04, RF-05, RF-06, RF-07]
 | GET | `/ventas/turno/{turnoId}` (alias `/api/ventas/turno/{turnoId}`) | JWT | [IMPLEMENTADO] |
 | POST | `/ventas/{id}/cobrar` (alias `/api/ventas/{id}/cobrar`) | JWT | [IMPLEMENTADO — valida monto_recibido ≥ total, calcula vuelto y persiste venta, pago y sale.completed pendiente en una transacción] |
 | POST | `/ventas/{id}/cobrar-tarjeta` (alias `/api/ventas/{id}/cobrar-tarjeta`) | JWT | [IMPLEMENTADO — reserva previa, aprobación/rechazo/timeout y bloqueo de repetición; S2-035] |
-| POST | `/ventas/{id}/anular` (alias `/api/ventas/{id}/anular`) | JWT + ADMIN | [CONTRATO S2-091 definido; controller y guardias pendientes; servicio parcial existente] |
+| POST | `/ventas/{id}/anular` (alias `/api/ventas/{id}/anular`) | JWT + ADMIN | [IMPLEMENTADO backend S2-092; ADMIN, tenant y guardias S2-091] |
 | GET | `/health` | Público | [IMPLEMENTADO] |
 
 > Ver [[matriz-rutas]] para la comparativa exhaustiva de rutas Kong, controladores y puertos de host.
@@ -104,11 +104,11 @@ Antes de autorizar tarjeta, MS-5 persiste un `IntentoPago PENDIENTE` con clave d
    → Si Timeout/Error: IntentoPago sigue PENDIENTE, venta sigue PENDIENTE, 0 pagos y 0 outbox (504 / 502)
    → GET /ventas/{id}/intento-tarjeta reconcilia el mismo intento sin repetir el POST
 
-6. [PLANIFICADO, no expuesto] POST /ventas/{id}/anular  { motivo }
+6. POST /ventas/{id}/anular  { motivo }
    → Contrato S2-091: ADMIN del tenant, COMPLETADA en efectivo, turno original abierto
-   → Servicio actual parcial VentaService.AnularAsync: estado → ANULADA
+   → VentaService.AnularAsync verifica identidad ADMIN; repositorio confirma estado ANULADA y auditoría en una transacción
    → Crea Anulacion { ventaId, autorizadoPor, motivo }
-   → ❌ NO solicita reembolso; contrato exige bloquear tarjeta aprobada e incertidumbre (guardias aún pendientes)
+   → Tarjeta aprobada e incertidumbre → 409 sin mutación ni llamada de pasarela
 ```
 
 ## Modelo de datos
@@ -396,4 +396,4 @@ Validación del 2026-10-26: **84/84 pruebas Release aprobadas**, sin fallos ni o
 
 ## S2-091 — Alcance de anulación total
 
-[CONTRATO DEFINIDO; IMPLEMENTACIÓN PENDIENTE] Ver [contrato HTTP, permisos y matriz](../dominio/anulacion-venta.md). Solo anulación total ADMIN del tenant para efectivo completado y turno original abierto; parciales y mixtos fuera de alcance. Rechazar tarjeta aprobada sin capacidad de devolución confirmada e intentos inciertos, sin alterar venta/pagos. El servicio existente no acredita cumplimiento; la ruta aún no está implementada. No se promete devolución física, reversión fiscal ni reposición de inventario.
+[IMPLEMENTADO backend S2-092] Ver [contrato HTTP, permisos y matriz](../dominio/anulacion-venta.md). Solo anulación total ADMIN del tenant para efectivo completado y turno original abierto. La ruta y el servicio verifican autorización; el repositorio comprueba estado/pagos/intentos dentro de una transacción con bloqueo de turno y venta. Rechazos 400/401/403/404/409 sin mutación; tarjeta aprobada sin reembolso disponible e intentos inciertos quedan bloqueados. Parciales, mixtos, devolución física, reversión fiscal y reposición de inventario no se implementan. No hay migración ni cambios de UI. [Pruebas y límites](../../qa/S2-092/reporte.md).

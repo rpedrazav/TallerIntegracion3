@@ -35,6 +35,9 @@ public interface IVentaRepository
     /// </summary>
     Task<Venta> ActualizarAsync(Venta venta);
 
+    /// <summary>Anula efectivo completado y registra auditoría dentro de una transacción.</summary>
+    Task<Venta> AnularTotalAsync(Guid ventaId, Guid tenantId, Guid autorizadoPor, string motivo);
+
     Task<Venta> CambiarMetodoPagoPendienteAsync(Guid ventaId, MetodoPagoVenta metodoPago);
 
     /// <summary>

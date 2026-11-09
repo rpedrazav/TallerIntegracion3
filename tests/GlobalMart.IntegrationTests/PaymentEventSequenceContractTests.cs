@@ -93,6 +93,9 @@ public sealed class PaymentEventSequenceContractTests
     private sealed class RecordingVentaRepository(Pos.Models.Venta venta)
         : Pos.Repositories.IVentaRepository
     {
+        public Task<Pos.Models.Venta> AnularTotalAsync(Guid ventaId, Guid tenantId, Guid autorizadoPor, string motivo)
+            => throw new NotSupportedException();
+
         public Pos.Models.Pago? Pago { get; private set; }
         public Pos.Models.IntentoPago? Intento { get; private set; }
         public Pos.Models.OutboxMessage? Outbox { get; private set; }

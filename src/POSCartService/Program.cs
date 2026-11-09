@@ -23,6 +23,7 @@ builder.Services.AddScoped<IItemVentaRepository, ItemVentaRepository>();
 builder.Services.AddScoped<IOutboxRepository, OutboxRepository>();
 builder.Services.AddScoped<ITurnoService, TurnoService>();
 builder.Services.AddScoped<IVentaService, VentaService>();
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IOutboxPublisherService, OutboxPublisherService>();
 builder.Services.Configure<OutboxPublisherOptions>(
     builder.Configuration.GetSection("OutboxPublisher"));

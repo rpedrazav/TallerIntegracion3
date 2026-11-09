@@ -15,7 +15,7 @@ reglas: []
 
 ## S2-091 — Contrato de anulación total (2026-11-09)
 
-[CONTRATO DEFINIDO; ENDPOINT PLANIFICADO] [Anulación total](dominio/anulacion-venta.md): POST `/ventas/{id}/anular` y alias `/api`, JWT + ADMIN del mismo tenant, motivo obligatorio, venta COMPLETADA en efectivo y turno original ABIERTO. Devolución parcial fuera de alcance. Tarjeta aprobada e intentos inciertos se rechazarán sin mutación: el simulador no tiene reembolso y no se declara dinero devuelto. `AnularAsync` existente no implementa estas guardias; S2-091 solo entrega contrato y matriz de aceptación, sin pruebas de endpoint ni cambios de runtime.
+[CONTRATO S2-091; BACKEND IMPLEMENTADO EN S2-092] [Anulación total](dominio/anulacion-venta.md): POST `/ventas/{id}/anular` y alias `/api`, JWT + ADMIN del mismo tenant, motivo obligatorio, venta COMPLETADA en efectivo y turno original ABIERTO. Devolución parcial fuera de alcance. Tarjeta aprobada e intentos inciertos se rechazan sin mutación: el simulador no tiene reembolso y no se declara dinero devuelto. S2-091 entregó contrato; S2-092 implementa endpoint, autorización en servicio y transición/auditoría atómicas. [Reporte y alcance de pruebas](../qa/S2-092/reporte.md). UI y despliegue remoto no verificados.
 
 ## Avance administrativo del 2026-10-27
 
@@ -158,7 +158,7 @@ S2-052 — 2026-10-19: **2/2 pruebas de integración HTTP locales aprobadas** pa
 - tests de integración S2-005 en `VentaIntegrationTests` cubren los 4 escenarios de creación segura: precio falsificado ignorado (precio persistido viene de MS-3, no del request), IVA por tenant desde MS-2, producto inactivo (400 sin persistir) y ausencia de turno abierto (409 sin persistir venta) [IMPLEMENTADO]
 
 **No implementado / CRÍTICO:**
-- Endpoint HTTP `POST /ventas/{id}/anular` aún no está expuesto en `VentasController.cs`
+- `POST /ventas/{id}/anular` y alias `/api` implementados en S2-092; UI, reembolso tarjeta y reversión de efectos externos pendientes.
 - Integración con hardware (balanza, impresora, cajón de dinero)
 
 ---
@@ -188,7 +188,7 @@ S2-052 — 2026-10-19: **2/2 pruebas de integración HTTP locales aprobadas** pa
 
 | # | Funcionalidad | RN/RF afectado | Gravedad |
 |---|---------------|----------------|----------|
-| 1 | Exponer endpoint `POST /ventas/{id}/anular` en `VentasController.cs` | RF-22 | 🔴 Crítica |
+| 1 | Endpoint de anulación expuesto con contrato S2-091; UI/reembolso pendientes | RF-22 | Backend S2-092 implementado |
 | 2 | Emisión simulada de DTE (boleta/factura) en MS-2 | RN-03, RF-08, TC-08/09 | 🔴 Crítica |
 | 4 | FEFO en recepción e inventario en MS-4 | RN-05, RF-10, WI-04/05 | 🟠 Alta |
 | 5 | Integrar frontend `Pos.tsx` con backend real | RF-04, RF-05 | 🟠 Alta |

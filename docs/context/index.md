@@ -62,7 +62,7 @@ reglas: []
 | `[[requerimientos-no-funcionales]]` | Para restricciones de calidad |
 | `[[rbac-multirol]]` | Para todo lo relacionado con roles y permisos |
 | `[[multi-tenant]]` | Para lógica de aislamiento de datos |
-| [anulacion-venta](dominio/anulacion-venta.md) | S2-091: contrato HTTP y ADMIN para anulación total; ruta pendiente y tarjeta bloqueada sin reembolso confirmado |
+| [anulacion-venta](dominio/anulacion-venta.md) | S2-091: contrato HTTP y ADMIN para anulación total; backend S2-092 implementado; tarjeta bloqueada sin reembolso confirmado |
 | [peso-variable](dominio/peso-variable.md) | Contrato S2-061: kg, precisión, mínimo, cantidad y precio de ítems pesables |
 | `[[fefo]]` | Para inventario de perecederos |
 | `[[costo-landed]]` | Para cálculo de costos de importación |
