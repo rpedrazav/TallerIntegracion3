@@ -29,6 +29,7 @@ using Xunit;
 
 namespace GlobalMart.IntegrationTests;
 
+[Collection("POS integration tests")]
 public class KafkaPublishIntegrationTests : IClassFixture<Ms5WebApplicationFactory>
 {
     private static readonly Guid ProductOneId = Guid.Parse("11111111-1111-1111-1111-111111111111");

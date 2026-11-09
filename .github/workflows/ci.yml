@@ -44,6 +44,18 @@ jobs:
         working-directory: globalmart-frontend
         run: npm run typecheck
 
+      - name: Frontend module tests
+        working-directory: globalmart-frontend
+        run: node --test tests/*.test.cjs
+
+      - name: Install Chromium
+        working-directory: globalmart-frontend
+        run: npx playwright install --with-deps chromium
+
+      - name: Renderer regression tests (HTTP fixtures)
+        working-directory: globalmart-frontend
+        run: npm run test:e2e
+
   build-and-test:
     name: Build & Test (.NET 8)
     runs-on: ubuntu-latest
@@ -64,6 +76,19 @@ jobs:
       # ------------------------------------------------------------------
       # 2. Configurar .NET 8 SDK
       # ------------------------------------------------------------------
+      # S2-082/083/084 run production TypeScript/React modules from the .NET suite.
+      # Jobs have separate filesystems; the frontend gate's node_modules is not shared.
+      - name: Setup Node.js for cross-service tests
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: globalmart-frontend/package-lock.json
+
+      - name: Install renderer dependencies for backend integration tests
+        working-directory: globalmart-frontend
+        run: npm ci --ignore-scripts
+
       - name: Setup .NET 8
         uses: actions/setup-dotnet@v4
         with:
@@ -101,6 +126,9 @@ jobs:
 
       - name: Build TaxComplianceService
         run: dotnet build src/TaxComplianceService/TaxComplianceService.csproj --no-restore --configuration Release
+
+      - name: Build unit tests
+        run: dotnet build tests/GlobalMart.Tests/GlobalMart.Tests.csproj --no-restore --configuration Release
 
       - name: Build IntegrationTests
         run: dotnet build tests/GlobalMart.IntegrationTests/GlobalMart.IntegrationTests.csproj --no-restore --configuration Release

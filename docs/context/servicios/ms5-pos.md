@@ -13,6 +13,10 @@ reglas: [RN-01, RN-02, RN-03, RN-06, RF-02, RF-03, RF-04, RF-05, RF-06, RF-07]
 ---
 # MS-5 · POS & Cart Service
 
+## S2-055 / TI3-686 — Verificación desde Electron
+
+[IMPLEMENTADO, alcance acotado] `ElectronCardE2ETests` ejecuta apertura y venta TARJETA desde UI, conecta MS-5 con PostgreSQL migrado y simulador Node reales y compara venta, intento, pago, referencia y evento durable. Aprobación: COMPLETADA + 1 pago + 1 `sale.completed`; rechazo: PENDIENTE + 0 pagos + 0 eventos. Identidad, catálogo e IVA controlados; no verifica entrega Kafka ni todos los servicios desplegados. Validación Windows 2026-10-19: **2/2 aprobadas**, capturas y JSON de concordancia en [S2-055](../../qa/S2-055/reporte.md). No cambia endpoints ni comportamiento productivo.
+
 > Servicio central del punto de venta. Gestiona turnos de caja y el ciclo completo de una venta (carrito, ítems, cobro, anulación). Integrado con MS-2 (IVA) y MS-3 (productos). Persiste y publica `sale.completed` mediante outbox; el frontend usa los cobros en efectivo y tarjeta simulada. El hardware físico sigue pendiente.
 
 ## Contrato Oficial de Creación de Venta (POST /ventas) — S2-001 / S2-002 / S2-003
@@ -397,3 +401,7 @@ Validación del 2026-10-26: **84/84 pruebas Release aprobadas**, sin fallos ni o
 ## S2-091 — Alcance de anulación total
 
 [IMPLEMENTADO backend S2-092] Ver [contrato HTTP, permisos y matriz](../dominio/anulacion-venta.md). Solo anulación total ADMIN del tenant para efectivo completado y turno original abierto. La ruta y el servicio verifican autorización; el repositorio comprueba estado/pagos/intentos dentro de una transacción con bloqueo de turno y venta. Rechazos 400/401/403/404/409 sin mutación; tarjeta aprobada sin reembolso disponible e intentos inciertos quedan bloqueados. Parciales, mixtos, devolución física, reversión fiscal y reposición de inventario no se implementan. No hay migración ni cambios de UI. [Pruebas y límites](../../qa/S2-092/reporte.md).
+
+## Integración de ramas — 2026-11-01
+
+El destino local de impuestos en `Services:TaxComplianceService:BaseUrl` se corrige a `http://localhost:5239`, coincidiendo con launchSettings de MS-2.

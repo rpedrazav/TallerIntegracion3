@@ -1,28 +1,18 @@
-using System.Text.Json;
 using Confluent.Kafka;
-using Microsoft.EntityFrameworkCore;
-using WarehouseInventoryService.Data;
-using WarehouseInventoryService.Models;
-using WarehouseInventoryService.Repositories;
 
 namespace WarehouseInventoryService.Messaging;
 
 /// <summary>
 /// Servicio hospedado que se suscribe al topic Kafka "sale.completed" al iniciar la aplicación.
-/// Por cada evento recibido: verifica idempotencia (EventosKafkaProcesados), deserializa el
-/// payload, itera los items y descuenta stock vía IStockRepository.Descontar.
+/// Por cada evento recibido, delega el procesamiento a ISaleEventProcessor que se encarga de:
+/// verificar idempotencia (EventosKafkaProcesados), deserializar el payload, iterar los items
+/// y descontar stock vía IStockRepository.Descontar.
 /// Si el procesamiento de un mensaje falla, se loguea el error y se continúa con el siguiente
 /// mensaje sin bloquear el consumer.
-/// No implementa selección de lote por FEFO (ver ticket separado).
 /// </summary>
 public sealed class KafkaConsumerService : IHostedService, IDisposable
 {
     private const string Topic = "sale.completed";
-
-    private static readonly JsonSerializerOptions JsonOptions = new()
-    {
-        PropertyNameCaseInsensitive = true
-    };
 
     private readonly ILogger<KafkaConsumerService> _logger;
     private readonly IConfiguration _configuration;
@@ -85,7 +75,9 @@ public sealed class KafkaConsumerService : IHostedService, IDisposable
 
                 try
                 {
-                    ProcesarEvento(result.Message.Value);
+                    using var scope = _scopeFactory.CreateScope();
+                    var processor = scope.ServiceProvider.GetRequiredService<ISaleEventProcessor>();
+                    processor.ProcesarEvento(result.Message.Value);
                 }
                 catch (Exception ex)
                 {
@@ -108,78 +100,6 @@ public sealed class KafkaConsumerService : IHostedService, IDisposable
         }
     }
 
-    private void ProcesarEvento(string payload)
-    {
-        SaleCompletedEvent? evento;
-        try
-        {
-            evento = JsonSerializer.Deserialize<SaleCompletedEvent>(payload, JsonOptions);
-        }
-        catch (JsonException ex)
-        {
-            _logger.LogError(ex, "Payload inválido en topic {Topic}: {Payload}", Topic, payload);
-            return;
-        }
-
-        if (evento is null || evento.Items.Count == 0)
-        {
-            _logger.LogWarning("Evento sale.completed sin items o nulo: {Payload}", payload);
-            return;
-        }
-
-        // Idempotencia: usa EventId (GUID único del evento) si está presente, o VentaId como fallback.
-        var eventId = evento.EventId != Guid.Empty ? evento.EventId : evento.VentaId;
-
-        using var scope = _scopeFactory.CreateScope();
-        var context = scope.ServiceProvider.GetRequiredService<WarehouseDbContext>();
-
-        // No hay TenantMiddleware en este flujo (no es un request HTTP), así que el tenant
-        // del filtro global multi-tenant se setea manualmente desde el propio evento.
-        context.CurrentTenantId = evento.TenantId;
-
-        var yaProcesado = context.EventosKafkaProcesados
-            .AsNoTracking()
-            .Any(e => e.EventId == eventId);
-
-        if (yaProcesado)
-        {
-            _logger.LogInformation(
-                "Evento {EventId} ya fue procesado anteriormente, se descarta (idempotencia)",
-                eventId);
-            return;
-        }
-
-        var stockRepository = scope.ServiceProvider.GetRequiredService<IStockRepository>();
-
-        foreach (var item in evento.Items)
-        {
-            var stockActualizado = stockRepository
-                .Descontar(item.ProductoId, item.Cantidad, evento.TenantId, evento.SucursalId)
-                .GetAwaiter()
-                .GetResult();
-
-            if (stockActualizado is null)
-            {
-                _logger.LogWarning(
-                    "No existe stock para producto {ProductoId} en sucursal {SucursalId} (venta {VentaId})",
-                    item.ProductoId, evento.SucursalId, evento.VentaId);
-            }
-            else
-            {
-                _logger.LogInformation(
-                    "Stock descontado: producto {ProductoId}, sucursal {SucursalId}, cantidad {Cantidad}, venta {VentaId}",
-                    item.ProductoId, evento.SucursalId, item.Cantidad, evento.VentaId);
-            }
-        }
-
-        context.EventosKafkaProcesados.Add(new EventoKafkaProcesado
-        {
-            EventId = eventId,
-            ProcesadoAt = DateTime.UtcNow
-        });
-        context.SaveChanges();
-    }
-
     public async Task StopAsync(CancellationToken cancellationToken)
     {
         _cts?.Cancel();
@@ -199,3 +119,4 @@ public sealed class KafkaConsumerService : IHostedService, IDisposable
         _consumer?.Dispose();
     }
 }
+

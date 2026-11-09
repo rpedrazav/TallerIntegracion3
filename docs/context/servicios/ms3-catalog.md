@@ -5,7 +5,7 @@ titulo: MS-3 · Catalog & Pricing Service
 estado: parcial
 fuentes: [src/CatalogPricingService/]
 verificado_contra_codigo: true
-ultima_revision: 2026-10-24
+ultima_revision: 2026-11-01
 depende_de: [ms1-identity]
 publica: []
 consume: []
@@ -14,6 +14,7 @@ reglas: [RN-01, RN-11, RF-04, RF-11, CP-01, CP-04, CP-05]
 # MS-3 · Catalog & Pricing Service
 
 > Gestiona el catálogo de productos del tenant con búsqueda por nombre (full-text) y lookup por código de barras. Soporta categorías jerárquicas y productos de peso variable. Precios dinámicos y promociones son PLANIFICADOS. Ver [[matriz-rutas]] para el inventario de puertos y prefijos.
+> Gestiona el catálogo de productos del tenant con búsqueda por nombre (full-text) y lookup por código de barras. Soporta categorías jerárquicas y productos de peso variable. Incluye seed de 30 productos variados con códigos de barras y precios (TI3-256). Precios dinámicos y promociones son PLANIFICADOS.
 
 ## Endpoints reales
 
@@ -152,3 +153,7 @@ PUT ajeno e inexistente retornan el mismo 404 y body; GET por ID, lookup y DELET
 ## S2-063 — Consumo del precio en MS-5
 
 El precio `decimal(12,4)` de MS-3 se conserva ahora en el snapshot `numeric(20,4)` de MS-5. Para `EsPesoVariable`, MS-5 interpreta `PrecioBase` por kg conforme a S2-061. No se agrega un UUID de kg ni un catálogo de unidades: la correspondencia real de `UomBaseId` sigue [NO VERIFICADO]. No cambia el modelo ni los endpoints de MS-3.
+
+## Integración de ramas — 2026-11-01
+
+Se unifica el bloque JWT de configuración, eliminando claves duplicadas que impedían cargar `appsettings.json`. Las migraciones vigentes se conservan sin reintroducir las migraciones antiguas eliminadas.

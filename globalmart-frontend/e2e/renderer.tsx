@@ -2,6 +2,7 @@ import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { HashRouter } from 'react-router-dom';
 import Pos from '../src/pages/Pos';
+import Admin from '../src/pages/Admin';
 import TenantConfig from '../src/components/admin/TenantConfig';
 import App from '../src/App';
 import '../src/index.css';
@@ -16,9 +17,5 @@ const tenantConfigToken = [
 const component = new URLSearchParams(window.location.search).get('component');
 
 createRoot(document.getElementById('root')!).render(
-  component === 'app'
-    ? <App />
-    : component === 'tenant-config'
-    ? <TenantConfig token={tenantConfigToken} />
-    : <HashRouter><Pos /></HashRouter>
+  component === 'app' ? <App /> : component === 'tenant-config' ? <TenantConfig token={tenantConfigToken} /> : component === 'admin' ? <HashRouter><Admin /></HashRouter> : <HashRouter><Pos /></HashRouter>
 );

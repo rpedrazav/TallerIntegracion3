@@ -1,0 +1,45 @@
+{
+  "scenario": "sim-approved-v1",
+  "verifiedAt": "2026-10-19T15:21:09.6719828Z",
+  "tenant": "e3d18945-e0f2-41f8-b1bd-2e637245dc83",
+  "saleId": "5976a1ae-d1c2-46d2-a526-1b342343f034",
+  "shiftId": "bc752867-fc52-427b-82cc-8c9df3763ced",
+  "total": 119.00,
+  "saleState": "COMPLETADA",
+  "attemptState": "APROBADO",
+  "gateway": {
+    "request_id": "fc138364-7b07-4da2-8e4a-7bfdd4190c6f",
+    "transaction_id": "SIM-TXN-4FBB17674CF2475418F02CAF",
+    "status": "APPROVED",
+    "authorization_code": "SIM-APPROVED",
+    "gateway_reference": "SIM-REF-4FBB17674CF2475418F02CAF",
+    "decline_code": null,
+    "message": null,
+    "processed_at": "2026-10-19T15:21:08.534+00:00"
+  },
+  "gatewayRequest": {
+    "request_id": "fc138364-7b07-4da2-8e4a-7bfdd4190c6f",
+    "tenant_id": "e3d18945-e0f2-41f8-b1bd-2e637245dc83",
+    "sale_id": "5976a1ae-d1c2-46d2-a526-1b342343f034",
+    "amount": 119.00,
+    "currency": "CLP",
+    "scenario_id": "sim-approved-v1"
+  },
+  "paymentCount": 1,
+  "eventCount": 1,
+  "payments": [
+    {
+      "Monto": 119.00,
+      "Referencia": "SIM-REF-4FBB17674CF2475418F02CAF"
+    }
+  ],
+  "events": [
+    {
+      "EventId": "4e171bd6-7de6-4472-80a6-86f55ab8b12e",
+      "Topic": "sale.completed",
+      "Payload": "{\u0022event_id\u0022:\u00224e171bd6-7de6-4472-80a6-86f55ab8b12e\u0022,\u0022schema_version\u0022:1,\u0022tenant_id\u0022:\u0022e3d18945-e0f2-41f8-b1bd-2e637245dc83\u0022,\u0022venta_id\u0022:\u00225976a1ae-d1c2-46d2-a526-1b342343f034\u0022,\u0022cajero_id\u0022:\u0022a6dda641-98cc-40f2-88a2-68194357cd73\u0022,\u0022sucursal_id\u0022:\u0022534b00c1-340e-44f3-bae8-ba61253f1781\u0022,\u0022items\u0022:[{\u0022producto_id\u0022:\u00223577d98f-2a01-4bb0-bbad-752ac2bb82ac\u0022,\u0022cantidad\u0022:1,\u0022precio_unitario\u0022:100.00}],\u0022subtotal\u0022:100.00,\u0022iva\u0022:19.00,\u0022total\u0022:119.00,\u0022metodo_pago\u0022:\u0022TARJETA\u0022,\u0022timestamp\u0022:\u00222026-10-19T15:21:08.5647336Z\u0022}"
+    }
+  ],
+  "authorizationPosts": 1,
+  "scope": "Electron \u002B MS-5 \u002B PostgreSQL \u002B Node simulator; fixture identity/catalog/tax; durable outbox, no Kafka delivery"
+}

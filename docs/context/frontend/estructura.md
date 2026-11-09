@@ -5,7 +5,7 @@ titulo: Frontend — Estructura del Proyecto Electron + React
 estado: parcial
 fuentes: [globalmart-frontend/src/, globalmart-frontend/package.json, globalmart-frontend/forge.config.ts]
 verificado_contra_codigo: true
-ultima_revision: 2026-10-25
+ultima_revision: 2026-11-01
 depende_de: [stack, ms1-identity, guia-estilo]
 publica: []
 consume: []
@@ -114,3 +114,7 @@ globalmart-frontend/
 - `globalmart-frontend/src/hardware/scale-cart.ts`
 - `globalmart-frontend/tests/scale-main-preload.integration.test.cjs`
 - `globalmart-frontend/package.json`
+
+## Integración de ramas — 2026-11-01
+
+`npm start` usa `electron-forge start` en Windows y Unix, sin desactivar el sandbox globalmente. Se conserva ForkTsCheckerWebpackPlugin y el gate `npm run typecheck`. Empaquetado Windows comprobado durante la integración.

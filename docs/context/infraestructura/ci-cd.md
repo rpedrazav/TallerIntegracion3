@@ -3,9 +3,9 @@ id: ci-cd
 tipo: infra
 titulo: CI/CD — GitHub Actions
 estado: implementado
-fuentes: [.github/workflows/ci.yml, .github/workflows/docker-build.yml]
+fuentes: [.github/workflows/ci.yml, .github/workflows/docker-build.yml, .github/workflows/electron-e2e.yml]
 verificado_contra_codigo: true
-ultima_revision: 2026-10-27
+ultima_revision: 2026-11-01
 depende_de: [docker-compose, testing]
 publica: []
 consume: []
@@ -28,6 +28,10 @@ on:
 ```
 
 ## Jobs del pipeline
+
+### Workflow independiente `electron-e2e.yml` — S2-024
+
+`.github/workflows/electron-e2e.yml` ejecuta en Windows, Node 22, `npm ci` y `npm run ci:local`, sin secretos, Docker ni datos personales. Arranca Electron real con perfil aislado por prueba y APIs simuladas. Publica HTML, capturas y trazas de fallo durante siete días, excluyendo perfiles. Tiene límite de 15 minutos y se activa con push a `main`, `dev` o `local`, PR hacia esas ramas y ejecución manual. El mismo comando local aprobó typecheck y **2/2 E2E** el 2026-10-18; ejecución hospedada GitHub Actions [NO VERIFICADO]. [Guía reproducible](../../../globalmart-frontend/e2e/electron/README.md).
 
 ### 1. `frontend-typecheck` (Gate TypeScript — S2-029 / TI3-660)
 - Checkout del código
@@ -58,7 +62,7 @@ env:
 
 ## Lo que NO corre en CI
 
-- Frontend Electron (requiere display/GUI)
+- Electron contra APIs desplegadas (el workflow S2-024 usa APIs simuladas)
 - Prometheus/Grafana (no necesarios para tests)
 - Kafdrop (UI, no necesaria en CI)
 
@@ -73,3 +77,9 @@ Los tests actuales son console apps de smoke testing (no xUnit con assertions). 
 
 ## Fuentes
 - `.github/workflows/ci.yml`
+
+## Integración de ramas — 2026-11-01
+
+CI compila también `GlobalMart.Tests`, incorporado a la solución, antes de ejecutar `dotnet test --no-build`. El gate frontend ejecuta las pruebas Node y la regresión Playwright con Chromium y fixtures HTTP. La integración real de Electron/tarjeta conserva su ejecución específica.
+
+El job `build-and-test` instala Node.js 22 y ejecuta `npm ci --ignore-scripts` en el frontend antes de las pruebas .NET: las suites S2-082/083/084 ejecutan TypeScript y React productivos desde Node. Los archivos `node_modules` del job frontend no se comparten entre runners. El primer CI de integración detectó esta dependencia faltante (62 fallos por módulo ausente); el consumidor Kafka aprobó en esa ejecución con infraestructura real.

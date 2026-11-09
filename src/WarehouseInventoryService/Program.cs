@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
@@ -17,6 +17,7 @@ builder.Services.AddCors(options => options.AddPolicy("ElectronApp", policy =>
 builder.Services.AddDbContext<WarehouseInventoryService.Data.WarehouseDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddScoped<IStockRepository, StockRepository>();
+builder.Services.AddScoped<WarehouseInventoryService.Messaging.ISaleEventProcessor, WarehouseInventoryService.Messaging.SaleEventProcessor>();
 builder.Services.AddHttpClient();
 if (builder.Configuration.GetValue("Kafka:Enabled", true))
     builder.Services.AddHostedService<WarehouseInventoryService.Messaging.KafkaConsumerService>();
@@ -54,12 +55,19 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
+
+    using var scope = app.Services.CreateScope();
+    var db = scope.ServiceProvider.GetRequiredService<WarehouseInventoryService.Data.WarehouseDbContext>();
+    db.Database.Migrate();
+    WarehouseInventoryService.Data.SeedData.Initialize(db);
 }
 
 app.UseCors("ElectronApp");
 app.UseAuthentication(); // 1. Verifica la firma del token
 app.UseAuthorization();  // 2. Verifica los roles del usuario
 app.UseMiddleware<WarehouseInventoryService.Middleware.TenantMiddleware>();
+
+// TI3-258: Mapear controllers normales siempre
 app.MapControllers();
 app.MapGet("/health", () => Results.Ok(new { status = "ok" }));
 
