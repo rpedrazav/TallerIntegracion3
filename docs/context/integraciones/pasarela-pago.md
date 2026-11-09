@@ -5,7 +5,7 @@ titulo: Integración con Pasarela de Pago
 estado: parcial
 fuentes: [GlobalMart_ContextMaster.md#sec12, src/POSCartService/Services/IPaymentGatewayClient.cs, src/POSCartService/Services/PaymentGatewayClient.cs, src/POSCartService/Exceptions/PaymentAuthorizationUncertainException.cs, src/POSCartService/DTOs/PaymentGatewayDtos.cs, src/POSCartService/Program.cs, Docker/simulator/server.js, tests/GlobalMart.IntegrationTests/PaymentGatewayClientTests.cs, tests/GlobalMart.IntegrationTests/PaymentSimulatorIntegrationTests.cs, tests/GlobalMart.IntegrationTests/PaymentRetrySafetyTests.cs, tareas/sprint2_youtrack_resultado.json, Docker/env.example, .env.example, src/POSCartService/appsettings.json, tests/GlobalMart.IntegrationTests/CobroSeguroIntegrationTests.cs, docs/qa/S2-035/reporte.md, src/POSCartService/Services/VentaService.cs, src/POSCartService/Repositories/VentaRepository.cs, src/POSCartService/Controllers/VentasController.cs, src/POSCartService/Models/Pago.cs, src/POSCartService/DTOs/CobrarTarjetaDTOs.cs, tests/GlobalMart.IntegrationTests/CobrarTarjetaIntegrationTests.cs, tests/GlobalMart.IntegrationTests/PaymentEventSequenceContractTests.cs, globalmart-frontend/src/payments/terminal-ipc.ts, globalmart-frontend/src/payments/synchronizeCardPayment.ts, globalmart-frontend/src/preload.ts, globalmart-frontend/tests/terminal-ipc.test.cjs, globalmart-frontend/tests/synchronized-card-payment.test.cjs]
 verificado_contra_codigo: true
-ultima_revision: 2026-10-26
+ultima_revision: 2026-11-09
 depende_de: [ms5-pos]
 publica: []
 consume: []
@@ -317,9 +317,9 @@ GlobalMart OS solo recibe la referencia de la transacción (RRN/código de autor
 
 ## Reembolsos (anulaciones)
 
-Al anular una venta cobrada con tarjeta:
-- MS-5 debe llamar a la pasarela con el código de autorización para revertir el cargo
-- Actualmente `VentaService.AnularAsync` no llama a ninguna pasarela [DISCREPANCIA]
+[CONTRATO S2-091 DEFINIDO; IMPLEMENTACIÓN PENDIENTE] Ver [anulación total](../dominio/anulacion-venta.md). El simulador y `IPaymentGatewayClient` solo autorizan/consultan pagos; no ofrecen refund/reversal. El endpoint futuro debe rechazar tarjeta aprobada con 409 `REEMBOLSO_NO_DISPONIBLE` sin cambiar la venta, e intentos inciertos con 409 `PAGO_INCIERTO`. No usar la respuesta APPROVED de autorización como confirmación de devolución.
+
+`VentaService.AnularAsync` actualmente no consulta la pasarela ni impone esas guardias. Un futuro soporte de reembolsos necesitará una operación específica del simulador y respuesta definitiva verificable; enviar un código de autorización por sí solo no revierte el cargo. Devoluciones parciales se difieren a otro sprint.
 
 ## Casos de uso afectados
 

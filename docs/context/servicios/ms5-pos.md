@@ -5,7 +5,7 @@ titulo: MS-5 · POS & Cart Service
 estado: parcial
 fuentes: [src/POSCartService/, Docker/simulator/server.js, tests/GlobalMart.IntegrationTests/PaymentSimulatorIntegrationTests.cs, tests/GlobalMart.IntegrationTests/PaymentRetrySafetyTests.cs, tests/GlobalMart.IntegrationTests/CobroSeguroIntegrationTests.cs, docs/qa/S2-035/reporte.md, tests/GlobalMart.IntegrationTests/CobrarTarjetaIntegrationTests.cs, tests/GlobalMart.IntegrationTests/PaymentEventSequenceContractTests.cs]
 verificado_contra_codigo: true
-ultima_revision: 2026-10-26
+ultima_revision: 2026-11-09
 depende_de: [ms1-identity, ms2-tax, ms3-catalog]
 publica: [sale.completed]
 consume: []
@@ -54,7 +54,7 @@ reglas: [RN-01, RN-02, RN-03, RN-06, RF-02, RF-03, RF-04, RF-05, RF-06, RF-07]
 | GET | `/ventas/turno/{turnoId}` (alias `/api/ventas/turno/{turnoId}`) | JWT | [IMPLEMENTADO] |
 | POST | `/ventas/{id}/cobrar` (alias `/api/ventas/{id}/cobrar`) | JWT | [IMPLEMENTADO — valida monto_recibido ≥ total, calcula vuelto y persiste venta, pago y sale.completed pendiente en una transacción] |
 | POST | `/ventas/{id}/cobrar-tarjeta` (alias `/api/ventas/{id}/cobrar-tarjeta`) | JWT | [IMPLEMENTADO — reserva previa, aprobación/rechazo/timeout y bloqueo de repetición; S2-035] |
-| POST | `/ventas/{id}/anular` (alias `/api/ventas/{id}/anular`) | JWT | [PLANIFICADO en controller — implementado en VentaService.AnularAsync] |
+| POST | `/ventas/{id}/anular` (alias `/api/ventas/{id}/anular`) | JWT + ADMIN | [CONTRATO S2-091 definido; controller y guardias pendientes; servicio parcial existente] |
 | GET | `/health` | Público | [IMPLEMENTADO] |
 
 > Ver [[matriz-rutas]] para la comparativa exhaustiva de rutas Kong, controladores y puertos de host.
@@ -104,10 +104,11 @@ Antes de autorizar tarjeta, MS-5 persiste un `IntentoPago PENDIENTE` con clave d
    → Si Timeout/Error: IntentoPago sigue PENDIENTE, venta sigue PENDIENTE, 0 pagos y 0 outbox (504 / 502)
    → GET /ventas/{id}/intento-tarjeta reconcilia el mismo intento sin repetir el POST
 
-6. POST /ventas/{id}/anular  { motivo }
-   → VentaService.AnularAsync: estado → ANULADA
+6. [PLANIFICADO, no expuesto] POST /ventas/{id}/anular  { motivo }
+   → Contrato S2-091: ADMIN del tenant, COMPLETADA en efectivo, turno original abierto
+   → Servicio actual parcial VentaService.AnularAsync: estado → ANULADA
    → Crea Anulacion { ventaId, autorizadoPor, motivo }
-   → ❌ NO solicita reembolso a pasarela
+   → ❌ NO solicita reembolso; contrato exige bloquear tarjeta aprobada e incertidumbre (guardias aún pendientes)
 ```
 
 ## Modelo de datos
@@ -392,3 +393,7 @@ Validación del 2026-10-26: **84/84 pruebas Release aprobadas**, sin fallos ni o
 1. **Aprobado:** Transiciona la venta a estado `COMPLETADA`, persiste el `Pago` de tipo `TARJETA` y genera el evento `sale.completed` en el outbox.
 2. **Rechazado:** Devuelve HTTP 422 y mantiene la venta en estado `PENDIENTE`.
 3. **Pérdida temporal / Timeout:** Devuelve HTTP 504 / 503 y mantiene la venta en estado `PENDIENTE` sin registrar pagos espurios.
+
+## S2-091 — Alcance de anulación total
+
+[CONTRATO DEFINIDO; IMPLEMENTACIÓN PENDIENTE] Ver [contrato HTTP, permisos y matriz](../dominio/anulacion-venta.md). Solo anulación total ADMIN del tenant para efectivo completado y turno original abierto; parciales y mixtos fuera de alcance. Rechazar tarjeta aprobada sin capacidad de devolución confirmada e intentos inciertos, sin alterar venta/pagos. El servicio existente no acredita cumplimiento; la ruta aún no está implementada. No se promete devolución física, reversión fiscal ni reposición de inventario.

@@ -5,13 +5,17 @@ titulo: Estado Real de Implementación — GlobalMart OS
 estado: vigente
 fuentes: [docs/context/_reports/inventario.md, src/, globalmart-frontend/src/api/client.ts, globalmart-frontend/src/hardware/simulated-scale-adapter.ts, globalmart-frontend/src/hardware/serial-scale-adapter.ts, globalmart-frontend/src/hardware/scale-adapter-factory.ts, globalmart-frontend/src/hardware/scale-ipc.ts, globalmart-frontend/src/payments/terminal-ipc.ts, globalmart-frontend/src/payments/synchronizeCardPayment.ts, globalmart-frontend/src/preload.ts, globalmart-frontend/e2e/weight-cart.spec.ts, globalmart-frontend/tests/simulated-scale-adapter.test.cjs, globalmart-frontend/tests/serial-scale-adapter.test.cjs, globalmart-frontend/tests/scale-ipc.test.cjs, globalmart-frontend/tests/terminal-ipc.test.cjs, globalmart-frontend/tests/synchronized-card-payment.test.cjs, git log, docs/context/_reports/preguntas-abiertas.md, tests/GlobalMart.IntegrationTests/CobroSeguroIntegrationTests.cs, docs/qa/S2-035/reporte.md, new-ingresses.yaml]
 verificado_contra_codigo: true
-ultima_revision: 2026-10-27
+ultima_revision: 2026-11-09
 depende_de: []
 publica: []
 consume: []
 reglas: []
 ---
 # Estado Real de Implementación — GlobalMart OS
+
+## S2-091 — Contrato de anulación total (2026-11-09)
+
+[CONTRATO DEFINIDO; ENDPOINT PLANIFICADO] [Anulación total](dominio/anulacion-venta.md): POST `/ventas/{id}/anular` y alias `/api`, JWT + ADMIN del mismo tenant, motivo obligatorio, venta COMPLETADA en efectivo y turno original ABIERTO. Devolución parcial fuera de alcance. Tarjeta aprobada e intentos inciertos se rechazarán sin mutación: el simulador no tiene reembolso y no se declara dinero devuelto. `AnularAsync` existente no implementa estas guardias; S2-091 solo entrega contrato y matriz de aceptación, sin pruebas de endpoint ni cambios de runtime.
 
 ## Avance administrativo del 2026-10-27
 
