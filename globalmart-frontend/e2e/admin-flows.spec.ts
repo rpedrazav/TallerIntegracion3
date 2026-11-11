@@ -164,6 +164,59 @@ for (const caso of [
   });
 }
 
+test('modal crear usuario contiene el foco, cierra con Escape y devuelve el foco', async ({ page }) => {
+  await page.route('**/users**', route => route.fulfill({ json: { items: [usuarioInicial], totalPages: 1 } }));
+  await abrirAdmin(page);
+
+  const opener = page.getByRole('button', { name: 'Crear usuario' });
+  await opener.click();
+  const modal = page.getByRole('dialog', { name: 'Crear usuario' });
+  const first = modal.getByLabel('Nombre');
+  const last = modal.getByRole('button', { name: 'Crear usuario' });
+  await expect(first).toBeFocused();
+
+  await first.press('Shift+Tab');
+  await expect(last).toBeFocused();
+  await last.press('Tab');
+  await expect(first).toBeFocused();
+
+  await last.click();
+  await expect(first).toHaveAttribute('aria-invalid', 'true');
+  await expect(first).toHaveAttribute('aria-describedby', 'cu-nombre-error');
+  await expect(modal.locator('#cu-nombre-error')).toContainText('El nombre es obligatorio.');
+
+  await first.press('Escape');
+  await expect(modal).toBeHidden();
+  await expect(opener).toBeFocused();
+});
+
+test('modal editar usuario contiene el foco, cierra con Escape y devuelve el foco', async ({ page }) => {
+  await page.route('**/users**', route => route.fulfill({ json: { items: [usuarioInicial], totalPages: 1 } }));
+  await abrirAdmin(page);
+
+  const opener = page.getByRole('button', { name: `Editar usuario ${usuarioInicial.nombre}` });
+  await opener.click();
+  const modal = page.getByRole('dialog', { name: 'Editar usuario' });
+  const first = modal.getByLabel('Correo electrónico');
+  const last = modal.getByRole('button', { name: 'Guardar cambios' });
+  await expect(first).toBeFocused();
+
+  await first.press('Shift+Tab');
+  await expect(last).toBeFocused();
+  await last.press('Tab');
+  await expect(first).toBeFocused();
+
+  await first.fill('correo-invalido');
+  await last.click();
+  await expect(first).toHaveAttribute('aria-invalid', 'true');
+  await expect(first).toHaveAttribute('aria-describedby', 'eu-email-error');
+  await expect(modal.locator('#eu-email-error')).toContainText('Ingresa un correo válido.');
+
+  await first.press('Escape');
+  await expect(modal).toBeHidden();
+  await expect(opener).toBeFocused();
+});
+
 test('edición exitosa actualiza la misma fila sin crear otra', async ({ page }) => {
   let usuarios = [usuarioInicial];
   let putCount = 0;

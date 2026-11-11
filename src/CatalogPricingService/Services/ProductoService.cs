@@ -42,6 +42,7 @@ namespace CatalogPricingService.Services
 
             productoExistente.Nombre = productoActualizado.Nombre;
             productoExistente.Descripcion = productoActualizado.Descripcion;
+            productoExistente.CodigoBarras = productoActualizado.CodigoBarras;
             productoExistente.PrecioBase = productoActualizado.PrecioBase;
             productoExistente.UomBaseId = productoActualizado.UomBaseId;
             productoExistente.CategoriaId = productoActualizado.CategoriaId;

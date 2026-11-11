@@ -3,7 +3,7 @@ id: pantallas
 tipo: frontend
 titulo: Pantallas del Frontend — GlobalMart OS
 estado: parcial
-fuentes: [globalmart-frontend/src/pages/, globalmart-frontend/src/components/, globalmart-frontend/src/api/client.ts, globalmart-frontend/src/hardware/scale-cart.ts, globalmart-frontend/src/payments/SimulatedTerminalAdapter.ts, globalmart-frontend/src/payments/terminal-ipc.ts, globalmart-frontend/src/payments/synchronizeCardPayment.ts, globalmart-frontend/src/preload.ts, globalmart-frontend/tests/scale-main-preload.integration.test.cjs, globalmart-frontend/tests/user-edit.test.cjs, globalmart-frontend/tests/user-deactivation.test.cjs, globalmart-frontend/e2e/admin-flows.spec.ts, globalmart-frontend/e2e/weight-cart.spec.ts, globalmart-frontend/tests/terminal-port.test.cjs, globalmart-frontend/tests/terminal-ipc.test.cjs, globalmart-frontend/tests/synchronized-card-payment.test.cjs]
+fuentes: [globalmart-frontend/src/pages/, globalmart-frontend/src/components/, globalmart-frontend/src/api/client.ts, globalmart-frontend/src/hardware/scale-cart.ts, globalmart-frontend/src/payments/SimulatedTerminalAdapter.ts, globalmart-frontend/src/payments/terminal-ipc.ts, globalmart-frontend/src/payments/synchronizeCardPayment.ts, globalmart-frontend/src/preload.ts, globalmart-frontend/tests/scale-main-preload.integration.test.cjs, globalmart-frontend/tests/user-edit.test.cjs, globalmart-frontend/tests/user-deactivation.test.cjs, globalmart-frontend/e2e/admin-flows.spec.ts, globalmart-frontend/e2e/productos-admin.spec.ts, globalmart-frontend/e2e/weight-cart.spec.ts, globalmart-frontend/tests/terminal-port.test.cjs, globalmart-frontend/tests/terminal-ipc.test.cjs, globalmart-frontend/tests/synchronized-card-payment.test.cjs]
 verificado_contra_codigo: true
 ultima_revision: 2026-11-11
 depende_de: [estructura, ms1-identity, ms5-pos, guia-estilo]
@@ -161,6 +161,12 @@ La UI expone edición de email y baja lógica; todavía no expone reactivación.
 
 **Baja lógica:** tras un DELETE 204, la pantalla conserva la fila con `activo=false`, bloquea inmediatamente edición y roles, y `GET /users` vuelve a incluir el usuario inactivo al recargar. No existe vista/API de auditoría consultable.
 
+### TI3-735 / S2-104 — accesibilidad de formularios administrativos [IMPLEMENTADO]
+
+`CrearUsuarioModal` y `EditarUsuarioModal` conservan `role="dialog"`, `aria-modal` y títulos accesibles; ahora fijan foco inicial, contienen Tab/Shift+Tab, cierran con Escape cuando no guardan y devuelven el foco al control invocador. Los errores de nombre, correo, contraseña y rol se asocian al control correspondiente mediante `aria-invalid` y `aria-describedby`. `AdminRoles` mantiene las defensas de handlers para cuentas inactivas y aplica tokens aprobados a controles, botones y mensajes con icono, título y detalle.
+
+`ProductoModal` incorpora la misma gestión de foco y semántica, restaura el indicador de foco del navegador y usa un formulario para aceptar Enter. Una guarda single-flight evita duplicar POST/PUT mientras existe un guardado; los errores locales de nombre y precio quedan asociados a sus inputs. Validación 2026-11-11: Node administrativo 12/12 y TypeScript con exit code 0. Playwright informó 25 casos `ok` en la corrida conjunta; el caso nuevo de productos falló inicialmente, se corrigió y fue informado `ok` en una repetición dirigida. Ambos runners quedaron abiertos por su servidor local y fueron interrumpidos sin exit code 0: PASS REPORTADO.
+
 Usa los tokens de color de la [[guia-estilo]] definidos en `index.css`. No hay reactivación individual de usuarios en UI todavía.
 
 ## ProductosPage.tsx — baja lógica TI3-642 / S2-011 [IMPLEMENTADO]
@@ -172,6 +178,12 @@ Mantiene `axios.delete` a `DELETE /products/{id}` con Bearer y `fetchDatos()` pa
 El backend exige ADMIN, conserva físicamente la fila mediante `IsActive=false`, retorna 204 idempotente y el mismo 404 para inexistente/otro tenant. La pantalla no agrega una guarda de rol; la autorización se aplica en MS-3. PUT requiere ADMIN para cambiar el estado. TI3-642 no modificó `TenantConfig.tsx`.
 
 Validación 2026-10-14: TypeScript `--noEmit --incremental false --pretty false` aprobado. Contrato backend validado con 11 casos de [DesactivarProductoIntegrationTests.cs](../../../tests/GlobalMart.IntegrationTests/DesactivarProductoIntegrationTests.cs). Validación visual/E2E específica de la acción: [NO VERIFICADO].
+
+### TI3-734 / S2-103 — tabla, validación y errores [IMPLEMENTADO]
+
+Creación y edición conservan el modal ante error y muestran mensajes comprensibles para el arreglo de FluentValidation (400), sesión inválida (401), permisos (403), producto inexistente/ajeno (404) y fallos de red. La desactivación presenta el error en pantalla y no anuncia éxito ni altera la fila ante fallo. El precio debe ser mayor que cero, igual que en MS-3. Tras POST, PUT o DELETE exitoso, `fetchDatos()` recarga automáticamente la colección y los filtros actuales se recalculan; no se requiere pulsar **Recargar**.
+
+`e2e/productos-admin.spec.ts` cubre alta, edición del código de barras, baja lógica, filtros, precio cero y feedback 400/401/403/404/red. El 2026-11-11 Playwright informó 8/8 casos `ok`, pero el servidor local no finalizó y el runner fue interrumpido sin resumen ni exit code 0: PASS REPORTADO. TypeScript aprobó con exit code 0. La pantalla continúa solicitando solo `page=1&pageSize=500`; catálogos mayores quedan fuera del alcance de TI3-734.
 
 ## BarcodeInput.tsx [IMPLEMENTADO]
 

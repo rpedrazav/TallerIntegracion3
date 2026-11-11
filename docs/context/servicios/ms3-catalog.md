@@ -5,7 +5,7 @@ titulo: MS-3 · Catalog & Pricing Service
 estado: parcial
 fuentes: [src/CatalogPricingService/]
 verificado_contra_codigo: true
-ultima_revision: 2026-11-01
+ultima_revision: 2026-11-11
 depende_de: [ms1-identity]
 publica: []
 consume: []
@@ -54,6 +54,12 @@ TI3-643 / S2-012: `GET /products/{id}`, utilizado por el POS para resolver produ
 Pruebas: [DesactivarProductoIntegrationTests.cs](../../../tests/GlobalMart.IntegrationTests/DesactivarProductoIntegrationTests.cs), 11/11 aprobadas el 2026-10-14 con PostgreSQL 16 y esquemas aislados. Cubren fila y datos conservados, segunda baja, 404 indistinguible, tenant ajeno intacto, 401/403, bloqueo de activación/desactivación por PUT sin ADMIN y regresión de ediciones permitidas. Build de MS-3 aprobado.
 
 Cierre TI3-642: test adicional `Delete_ProductoVendido_ConservaVentaHistoricaConsultableYDatosIntactos`, ejecutado individualmente el 2026-10-14: 1/1 aprobado. Prepara una venta COMPLETADA con un ItemVenta referido al producto y consulta `GET /ventas/{id}` en MS-5 antes y después del DELETE ADMIN en MS-3 (204). Verifica que venta e ítem siguen consultables, conservando sus IDs, ProductoId, NombreProducto, PrecioUnitario, Cantidad, Subtotal e impuestos/total de venta. Confirma además la fila de catálogo con IsActive=false y sus demás datos intactos. Usa esquemas PostgreSQL aislados y no modifica código productivo.
+
+### Edición administrativa — TI3-734 / S2-103
+
+`ProductoService.UpdateProductoAsync` persiste `CodigoBarras` recibido por el contrato PUT, además de nombre, descripción, precio, UOM, categoría, estado y tipo de peso. La consulta previa continúa filtrando por ID y tenant mediante `GetByIdAsync`; los validadores existentes mantienen nombre, precio positivo y unicidad del código de barras dentro del tenant. No se cambiaron controlador, DTO, endpoint, autenticación ni migraciones.
+
+El caso `Put_ProductoBAjenoEInexistente_Mismo404YSnapshotIntacto_Propio200` ahora exige que el nuevo código de barras quede persistido. El 2026-11-11 el proyecto y la prueba compilaron, pero la ejecución se detuvo en `InitializeAsync` porque `GLOBALMART_TEST_POSTGRES` no está configurada; resultado funcional de integración [NO VERIFICADO] en este entorno.
 
 ## Modelo de datos
 

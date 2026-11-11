@@ -116,6 +116,7 @@ public sealed class ProductoTenantIsolationIntegrationTests : IAsyncLifetime
         await using var verify = _fixture.CatalogDb(_fixture.TenantA);
         var own = await verify.Productos.SingleAsync();
         Assert.Equal("Intento de edición", own.Nombre);
+        Assert.Equal("nuevo-edicion", own.CodigoBarras);
         Assert.Equal(999m, own.PrecioBase);
         Assert.False(own.IsActive);
         Assert.Equal(before, await SnapshotB());

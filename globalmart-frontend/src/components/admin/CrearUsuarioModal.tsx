@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 // Roles asignables por un ADMIN de tenant (SUPER_ADMIN está prohibido en MS-1).
 export const ROLES_ASIGNABLES = ['CAJERO', 'REPONEDOR', 'ADMIN'] as const;
@@ -99,6 +99,15 @@ const btnSecondary: React.CSSProperties = {
   ...btnBase, background: 'transparent', color: 'var(--color-ink)', border: '1px solid var(--color-line)',
 };
 
+const FOCUSABLE_SELECTOR = [
+  'button:not([disabled])',
+  'input:not([disabled])',
+  'select:not([disabled])',
+  'textarea:not([disabled])',
+  '[href]',
+  '[tabindex]:not([tabindex="-1"])',
+].join(',');
+
 const CrearUsuarioModal: React.FC<Props> = ({ isOpen, tenantId, sucursales, roles = [...ROLES_ASIGNABLES], onClose, onSubmit }) => {
   const [form, setForm] = useState<FormState>(FORM_INICIAL);
   const [touched, setTouched] = useState<Partial<Record<keyof FormState, boolean>>>({});
@@ -106,12 +115,28 @@ const CrearUsuarioModal: React.FC<Props> = ({ isOpen, tenantId, sucursales, role
   const [saving, setSaving] = useState(false);
   const [serverError, setServerError] = useState('');
   const [mostrarPassword, setMostrarPassword] = useState(false);
+  const dialogRef = useRef<HTMLFormElement>(null);
+  const previousFocusRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
     if (!isOpen) return;
     const password = generarPasswordInicial();
     setForm({ ...FORM_INICIAL, password, confirmarPassword: password });
     setMostrarPassword(false);
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    previousFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const frame = window.requestAnimationFrame(() => {
+      const dialog = dialogRef.current;
+      const first = dialog?.querySelector<HTMLElement>(FOCUSABLE_SELECTOR);
+      (first ?? dialog)?.focus();
+    });
+    return () => {
+      window.cancelAnimationFrame(frame);
+      previousFocusRef.current?.focus();
+    };
   }, [isOpen]);
 
   if (!isOpen) return null;
@@ -131,6 +156,32 @@ const CrearUsuarioModal: React.FC<Props> = ({ isOpen, tenantId, sucursales, role
     setSubmitted(false);
     setServerError('');
     onClose();
+  };
+
+  const handleDialogKeyDown = (event: React.KeyboardEvent<HTMLFormElement>) => {
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      cerrar();
+      return;
+    }
+    if (event.key !== 'Tab') return;
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+    const focusable = Array.from(dialog.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR));
+    if (focusable.length === 0) {
+      event.preventDefault();
+      dialog.focus();
+      return;
+    }
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (event.shiftKey && (document.activeElement === first || !dialog.contains(document.activeElement))) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && (document.activeElement === last || !dialog.contains(document.activeElement))) {
+      event.preventDefault();
+      first.focus();
+    }
   };
 
   const handleSubmit = async (ev: React.FormEvent) => {
@@ -166,17 +217,19 @@ const CrearUsuarioModal: React.FC<Props> = ({ isOpen, tenantId, sucursales, role
         value={form[k]}
         disabled={saving}
         aria-invalid={!!show(k)}
+        aria-describedby={show(k) ? `cu-${k}-error` : undefined}
         onChange={e => set(k, e.target.value as never)}
         onBlur={() => setTouched(t => ({ ...t, [k]: true }))}
         style={inputStyle(!!show(k))}
       />
-      {show(k) && <div role="alert" style={errorStyle}>{errors[k]}</div>}
+      {show(k) && <div id={`cu-${k}-error`} role="alert" style={errorStyle}>{errors[k]}</div>}
     </div>
   );
 
   return (
     <div style={overlayStyle} onClick={cerrar}>
       <form
+        ref={dialogRef}
         style={modalStyle}
         onClick={e => e.stopPropagation()}
         onSubmit={handleSubmit}
@@ -184,6 +237,8 @@ const CrearUsuarioModal: React.FC<Props> = ({ isOpen, tenantId, sucursales, role
         role="dialog"
         aria-modal="true"
         aria-labelledby="cu-titulo"
+        tabIndex={-1}
+        onKeyDown={handleDialogKeyDown}
       >
         <h3 id="cu-titulo" style={{ marginTop: 0 }}>Crear usuario</h3>
 
@@ -206,12 +261,14 @@ const CrearUsuarioModal: React.FC<Props> = ({ isOpen, tenantId, sucursales, role
             id="cu-rol"
             value={form.rol}
             disabled={saving}
+            aria-invalid={!!show('rol')}
+            aria-describedby={show('rol') ? 'cu-rol-error' : undefined}
             onChange={e => set('rol', e.target.value)}
             style={inputStyle(!!show('rol'))}
           >
             {roles.map(r => <option key={r} value={r}>{r}</option>)}
           </select>
-          {show('rol') && <div role="alert" style={errorStyle}>{errors.rol}</div>}
+          {show('rol') && <div id="cu-rol-error" role="alert" style={errorStyle}>{errors.rol}</div>}
         </div>
 
         <div style={{ marginBottom: '0.9rem' }}>

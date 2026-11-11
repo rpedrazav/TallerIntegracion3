@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import axios, { AxiosError } from 'axios';
 import { useAuth } from '../hooks/useAuth';
 import { buildServiceUrl } from '../config/api';
@@ -23,6 +23,76 @@ interface Producto {
 interface Categoria {
   id: string;
   nombre: string;
+}
+
+interface ValidationFailurePayload {
+  errorMessage?: string;
+  ErrorMessage?: string;
+  message?: string;
+}
+
+interface ApiErrorPayload {
+  message?: string;
+  errors?: Record<string, string[]> | ValidationFailurePayload[];
+}
+
+type ProductAction = 'cargar' | 'guardar' | 'desactivar';
+
+function validationMessages(payload: unknown): string[] {
+  if (Array.isArray(payload)) {
+    return payload
+      .map((item: unknown) => {
+        if (typeof item !== 'object' || item === null) return '';
+        const failure = item as ValidationFailurePayload;
+        return failure.errorMessage ?? failure.ErrorMessage ?? failure.message ?? '';
+      })
+      .filter((message): message is string => Boolean(message));
+  }
+
+  if (typeof payload !== 'object' || payload === null) return [];
+  const errors = (payload as ApiErrorPayload).errors;
+  if (Array.isArray(errors)) return validationMessages(errors);
+  if (typeof errors === 'object' && errors !== null) {
+    return Object.values(errors).flat().filter((message): message is string => Boolean(message));
+  }
+  return [];
+}
+
+export function getProductErrorMessage(error: unknown, action: ProductAction): string {
+  if (!axios.isAxiosError(error)) {
+    return action === 'desactivar'
+      ? 'Error inesperado al desactivar el producto.'
+      : 'Error inesperado al guardar el producto.';
+  }
+
+  if (!error.response) {
+    return 'No se pudo conectar con el servicio de catálogo (MS-3).';
+  }
+
+  const payload = error.response.data as ApiErrorPayload | ValidationFailurePayload[] | undefined;
+  const explicitMessage = !Array.isArray(payload) && typeof payload?.message === 'string'
+    ? payload.message.trim()
+    : '';
+  const validationMessage = validationMessages(payload).join(', ');
+
+  if (error.response.status === 400) {
+    return validationMessage || explicitMessage || 'Los datos del producto no son válidos.';
+  }
+  if (error.response.status === 401) {
+    return 'Tu sesión no es válida o expiró. Inicia sesión nuevamente.';
+  }
+  if (error.response.status === 403) {
+    return action === 'desactivar'
+      ? 'No tienes permisos para desactivar productos.'
+      : 'No tienes permisos para guardar productos.';
+  }
+  if (error.response.status === 404) {
+    return explicitMessage || 'El producto no existe o pertenece a otro tenant.';
+  }
+
+  return explicitMessage || (action === 'desactivar'
+    ? 'Error al desactivar el producto.'
+    : 'Error al guardar el producto.');
 }
 
 interface FormState {
@@ -53,7 +123,6 @@ const inputStyle: React.CSSProperties = {
   border: '1px solid var(--color-line)',
   borderRadius: '8px',
   fontSize: '0.95rem',
-  outline: 'none',
   boxSizing: 'border-box',
   color: 'var(--color-ink)',
   backgroundColor: 'var(--color-bg)',
@@ -69,6 +138,15 @@ const labelStyle: React.CSSProperties = {
   letterSpacing: '0.04em',
 };
 
+const PRODUCT_FOCUSABLE_SELECTOR = [
+  'button:not([disabled])',
+  'input:not([disabled])',
+  'select:not([disabled])',
+  'textarea:not([disabled])',
+  '[href]',
+  '[tabindex]:not([tabindex="-1"])',
+].join(',');
+
 // ── Componente Modal ──────────────────────────────────────────────────────────
 
 interface ModalProps {
@@ -77,14 +155,59 @@ interface ModalProps {
   categorias: Categoria[];
   guardando: boolean;
   errorModal: string;
+  errorField: keyof FormState | null;
   onChange: (field: keyof FormState, value: string | boolean) => void;
   onGuardar: () => void;
   onCerrar: () => void;
 }
 
 function ProductoModal({
-  modo, form, categorias, guardando, errorModal, onChange, onGuardar, onCerrar,
+  modo, form, categorias, guardando, errorModal, errorField, onChange, onGuardar, onCerrar,
 }: ModalProps) {
+  const dialogRef = useRef<HTMLFormElement>(null);
+  const previousFocusRef = useRef<HTMLElement | null>(null);
+  const titleId = 'producto-modal-titulo';
+  const errorId = 'producto-modal-error';
+  useEffect(() => {
+    previousFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const frame = window.requestAnimationFrame(() => {
+      const dialog = dialogRef.current;
+      const first = dialog?.querySelector<HTMLElement>('#modal-nombre')
+        ?? dialog?.querySelector<HTMLElement>(PRODUCT_FOCUSABLE_SELECTOR);
+      (first ?? dialog)?.focus();
+    });
+    return () => {
+      window.cancelAnimationFrame(frame);
+      previousFocusRef.current?.focus();
+    };
+  }, []);
+
+  const handleDialogKeyDown = (event: React.KeyboardEvent<HTMLFormElement>) => {
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      if (!guardando) onCerrar();
+      return;
+    }
+    if (event.key !== 'Tab') return;
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+    const focusable = Array.from(dialog.querySelectorAll<HTMLElement>(PRODUCT_FOCUSABLE_SELECTOR));
+    if (focusable.length === 0) {
+      event.preventDefault();
+      dialog.focus();
+      return;
+    }
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (event.shiftKey && (document.activeElement === first || !dialog.contains(document.activeElement))) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && (document.activeElement === last || !dialog.contains(document.activeElement))) {
+      event.preventDefault();
+      first.focus();
+    }
+  };
+
   return (
     <div
       style={{
@@ -96,7 +219,17 @@ function ProductoModal({
       }}
       onClick={(e) => { if (e.target === e.currentTarget) onCerrar(); }}
     >
-      <div
+      <form
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        tabIndex={-1}
+        onKeyDown={handleDialogKeyDown}
+        onSubmit={(event) => {
+          event.preventDefault();
+          if (!guardando) onGuardar();
+        }}
         style={{
           background: 'var(--color-surface)',
           borderRadius: '18px',
@@ -120,7 +253,7 @@ function ProductoModal({
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
             <span style={{ fontSize: '1.6rem' }}>{modo === 'crear' ? '➕' : '✏️'}</span>
             <div>
-              <h2 style={{ margin: 0, color: 'var(--color-surface)', fontSize: '1.2rem', fontWeight: 800 }}>
+              <h2 id={titleId} style={{ margin: 0, color: 'var(--color-surface)', fontSize: '1.2rem', fontWeight: 800 }}>
                 {modo === 'crear' ? 'Nuevo Producto' : 'Editar Producto'}
               </h2>
               <p style={{ margin: 0, color: 'rgba(255,255,255,0.7)', fontSize: '0.8rem' }}>
@@ -152,7 +285,7 @@ function ProductoModal({
         <div style={{ padding: '1.75rem', display: 'flex', flexDirection: 'column', gap: '1.1rem' }}>
 
           {errorModal && (
-            <div style={{
+            <div id={errorId} role="alert" style={{
               background: 'var(--color-danger-bg)', border: '1px solid var(--color-danger)',
               borderRadius: '8px', padding: '0.75rem 1rem',
               color: 'var(--color-danger)', fontSize: '0.875rem',
@@ -170,6 +303,8 @@ function ProductoModal({
               type="text"
               placeholder="Ej: Leche entera 1L"
               value={form.nombre}
+              aria-invalid={errorField === 'nombre'}
+              aria-describedby={errorField === 'nombre' ? errorId : undefined}
               onChange={(e) => onChange('nombre', e.target.value)}
               style={inputStyle}
               disabled={guardando}
@@ -201,6 +336,8 @@ function ProductoModal({
                 step="1"
                 placeholder="Ej: 1200"
                 value={form.precioBase}
+                aria-invalid={errorField === 'precioBase'}
+                aria-describedby={errorField === 'precioBase' ? errorId : undefined}
                 onChange={(e) => onChange('precioBase', e.target.value)}
                 style={inputStyle}
                 disabled={guardando}
@@ -310,8 +447,7 @@ function ProductoModal({
           </button>
           <button
             id="btn-guardar-modal-producto"
-            type="button"
-            onClick={onGuardar}
+            type="submit"
             disabled={guardando}
             style={{
               padding: '0.6rem 1.5rem',
@@ -331,7 +467,7 @@ function ProductoModal({
             {guardando ? '⏳ Guardando…' : modo === 'crear' ? '➕ Crear Producto' : '💾 Guardar Cambios'}
           </button>
         </div>
-      </div>
+      </form>
 
       <style>{`
         @keyframes modalIn {
@@ -366,6 +502,8 @@ export default function ProductosPage() {
   const [form, setForm] = useState<FormState>(FORM_VACÍO);
   const [guardando, setGuardando] = useState(false);
   const [errorModal, setErrorModal] = useState('');
+  const [errorField, setErrorField] = useState<keyof FormState | null>(null);
+  const guardandoRef = useRef(false);
 
   // ── Fetch unificado ──────────────────────────────────────────────────────
 
@@ -436,21 +574,26 @@ export default function ProductosPage() {
     setEditandoId(null);
     setModalModo('crear');
     setErrorModal('');
+    setErrorField(null);
     setModalAbierto(true);
   };
 
   const handleEliminar = async (id: string, nombre: string) => {
     if (!window.confirm(`El producto '${nombre}' será DESACTIVADO y se conservará en el catálogo. ¿Deseas continuar?`)) return;
+    setErrorMsg('');
     try {
       const token = await window.api?.getToken();
-      if (!token) return;
+      if (!token) {
+        setErrorMsg('Tu sesión no es válida o expiró. Inicia sesión nuevamente.');
+        return;
+      }
       await axios.delete(buildServiceUrl('catalog', `/products/${id}`), {
         headers: { Authorization: `Bearer ${token}` }
       });
       fetchDatos();
     } catch (error) {
       console.error('Error al desactivar producto', error);
-      alert('Error al desactivar producto.');
+      setErrorMsg(getProductErrorMessage(error, 'desactivar'));
     }
   };
 
@@ -467,6 +610,7 @@ export default function ProductosPage() {
     setEditandoId(prod.id);
     setModalModo('editar');
     setErrorModal('');
+    setErrorField(null);
     setModalAbierto(true);
   };
 
@@ -474,19 +618,25 @@ export default function ProductosPage() {
     if (guardando) return;
     setModalAbierto(false);
     setErrorModal('');
+    setErrorField(null);
   };
 
   const handleFormChange = (field: keyof FormState, value: string | boolean) => {
     setForm(prev => ({ ...prev, [field]: value }));
+    setErrorModal('');
+    setErrorField(null);
   };
 
   const handleGuardar = async () => {
-    if (!form.nombre.trim()) { setErrorModal('El nombre es obligatorio.'); return; }
+    if (guardandoRef.current) return;
+    if (!form.nombre.trim()) { setErrorField('nombre'); setErrorModal('El nombre es obligatorio.'); return; }
     const precio = parseFloat(form.precioBase);
-    if (isNaN(precio) || precio < 0) { setErrorModal('El precio debe ser un número válido mayor o igual a 0.'); return; }
+    if (isNaN(precio) || precio <= 0) { setErrorField('precioBase'); setErrorModal('El precio debe ser un número válido mayor que 0.'); return; }
 
+    guardandoRef.current = true;
     setGuardando(true);
     setErrorModal('');
+    setErrorField(null);
     const headers = { Authorization: `Bearer ${token}` };
 
     const payload = {
@@ -509,13 +659,10 @@ export default function ProductosPage() {
       setModalAbierto(false);
       fetchDatos(); // recargar lista
     } catch (err) {
-      const axErr = err as AxiosError<{ message?: string; errors?: Record<string, string[]> }>;
-      const msg =
-        axErr.response?.data?.message ??
-        Object.values(axErr.response?.data?.errors ?? {}).flat().join(', ') ??
-        'Error al guardar el producto.';
-      setErrorModal(msg);
+      setErrorField(null);
+      setErrorModal(getProductErrorMessage(err, 'guardar'));
     } finally {
+      guardandoRef.current = false;
       setGuardando(false);
     }
   };
@@ -727,6 +874,7 @@ export default function ProductosPage() {
       {/* ── Error ── */}
       {errorMsg && (
         <div
+          role="alert"
           style={{
             background: 'var(--color-danger-bg)', border: '1px solid var(--color-danger)',
             borderRadius: '12px', padding: '1rem 1.25rem',
@@ -1051,6 +1199,7 @@ export default function ProductosPage() {
           categorias={categorias}
           guardando={guardando}
           errorModal={errorModal}
+          errorField={errorField}
           onChange={handleFormChange}
           onGuardar={handleGuardar}
           onCerrar={cerrarModal}

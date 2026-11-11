@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   crearSolicitudEdicionUsuario,
   obtenerEmailInicial,
@@ -34,12 +34,23 @@ const buttonStyle: React.CSSProperties = {
   padding: '0.55rem 1.1rem', borderRadius: '8px', fontSize: '0.95rem', fontWeight: 600,
 };
 
+const FOCUSABLE_SELECTOR = [
+  'button:not([disabled])',
+  'input:not([disabled])',
+  'select:not([disabled])',
+  'textarea:not([disabled])',
+  '[href]',
+  '[tabindex]:not([tabindex="-1"])',
+].join(',');
+
 export default function EditarUsuarioModal({ usuario, isOpen, onClose, onSubmit, onSuccess }: Props) {
   const [email, setEmail] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const dialogRef = useRef<HTMLDivElement | HTMLFormElement | null>(null);
+  const previousFocusRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
     if (!isOpen || !usuario) return;
@@ -50,18 +61,65 @@ export default function EditarUsuarioModal({ usuario, isOpen, onClose, onSubmit,
     setSuccess('');
   }, [isOpen, usuario]);
 
+  useEffect(() => {
+    if (!isOpen || !usuario) return;
+    previousFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const frame = window.requestAnimationFrame(() => {
+      const dialog = dialogRef.current;
+      const first = dialog?.querySelector<HTMLElement>(FOCUSABLE_SELECTOR);
+      (first ?? dialog)?.focus();
+    });
+    return () => {
+      window.cancelAnimationFrame(frame);
+      previousFocusRef.current?.focus();
+    };
+  }, [isOpen, usuario]);
+
+  const cerrar = () => {
+    if (!saving) onClose();
+  };
+
+  const handleDialogKeyDown = (event: React.KeyboardEvent<HTMLElement>) => {
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      cerrar();
+      return;
+    }
+    if (event.key !== 'Tab') return;
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+    const focusable = Array.from(dialog.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR));
+    if (focusable.length === 0) {
+      event.preventDefault();
+      dialog.focus();
+      return;
+    }
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (event.shiftKey && (document.activeElement === first || !dialog.contains(document.activeElement))) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && (document.activeElement === last || !dialog.contains(document.activeElement))) {
+      event.preventDefault();
+      first.focus();
+    }
+  };
+
   if (!isOpen || !usuario) return null;
 
   if (!usuario.activo) {
     return (
       <div style={overlayStyle} onClick={onClose}>
         <div
+          ref={node => { dialogRef.current = node; }}
           style={modalStyle}
           onClick={event => event.stopPropagation()}
           role="dialog"
           aria-modal="true"
           aria-labelledby="eu-titulo-inactivo"
           aria-describedby="eu-mensaje-inactivo"
+          tabIndex={-1}
+          onKeyDown={handleDialogKeyDown}
         >
           <h3 id="eu-titulo-inactivo" style={{ marginTop: 0 }}>Edición no disponible</h3>
           <p id="eu-mensaje-inactivo">No se puede editar un usuario inactivo.</p>
@@ -76,10 +134,6 @@ export default function EditarUsuarioModal({ usuario, isOpen, onClose, onSubmit,
   }
 
   const emailError = validarEmailEdicion(email);
-
-  const cerrar = () => {
-    if (!saving) onClose();
-  };
 
   const guardar = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -108,6 +162,7 @@ export default function EditarUsuarioModal({ usuario, isOpen, onClose, onSubmit,
   return (
     <div style={overlayStyle} onClick={cerrar}>
       <form
+        ref={node => { dialogRef.current = node; }}
         style={modalStyle}
         onClick={event => event.stopPropagation()}
         onSubmit={guardar}
@@ -115,6 +170,8 @@ export default function EditarUsuarioModal({ usuario, isOpen, onClose, onSubmit,
         role="dialog"
         aria-modal="true"
         aria-labelledby="eu-titulo"
+        tabIndex={-1}
+        onKeyDown={handleDialogKeyDown}
       >
         <h3 id="eu-titulo" style={{ marginTop: 0 }}>Editar usuario</h3>
         <p style={{ color: 'var(--color-ink-soft)', fontSize: '0.875rem' }}>
@@ -133,6 +190,7 @@ export default function EditarUsuarioModal({ usuario, isOpen, onClose, onSubmit,
             value={email}
             disabled={saving}
             aria-invalid={submitted && !!emailError}
+            aria-describedby={submitted && emailError ? 'eu-email-error' : undefined}
             onChange={event => {
               setEmail(event.target.value);
               setError('');
@@ -141,7 +199,7 @@ export default function EditarUsuarioModal({ usuario, isOpen, onClose, onSubmit,
             style={inputStyle(submitted && !!emailError)}
           />
           {submitted && emailError && (
-            <div role="alert" style={{ ...messageStyle, color: 'var(--color-danger-text)' }}>{emailError}</div>
+            <div id="eu-email-error" role="alert" style={{ ...messageStyle, color: 'var(--color-danger-text)' }}>{emailError}</div>
           )}
         </div>
 

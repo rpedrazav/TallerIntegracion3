@@ -7,6 +7,24 @@ import type { Usuario } from '../components/admin/UsuariosList';
 
 interface Rol { id: string; nombre: string; descripcion: string; tenantId: string | null; rolBase: string | null }
 
+const controlStyle: React.CSSProperties = {
+  display: 'block', width: '100%', boxSizing: 'border-box', marginTop: '0.25rem',
+  padding: '0.55rem 0.75rem', borderRadius: 8, border: '1px solid var(--color-line)',
+  background: 'var(--color-bg)', color: 'var(--color-ink)', fontFamily: 'var(--font-sans)',
+};
+const buttonStyle: React.CSSProperties = {
+  padding: '0.55rem 0.9rem', borderRadius: 8, border: '1px solid var(--color-line)',
+  background: 'var(--color-surface)', color: 'var(--color-ink)', fontWeight: 600,
+};
+const primaryButtonStyle: React.CSSProperties = {
+  ...buttonStyle, background: 'var(--color-primary)', color: 'var(--color-on-primary)',
+  borderColor: 'var(--color-primary)',
+};
+const messageStyle: React.CSSProperties = {
+  display: 'flex', alignItems: 'flex-start', gap: '0.65rem', padding: '0.75rem 1rem',
+  borderRadius: 8, marginBottom: '1rem',
+};
+
 export default function AdminRoles() {
   const { token } = useAuth();
   const [roles, setRoles] = useState<Rol[]>([]);
@@ -92,20 +110,25 @@ export default function AdminRoles() {
   return <section>
     <h2>Roles del tenant</h2>
     <p>Asigna funciones a las cuentas de tu tienda. Los roles propios heredan los permisos de un rol base.</p>
-    {error && <p role="alert">{error}</p>}{success && <p role="status">{success}</p>}
+    {error && <div role="alert" style={{ ...messageStyle, background: 'var(--color-danger-bg)', color: 'var(--color-danger-text)', border: '1px solid var(--color-danger)' }}>
+      <span aria-hidden="true">⚠️</span><span><strong>Error</strong><br />{error}</span>
+    </div>}
+    {success && <div role="status" style={{ ...messageStyle, background: 'var(--color-success-bg)', color: 'var(--color-success-text)', border: '1px solid var(--color-success)' }}>
+      <span aria-hidden="true">✅</span><span><strong>Operación completada</strong><br />{success}</span>
+    </div>}
     <form onSubmit={event => { void crearRol(event); }} style={{ display: 'grid', gap: '0.75rem', maxWidth: 520, marginBottom: '1.5rem' }}>
       <h3>Crear rol del tenant</h3>
-      <label>Nombre del rol <input value={nuevoNombre} onChange={e => setNuevoNombre(e.target.value.toUpperCase())} minLength={3} maxLength={50} pattern="[A-Z][A-Z0-9_]{2,49}" required /></label>
-      <label>Descripción <input value={nuevaDescripcion} onChange={e => setNuevaDescripcion(e.target.value)} maxLength={200} /></label>
-      <label>Permisos base <select value={nuevoRolBase} onChange={e => setNuevoRolBase(e.target.value)}>
+      <label>Nombre del rol <input style={controlStyle} value={nuevoNombre} onChange={e => setNuevoNombre(e.target.value.toUpperCase())} minLength={3} maxLength={50} pattern="[A-Z][A-Z0-9_]{2,49}" required /></label>
+      <label>Descripción <input style={controlStyle} value={nuevaDescripcion} onChange={e => setNuevaDescripcion(e.target.value)} maxLength={200} /></label>
+      <label>Permisos base <select style={controlStyle} value={nuevoRolBase} onChange={e => setNuevoRolBase(e.target.value)}>
         <option value="CAJERO">CAJERO</option><option value="REPONEDOR">REPONEDOR</option><option value="ADMIN">ADMIN</option>
       </select></label>
-      <button type="submit" disabled={saving === 'nuevo'}>{saving === 'nuevo' ? 'Creando…' : 'Crear rol'}</button>
+      <button type="submit" disabled={saving === 'nuevo'} style={primaryButtonStyle}>{saving === 'nuevo' ? 'Creando…' : 'Crear rol'}</button>
     </form>
     <h3>Roles disponibles</h3>
     {roles.map(r => <div key={r.id} style={{ marginBottom: '0.5rem' }}>
       <strong>{r.nombre}</strong> {r.rolBase && <span>(permisos {r.rolBase})</span>} {r.descripcion}
-      {r.tenantId && <button type="button" disabled={saving === r.id} onClick={() => { void eliminarRol(r); }} style={{ marginLeft: '0.75rem' }}>Eliminar rol</button>}
+      {r.tenantId && <button type="button" disabled={saving === r.id} onClick={() => { void eliminarRol(r); }} style={{ ...buttonStyle, marginLeft: '0.75rem', color: 'var(--color-danger-text)', borderColor: 'var(--color-danger)' }}>Eliminar rol</button>}
     </div>)}
     <h3>Asignación a usuarios</h3>
     {usuarios.map(u => <div key={u.id} aria-label={`Roles de ${u.nombre}`} style={{ padding: '1rem', marginBottom: '0.75rem', border: '1px solid var(--color-line)', borderRadius: 8, background: 'var(--color-surface)' }}>
@@ -117,12 +140,12 @@ export default function AdminRoles() {
         {roles.map(r => <label key={r.id} title={r.descripcion}><input type="checkbox" disabled={!u.activo} checked={(seleccion[u.id] ?? []).includes(r.id)} onChange={event => setSeleccion(current => ({ ...current, [u.id]: event.target.checked ? [...(current[u.id] ?? []), r.id] : (current[u.id] ?? []).filter(id => id !== r.id) }))} /> {r.nombre}</label>)}
       </div>
       {!u.activo && <p style={{ color: 'var(--color-ink-soft)' }}>Modificación de roles bloqueada: usuario inactivo.</p>}
-      <button type="button" aria-label={`Guardar roles de ${u.nombre}`} aria-disabled={!u.activo} disabled={saving === u.id} onClick={() => { void guardar(u); }} style={{ cursor: u.activo ? 'pointer' : 'not-allowed', opacity: u.activo ? 1 : 0.6 }}>{saving === u.id ? 'Guardando…' : 'Guardar roles'}</button>
+      <button type="button" aria-label={`Guardar roles de ${u.nombre}`} aria-disabled={!u.activo} disabled={saving === u.id} onClick={() => { void guardar(u); }} style={{ ...primaryButtonStyle, cursor: u.activo ? 'pointer' : 'not-allowed', opacity: u.activo ? 1 : 0.6 }}>{saving === u.id ? 'Guardando…' : 'Guardar roles'}</button>
     </div>)}
     <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
-      <button type="button" disabled={page <= 1} onClick={() => setPage(p => p - 1)}>Anterior</button>
+      <button type="button" disabled={page <= 1} onClick={() => setPage(p => p - 1)} style={buttonStyle}>Anterior</button>
       <span>Página {page} de {totalPages}</span>
-      <button type="button" disabled={page >= totalPages} onClick={() => setPage(p => p + 1)}>Siguiente</button>
+      <button type="button" disabled={page >= totalPages} onClick={() => setPage(p => p + 1)} style={buttonStyle}>Siguiente</button>
     </div>
   </section>;
 }
