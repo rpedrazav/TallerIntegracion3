@@ -128,10 +128,14 @@ export default function Pos() {
               setPaymentState('uncertain');
               setPaymentError('El intento de tarjeta sigue sin resultado confirmado. Verifica su estado antes de cobrar.');
               setIsPaymentOpen(true);
-            } else if (intento.estado === 'approved') {
-              if (intento.venta) pendiente = intento.venta;
+            } else if (intento.estado === 'approved' && intento.venta?.estado === 'COMPLETADA') {
+              pendiente = intento.venta;
               setPaymentReference(intento.gatewayReference);
               setPaymentState('approved');
+              setIsPaymentOpen(true);
+            } else if (intento.estado === 'approved') {
+              setPaymentState('uncertain');
+              setPaymentError('MS-5 no confirmó la venta como COMPLETADA. Verifica su estado antes de cobrar.');
               setIsPaymentOpen(true);
             } else if (intento.estado === 'declined') {
               setPaymentState('declined');
@@ -583,13 +587,18 @@ export default function Pos() {
         return;
       }
       if (result.estado === 'processing') return;
-      if (result.estado !== 'approved') {
-        setPaymentState('uncertain');
-        setPaymentError('MS-5 no devolvió una confirmación completa. Verifica la venta antes de otro intento.');
+      if (result.estado === 'approved' && result.venta?.estado === 'COMPLETADA') {
+        setPaymentReference(result.gatewayReference);
+        setPaymentState('approved');
         return;
       }
-      setPaymentReference(result.gatewayReference);
-      setPaymentState('approved');
+      if (result.estado === 'approved') {
+        setPaymentState('uncertain');
+        setPaymentError('MS-5 no confirmó la venta como COMPLETADA. Verifica el estado antes de continuar.');
+        return;
+      }
+      setPaymentState('uncertain');
+      setPaymentError('MS-5 no devolvió una confirmación completa. Verifica la venta antes de otro intento.');
     } catch {
       setPaymentState('uncertain');
       setPaymentError('No se pudo confirmar el resultado de la pasarela. Verifica la venta antes de otro cobro.');
@@ -640,7 +649,7 @@ export default function Pos() {
           saleRef.current = intento.venta;
           setVenta(intento.venta);
         }
-        if (intento.estado === 'approved') {
+        if (intento.estado === 'approved' && intento.venta?.estado === 'COMPLETADA') {
           setPaymentReference(intento.gatewayReference);
           setPaymentState('approved');
         } else if (intento.estado === 'declined') {

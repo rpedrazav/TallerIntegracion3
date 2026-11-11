@@ -297,3 +297,99 @@ test('doble clic usa single-flight y produce un único intento lógico con una c
   assert.equal(charges[0].idempotencyKey, claveIdempotencia);
   assert.equal(attemptReference.current, claveIdempotencia);
 });
+
+test('S2-107: solo autorización confirmada por MS-5 marca venta COMPLETADA usando la misma clave', async () => {
+  const { synchronizeCardPayment } = loadCoordinator();
+  const llamadas = [];
+
+  const terminal = {
+    iniciarCobro: async solicitud => {
+      llamadas.push({ operacion: 'terminal:iniciar', clave: solicitud.claveIdempotencia });
+      return {
+        ventaId,
+        monto: solicitud.monto,
+        referenciaIntento: solicitud.claveIdempotencia,
+        estado: 'approved',
+        referenciaOpaca: 'SIM-TERMINAL-01',
+      };
+    },
+    consultarEstado: async solicitud => {
+      llamadas.push({ operacion: 'terminal:consultar', clave: solicitud.referenciaIntento });
+      return {
+        ventaId,
+        monto: solicitud.monto,
+        referenciaIntento: solicitud.referenciaIntento,
+        estado: 'approved',
+        referenciaOpaca: 'SIM-TERMINAL-01',
+      };
+    },
+  };
+
+  // Caso 1: MS-5 no confirma COMPLETADA (devuelve PENDIENTE)
+  const ms5Pendiente = {
+    chargeCard: async (sId, key) => {
+      llamadas.push({ operacion: 'ms5:cobrar-tarjeta', key });
+      return {
+        venta: { id: sId, estado: 'PENDIENTE' },
+        status: 'APPROVED',
+        gateway_reference: 'gw-ref-1',
+      };
+    },
+    cardAttemptStatus: async () => ({
+      venta: { id: ventaId, estado: 'PENDIENTE' },
+      status: 'UNCERTAIN',
+      request_id: claveIdempotencia,
+    }),
+  };
+
+  const resultadoNoCompletada = await synchronizeCardPayment({
+    terminal,
+    ms5: ms5Pendiente,
+    ventaId,
+    monto: 25000,
+    claveIdempotencia,
+  });
+
+  assert.notEqual(resultadoNoCompletada.estado, 'approved', 'No debe aprobar si MS-5 no confirma COMPLETADA');
+  assert.equal(resultadoNoCompletada.estado, 'uncertain');
+
+  // Caso 2: MS-5 confirma autorización y marca COMPLETADA
+  const ms5Completada = {
+    chargeCard: async (sId, key) => {
+      llamadas.push({ operacion: 'ms5:cobrar-tarjeta', key });
+      return {
+        venta: { id: sId, estado: 'COMPLETADA' },
+        status: 'APPROVED',
+        gateway_reference: 'gw-ref-completada-1',
+      };
+    },
+    cardAttemptStatus: async () => {
+      throw new Error('No debe llamar reconciliación si ya confirmó');
+    },
+  };
+
+  const resultadoConfirmado = await synchronizeCardPayment({
+    terminal,
+    ms5: ms5Completada,
+    ventaId,
+    monto: 25000,
+    claveIdempotencia,
+  });
+
+  assert.equal(resultadoConfirmado.estado, 'approved');
+  assert.equal(resultadoConfirmado.venta.estado, 'COMPLETADA');
+  assert.equal(resultadoConfirmado.gatewayReference, 'gw-ref-completada-1');
+  assert.equal(resultadoConfirmado.referenciaIntento, claveIdempotencia);
+
+  // Validar correlación de claves de idempotencia
+  const clavesTerminal = llamadas.filter(l => l.operacion.startsWith('terminal')).map(l => l.clave);
+  const clavesMs5 = llamadas.filter(l => l.operacion === 'ms5:cobrar-tarjeta').map(l => l.key);
+
+  for (const c of clavesTerminal) {
+    assert.equal(c, claveIdempotencia, 'La clave enviada al terminal debe coincidir');
+  }
+  for (const c of clavesMs5) {
+    assert.equal(c, claveIdempotencia, 'La clave enviada a MS-5 debe ser la misma clave del terminal');
+  }
+});
+
