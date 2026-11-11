@@ -3,9 +3,9 @@ id: ms1-identity
 tipo: microservicio
 titulo: MS-1 · Tenant & Identity Service
 estado: parcial
-fuentes: [src/TenantIdentityService/, Docker/config/kong.yaml]
+fuentes: [src/TenantIdentityService/, globalmart-frontend/src/pages/Admin.tsx, globalmart-frontend/src/pages/AdminRoles.tsx, globalmart-frontend/src/components/admin/UsuariosList.tsx, Docker/config/kong.yaml]
 verificado_contra_codigo: true
-ultima_revision: 2026-10-27
+ultima_revision: 2026-11-11
 depende_de: []
 publica: []
 consume: []
@@ -17,7 +17,7 @@ reglas: [RN-01, RN-07, RN-08, RN-12]
 
 `--bootstrap-admin` aprovisiona explícitamente un tenant y su cuenta ADMIN con `GLOBALMART_BOOTSTRAP_TENANT_ID`, `GLOBALMART_BOOTSTRAP_TENANT_NAME`, `GLOBALMART_BOOTSTRAP_ADMIN_EMAIL` y `GLOBALMART_BOOTSTRAP_ADMIN_PASSWORD`. Ejecución: `dotnet run --project src/TenantIdentityService -- --bootstrap-admin` contra la base de MS-1. Aplica migraciones y guarda la contraseña con BCrypt; no hay endpoint público de aprovisionamiento.
 
-`POST /users` acepta `tenantId` solo si coincide con el JWT y `sucursalId` opcional del tenant. `PUT /users/{id}` y `DELETE /users/{id}` modifican la tabla `Usuarios` usada por login; el listado incluye inactivos. `GET /users/roles` enumera los roles base y los propios del tenant. `POST /users/roles` crea un rol con permisos heredados de CAJERO, REPONEDOR o ADMIN; `DELETE /users/roles/{id}` elimina solo roles propios no asignados. La migración `AddTenantCustomRoles` añade `TenantId` y `RolBase` a `Roles`; el filtro de EF evita consultar roles de otros tenants. `POST /users/{id}/roles` evita quitarse todos los roles con permisos ADMIN. El JWT incluye nombre y rol base, de modo que las políticas existentes funcionen con el rol propio. La revocación inmediata de JWT ya emitidos no está implementada.
+`POST /users` acepta `tenantId` solo si coincide con el JWT y `sucursalId` opcional del tenant. `PUT /users/{id}` y `DELETE /users/{id}` modifican la tabla `Usuarios` usada por login; el listado incluye inactivos. MS-1 permite actualmente `PUT /users/{id}` y `POST /users/{id}/roles` sobre usuarios inactivos: TI3-733 no cambia ese contrato y agrega únicamente un bloqueo de interfaz. `GET /users/roles` enumera los roles base y los propios del tenant. `POST /users/roles` crea un rol con permisos heredados de CAJERO, REPONEDOR o ADMIN; `DELETE /users/roles/{id}` elimina solo roles propios no asignados. La migración `AddTenantCustomRoles` añade `TenantId` y `RolBase` a `Roles`; el filtro de EF evita consultar roles de otros tenants. `POST /users/{id}/roles` evita quitarse todos los roles con permisos ADMIN. El JWT incluye nombre y rol base, de modo que las políticas existentes funcionen con el rol propio. La revocación inmediata de JWT ya emitidos no está implementada.
 
 Las pruebas de integración de creación, edición y baja usan `Usuarios` sobre PostgreSQL y aprobaron junto con el resto de la suite (334/334). Un ADMIN fue aprovisionado en el tenant demo del clúster y su login fue validado por port-forward y por el Ingress. La creación, asignación y eliminación de un rol propio se verificaron por el Ingress; las tres pruebas nuevas de roles propios cubren permisos heredados, aislamiento entre tenants y bloqueo de eliminación mientras está asignado.
 
@@ -78,10 +78,10 @@ src/TenantIdentityService/
 - [DesactivarUsuarioIntegrationTests](../../../tests/GlobalMart.IntegrationTests/DesactivarUsuarioIntegrationTests.cs): seis métodos, siete casos (la teoría 404 distingue otro tenant e ID inexistente). Verifican fila conservada, otros campos intactos, autodesactivación rechazada, idempotencia y autorización. Conexión estándar de la factoría y esquema PostgreSQL aislado por caso.
 - Las pruebas del 2026-10-06 cubrían el esquema antiguo `users`; el flujo unificado del 2026-10-27 compila, pero su integración PostgreSQL está [NO VERIFICADA].
 
-### Contrato de Administración TI3-672
+### Contrato de Administración TI3-672 / TI3-733
 
 - La pantalla `/admin/*` queda disponible solo para claims `ADMIN` o `SUPER_ADMIN`. CAJERO no ve su acceso y es redirigido a `/pos`; la autorización del controlador conserva `403` como defensa independiente del frontend [IMPLEMENTADO].
-- La UI permite listar y crear usuarios. `PUT /users/{id}` y la baja lógica `DELETE /users/{id}` existen en MS-1, pero edición, desactivación y reactivación todavía no se exponen en la pantalla.
+- La UI permite listar, crear, editar y desactivar usuarios. Activos e inactivos permanecen visibles con indicador textual; para inactivos, TI3-733 bloquea en frontend la edición de email y la modificación de roles, sin atribuir ese bloqueo a MS-1. La reactivación no se expone ni tiene endpoint.
 - Errores vigentes: `400` para datos inválidos o autodesactivación según la operación; `401` sin autenticación o claims requeridos; `403` sin rol autorizado; `404` para ID inexistente o perteneciente a otro tenant; `409` para email duplicado al editar.
 - `UserRepository.FindByEmailAsync` exige `Usuario.Activo=true`; DELETE marca inactivo ese mismo registro, de modo que el siguiente login falla con el mismo 401 genérico. No se implementó revocación de JWT emitidos.
 

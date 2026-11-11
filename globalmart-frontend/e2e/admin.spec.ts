@@ -1,11 +1,18 @@
 import { expect, test } from '@playwright/test';
 
 const tenantId = 'aaaaaaaa-0000-0000-0000-000000000001';
-const token = [
-  btoa(JSON.stringify({ alg: 'none', typ: 'JWT' })),
-  btoa(JSON.stringify({ sub: '11111111-1111-1111-1111-111111111111', tenant_id: tenantId, active_role: 'ADMIN', roles: ['ADMIN'] })),
+const crearToken = (activeRole: string | undefined, roles: string[]) => [
+  Buffer.from(JSON.stringify({ alg: 'none', typ: 'JWT' }), 'utf8').toString('base64url'),
+  Buffer.from(JSON.stringify({
+    sub: '11111111-1111-1111-1111-111111111111',
+    tenant_id: tenantId,
+    ...(activeRole ? { active_role: activeRole } : {}),
+    roles,
+  }), 'utf8').toString('base64url'),
   '',
 ].join('.');
+
+const token = crearToken('ADMIN', ['ADMIN']);
 
 test.beforeEach(async ({ page }) => {
   await page.addInitScript((jwt: string) => {
@@ -13,6 +20,50 @@ test.beforeEach(async ({ page }) => {
     Object.defineProperty(window, 'api', { value: bridge });
   }, token);
   await page.route('**/sucursales', route => route.fulfill({ json: [{ id: '22222222-2222-2222-2222-222222222222', nombre: 'Centro', activa: true, direccion: 'Calle 1', zonaHoraria: 'America/Santiago' }] }));
+});
+
+test('ADMIN activo visualiza el acceso administrativo desde POS', async ({ page }) => {
+  await page.goto('/?component=app#/pos');
+  await expect(page.getByRole('link', { name: 'Volver a administración' })).toBeVisible();
+});
+
+test('CAJERO activo con ADMIN asignado no ve ni abre rutas administrativas', async ({ browser }) => {
+  const context = await browser.newContext();
+  const page = await context.newPage();
+  const tokenCajeroMultirol = crearToken('CAJERO', ['ADMIN', 'CAJERO']);
+
+  await page.addInitScript((jwt: string) => {
+    const bridge = { getToken: async () => jwt, setToken: async () => undefined, logout: async () => undefined };
+    Object.defineProperty(window, 'api', { value: bridge });
+  }, tokenCajeroMultirol);
+
+  await page.goto('/?component=app#/pos');
+  await expect(page.getByRole('link', { name: 'Volver a administración' })).toHaveCount(0);
+
+  await page.goto('/?component=app#/admin');
+  await expect(page.getByRole('alert')).toContainText('Acceso denegado');
+  await expect(page.getByRole('heading', { name: 'GlobalMart Admin' })).toHaveCount(0);
+
+  await page.goto('/?component=app#/admin/usuarios');
+  await expect(page.getByRole('alert')).toContainText('Acceso denegado');
+  await expect(page.getByRole('heading', { name: 'GlobalMart Admin' })).toHaveCount(0);
+
+  await context.close();
+});
+
+test('sin sesión conserva la redirección al login', async ({ browser }) => {
+  const context = await browser.newContext();
+  const page = await context.newPage();
+
+  await page.addInitScript(() => {
+    const bridge = { getToken: async () => null, setToken: async () => undefined, logout: async () => undefined };
+    Object.defineProperty(window, 'api', { value: bridge });
+  });
+
+  await page.goto('/?component=app#/admin');
+  await expect(page).toHaveURL(/#\/login$/);
+
+  await context.close();
 });
 
 test('ADMIN abre vista propia y crea un cajero con datos copiables', async ({ page }) => {

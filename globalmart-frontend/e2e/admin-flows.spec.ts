@@ -11,7 +11,7 @@ interface TestUser {
 
 const adminToken = [
   Buffer.from(JSON.stringify({ alg: 'none', typ: 'JWT' })).toString('base64url'),
-  Buffer.from(JSON.stringify({ tenant_id: 'tenant-a', roles: ['ADMIN'] })).toString('base64url'),
+  Buffer.from(JSON.stringify({ tenant_id: 'tenant-a', active_role: 'ADMIN', roles: ['ADMIN'] })).toString('base64url'),
   '',
 ].join('.');
 
@@ -195,6 +195,42 @@ test('edición exitosa actualiza la misma fila sin crear otra', async ({ page })
   expect(putCount).toBe(1);
 });
 
+test('listado mixto conserva al inactivo y bloquea su edición sin enviar PUT', async ({ page }) => {
+  const usuarioInactivo: TestUser = {
+    ...usuarioInicial,
+    id: '22222222-2222-2222-2222-222222222222',
+    nombre: 'Beatriz Inactiva',
+    email: 'beatriz@globalmart.cl',
+    activo: false,
+  };
+  let putCount = 0;
+
+  await page.route('**/users**', async route => {
+    if (route.request().method() === 'GET') {
+      await route.fulfill({ json: { items: [usuarioInicial, usuarioInactivo], totalPages: 1 } });
+      return;
+    }
+    if (route.request().method() === 'PUT') putCount += 1;
+    await route.abort();
+  });
+
+  await abrirAdmin(page);
+  const filaActiva = page.locator('tbody tr').filter({ hasText: usuarioInicial.email });
+  const filaInactiva = page.locator('tbody tr').filter({ hasText: usuarioInactivo.email });
+  await expect(page.locator('tbody tr')).toHaveCount(2);
+  await expect(filaActiva.getByText('Activo', { exact: true })).toBeVisible();
+  await expect(filaInactiva.getByText('Inactivo', { exact: true })).toBeVisible();
+  await expect(filaActiva.getByRole('button', { name: `Editar usuario ${usuarioInicial.nombre}` })).toBeEnabled();
+  const editarInactivo = filaInactiva.getByRole('button', { name: `Editar usuario ${usuarioInactivo.nombre}` });
+  await expect(editarInactivo).toHaveAttribute('aria-disabled', 'true');
+  await expect(filaInactiva.getByText('Edición bloqueada: usuario inactivo.')).toBeVisible();
+
+  await editarInactivo.dispatchEvent('click');
+  await expect(page.getByRole('alert')).toContainText('No se puede editar un usuario inactivo.');
+  await expect(page.getByRole('dialog', { name: 'Editar usuario' })).toHaveCount(0);
+  expect(putCount).toBe(0);
+});
+
 for (const caso of [
   {
     status: 400,
@@ -234,19 +270,21 @@ for (const caso of [
 
 test('baja confirma, muestra progreso y conserva la fila como Inactivo tras 204', async ({ page }) => {
   let deleteStarted = false;
+  let usuarios = [usuarioInicial];
   let releaseDelete: (() => void) | undefined;
   const continueDelete = new Promise<void>(resolve => { releaseDelete = resolve; });
 
   await page.route('**/users**', async route => {
     const request = route.request();
     if (request.method() === 'GET') {
-      await route.fulfill({ json: { items: [usuarioInicial] } });
+      await route.fulfill({ json: { items: usuarios, totalPages: 1 } });
       return;
     }
     if (request.method() === 'DELETE') {
       expect(new URL(request.url()).pathname).toMatch(new RegExp(`/users/${usuarioInicial.id}$`));
       deleteStarted = true;
       await continueDelete;
+      usuarios = [{ ...usuarioInicial, activo: false }];
       await route.fulfill({ status: 204 });
       return;
     }
@@ -267,7 +305,64 @@ test('baja confirma, muestra progreso y conserva la fila como Inactivo tras 204'
   const fila = page.locator('tbody tr').filter({ hasText: usuarioInicial.email });
   await expect(fila).toHaveCount(1);
   await expect(fila.getByText('Inactivo', { exact: true })).toBeVisible();
+  await expect(fila.getByRole('button', { name: `Editar usuario ${usuarioInicial.nombre}` })).toHaveAttribute('aria-disabled', 'true');
   await expect(page.locator('tbody tr')).toHaveCount(1);
+
+  await page.getByRole('button', { name: 'Refrescar' }).click();
+  await expect(fila).toHaveCount(1);
+  await expect(fila.getByText('Inactivo', { exact: true })).toBeVisible();
+});
+
+test('roles conserva usuarios activos e inactivos y bloquea solicitudes para el inactivo', async ({ page }) => {
+  const usuarioInactivo: TestUser = {
+    ...usuarioInicial,
+    id: '22222222-2222-2222-2222-222222222222',
+    nombre: 'Beatriz Inactiva',
+    email: 'beatriz@globalmart.cl',
+    activo: false,
+  };
+  const roles = [
+    { id: 'role-cajero', nombre: 'CAJERO', descripcion: 'Caja', tenantId: null, rolBase: null },
+    { id: 'role-admin', nombre: 'ADMIN', descripcion: 'Admin', tenantId: null, rolBase: null },
+  ];
+  let postCount = 0;
+
+  await prepararSesion(page);
+  await page.route('**/users**', route => route.fulfill({ json: { items: [usuarioInicial, usuarioInactivo], totalPages: 1 } }));
+  await page.route('**/users/**/roles', async route => {
+    if (route.request().method() === 'POST') {
+      postCount += 1;
+      await route.fulfill({ json: { ...usuarioInicial, roles: ['CAJERO', 'ADMIN'] } });
+      return;
+    }
+    await route.abort();
+  });
+  await page.route('**/users/roles**', async route => {
+    if (route.request().method() === 'GET') {
+      await route.fulfill({ json: roles });
+      return;
+    }
+    await route.abort();
+  });
+
+  await page.goto('/?component=app#/admin/roles');
+  const activo = page.getByLabel(`Roles de ${usuarioInicial.nombre}`);
+  const inactivo = page.getByLabel(`Roles de ${usuarioInactivo.nombre}`);
+  await expect(activo.getByText('Activo', { exact: true })).toBeVisible();
+  await expect(inactivo.getByText('Inactivo', { exact: true })).toBeVisible();
+
+  await activo.getByLabel('ADMIN').check();
+  await activo.getByRole('button', { name: `Guardar roles de ${usuarioInicial.nombre}` }).click();
+  await expect(page.getByRole('status')).toContainText(`Roles de ${usuarioInicial.nombre} actualizados.`);
+  expect(postCount).toBe(1);
+
+  await expect(inactivo.getByLabel('CAJERO')).toBeDisabled();
+  await expect(inactivo.getByRole('button', { name: `Guardar roles de ${usuarioInactivo.nombre}` })).toHaveAttribute('aria-disabled', 'true');
+  await expect(inactivo.getByText('Modificación de roles bloqueada: usuario inactivo.')).toBeVisible();
+  const guardarInactivo = inactivo.getByRole('button', { name: `Guardar roles de ${usuarioInactivo.nombre}` });
+  await guardarInactivo.dispatchEvent('click');
+  await expect(page.getByRole('alert')).toContainText('No se pueden modificar los roles de un usuario inactivo.');
+  expect(postCount).toBe(1);
 });
 
 test('baja fallida explica la autodesactivación y conserva la fila activa', async ({ page }) => {

@@ -3,9 +3,9 @@ id: auth-y-roles
 tipo: frontend
 titulo: Autenticación y Roles en el Frontend
 estado: parcial
-fuentes: [globalmart-frontend/src/hooks/useAuth.ts, globalmart-frontend/src/pages/Login.tsx, globalmart-frontend/src/api/client.ts, globalmart-frontend/src/pages/AdminRoles.tsx, globalmart-frontend/src/components/admin/CrearUsuarioModal.tsx]
+fuentes: [globalmart-frontend/src/hooks/useAuth.ts, globalmart-frontend/src/pages/Login.tsx, globalmart-frontend/src/api/client.ts, globalmart-frontend/src/App.tsx, globalmart-frontend/src/components/AppLayout.tsx, globalmart-frontend/src/store/useTenantStore.ts, globalmart-frontend/src/pages/AdminRoles.tsx, globalmart-frontend/src/components/admin/CrearUsuarioModal.tsx, globalmart-frontend/tests/admin-access.test.cjs, globalmart-frontend/e2e/admin.spec.ts]
 verificado_contra_codigo: true
-ultima_revision: 2026-10-27
+ultima_revision: 2026-11-11
 depende_de: [estructura, rbac-multirol, ms1-identity]
 publica: []
 consume: []
@@ -13,7 +13,7 @@ reglas: [RN-07, RN-08]
 ---
 # Autenticación y Roles en el Frontend
 
-ADMIN/SUPER_ADMIN entran en `/admin` y los demás roles en `/pos`. Los roles propios del tenant heredan permisos de CAJERO, REPONEDOR o ADMIN; MS-1 incluye el rol base y el nombre propio en el JWT y `active_role` refleja el permiso base. `AdminLayout` ofrece navegación propia y `AdminRoute` protege usuarios, roles, sucursales, inventario, productos y configuración. La cuenta nueva muestra tenant ID, correo, contraseña inicial y rol para copiar durante la sesión de creación.
+ADMIN/SUPER_ADMIN con ese valor en `active_role` entran en `/admin` y los demás roles en `/pos`. Desde TI3-732, `useTenantStore` deriva `esAdmin` exclusivamente de `active_role`: los roles asignados en `roles` no conceden acceso administrativo alternativo. Por tanto, un usuario con `roles: ["ADMIN", "CAJERO"]` y `active_role: "CAJERO"` no ve el enlace de Administración y recibe acceso denegado al abrir `/admin/*`. Los roles propios del tenant heredan permisos de CAJERO, REPONEDOR o ADMIN; MS-1 incluye el rol base y el nombre propio en el JWT y `active_role` refleja el permiso base. La cuenta nueva muestra tenant ID, correo, contraseña inicial y rol para copiar durante la sesión de creación.
 
 > Manejo del JWT en el frontend: login, almacenamiento con electron-store, y protección de rutas. El RoleSwitcher multi-rol NO está implementado.
 
@@ -42,7 +42,9 @@ El JWT se guarda mediante `window.api.setToken` en electron-store. Login tambié
 
 ## Protección de rutas
 
-`App.tsx` declara las rutas; las llamadas protegidas de POS y turnos redirigen a `/login` tras un 401. No hay guard de rutas en `App.tsx` [VERIFICADO].
+`App.tsx` declara `AdminRoute` como guard común de `/admin` y todas sus rutas hijas (usuarios, roles, inventario, sucursales, productos y configuración). Sin sesión redirige a `/login`; con sesión cuyo `active_role` no sea `ADMIN` o `SUPER_ADMIN`, muestra `Acceso denegado` sin montar `AdminLayout`. `AppLayout` usa el mismo `esAdmin` para ocultar el enlace de Administración. Las pruebas de TI3-732 cubren ADMIN activo, el caso multirol con CAJERO activo, acceso directo a `/admin` y `/admin/usuarios`, y ausencia de sesión.
+
+Este control mantiene coherente la interfaz, pero no sustituye la autorización del backend: los endpoints administrativos conservan sus atributos y políticas de autorización independientes.
 
 ## JWT decodificado (estructura real)
 
@@ -70,6 +72,7 @@ El JWT se guarda mediante `window.api.setToken` en electron-store. Login tambié
 | Sin refresh token | Al expirar el JWT, hay que hacer login nuevamente |
 | Sin RoleSwitcher | Usuarios multi-rol no pueden cambiar su rol activo |
 | Expiración del token | Las llamadas protegidas redirigen al login si reciben 401; no hay renovación de JWT |
+| Validación local del JWT | El frontend solo decodifica el payload; no valida criptográficamente el token ni su expiración antes de renderizar. El backend sigue siendo la autoridad de seguridad |
 
 ## Conexiones
 - Login backend: [[ms1-identity]]
@@ -79,3 +82,8 @@ El JWT se guarda mediante `window.api.setToken` en electron-store. Login tambié
 ## Fuentes
 - `globalmart-frontend/src/hooks/useAuth.ts`
 - `globalmart-frontend/src/pages/Login.tsx`
+- `globalmart-frontend/src/App.tsx`
+- `globalmart-frontend/src/components/AppLayout.tsx`
+- `globalmart-frontend/src/store/useTenantStore.ts`
+- `globalmart-frontend/tests/admin-access.test.cjs`
+- `globalmart-frontend/e2e/admin.spec.ts`

@@ -22,14 +22,9 @@ export const useTenantStore = create<TenantState>((set) => ({
       const payload = parseJwt(token);
       const id = payload?.tenant_id || localStorage.getItem('tenant') || '';
       const rolActivo = payload?.active_role?.toUpperCase();
-      const roles = Array.isArray(payload?.roles)
-        ? payload.roles.map((r: string) => r.toUpperCase())
-        : [];
       const tieneRolAdmin =
         rolActivo === 'ADMIN' ||
-        rolActivo === 'SUPER_ADMIN' ||
-        roles.includes('ADMIN') ||
-        roles.includes('SUPER_ADMIN');
+        rolActivo === 'SUPER_ADMIN';
 
       set({ token, tenantId: id, esAdmin: tieneRolAdmin });
     } catch {

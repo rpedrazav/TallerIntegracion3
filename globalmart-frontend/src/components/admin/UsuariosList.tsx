@@ -77,7 +77,9 @@ export default function UsuariosList({
                 <button
                   type="button"
                   onClick={() => onEdit(u)}
+                  aria-disabled={!u.activo}
                   aria-label={`Editar usuario ${u.nombre}`}
+                  aria-describedby={!u.activo ? `edicion-inactiva-${u.id}` : undefined}
                   style={{
                     background: 'transparent',
                     color: 'var(--color-primary)',
@@ -85,11 +87,17 @@ export default function UsuariosList({
                     borderRadius: '6px',
                     padding: '0.35rem 0.7rem',
                     fontWeight: 600,
-                    cursor: 'pointer',
+                    cursor: u.activo ? 'pointer' : 'not-allowed',
+                    opacity: u.activo ? 1 : 0.6,
                   }}
                 >
                   Editar
                 </button>
+                {!u.activo && (
+                  <span id={`edicion-inactiva-${u.id}`} style={{ color: 'var(--color-ink-soft)', fontSize: '0.8125rem' }}>
+                    Edición bloqueada: usuario inactivo.
+                  </span>
+                )}
                 {u.activo && (
                   <button
                     type="button"

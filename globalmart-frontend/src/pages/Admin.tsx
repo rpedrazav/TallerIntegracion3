@@ -123,6 +123,10 @@ export default function Admin() {
   };
 
   const editarUsuario = async (solicitud: SolicitudEdicionUsuario) => {
+    if (!usuarioEditando?.activo) {
+      throw new Error('No se puede editar un usuario inactivo.');
+    }
+
     try {
       await axios.request({
         method: solicitud.method,
@@ -344,6 +348,12 @@ export default function Admin() {
             error={error}
             onEdit={usuario => {
               setSuccess('');
+              if (!usuario.activo) {
+                setUsuarioEditando(null);
+                setError('No se puede editar un usuario inactivo.');
+                return;
+              }
+              setError('');
               setUsuarioEditando(usuario);
             }}
             onDeactivate={desactivarUsuario}

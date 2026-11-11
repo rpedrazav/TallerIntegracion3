@@ -3,15 +3,23 @@ id: estado-actual
 tipo: indice
 titulo: Estado Real de Implementación — GlobalMart OS
 estado: vigente
-fuentes: [docs/context/_reports/inventario.md, src/, globalmart-frontend/src/api/client.ts, globalmart-frontend/src/hardware/simulated-scale-adapter.ts, globalmart-frontend/src/hardware/serial-scale-adapter.ts, globalmart-frontend/src/hardware/scale-adapter-factory.ts, globalmart-frontend/src/hardware/scale-ipc.ts, globalmart-frontend/src/payments/terminal-ipc.ts, globalmart-frontend/src/payments/synchronizeCardPayment.ts, globalmart-frontend/src/preload.ts, globalmart-frontend/e2e/weight-cart.spec.ts, globalmart-frontend/tests/simulated-scale-adapter.test.cjs, globalmart-frontend/tests/serial-scale-adapter.test.cjs, globalmart-frontend/tests/scale-ipc.test.cjs, globalmart-frontend/tests/terminal-ipc.test.cjs, globalmart-frontend/tests/synchronized-card-payment.test.cjs, git log, docs/context/_reports/preguntas-abiertas.md, tests/GlobalMart.IntegrationTests/CobroSeguroIntegrationTests.cs, docs/qa/S2-035/reporte.md, new-ingresses.yaml]
+fuentes: [docs/context/_reports/inventario.md, src/, globalmart-frontend/src/api/client.ts, globalmart-frontend/src/store/useTenantStore.ts, globalmart-frontend/src/pages/Admin.tsx, globalmart-frontend/src/pages/AdminRoles.tsx, globalmart-frontend/src/components/admin/UsuariosList.tsx, globalmart-frontend/src/components/admin/EditarUsuarioModal.tsx, globalmart-frontend/src/hardware/simulated-scale-adapter.ts, globalmart-frontend/src/hardware/serial-scale-adapter.ts, globalmart-frontend/src/hardware/scale-adapter-factory.ts, globalmart-frontend/src/hardware/scale-ipc.ts, globalmart-frontend/src/payments/terminal-ipc.ts, globalmart-frontend/src/payments/synchronizeCardPayment.ts, globalmart-frontend/src/preload.ts, globalmart-frontend/e2e/admin-flows.spec.ts, globalmart-frontend/e2e/admin.spec.ts, globalmart-frontend/e2e/weight-cart.spec.ts, globalmart-frontend/tests/admin-access.test.cjs, globalmart-frontend/tests/user-edit.test.cjs, globalmart-frontend/tests/user-deactivation.test.cjs, globalmart-frontend/tests/simulated-scale-adapter.test.cjs, globalmart-frontend/tests/serial-scale-adapter.test.cjs, globalmart-frontend/tests/scale-ipc.test.cjs, globalmart-frontend/tests/terminal-ipc.test.cjs, globalmart-frontend/tests/synchronized-card-payment.test.cjs, git log, docs/context/_reports/preguntas-abiertas.md, tests/GlobalMart.IntegrationTests/CobroSeguroIntegrationTests.cs, docs/qa/S2-035/reporte.md, new-ingresses.yaml]
 verificado_contra_codigo: true
-ultima_revision: 2026-11-09
+ultima_revision: 2026-11-11
 depende_de: []
 publica: []
 consume: []
 reglas: []
 ---
 # Estado Real de Implementación — GlobalMart OS
+
+## TI3-733 / S2-102 — Estados de usuarios inactivos (2026-11-11)
+
+[IMPLEMENTADO; VALIDACIÓN E2E PARCIAL] La administración conserva usuarios activos e inactivos en la misma tabla con indicadores textuales y visuales. Las cuentas inactivas no pueden iniciar edición básica ni guardar cambios de roles desde la UI; tabla, handlers, modal y pantalla de roles aplican defensas para evitar PUT/POST, mientras los usuarios activos mantienen sus acciones. Después de DELETE 204 la fila permanece con `activo=false`, el bloqueo se aplica inmediatamente y una recarga controlada conserva la cuenta como Inactivo. MS-1 no fue modificado y continúa aceptando PUT y asignación de roles sobre inactivos, por lo que la restricción es solo de interfaz; reactivación sigue sin implementarse. Pruebas Node relacionadas y regresión TI3-732: 12/12, exit code 0. TypeScript y empaquetado Electron: exit code 0. Playwright informó 23/23 casos `ok`, pero el servidor local no cerró y el runner fue interrumpido sin resumen final ni exit code 0; E2E registrado como PASS REPORTADO.
+
+## TI3-732 / S2-101 — Protección Admin por rol activo (2026-11-11)
+
+[IMPLEMENTADO Y PROBADO] El frontend deriva `esAdmin` exclusivamente del claim JWT `active_role`: permite `ADMIN` y `SUPER_ADMIN`, y deniega CAJERO, valores desconocidos o ausencia del claim aunque `roles` contenga ADMIN. El `AdminRoute` existente protege `/admin` y sus rutas hijas, mientras `AppLayout` oculta el enlace administrativo con la misma decisión. La prueba unitaria real del store aprobó 9/9 y las 8 aserciones E2E de `admin.spec.ts` finalizaron correctamente, incluyendo el caso crítico `roles: [ADMIN, CAJERO]` con `active_role: CAJERO`, acceso directo a `/admin` y `/admin/usuarios`, ADMIN activo y sesión ausente. TypeScript y el empaquetado Electron aprobaron. El runner E2E requirió interrupción manual después de informar los 8 casos como aprobados porque su servidor local no terminó automáticamente. El frontend sigue sin validar criptográficamente ni comprobar la expiración del JWT antes de renderizar; la autorización backend continúa siendo la defensa de seguridad independiente.
 
 ## S2-091 — Contrato de anulación total (2026-11-09)
 

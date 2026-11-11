@@ -41,6 +41,12 @@ export default function AdminRoles() {
   }, [token, page, reload]);
 
   const guardar = async (usuario: Usuario) => {
+    if (!usuario.activo) {
+      setSuccess('');
+      setError('No se pueden modificar los roles de un usuario inactivo.');
+      return;
+    }
+
     const roleIds = seleccion[usuario.id] ?? [];
     if (!roleIds.length) { setError('Selecciona al menos un rol.'); return; }
     if (usuario.id === actorId && !roleIds.some(id => roles.some(r => r.id === id && (r.nombre === 'ADMIN' || r.rolBase === 'ADMIN')))) {
@@ -102,12 +108,16 @@ export default function AdminRoles() {
       {r.tenantId && <button type="button" disabled={saving === r.id} onClick={() => { void eliminarRol(r); }} style={{ marginLeft: '0.75rem' }}>Eliminar rol</button>}
     </div>)}
     <h3>Asignación a usuarios</h3>
-    {usuarios.map(u => <div key={u.id} style={{ padding: '1rem', marginBottom: '0.75rem', border: '1px solid var(--color-line)', borderRadius: 8, background: 'var(--color-surface)' }}>
-      <strong>{u.nombre}</strong> <span>{u.email}</span>
+    {usuarios.map(u => <div key={u.id} aria-label={`Roles de ${u.nombre}`} style={{ padding: '1rem', marginBottom: '0.75rem', border: '1px solid var(--color-line)', borderRadius: 8, background: 'var(--color-surface)' }}>
+      <strong>{u.nombre}</strong> <span>{u.email}</span>{' '}
+      <span style={{ fontWeight: 600, color: u.activo ? 'var(--color-success-text)' : 'var(--color-danger-text)' }}>
+        {u.activo ? 'Activo' : 'Inactivo'}
+      </span>
       <div style={{ display: 'flex', gap: '1rem', margin: '0.75rem 0' }}>
-        {roles.map(r => <label key={r.id} title={r.descripcion}><input type="checkbox" checked={(seleccion[u.id] ?? []).includes(r.id)} onChange={event => setSeleccion(current => ({ ...current, [u.id]: event.target.checked ? [...(current[u.id] ?? []), r.id] : (current[u.id] ?? []).filter(id => id !== r.id) }))} /> {r.nombre}</label>)}
+        {roles.map(r => <label key={r.id} title={r.descripcion}><input type="checkbox" disabled={!u.activo} checked={(seleccion[u.id] ?? []).includes(r.id)} onChange={event => setSeleccion(current => ({ ...current, [u.id]: event.target.checked ? [...(current[u.id] ?? []), r.id] : (current[u.id] ?? []).filter(id => id !== r.id) }))} /> {r.nombre}</label>)}
       </div>
-      <button type="button" disabled={saving === u.id} onClick={() => { void guardar(u); }}>{saving === u.id ? 'Guardando…' : 'Guardar roles'}</button>
+      {!u.activo && <p style={{ color: 'var(--color-ink-soft)' }}>Modificación de roles bloqueada: usuario inactivo.</p>}
+      <button type="button" aria-label={`Guardar roles de ${u.nombre}`} aria-disabled={!u.activo} disabled={saving === u.id} onClick={() => { void guardar(u); }} style={{ cursor: u.activo ? 'pointer' : 'not-allowed', opacity: u.activo ? 1 : 0.6 }}>{saving === u.id ? 'Guardando…' : 'Guardar roles'}</button>
     </div>)}
     <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
       <button type="button" disabled={page <= 1} onClick={() => setPage(p => p - 1)}>Anterior</button>

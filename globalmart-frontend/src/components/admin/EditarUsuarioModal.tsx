@@ -52,6 +52,29 @@ export default function EditarUsuarioModal({ usuario, isOpen, onClose, onSubmit,
 
   if (!isOpen || !usuario) return null;
 
+  if (!usuario.activo) {
+    return (
+      <div style={overlayStyle} onClick={onClose}>
+        <div
+          style={modalStyle}
+          onClick={event => event.stopPropagation()}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="eu-titulo-inactivo"
+          aria-describedby="eu-mensaje-inactivo"
+        >
+          <h3 id="eu-titulo-inactivo" style={{ marginTop: 0 }}>Edición no disponible</h3>
+          <p id="eu-mensaje-inactivo">No se puede editar un usuario inactivo.</p>
+          <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+            <button type="button" onClick={onClose} style={{ ...buttonStyle, background: 'transparent', border: '1px solid var(--color-line)' }}>
+              Cerrar
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const emailError = validarEmailEdicion(email);
 
   const cerrar = () => {
@@ -61,6 +84,10 @@ export default function EditarUsuarioModal({ usuario, isOpen, onClose, onSubmit,
   const guardar = async (event: React.FormEvent) => {
     event.preventDefault();
     setSubmitted(true);
+    if (!usuario.activo) {
+      setError('No se puede editar un usuario inactivo.');
+      return;
+    }
     if (emailError) return;
 
     setSaving(true);

@@ -3,6 +3,9 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const path = require('node:path');
 const ts = require('typescript');
+const React = require('react');
+const { renderToStaticMarkup } = require('react-dom/server');
+require('ts-node/register/transpile-only');
 
 test('edición precarga y valida email y construye PUT con el mismo usuario', () => {
   const helperPath = path.resolve(__dirname, '../src/components/admin/editarUsuario.ts');
@@ -41,4 +44,27 @@ test('edición precarga y valida email y construye PUT con el mismo usuario', ()
   assert.equal('nombre' in solicitud.body, false);
   assert.equal('password' in solicitud.body, false);
   assert.equal('roles' in solicitud.body, false);
+});
+
+test('modal de usuario inactivo no presenta controles para guardar cambios', () => {
+  const EditarUsuarioModal = require('../src/components/admin/EditarUsuarioModal.tsx').default;
+  let submitInvocado = false;
+  const html = renderToStaticMarkup(React.createElement(EditarUsuarioModal, {
+    usuario: {
+      id: '11111111-1111-1111-1111-111111111111',
+      nombre: 'Usuario Inactivo',
+      email: 'inactivo@globalmart.cl',
+      activo: false,
+      creadoEn: '2026-10-18T12:00:00Z',
+    },
+    isOpen: true,
+    onClose: () => undefined,
+    onSubmit: async () => { submitInvocado = true; },
+    onSuccess: () => undefined,
+  }));
+
+  assert.match(html, /Edición no disponible/);
+  assert.match(html, /No se puede editar un usuario inactivo/);
+  assert.doesNotMatch(html, /Guardar cambios/);
+  assert.equal(submitInvocado, false);
 });
