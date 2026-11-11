@@ -13,12 +13,14 @@ interface PaymentModalProps {
   change?: number | null;
   errorMessage?: string;
   shortfall?: number | null;
+  terminalConnected?: boolean;
   onClose: () => void;
   onConfirm?: (method: PaymentMethod, cashReceived?: number) => void;
   onChangeMethod?: (method: PaymentMethod) => void;
   onCashInputChange?: () => void;
   onVerify?: () => void;
   onRetry?: () => void;
+  onCancelAttempt?: () => void;
 }
 
 const money = (value: number) => `$ ${value.toLocaleString('es-CL')}`;
@@ -51,7 +53,23 @@ const stateText: Record<Exclude<PaymentState, 'available'>, { title: string; det
   },
 };
 
-export default function PaymentModal({ total, saleMethod, state, reference, change, errorMessage, shortfall, onClose, onConfirm, onChangeMethod, onCashInputChange, onVerify, onRetry }: PaymentModalProps) {
+export default function PaymentModal({
+  total,
+  saleMethod,
+  state,
+  reference,
+  change,
+  errorMessage,
+  shortfall,
+  terminalConnected = true,
+  onClose,
+  onConfirm,
+  onChangeMethod,
+  onCashInputChange,
+  onVerify,
+  onRetry,
+  onCancelAttempt,
+}: PaymentModalProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [method, setMethod] = useState<PaymentMethod>(saleMethod);
   const [cashInput, setCashInput] = useState('');
@@ -102,9 +120,33 @@ export default function PaymentModal({ total, saleMethod, state, reference, chan
               {cashInput !== '' && !cashIsValid && <p className="payment-modal__error" role="alert">Ingresa un monto mayor que cero.</p>}
             </div>
           ) : (
-            <div className="payment-modal__card-info">
+            <div className="payment-modal__card-info payment-modal__terminal-panel" aria-label="Panel de terminal POS">
+              <div className="payment-modal__terminal-status-bar">
+                <div className="payment-modal__terminal-connection">
+                  <span className={`payment-modal__status-dot ${terminalConnected ? 'payment-modal__status-dot--online' : 'payment-modal__status-dot--offline'}`} aria-hidden="true" />
+                  <span className="payment-modal__status-text">Estado de conexión: <strong>{terminalConnected ? 'Conectado' : 'Desconectado'}</strong></span>
+                </div>
+                <span className="payment-modal__mode-badge">Terminal POS (Simulador)</span>
+              </div>
+              <div className="payment-modal__terminal-steps">
+                <div className="payment-modal__step-row">
+                  <span className="payment-modal__step-label">Monto desde MS-5:</span>
+                  <span className="payment-modal__step-value">{money(total)}</span>
+                </div>
+                <div className="payment-modal__step-row">
+                  <span className="payment-modal__step-label">Estado de lectura:</span>
+                  <span className="payment-modal__step-value">Listo para iniciar lectura</span>
+                </div>
+                <div className="payment-modal__step-row">
+                  <span className="payment-modal__step-label">Autorización:</span>
+                  <span className="payment-modal__step-value">Pasarela simulada</span>
+                </div>
+              </div>
               <strong>Cobro mediante pasarela simulada</strong>
               <p>El POS enviará el monto de la venta. La respuesta mostrará únicamente una referencia opaca; aquí no se solicitan datos de tarjeta.</p>
+              <div className="payment-modal__security-notice">
+                <span>🔒 Operación segura: no se solicita número de tarjeta ni datos sensibles.</span>
+              </div>
             </div>
           )}
 
@@ -114,8 +156,61 @@ export default function PaymentModal({ total, saleMethod, state, reference, chan
         </>
       ) : (
         <div id="payment-modal-description" className={`payment-modal__result payment-modal__result--${state}`} role="status" aria-live="polite">
+          {method === 'card' && (
+            <div className="payment-modal__terminal-status-bar">
+              <div className="payment-modal__terminal-connection">
+                <span className={`payment-modal__status-dot ${terminalConnected ? 'payment-modal__status-dot--online' : 'payment-modal__status-dot--offline'}`} aria-hidden="true" />
+                <span className="payment-modal__status-text">Estado de conexión: <strong>{terminalConnected ? 'Conectado' : 'Desconectado'}</strong></span>
+              </div>
+              <span className="payment-modal__mode-badge">Terminal POS</span>
+            </div>
+          )}
           <span className="payment-modal__symbol" aria-hidden="true">{stateText[state].symbol}</span>
           <p>{stateText[state].detail}</p>
+          {method === 'card' && (
+            <div className="payment-modal__terminal-steps">
+              <div className="payment-modal__step-row">
+                <span className="payment-modal__step-label">Monto desde MS-5:</span>
+                <span className="payment-modal__step-value">{money(total)}</span>
+              </div>
+              {state === 'processing' && (
+                <>
+                  <div className="payment-modal__step-row">
+                    <span className="payment-modal__step-label">Lectura de tarjeta:</span>
+                    <span className="payment-modal__step-value">Leyendo dispositivo en terminal...</span>
+                  </div>
+                  <div className="payment-modal__step-row">
+                    <span className="payment-modal__step-label">Autorización:</span>
+                    <span className="payment-modal__step-value">Enviando a pasarela simulada</span>
+                  </div>
+                </>
+              )}
+              {state === 'approved' && (
+                <div className="payment-modal__step-row">
+                  <span className="payment-modal__step-label">Autorización:</span>
+                  <span className="payment-modal__step-value">Aprobada</span>
+                </div>
+              )}
+              {state === 'declined' && (
+                <div className="payment-modal__step-row">
+                  <span className="payment-modal__step-label">Autorización:</span>
+                  <span className="payment-modal__step-value">Rechazada</span>
+                </div>
+              )}
+              {state === 'cancelled' && (
+                <div className="payment-modal__step-row">
+                  <span className="payment-modal__step-label">Estado terminal:</span>
+                  <span className="payment-modal__step-value">Cancelado</span>
+                </div>
+              )}
+              {state === 'uncertain' && (
+                <div className="payment-modal__step-row">
+                  <span className="payment-modal__step-label">Estado terminal:</span>
+                  <span className="payment-modal__step-value">Incierto (pendiente de verificación)</span>
+                </div>
+              )}
+            </div>
+          )}
           {state === 'approved' && method === 'cash' && change != null && <p className="payment-modal__change">Vuelto calculado por MS-5: <strong>{money(change)}</strong></p>}
           {errorMessage && <p>{errorMessage}</p>}
           {method === 'card' && reference && <p className="payment-modal__reference">Referencia opaca: <code>{reference}</code></p>}
@@ -137,7 +232,16 @@ export default function PaymentModal({ total, saleMethod, state, reference, chan
         )}
         {state === 'declined' && !methodMatchesSale && onChangeMethod && <button type="button" className="payment-modal__primary" onClick={() => onChangeMethod(method)}>Cambiar a {method === 'cash' ? 'efectivo' : 'tarjeta'}</button>}
         {state === 'declined' && methodMatchesSale && method === 'card' && onRetry && <button type="button" className="payment-modal__primary" onClick={onRetry}>Reintentar tarjeta</button>}
-        {state === 'processing' && <span className="payment-modal__waiting">Procesando…</span>}
+        {state === 'processing' && (
+          <div className="payment-modal__processing-actions">
+            <span className="payment-modal__waiting">Procesando…</span>
+            {onCancelAttempt && (
+              <button type="button" className="payment-modal__secondary" onClick={onCancelAttempt}>
+                Cancelar intento
+              </button>
+            )}
+          </div>
+        )}
         {state === 'uncertain' && onVerify && <button type="button" className="payment-modal__primary" onClick={onVerify}>Verificar venta</button>}
         {state !== 'available' && state !== 'processing' && <button type="button" className="payment-modal__secondary" onClick={onClose}>Cerrar</button>}
       </div>

@@ -740,12 +740,19 @@ export default function Pos() {
         reference={paymentReference}
         errorMessage={paymentError}
         shortfall={paymentShortfall}
+        terminalConnected={true}
         onClose={closePayment}
         onConfirm={handlePayment}
         onChangeMethod={changePaymentMethod}
         onCashInputChange={() => { setPaymentError(''); setPaymentShortfall(null); }}
         onVerify={paymentState === 'uncertain' ? verifyPayment : undefined}
         onRetry={paymentState === 'declined' && venta.metodo_pago === 'TARJETA' ? retryDeclinedCard : undefined}
+        onCancelAttempt={venta.metodo_pago === 'TARJETA' && (paymentState === 'processing' || paymentState === 'uncertain') ? () => {
+          setPaymentState('cancelled');
+          setPaymentError('');
+          setPaymentReference(null);
+          releasePaymentSingleFlight(paymentInFlight);
+        } : undefined}
       />}
       {ventaError && (
         <div role="alert" style={{ padding: '0.75rem 1rem', border: '1px solid var(--color-danger)', background: 'var(--color-danger-bg)', color: 'var(--color-danger)', borderRadius: '8px' }}>
