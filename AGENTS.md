@@ -62,4 +62,4 @@ cd globalmart-frontend && npm install && npm start
 
 ## Sprint Actual
 
-Sprint 1 (Semana 3 de 4) — Ver [`docs/context/planificacion/sprint-actual.md`](docs/context/planificacion/sprint-actual.md)
+Sprint 3 (Semanas 9–12) — Ver [`docs/context/planificacion/sprint-actual.md`](docs/context/planificacion/sprint-actual.md)

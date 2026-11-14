@@ -83,3 +83,4 @@ _ReSharper*/
 *.pidb
 *.svclog
 *.scc
+.obsidian/

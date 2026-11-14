@@ -118,6 +118,7 @@ Para tareas con ID `S2-xxx`, consultar primero la carpeta [tareas/](../../tareas
 
 - [plan_sprint2_revisado.xlsx](../../tareas/plan_sprint2_revisado.xlsx): hoja `Resumen` con las cinco metas y límites físicos; hoja `Sprint 2` con ID, entregable, aceptación y asignación. Es la fuente consultada para S2-021.
 - [sprint2_youtrack_resultado.json](../../tareas/sprint2_youtrack_resultado.json): correspondencia de IDs del plan con YouTrack (S2-021 → TI3-652).
+- Las tareas `S2-091`..`S2-120` (Semana 8 del Sprint 2) se trasladaron a la Semana 9 del Sprint 3; avance en `[[sprint-actual]]`.
 - [Matriz S2-021](../../diagramas/matriz/S2-021-matriz-aceptacion.md): escenarios, resultados esperados, dependencias y separación entre validación simulada y física. Define pruebas pendientes; no certifica su ejecución.
 
 Los archivos de planificación describen objetivos. Contrastar su estado con `estado-actual.md` y evidencia de código/pruebas antes de declarar una funcionalidad implementada.

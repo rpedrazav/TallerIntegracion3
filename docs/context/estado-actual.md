@@ -40,7 +40,7 @@ reglas: []
 > Nodo más importante para cualquier IA nueva. Refleja el estado REAL del código al 27-10-2026, validado contra el repositorio y las aclaraciones del equipo de desarrollo.
 
 **Contexto del proyecto:** Proyecto académico de Ingeniería Civil Informática, Universidad Católica de Temuco (UCT). Las integraciones externas que no puedan obtenerse legalmente (certificados digitales reales del SII, terminales de pago bancario físicos) serán simuladas.  
-**Sprint en curso:** **Sprint 1** (penúltimo día de la Semana 3 de un ciclo de 4 semanas, de miércoles a miércoles).
+**Sprint en curso:** **Sprint 3** (Semanas 9–12, ciclos de miércoles a miércoles). La Semana 9 contiene las tareas de la Semana 8 del Sprint 2, no ejecutadas por exigencia del profesor. Ver [[sprint-actual]].
 
 **Revisión del DoD:** completada. Ver [dod-sprint1-revision.md](dod-sprint1-revision.md) para el veredicto de los siete criterios y sus hallazgos técnicos.
 
