@@ -5,7 +5,7 @@ titulo: Kong API Gateway — Configuración y Rutas
 estado: parcial
 fuentes: [Docker/config/kong.yaml, Docker/config/README_KONG.md]
 verificado_contra_codigo: true
-ultima_revision: 2026-10-17
+ultima_revision: 2026-11-14
 depende_de: [ms1-identity, ms3-catalog, ms5-pos]
 publica: []
 consume: []
@@ -47,6 +47,7 @@ reglas: [RN-07]
 | Ruta Kong | Métodos | JWT | Descripción |
 |-----------|---------|-----|-------------|
 | `/simulator/payments`, `/api/simulator/payments` | GET, POST, OPTIONS | ❌ Sin JWT | Autorizar y consultar estado por clave idempotente |
+| `/simulator/reversals`, `/api/simulator/reversals` | GET, POST, OPTIONS | ❌ Sin JWT | Reversa simulada y consulta por clave (S2-093); configuración, despliegue remoto [NO VERIFICADO] |
 | `/simulator/health`, `/api/simulator/health` | GET, OPTIONS | ❌ Sin JWT | Health check local |
 
 ## Servicios SIN rutas Kong

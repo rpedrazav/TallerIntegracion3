@@ -187,6 +187,8 @@ services:
         paths:
           - /simulator/payments
           - /api/simulator/payments
+          - /simulator/reversals
+          - /api/simulator/reversals
         strip_path: false
         methods:
           - GET

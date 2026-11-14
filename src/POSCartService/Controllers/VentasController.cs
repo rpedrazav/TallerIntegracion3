@@ -43,7 +43,7 @@ public sealed class VentasController : ControllerBase
 
 
 
-    /// <summary>Anulación total de efectivo, autorizada por ADMIN del mismo tenant (S2-092).</summary>
+    /// <summary>Anulación total de efectivo o tarjeta con reversa confirmada, autorizada por ADMIN del mismo tenant (S2-092).</summary>
     [HttpPost("{id:guid}/anular")]
     [Authorize(Roles = "ADMIN")]
     [ProducesResponseType(StatusCodes.Status200OK)]
@@ -80,8 +80,8 @@ public sealed class VentasController : ControllerBase
                     autorizado_por = venta.Anulacion.AutorizadoPor,
                     created_at = venta.Anulacion.CreatedAt
                 },
-                reembolso_tarjeta = "NO_APLICA",
-                devolucion_efectivo = "GESTION_MANUAL"
+                reembolso_tarjeta = venta.MetodoPago == MetodoPagoVenta.TARJETA ? "CONFIRMADO_SIMULADO" : "NO_APLICA",
+                devolucion_efectivo = venta.MetodoPago == MetodoPagoVenta.EFECTIVO ? "GESTION_MANUAL" : "NO_APLICA"
             });
         }
         catch (KeyNotFoundException)
@@ -100,6 +100,34 @@ public sealed class VentasController : ControllerBase
         {
             _logger?.LogError(ex, "Error al anular venta {VentaId} del tenant {TenantId}", id, tenantId);
             return StatusCode(500, new { codigo = "ERROR_PERSISTENCIA", error = "No se pudo confirmar la anulación." });
+        }
+    }
+
+    /// <summary>Consulta y reconcilia una reversa pendiente sin reenviar la devolución.</summary>
+    [HttpGet("{id:guid}/reversa-tarjeta")]
+    [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
+    [Authorize(Roles = "ADMIN")]
+    public async Task<IActionResult> ConsultarReversa(Guid id, [FromServices] ReversaTarjetaService reversas)
+    {
+        if (!TryGetClaims(out var adminId, out var tenantId) || adminId == Guid.Empty || tenantId == Guid.Empty)
+            return Unauthorized();
+        try
+        {
+            var r = await reversas.ConsultarAsync(id);
+            return Ok(new {
+                reversa_id = r.Id, venta_id = r.VentaId, estado = r.Estado.ToString(), monto = r.Monto, moneda = r.Moneda,
+                referencia_pago = r.ReferenciaPago, referencia_reversa = r.ReferenciaReversa, codigo_rechazo = r.CodigoRechazo,
+                motivo = r.Motivo, autorizado_por = r.AutorizadoPor, created_at = r.CreatedAt, updated_at = r.UpdatedAt,
+                reembolso_confirmado = r.Estado == EstadoReversa.APROBADA
+            });
+        }
+        catch (KeyNotFoundException) { return NotFound(new { codigo = "REVERSA_NO_ENCONTRADA", error = "Reversa no encontrada." }); }
+        catch (UnauthorizedAccessException) { return Forbid(); }
+        catch (AnulacionConflictException ex) { return Conflict(new { codigo = ex.Codigo, error = ex.Message }); }
+        catch (Exception ex)
+        {
+            _logger?.LogError(ex, "Error al reconciliar reversa de venta {VentaId}", id);
+            return StatusCode(500, new { codigo = "ERROR_PERSISTENCIA", error = "No se pudo confirmar el resultado local; consulte nuevamente." });
         }
     }
 
