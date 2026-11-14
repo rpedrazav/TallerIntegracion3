@@ -10,13 +10,15 @@ public class VentaService : IVentaService
 {
     private readonly IVentaRepository _ventaRepository;
     private readonly IHttpContextAccessor? _httpContextAccessor;
+    private readonly ReversaTarjetaService? _reversas;
     private readonly IItemVentaRepository? _itemVentaRepository;
 
     public VentaService(
         IVentaRepository ventaRepository,
         IItemVentaRepository? itemVentaRepository = null,
         IKafkaProducerService? kafkaProducer = null,
-        IHttpContextAccessor? httpContextAccessor = null)
+        IHttpContextAccessor? httpContextAccessor = null,
+        ReversaTarjetaService? reversas = null)
     {
         _ventaRepository     = ventaRepository ?? throw new ArgumentNullException(nameof(ventaRepository));
         _itemVentaRepository = itemVentaRepository;
@@ -24,6 +26,7 @@ public class VentaService : IVentaService
         // parámetro opcional para no romper los ejecutables de prueba existentes.
         _ = kafkaProducer;
         _httpContextAccessor = httpContextAccessor;
+        _reversas = reversas;
     }
 
 
@@ -157,6 +160,10 @@ public class VentaService : IVentaService
         if (motivo.Length is < 1 or > 500)
             throw new ArgumentException("motivo debe contener entre 1 y 500 caracteres.", nameof(motivo));
 
+        var venta = await _ventaRepository.GetByIdAsync(ventaId);
+        if (venta is null || venta.TenantId != tenantId) throw new KeyNotFoundException("Venta no encontrada.");
+        if (venta.MetodoPago == MetodoPagoVenta.TARJETA && _reversas is not null)
+            return await _reversas.AnularAsync(ventaId, motivo);
         return await _ventaRepository.AnularTotalAsync(ventaId, tenantId, adminId, motivo);
     }
 

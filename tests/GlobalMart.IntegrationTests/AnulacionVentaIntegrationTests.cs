@@ -192,7 +192,7 @@ public sealed class AnulacionVentaIntegrationTests : IClassFixture<Ms5WebApplica
     [InlineData("CANCELADA", "ESTADO_NO_ANULABLE")]
     [InlineData("ANULADA", "VENTA_YA_ANULADA")]
     [InlineData("cerrado", "TURNO_NO_ANULABLE")]
-    [InlineData("tarjeta", "REEMBOLSO_NO_DISPONIBLE")]
+    [InlineData("tarjeta", "PAGO_INCONSISTENTE")]
     [InlineData("pago_tarjeta", "REEMBOLSO_NO_DISPONIBLE")]
     [InlineData("aprobado", "REEMBOLSO_NO_DISPONIBLE")]
     [InlineData("incierto", "PAGO_INCIERTO")]

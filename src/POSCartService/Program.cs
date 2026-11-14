@@ -100,6 +100,8 @@ builder.Services.AddHttpClient(PaymentGatewayClient.HttpClientName, client =>
     client.DefaultRequestHeaders.Add("Accept", "application/json");
 });
 builder.Services.AddScoped<IPaymentGatewayClient, PaymentGatewayClient>();
+builder.Services.AddScoped<IReversalGatewayClient, ReversalGatewayClient>();
+builder.Services.AddScoped<ReversaTarjetaService>();
 
 // â”€â”€â”€ Clientes HTTP hacia microservicios MS-3 y MS-2 â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 builder.Services.AddHttpClient(CatalogClient.HttpClientName, client =>

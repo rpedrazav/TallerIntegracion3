@@ -5,7 +5,7 @@ titulo: MS-5 · POS & Cart Service
 estado: parcial
 fuentes: [src/POSCartService/, Docker/simulator/server.js, tests/GlobalMart.IntegrationTests/PaymentSimulatorIntegrationTests.cs, tests/GlobalMart.IntegrationTests/PaymentRetrySafetyTests.cs, tests/GlobalMart.IntegrationTests/CobroSeguroIntegrationTests.cs, docs/qa/S2-035/reporte.md, tests/GlobalMart.IntegrationTests/CobrarTarjetaIntegrationTests.cs, tests/GlobalMart.IntegrationTests/PaymentEventSequenceContractTests.cs]
 verificado_contra_codigo: true
-ultima_revision: 2026-11-09
+ultima_revision: 2026-11-14
 depende_de: [ms1-identity, ms2-tax, ms3-catalog]
 publica: [sale.completed]
 consume: []
@@ -58,7 +58,8 @@ reglas: [RN-01, RN-02, RN-03, RN-06, RF-02, RF-03, RF-04, RF-05, RF-06, RF-07]
 | GET | `/ventas/turno/{turnoId}` (alias `/api/ventas/turno/{turnoId}`) | JWT | [IMPLEMENTADO] |
 | POST | `/ventas/{id}/cobrar` (alias `/api/ventas/{id}/cobrar`) | JWT | [IMPLEMENTADO — valida monto_recibido ≥ total, calcula vuelto y persiste venta, pago y sale.completed pendiente en una transacción] |
 | POST | `/ventas/{id}/cobrar-tarjeta` (alias `/api/ventas/{id}/cobrar-tarjeta`) | JWT | [IMPLEMENTADO — reserva previa, aprobación/rechazo/timeout y bloqueo de repetición; S2-035] |
-| POST | `/ventas/{id}/anular` (alias `/api/ventas/{id}/anular`) | JWT + ADMIN | [IMPLEMENTADO backend S2-092; ADMIN, tenant y guardias S2-091] |
+| POST | `/ventas/{id}/anular` (alias `/api/ventas/{id}/anular`) | JWT + ADMIN | [IMPLEMENTADO S2-092/S2-093; efectivo o reversa tarjeta confirmada] |
+| GET | `/ventas/{id}/reversa-tarjeta` (alias `/api`) | JWT + ADMIN | [IMPLEMENTADO S2-093; consulta y reconciliación de reversa] |
 | GET | `/health` | Público | [IMPLEMENTADO] |
 
 > Ver [[matriz-rutas]] para la comparativa exhaustiva de rutas Kong, controladores y puertos de host.
@@ -109,7 +110,7 @@ Antes de autorizar tarjeta, MS-5 persiste un `IntentoPago PENDIENTE` con clave d
    → GET /ventas/{id}/intento-tarjeta reconcilia el mismo intento sin repetir el POST
 
 6. POST /ventas/{id}/anular  { motivo }
-   → Contrato S2-091: ADMIN del tenant, COMPLETADA en efectivo, turno original abierto
+   → ADMIN del tenant, COMPLETADA, turno original abierto; tarjeta exige reversa S2-093 confirmada
    → VentaService.AnularAsync verifica identidad ADMIN; repositorio confirma estado ANULADA y auditoría en una transacción
    → Crea Anulacion { ventaId, autorizadoPor, motivo }
    → Tarjeta aprobada e incertidumbre → 409 sin mutación ni llamada de pasarela
@@ -400,8 +401,25 @@ Validación del 2026-10-26: **84/84 pruebas Release aprobadas**, sin fallos ni o
 
 ## S2-091 — Alcance de anulación total
 
-[IMPLEMENTADO backend S2-092] Ver [contrato HTTP, permisos y matriz](../dominio/anulacion-venta.md). Solo anulación total ADMIN del tenant para efectivo completado y turno original abierto. La ruta y el servicio verifican autorización; el repositorio comprueba estado/pagos/intentos dentro de una transacción con bloqueo de turno y venta. Rechazos 400/401/403/404/409 sin mutación; tarjeta aprobada sin reembolso disponible e intentos inciertos quedan bloqueados. Parciales, mixtos, devolución física, reversión fiscal y reposición de inventario no se implementan. No hay migración ni cambios de UI. [Pruebas y límites](../../qa/S2-092/reporte.md).
+[BASE HISTÓRICA S2-092; tarjeta ampliada en S2-093 abajo] Ver [contrato HTTP, permisos y matriz](../dominio/anulacion-venta.md). Solo anulación total ADMIN del tenant para efectivo completado y turno original abierto. La ruta y el servicio verifican autorización; el repositorio comprueba estado/pagos/intentos dentro de una transacción con bloqueo de turno y venta. Rechazos 400/401/403/404/409 sin mutación; tarjeta aprobada sin reembolso disponible e intentos inciertos quedan bloqueados. Parciales, mixtos, devolución física, reversión fiscal y reposición de inventario no se implementan. No hay migración ni cambios de UI. [Pruebas y límites](../../qa/S2-092/reporte.md).
 
 ## Integración de ramas — 2026-11-01
 
 El destino local de impuestos en `Services:TaxComplianceService:BaseUrl` se corrige a `http://localhost:5239`, coincidiendo con launchSettings de MS-2.
+
+
+## S2-093 — Reversa total de tarjeta [IMPLEMENTADO backend]
+
+`POST /ventas/{id}/anular` (también `/api`) admite tarjeta completada: exige ADMIN del mismo tenant, motivo, turno original ABIERTO, un pago y un intento APROBADO con referencia opaca, monto y moneda coherentes. El renderer no proporciona importes ni datos bancarios.
+
+1. `ReversaTarjetaService` bloquea turno y venta para reservar `ReversaPago` PENDIENTE en PostgreSQL; índice único `(TenantId, VentaId)`. Confirma esa reserva antes de llamar al simulador, sin mantener locks durante HTTP.
+2. `IReversalGatewayClient.ReverseAsync` envía referencia opaca original y el Id de reversa como `request_id`/`Idempotency-Key`. Se verifica que la respuesta coincida en solicitud, tenant, venta, referencia, importe y moneda.
+3. REVERSED confirma **juntos** estado APROBADA de reversa, venta ANULADA y auditoría original. Devuelve 200, `reembolso_tarjeta: CONFIRMADO_SIMULADO` y `devolucion_efectivo: NO_APLICA`. Conserva pago, intento de autorización, ítems, montos y outbox históricos.
+4. DECLINED persiste RECHAZADA y código; devuelve 409 `REVERSA_RECHAZADA`. La venta sigue COMPLETADA, sin auditoría de anulación y sin afirmar devolución.
+5. Timeout, error HTTP, JSON o respuesta inconsistente conservan PENDIENTE; 409 `REVERSA_PENDIENTE`. Un fallo de commit deja la reserva recuperable, sin confirmación local parcial.
+
+**Consulta:** `GET /ventas/{id}/reversa-tarjeta` (alias `/api`), JWT + ADMIN. Devuelve estado, identidades, referencias, monto/moneda, motivo, autorizador, fechas y `reembolso_confirmado`. No se implementa pantalla. Un caso inexistente o ajeno devuelve 404 `REVERSA_NO_ENCONTRADA`. Si está PENDIENTE, consulta al simulador y reconcilia el resultado local; por ello esta consulta puede actualizar el estado. No reenvía una reversa. Si el turno se cerró después de reservar, igualmente registra una devolución externa ya confirmada.
+
+**Repetición:** nunca genera otro POST externo para una venta con reversa reservada. APROBADA retorna el éxito existente; RECHAZADA o PENDIENTE mantienen 409. No hay reintento automático de rechazo ni nueva clave. Un caso pendiente sin resultado externo requiere revisión; no se presume aprobado ni rechazado.
+
+Se añade migración `AddReversasPago`. La aplicación ejecuta migraciones al iniciar. Deben desplegarse MS-5, el simulador completo (incluye `reversals.js`) y la configuración Kong correspondiente. Pruebas locales y límites en [reporte S2-093](../../qa/S2-093/reporte.md). Despliegue en cluster [NO VERIFICADO]. No incluye devoluciones parciales, reposición MS-4, reversión fiscal ni reembolso bancario real.

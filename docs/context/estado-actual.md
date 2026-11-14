@@ -5,7 +5,7 @@ titulo: Estado Real de Implementación — GlobalMart OS
 estado: vigente
 fuentes: [docs/context/_reports/inventario.md, src/, globalmart-frontend/src/api/client.ts, globalmart-frontend/src/store/useTenantStore.ts, globalmart-frontend/src/pages/Admin.tsx, globalmart-frontend/src/pages/AdminRoles.tsx, globalmart-frontend/src/components/admin/UsuariosList.tsx, globalmart-frontend/src/components/admin/EditarUsuarioModal.tsx, globalmart-frontend/src/hardware/simulated-scale-adapter.ts, globalmart-frontend/src/hardware/serial-scale-adapter.ts, globalmart-frontend/src/hardware/scale-adapter-factory.ts, globalmart-frontend/src/hardware/scale-ipc.ts, globalmart-frontend/src/payments/terminal-ipc.ts, globalmart-frontend/src/payments/synchronizeCardPayment.ts, globalmart-frontend/src/preload.ts, globalmart-frontend/e2e/admin-flows.spec.ts, globalmart-frontend/e2e/admin.spec.ts, globalmart-frontend/e2e/weight-cart.spec.ts, globalmart-frontend/tests/admin-access.test.cjs, globalmart-frontend/tests/user-edit.test.cjs, globalmart-frontend/tests/user-deactivation.test.cjs, globalmart-frontend/tests/simulated-scale-adapter.test.cjs, globalmart-frontend/tests/serial-scale-adapter.test.cjs, globalmart-frontend/tests/scale-ipc.test.cjs, globalmart-frontend/tests/terminal-ipc.test.cjs, globalmart-frontend/tests/synchronized-card-payment.test.cjs, git log, docs/context/_reports/preguntas-abiertas.md, tests/GlobalMart.IntegrationTests/CobroSeguroIntegrationTests.cs, docs/qa/S2-035/reporte.md, new-ingresses.yaml]
 verificado_contra_codigo: true
-ultima_revision: 2026-11-11
+ultima_revision: 2026-11-14
 depende_de: []
 publica: []
 consume: []
@@ -31,7 +31,7 @@ reglas: []
 
 ## S2-091 — Contrato de anulación total (2026-11-09)
 
-[CONTRATO S2-091; BACKEND IMPLEMENTADO EN S2-092] [Anulación total](dominio/anulacion-venta.md): POST `/ventas/{id}/anular` y alias `/api`, JWT + ADMIN del mismo tenant, motivo obligatorio, venta COMPLETADA en efectivo y turno original ABIERTO. Devolución parcial fuera de alcance. Tarjeta aprobada e intentos inciertos se rechazan sin mutación: el simulador no tiene reembolso y no se declara dinero devuelto. S2-091 entregó contrato; S2-092 implementa endpoint, autorización en servicio y transición/auditoría atómicas. [Reporte y alcance de pruebas](../qa/S2-092/reporte.md). UI y despliegue remoto no verificados.
+[CONTRATO S2-091; BACKEND IMPLEMENTADO EN S2-092] [Anulación total](dominio/anulacion-venta.md): POST `/ventas/{id}/anular` y alias `/api`, JWT + ADMIN del mismo tenant, motivo obligatorio, venta COMPLETADA en efectivo y turno original ABIERTO. Devolución parcial fuera de alcance. S2-093 amplía tarjeta con reversa simulada: solo una respuesta REVERSED validada permite anular; rechazo e incertidumbre permanecen visibles sin fingir devolución. S2-091 entregó contrato; S2-092 implementa endpoint, autorización en servicio y transición/auditoría atómicas. [Reporte y alcance de pruebas](../qa/S2-092/reporte.md). UI y despliegue remoto no verificados.
 
 ## Avance administrativo del 2026-10-27
 
@@ -174,7 +174,7 @@ S2-052 — 2026-10-19: **2/2 pruebas de integración HTTP locales aprobadas** pa
 - tests de integración S2-005 en `VentaIntegrationTests` cubren los 4 escenarios de creación segura: precio falsificado ignorado (precio persistido viene de MS-3, no del request), IVA por tenant desde MS-2, producto inactivo (400 sin persistir) y ausencia de turno abierto (409 sin persistir venta) [IMPLEMENTADO]
 
 **No implementado / CRÍTICO:**
-- `POST /ventas/{id}/anular` y alias `/api` implementados en S2-092; UI, reembolso tarjeta y reversión de efectos externos pendientes.
+- `POST /ventas/{id}/anular` y alias `/api` implementados en S2-092; UI y reversión de efectos externos pendientes; reversa simulada de tarjeta implementada en S2-093.
 - Integración con hardware (balanza, impresora, cajón de dinero)
 
 ---
@@ -204,7 +204,7 @@ S2-052 — 2026-10-19: **2/2 pruebas de integración HTTP locales aprobadas** pa
 
 | # | Funcionalidad | RN/RF afectado | Gravedad |
 |---|---------------|----------------|----------|
-| 1 | Endpoint de anulación expuesto con contrato S2-091; UI/reembolso pendientes | RF-22 | Backend S2-092 implementado |
+| 1 | Endpoint de anulación expuesto con contrato S2-091; UI pendiente; reversa simulada S2-093 implementada | RF-22 | Backend S2-092 implementado |
 | 2 | Emisión simulada de DTE (boleta/factura) en MS-2 | RN-03, RF-08, TC-08/09 | 🔴 Crítica |
 | 4 | FEFO en recepción e inventario en MS-4 | RN-05, RF-10, WI-04/05 | 🟠 Alta |
 | 5 | Integrar frontend `Pos.tsx` con backend real | RF-04, RF-05 | 🟠 Alta |
@@ -481,3 +481,7 @@ S2-080 [IMPLEMENTADO — pruebas E2E controladas]: tres escenarios de Playwright
 ## S2-089 / TI3-720 — Integrar smoke de simuladores
 
 [IMPLEMENTADO] Flujo de prueba automatizado mediante `scripts/smoke-simuladores-frontend.sh` y `globalmart-frontend/tests/smoke-simulators.ts`, ejecutable en CI o local sin periféricos conectados. Comprueba lecturas de balanza, pesaje, tara y el ciclo de vida del terminal (inicio, aprobación con token opaco, rechazo y cancelación). Incluye widget interactivo de balanza integrado en la interfaz POS (`Pos.tsx`).
+
+## S2-093 — Reversa tarjeta (2026-11-14)
+
+[IMPLEMENTADO backend] Reserva durable `ReversaPago`, reversa por referencia opaca, resultado validado y confirmación atómica de reversa/venta/auditoría. Rechazo y timeout no anulan. GET `/ventas/{id}/reversa-tarjeta` para ADMIN del tenant consulta y recupera pendientes sin otra solicitud de reversa. Simulador y rutas Kong actualizados; requiere migración `AddReversasPago`. No hay UI ni devolución bancaria real. Despliegue remoto [NO VERIFICADO]. [Contrato](dominio/anulacion-venta.md), [evidencia](../qa/S2-093/reporte.md).

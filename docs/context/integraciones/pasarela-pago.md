@@ -5,7 +5,7 @@ titulo: Integración con Pasarela de Pago
 estado: parcial
 fuentes: [GlobalMart_ContextMaster.md#sec12, src/POSCartService/Services/IPaymentGatewayClient.cs, src/POSCartService/Services/PaymentGatewayClient.cs, src/POSCartService/Exceptions/PaymentAuthorizationUncertainException.cs, src/POSCartService/DTOs/PaymentGatewayDtos.cs, src/POSCartService/Program.cs, Docker/simulator/server.js, tests/GlobalMart.IntegrationTests/PaymentGatewayClientTests.cs, tests/GlobalMart.IntegrationTests/PaymentSimulatorIntegrationTests.cs, tests/GlobalMart.IntegrationTests/PaymentRetrySafetyTests.cs, tareas/sprint2_youtrack_resultado.json, Docker/env.example, .env.example, src/POSCartService/appsettings.json, tests/GlobalMart.IntegrationTests/CobroSeguroIntegrationTests.cs, docs/qa/S2-035/reporte.md, src/POSCartService/Services/VentaService.cs, src/POSCartService/Repositories/VentaRepository.cs, src/POSCartService/Controllers/VentasController.cs, src/POSCartService/Models/Pago.cs, src/POSCartService/DTOs/CobrarTarjetaDTOs.cs, tests/GlobalMart.IntegrationTests/CobrarTarjetaIntegrationTests.cs, tests/GlobalMart.IntegrationTests/PaymentEventSequenceContractTests.cs, globalmart-frontend/src/payments/terminal-ipc.ts, globalmart-frontend/src/payments/synchronizeCardPayment.ts, globalmart-frontend/src/preload.ts, globalmart-frontend/tests/terminal-ipc.test.cjs, globalmart-frontend/tests/synchronized-card-payment.test.cjs]
 verificado_contra_codigo: true
-ultima_revision: 2026-11-09
+ultima_revision: 2026-11-14
 depende_de: [ms5-pos]
 publica: []
 consume: []
@@ -400,3 +400,15 @@ Flujo de verificación automatizado para validar el ciclo mínimo de cobro con t
 2. **Rechazo:** Escenario de rechazo por fondos insuficientes o declinación retorna HTTP 422 y conserva la venta en estado `PENDIENTE` sin registrar pagos ni outbox espurios.
 3. **Pérdida temporal / Timeout:** Timeout de la pasarela responde adecuadamente (HTTP 504 / 503) y conserva la venta en estado `PENDIENTE` sin corrupción de saldos.
 
+
+## S2-093 — Contrato de reversa simulada [IMPLEMENTADO]
+
+`IReversalGatewayClient` y `ReversalGatewayClient` usan el mismo cliente HTTP configurado para la pasarela. `ReverseAsync` hace POST `/simulator/reversals`; `GetStatusAsync` hace GET `/simulator/reversals/{request_id}?tenant_id=...`. Ambos llevan `Idempotency-Key`; aliases `/api` disponibles. La consulta es validada contra la reserva persistida por `ReversaTarjetaService`.
+
+DTO de solicitud: `request_id`, `tenant_id`, `sale_id`, `gateway_reference`, `amount`, `currency`, `scenario_id`. DTO de respuesta: las mismas identidades, referencia, monto/moneda, `status` REVERSED o DECLINED, `reversal_reference`, `decline_code`. Sin PAN/CVV/PIN. El simulador exige una autorización APPROVED del mismo tenant y venta, con igual referencia/monto/moneda. Repetición de clave con otro contenido: 409. Otra clave para el mismo pago ya solicitado: 409.
+
+Escenarios controlados por configuración **del backend** `PasarelaPago:ReversalScenarioId`: `sim-reversal-approved-v1` (predeterminado), `sim-reversal-declined-v1`, `sim-reversal-timeout-v1`. El último guarda aprobación externa y demora 35 segundos la respuesta POST; el timeout del cliente debe ser menor (predeterminado 30 s). GET recupera el resultado. El renderer no selecciona escenario.
+
+`ReversaPago` persiste PENDIENTE/APROBADA/RECHAZADA en PostgreSQL. La venta solo se anula ante REVERSED validado y confirmado localmente con la auditoría. Rechazo queda visible en GET `/ventas/{id}/reversa-tarjeta`; incertidumbre no genera otro POST externo. [Contrato completo](../dominio/anulacion-venta.md) y [pruebas S2-093](../../qa/S2-093/reporte.md).
+
+**Límite:** autorizaciones y reversas del simulador viven en memoria del proceso. Reiniciarlo pierde sus respuestas e idempotencia; la reserva durable de MS-5 impide reenviar automáticamente, pero un resultado perdido requiere revisión manual. No se promete devolución bancaria real ni entrega/efecto exactamente una vez entre servicios. Los endpoints del simulador continúan siendo infraestructura de pruebas sin JWT, no una API bancaria pública.

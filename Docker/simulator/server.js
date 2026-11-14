@@ -16,6 +16,7 @@
 
 const http = require('http');
 const crypto = require('crypto');
+const handleReversal = require('./reversals');
 
 const PORT = parseInt(process.env.PORT || '5050', 10);
 const HOST = process.env.HOST || '0.0.0.0';
@@ -126,6 +127,8 @@ const server = http.createServer((req, res) => {
       timestamp: new Date().toISOString()
     });
   }
+
+  if (handleReversal(req, res, requestUrl, idempotencyStore, sendJson, containsCardData)) return;
 
   // 2. Consulta de estado por la misma clave idempotente (S2-039)
   const statusRoute = urlPath.match(/^\/(?:api\/)?simulator\/payments\/([^/]+)$/i);
