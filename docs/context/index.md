@@ -84,6 +84,7 @@ reglas: []
 | Nodo | Cuándo leerlo |
 |------|---------------|
 | `[[kafka-topics]]` | Para cualquier cambio en eventos Kafka |
+| [sale-reversed-outbox](eventos/sale-reversed-outbox.md) | S2-094: anulación total, payload e identidad estable por outbox |
 
 ### `frontend/` — App Electron + React
 | Nodo | Cuándo leerlo |

@@ -93,7 +93,7 @@ UUIDs y fecha ilustrativos. El 200 confirma una anulación administrativa local 
 
 1. `ReversaTarjetaService` bloquea turno y venta para reservar `ReversaPago` PENDIENTE en PostgreSQL; índice único `(TenantId, VentaId)`. Confirma esa reserva antes de llamar al simulador, sin mantener locks durante HTTP.
 2. `IReversalGatewayClient.ReverseAsync` envía referencia opaca original y el Id de reversa como `request_id`/`Idempotency-Key`. Se verifica que la respuesta coincida en solicitud, tenant, venta, referencia, importe y moneda.
-3. REVERSED confirma **juntos** estado APROBADA de reversa, venta ANULADA y auditoría original. Devuelve 200, `reembolso_tarjeta: CONFIRMADO_SIMULADO` y `devolucion_efectivo: NO_APLICA`. Conserva pago, intento de autorización, ítems, montos y outbox históricos.
+3. REVERSED confirma **juntos** estado APROBADA de reversa, venta ANULADA, auditoría original y outbox `sale.reversed` (S2-094). Devuelve 200, `reembolso_tarjeta: CONFIRMADO_SIMULADO` y `devolucion_efectivo: NO_APLICA`. Conserva pago, intento de autorización, ítems, montos y outbox históricos.
 4. DECLINED persiste RECHAZADA y código; devuelve 409 `REVERSA_RECHAZADA`. La venta sigue COMPLETADA, sin auditoría de anulación y sin afirmar devolución.
 5. Timeout, error HTTP, JSON o respuesta inconsistente conservan PENDIENTE; 409 `REVERSA_PENDIENTE`. Un fallo de commit deja la reserva recuperable, sin confirmación local parcial.
 
@@ -108,7 +108,7 @@ Los errores de validación de negocio usan `codigo` y `error`. Un JSON malformad
 ## Efectos que no promete este contrato
 
 - No publica de nuevo `sale.completed` ni borra el outbox histórico de una venta completada.
-- No define un evento de reversión ni acredita reposición automática en MS-4, reversión de puntos o anulación fiscal. Cada efecto requiere contrato/implementación propios.
+- S2-094 define [sale.reversed por outbox](../eventos/sale-reversed-outbox.md); no acredita reposición automática en MS-4, reversión de puntos o anulación fiscal. Cada consumidor requiere implementación propia.
 - No permite devolución parcial ni dividir pagos. Rechazar solicitudes parciales, no ignorarlas y anular toda la venta accidentalmente.
 - No añade estados ficticios al enum de venta ni equipara ANULADA con REEMBOLSADA.
 
@@ -140,3 +140,7 @@ S2-091 entregó esta matriz como especificación. S2-092 incorpora `AnulacionVen
 - [Cliente de pasarela](../../../src/POSCartService/Services/IPaymentGatewayClient.cs)
 - [Simulador](../../../Docker/simulator/server.js)
 - [Correspondencia S2-091 → TI3-722](../../../tareas/sprint2_youtrack_resultado.json)
+
+## S2-094 — Evento de anulación
+
+Venta ANULADA, auditoría y snapshot de `sale.reversed` se guardan atómicamente. EventId = Anulacion.Id; venta_id vincula la venta original. Reintentos HTTP o de publicación no crean otra reversa lógica. Tarjeta rechazada o incierta no produce este evento. Se conserva el outbox original de cobro. [Evidencia](../../qa/S2-094/reporte.md).

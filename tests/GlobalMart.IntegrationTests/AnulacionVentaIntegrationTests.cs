@@ -124,7 +124,14 @@ public sealed class AnulacionVentaIntegrationTests : IClassFixture<Ms5WebApplica
         Assert.Equal(81, persisted.Pagos.Single().Vuelto);
         Assert.Equal(100, Assert.Single(persisted.Items).PrecioUnitario);
         Assert.Single(await db.Anulaciones.ToListAsync());
-        Assert.Single(await db.OutboxMessages.ToListAsync());
+        Assert.Single(await db.OutboxMessages.Where(o => o.EventType == "sale.completed").ToListAsync());
+        var message = await db.OutboxMessages.SingleAsync(o => o.EventType == "sale.reversed");
+        Assert.Equal((await db.Anulaciones.SingleAsync()).Id, message.EventId);
+        var payload = JsonDocument.Parse(message.Payload).RootElement;
+        Assert.Equal(venta.Id, payload.GetProperty("venta_id").GetGuid());
+        Assert.Equal(venta.TenantId, payload.GetProperty("tenant_id").GetGuid());
+        Assert.Equal(119, payload.GetProperty("total").GetDecimal());
+        Assert.Single(payload.GetProperty("items").EnumerateArray());
         var snapshot = await Snapshot(venta.TenantId);
         using var repeated = await Send(client, venta.Id);
         Assert.Equal(HttpStatusCode.Conflict, repeated.StatusCode);
@@ -222,6 +229,7 @@ public sealed class AnulacionVentaIntegrationTests : IClassFixture<Ms5WebApplica
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<Pos.Data.PosCartDbContext>(); db.CurrentTenantId = venta.TenantId;
         Assert.Single(await db.Anulaciones.ToListAsync());
+        Assert.Single(await db.OutboxMessages.Where(o => o.EventType == "sale.reversed").ToListAsync());
         foreach (var response in responses) response.Dispose();
     }
 

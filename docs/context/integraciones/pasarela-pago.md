@@ -412,3 +412,7 @@ Escenarios controlados por configuración **del backend** `PasarelaPago:Reversal
 `ReversaPago` persiste PENDIENTE/APROBADA/RECHAZADA en PostgreSQL. La venta solo se anula ante REVERSED validado y confirmado localmente con la auditoría. Rechazo queda visible en GET `/ventas/{id}/reversa-tarjeta`; incertidumbre no genera otro POST externo. [Contrato completo](../dominio/anulacion-venta.md) y [pruebas S2-093](../../qa/S2-093/reporte.md).
 
 **Límite:** autorizaciones y reversas del simulador viven en memoria del proceso. Reiniciarlo pierde sus respuestas e idempotencia; la reserva durable de MS-5 impide reenviar automáticamente, pero un resultado perdido requiere revisión manual. No se promete devolución bancaria real ni entrega/efecto exactamente una vez entre servicios. Los endpoints del simulador continúan siendo infraestructura de pruebas sin JWT, no una API bancaria pública.
+
+## S2-094 — Evento posterior a reversa confirmada
+
+La confirmación local de REVERSED guarda también `sale.reversed` en outbox, junto con reversa APROBADA, venta ANULADA y auditoría. Rechazo o incertidumbre no lo generan. No cambia el contrato HTTP del simulador. [Contrato del evento](../eventos/sale-reversed-outbox.md).

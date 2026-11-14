@@ -7,7 +7,7 @@ fuentes: [src/POSCartService/, Docker/simulator/server.js, tests/GlobalMart.Inte
 verificado_contra_codigo: true
 ultima_revision: 2026-11-14
 depende_de: [ms1-identity, ms2-tax, ms3-catalog]
-publica: [sale.completed]
+publica: [sale.completed, sale.reversed]
 consume: []
 reglas: [RN-01, RN-02, RN-03, RN-06, RF-02, RF-03, RF-04, RF-05, RF-06, RF-07]
 ---
@@ -239,7 +239,7 @@ await _ventaRepository.CompletarConOutboxAsync(venta.Id, pago, outboxMessage);
 | PC-22 | Poner Venta en Espera (Hold) | [PLANIFICADO] |
 | PC-23 | Recuperar Venta de Espera | [PLANIFICADO] |
 | PC-24 | Publicar sale.completed | [IMPLEMENTADO — outbox, worker y reintentos automáticos] |
-| PC-25 | Publicar sale.reversed | [PLANIFICADO] |
+| PC-25 | Publicar sale.reversed | [IMPLEMENTADO por outbox S2-094] |
 | PC-26 | Leer Tarjeta en Terminal (NFC/chip/mag) | [PLANIFICADO] |
 | PC-27 | Enviar Solicitud a Pasarela | [IMPLEMENTADO — invocado desde cobrar-tarjeta] |
 | PC-28 | Recibir Respuesta de Pasarela | [IMPLEMENTADO — aprobación, rechazo y timeout; S2-035] |
@@ -414,7 +414,7 @@ El destino local de impuestos en `Services:TaxComplianceService:BaseUrl` se corr
 
 1. `ReversaTarjetaService` bloquea turno y venta para reservar `ReversaPago` PENDIENTE en PostgreSQL; índice único `(TenantId, VentaId)`. Confirma esa reserva antes de llamar al simulador, sin mantener locks durante HTTP.
 2. `IReversalGatewayClient.ReverseAsync` envía referencia opaca original y el Id de reversa como `request_id`/`Idempotency-Key`. Se verifica que la respuesta coincida en solicitud, tenant, venta, referencia, importe y moneda.
-3. REVERSED confirma **juntos** estado APROBADA de reversa, venta ANULADA y auditoría original. Devuelve 200, `reembolso_tarjeta: CONFIRMADO_SIMULADO` y `devolucion_efectivo: NO_APLICA`. Conserva pago, intento de autorización, ítems, montos y outbox históricos.
+3. REVERSED confirma **juntos** estado APROBADA de reversa, venta ANULADA, auditoría original y outbox `sale.reversed` (S2-094). Devuelve 200, `reembolso_tarjeta: CONFIRMADO_SIMULADO` y `devolucion_efectivo: NO_APLICA`. Conserva pago, intento de autorización, ítems, montos y outbox históricos.
 4. DECLINED persiste RECHAZADA y código; devuelve 409 `REVERSA_RECHAZADA`. La venta sigue COMPLETADA, sin auditoría de anulación y sin afirmar devolución.
 5. Timeout, error HTTP, JSON o respuesta inconsistente conservan PENDIENTE; 409 `REVERSA_PENDIENTE`. Un fallo de commit deja la reserva recuperable, sin confirmación local parcial.
 
@@ -423,3 +423,7 @@ El destino local de impuestos en `Services:TaxComplianceService:BaseUrl` se corr
 **Repetición:** nunca genera otro POST externo para una venta con reversa reservada. APROBADA retorna el éxito existente; RECHAZADA o PENDIENTE mantienen 409. No hay reintento automático de rechazo ni nueva clave. Un caso pendiente sin resultado externo requiere revisión; no se presume aprobado ni rechazado.
 
 Se añade migración `AddReversasPago`. La aplicación ejecuta migraciones al iniciar. Deben desplegarse MS-5, el simulador completo (incluye `reversals.js`) y la configuración Kong correspondiente. Pruebas locales y límites en [reporte S2-093](../../qa/S2-093/reporte.md). Despliegue en cluster [NO VERIFICADO]. No incluye devoluciones parciales, reposición MS-4, reversión fiscal ni reembolso bancario real.
+
+## S2-094 — Publicación de anulación por outbox
+
+[IMPLEMENTADO] `SaleReversedEvent.CreateOutbox` prepara un snapshot ligado a la venta original, con EventId estable tomado de Anulacion.Id. Efectivo y tarjeta aprobada guardan el evento junto con estado/auditoría en la misma transacción. El worker existente publica y reintenta ese mismo JSON en `sale.reversed`; no se llama a Kafka durante la anulación. Sin nueva migración ni consumidor MS-4. [Contrato](../eventos/sale-reversed-outbox.md), [pruebas](../../qa/S2-094/reporte.md).

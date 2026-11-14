@@ -116,7 +116,20 @@ public sealed class ReversaTarjetaIntegrationTests : IAsyncLifetime
         Assert.Equal(cancelled ? Pos.Models.EstadoVenta.ANULADA : Pos.Models.EstadoVenta.COMPLETADA, sale.Estado);
         Assert.Equal(119, sale.Total); Assert.Single(sale.Items); Assert.Equal(119, Assert.Single(sale.Pagos).Monto);
         Assert.Equal(Pos.Models.EstadoIntentoPago.APROBADO, Assert.Single(sale.IntentosPago).Estado);
-        Assert.Equal(cancelled ? 1 : 0, await db.Anulaciones.CountAsync()); Assert.Single(await db.OutboxMessages.ToListAsync());
+        Assert.Equal(cancelled ? 1 : 0, await db.Anulaciones.CountAsync()); Assert.Single(await db.OutboxMessages.Where(o => o.EventType == "sale.completed").ToListAsync());
+        var events = await db.OutboxMessages.Where(o => o.EventType == "sale.reversed").ToListAsync();
+        Assert.Equal(cancelled ? 1 : 0, events.Count);
+        if (cancelled) {
+            var audit = await db.Anulaciones.SingleAsync();
+            var message = Assert.Single(events);
+            var payload = JsonDocument.Parse(message.Payload).RootElement;
+            Assert.Equal(audit.Id, message.EventId);
+            Assert.Equal(message.EventId, payload.GetProperty("event_id").GetGuid());
+            Assert.Equal(venta.Id, payload.GetProperty("venta_id").GetGuid());
+            Assert.Equal(venta.TenantId, payload.GetProperty("tenant_id").GetGuid());
+            Assert.Equal(119, payload.GetProperty("total").GetDecimal());
+            Assert.Single(payload.GetProperty("items").EnumerateArray());
+        }
         if (cancelled) Assert.StartsWith("SIM-REV-", reversal.ReferenciaReversa);
     }
 

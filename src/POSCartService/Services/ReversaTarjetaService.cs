@@ -1,3 +1,4 @@
+using POSCartService.Messaging;
 using System.Security.Claims;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
@@ -131,6 +132,8 @@ public sealed class ReversaTarjetaService(PosCartDbContext db, IReversalGatewayC
             venta.Estado = EstadoVenta.ANULADA;
             venta.Anulacion = new Anulacion { VentaId = venta.Id, Motivo = reversa.Motivo, AutorizadoPor = reversa.AutorizadoPor };
             db.Anulaciones.Add(venta.Anulacion);
+            await db.Entry(venta).Collection(v => v.Items).LoadAsync();
+            db.OutboxMessages.Add(SaleReversedEvent.CreateOutbox(venta));
             reversa.Estado = EstadoReversa.APROBADA;
             reversa.ReferenciaReversa = result.ReversalReference;
         }

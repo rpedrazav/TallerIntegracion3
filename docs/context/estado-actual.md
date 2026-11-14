@@ -485,3 +485,7 @@ S2-080 [IMPLEMENTADO — pruebas E2E controladas]: tres escenarios de Playwright
 ## S2-093 — Reversa tarjeta (2026-11-14)
 
 [IMPLEMENTADO backend] Reserva durable `ReversaPago`, reversa por referencia opaca, resultado validado y confirmación atómica de reversa/venta/auditoría. Rechazo y timeout no anulan. GET `/ventas/{id}/reversa-tarjeta` para ADMIN del tenant consulta y recupera pendientes sin otra solicitud de reversa. Simulador y rutas Kong actualizados; requiere migración `AddReversasPago`. No hay UI ni devolución bancaria real. Despliegue remoto [NO VERIFICADO]. [Contrato](dominio/anulacion-venta.md), [evidencia](../qa/S2-093/reporte.md).
+
+## S2-094 — sale.reversed por outbox (2026-11-14)
+
+[IMPLEMENTADO] Anulación en efectivo o reversa de tarjeta confirmada persisten venta, auditoría y evento `sale.reversed` en la misma transacción. Identidad estable = Anulacion.Id, relación a venta original por venta_id, snapshot de ítems/montos y publicación mediante worker existente. Rechazo/timeout no generan evento; reintentos conservan EventId y JSON. Sin migración adicional ni backfill de anulaciones históricas. Consumidor de reversas, reposición de stock y entrega Kafka/cluster [NO VERIFICADO]. [Contrato](eventos/sale-reversed-outbox.md), [reporte](../qa/S2-094/reporte.md).

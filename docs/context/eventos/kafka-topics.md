@@ -5,9 +5,9 @@ titulo: Kafka Topics — Diseño vs Implementación Real
 estado: parcial
 fuentes: [src/POSCartService/Services/KafkaProducerService.cs, src/POSCartService/Services/OutboxPublisherWorker.cs, src/POSCartService/Messaging/SaleCompletedEvent.cs, src/WarehouseInventoryService/Messaging/KafkaConsumerService.cs, tests/GlobalMart.IntegrationTests/OutboxBrokerRecoveryIntegrationTests.cs, Docker/docker-compose.yml, Docker/scripts/init-kafka-topics.sh]
 verificado_contra_codigo: true
-ultima_revision: 2026-10-15
+ultima_revision: 2026-11-14
 depende_de: [ms5-pos, ms4-inventory]
-publica: [sale.completed]
+publica: [sale.completed, sale.reversed]
 consume: [sale.completed]
 diseno_publica: [sale.completed, sale.reversed, stock.alert, expiry.alert, stock.updated, purchase.received, fx.rate.updated, points.updated]
 diseno_consume: [sale.completed, sale.reversed, stock.alert, expiry.alert, stock.updated, purchase.received, fx.rate.updated, points.updated]
@@ -15,7 +15,7 @@ reglas: [RN-04, RF-09]
 ---
 # Kafka Topics — Diseño vs Implementación Real
 
-> Contraste entre los topics diseñados en el ContextMaster y lo que realmente existe en el código. **Estado:** MS-5 publica `sale.completed` desde outbox y MS-4 lo consume.
+> Contraste entre los topics diseñados en el ContextMaster y lo que realmente existe en el código. **Estado:** MS-5 publica `sale.completed` y `sale.reversed` desde outbox; MS-4 consume únicamente `sale.completed`.
 
 ## Topics aprovisionados (docker-compose init)
 
@@ -39,7 +39,7 @@ product.expiring_soon   purchase_order.received
 | `sale.completed` | ✅ MS-5 OutboxPublisherWorker | ✅ MS-4 KafkaConsumerService | [IMPLEMENTADO] |
 | `stock.alert` | ❌ NINGUNO | ❌ NINGUNO | [PLANIFICADO] |
 | `expiry.alert` | ❌ NINGUNO | ❌ NINGUNO | [PLANIFICADO] |
-| `sale.reversed` | ❌ NINGUNO | ❌ NINGUNO | [PLANIFICADO] |
+| `sale.reversed` | ✅ MS-5 OutboxPublisherWorker | ❌ NINGUNO | [PRODUCTOR IMPLEMENTADO S2-094; consumidor pendiente] |
 | `stock.updated` | ❌ NINGUNO | ❌ NINGUNO | [PLANIFICADO] |
 | `purchase.received` | ❌ NINGUNO | ❌ NINGUNO | [PLANIFICADO] |
 | `fx.rate.updated` | ❌ NINGUNO | ❌ NINGUNO | [PLANIFICADO] |
@@ -137,3 +137,7 @@ El consumo de `sale.completed` por MS-4 también está cubierto mediante un test
 - `Docker/scripts/init-kafka-topics.sh`
 - `tests/GlobalMart.IntegrationTests/KafkaPublishIntegrationTests.cs`
 - `tests/GlobalMart.IntegrationTests/OutboxBrokerRecoveryIntegrationTests.cs`
+
+## S2-094 — Anulación total
+
+[Payload y contrato de sale.reversed](sale-reversed-outbox.md): evento y auditoría guardados con venta ANULADA, EventId = Anulacion.Id, vínculo por venta_id. Los reintentos conservan JSON e identidad. En tarjeta solo se registra ante reversa aprobada. No garantiza entrega exactamente una vez ni orden entre topics.

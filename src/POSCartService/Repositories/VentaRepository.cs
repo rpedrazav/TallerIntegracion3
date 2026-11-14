@@ -1,3 +1,4 @@
+using POSCartService.Messaging;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using POSCartService.Data;
@@ -61,6 +62,8 @@ public class VentaRepository : IVentaRepository
         venta.Estado = EstadoVenta.ANULADA;
         venta.Anulacion = new Anulacion { VentaId = venta.Id, AutorizadoPor = autorizadoPor, Motivo = motivo };
         _context.Anulaciones.Add(venta.Anulacion);
+        await _context.Entry(venta).Collection(v => v.Items).LoadAsync();
+        _context.OutboxMessages.Add(SaleReversedEvent.CreateOutbox(venta));
         await _context.SaveChangesAsync();
         await transaction.CommitAsync();
         return venta;
