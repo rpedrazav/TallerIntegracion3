@@ -3,7 +3,7 @@ id: sprint-actual
 tipo: planificacion
 titulo: Sprint Actual — Sprint 3 (En Curso)
 estado: vigente
-fuentes: [tareas/plan_sprint3.xlsx, tareas/plan_sprint2_revisado.xlsx, docs/qa/S2-092/reporte.md, docs/qa/S2-106/reporte.md, docs/qa/S2-107/reporte.md, tareas/sprint2_youtrack_resultado.json, docs/defensa-sprint2/01-resumen.md, docs/context/estado-actual.md, aclaración del equipo (Daniel Prado, 2026-11-14)]
+fuentes: [tareas/plan_sprint3.xlsx, docs/qa/S2-111/checklist-salida.md, tareas/plan_sprint2_revisado.xlsx, docs/qa/S2-092/reporte.md, docs/qa/S2-106/reporte.md, docs/qa/S2-107/reporte.md, tareas/sprint2_youtrack_resultado.json, docs/defensa-sprint2/01-resumen.md, docs/context/estado-actual.md, aclaración del equipo (Daniel Prado, 2026-11-14)]
 verificado_contra_codigo: false
 ultima_revision: 2026-11-14
 depende_de: [sprints-anteriores, roadmap]
@@ -62,7 +62,7 @@ Total trasladado: **30 tareas**, 30 h originales comprimidas a **25 h** (ver Pla
 | S2-108 | TI3-739 | Mostrar comprobante de pago seguro | Rodrigo | G5 | Must | 60 | Pendiente |
 | S2-109 | TI3-740 | Resolver errores y recarga POS | Rodrigo | G5 | Must | 60 | Pendiente |
 | S2-110 | TI3-741 | Ejecutar demo completa de mostrador | Rodrigo | G5 | Must | 90 | Pendiente |
-| S2-111 | TI3-742 | Congelar criterios de salida del sprint | Daniel | H | Must | 30 | Pendiente |
+| S2-111 | TI3-742 | Congelar criterios de salida del sprint | Daniel | H | Must | 30 | Checklist congelado — [checklist](../../qa/S2-111/checklist-salida.md) (2026-11-14): 112 Must trazados, ninguna meta cumple aún |
 | S2-112 | TI3-743 | Ejecutar E2E de Admin y venta | Daniel | H | Must | 60 | Pendiente |
 | S2-113 | TI3-744 | Ejecutar E2E de tarjeta y pesaje | Daniel | H | Must | 60 | Pendiente |
 | S2-114 | TI3-745 | Medir cobertura y compilar todo | Daniel | H | Must | 60 | Pendiente |
