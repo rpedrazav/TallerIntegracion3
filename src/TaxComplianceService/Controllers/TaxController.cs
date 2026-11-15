@@ -107,7 +107,7 @@ public class TaxController : ControllerBase
         decimal porcentajeIva = request.PorcentajeIva ?? tenantConfig.PorcentajeIva;
 
         // 5. Ejecutar cÃ¡lculo fiscal
-        var breakdown = _taxCalculatorService.Calculate(request.Items, porcentajeIva);
+        var breakdown = _taxCalculatorService.Calculate(request.Items, porcentajeIva, tenantConfig.Moneda);
 
         _logger.LogInformation(
             "[TaxController] CÃ¡lculo exitoso para tenant {TenantId}. Subtotal: {Subtotal}, IVA ({Porcentaje}%): {Iva}, Total: {Total}",

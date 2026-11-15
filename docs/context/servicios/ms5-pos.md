@@ -5,7 +5,7 @@ titulo: MS-5 · POS & Cart Service
 estado: parcial
 fuentes: [src/POSCartService/, Docker/simulator/server.js, tests/GlobalMart.IntegrationTests/PaymentSimulatorIntegrationTests.cs, tests/GlobalMart.IntegrationTests/PaymentRetrySafetyTests.cs, tests/GlobalMart.IntegrationTests/CobroSeguroIntegrationTests.cs, docs/qa/S2-035/reporte.md, tests/GlobalMart.IntegrationTests/CobrarTarjetaIntegrationTests.cs, tests/GlobalMart.IntegrationTests/PaymentEventSequenceContractTests.cs]
 verificado_contra_codigo: true
-ultima_revision: 2026-11-14
+ultima_revision: 2026-11-15
 depende_de: [ms1-identity, ms2-tax, ms3-catalog]
 publica: [sale.completed, sale.reversed]
 consume: []
@@ -49,7 +49,7 @@ reglas: [RN-01, RN-02, RN-03, RN-06, RF-02, RF-03, RF-04, RF-05, RF-06, RF-07]
 | POST | `/turnos/abrir` (alias `/api/turnos/abrir`) | JWT | [IMPLEMENTADO] |
 | GET | `/turnos/activo` (alias `/api/turnos/activo`) | JWT | [IMPLEMENTADO] |
 | POST | `/turnos/cerrar` (alias `/api/turnos/cerrar`) | JWT | [IMPLEMENTADO] |
-| POST | `/turnos/cuadre` (alias `/api/turnos/cuadre`) | JWT | [IMPLEMENTADO — suma pagos EFECTIVO/COMPLETADAS; retorna efectivo_esperado, monto_declarado, diferencia] |
+| POST | `/turnos/cuadre` (alias `/api/turnos/cuadre`) | JWT | [IMPLEMENTADO — suma efectivo neto (Monto − Vuelto) de pagos EFECTIVO de ventas COMPLETADAS, sin fondo inicial (S2-112); retorna efectivo_esperado, monto_declarado, diferencia] |
 | POST | `/ventas` (alias `/api/ventas`) | JWT | [IMPLEMENTADO — Contrato fijado S2-001] |
 | POST | `/ventas/{id}/items` (alias `/api/ventas/{id}/items`) | JWT | [IMPLEMENTADO] |
 | PUT | `/ventas/{id}/items/{itemId}` (alias `/api/ventas/{id}/items/{itemId}`) | JWT | [IMPLEMENTADO] |
@@ -427,3 +427,7 @@ Se añade migración `AddReversasPago`. La aplicación ejecuta migraciones al in
 ## S2-094 — Publicación de anulación por outbox
 
 [IMPLEMENTADO] `SaleReversedEvent.CreateOutbox` prepara un snapshot ligado a la venta original, con EventId estable tomado de Anulacion.Id. Efectivo y tarjeta aprobada guardan el evento junto con estado/auditoría en la misma transacción. El worker existente publica y reintenta ese mismo JSON en `sale.reversed`; no se llama a Kafka durante la anulación. Sin nueva migración ni consumidor MS-4. [Contrato](../eventos/sale-reversed-outbox.md), [pruebas](../../qa/S2-094/reporte.md).
+
+## S2-112 — Subtotal de línea desde MS-2
+
+[IMPLEMENTADO] Al crear una venta, agregar un ítem o cambiar su cantidad, MS-5 ya no calcula `precio × cantidad` por su cuenta: guarda el subtotal de línea que devuelve MS-2 (en CLP, pesos enteros), igual que el subtotal, el IVA y el total. Así Σ líneas = subtotal de la venta.

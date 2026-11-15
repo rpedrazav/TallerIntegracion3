@@ -239,7 +239,6 @@ public sealed class VentasController : ControllerBase
                 return BadRequest(new { error = "El precio de catálogo no puede ser negativo." });
 
             decimal precioUnitario = producto.PrecioBase;
-            decimal subtotalItem = Math.Round(precioUnitario * cantidad, 2, MidpointRounding.ToEven);
 
             itemsDominio.Add(new ItemVenta
             {
@@ -247,8 +246,7 @@ public sealed class VentasController : ControllerBase
                 NombreProducto = producto.Nombre,
                 Cantidad       = cantidad,
                 PesoKg         = pesoKg,
-                PrecioUnitario = precioUnitario,
-                Subtotal       = subtotalItem
+                PrecioUnitario = precioUnitario
             });
 
             itemsParaCalculoTax.Add(new TaxItemDto
@@ -284,7 +282,10 @@ public sealed class VentasController : ControllerBase
             });
         }
 
-        // 7. Crear la venta a través del servicio de dominio con totales autoritativos de MS-2
+        // 7. Crear la venta con importes autoritativos de MS-2 (también el subtotal por línea; en CLP, pesos enteros)
+        for (var i = 0; i < itemsDominio.Count; i++)
+            itemsDominio[i].Subtotal = taxResult.Items[i].Subtotal;
+
         var venta = await _ventaService.CrearAsync(
             turnoId:    turno.Id,
             cajeroId:   cajeroId,
@@ -386,7 +387,6 @@ public sealed class VentasController : ControllerBase
             return BadRequest(new { error = "El precio de catálogo no puede ser negativo." });
 
         decimal precioUnitario = producto.PrecioBase;
-        decimal subtotalItem = Math.Round(precioUnitario * cantidad, 2, MidpointRounding.ToEven);
 
         var nuevoItem = new ItemVenta
         {
@@ -396,8 +396,7 @@ public sealed class VentasController : ControllerBase
             NombreProducto = producto.Nombre,
             Cantidad       = cantidad,
             PesoKg         = pesoKg,
-            PrecioUnitario = precioUnitario,
-            Subtotal       = subtotalItem
+            PrecioUnitario = precioUnitario
         };
 
         // 7. Llamar a MS-2 POST /api/tax/calculate para calcular el IVA consolidado
@@ -437,7 +436,9 @@ public sealed class VentasController : ControllerBase
             });
         }
 
-        // 8. Persistir ítem y actualizar venta con totales calculados
+        // 8. Persistir ítem (subtotal de línea según MS-2) y actualizar venta con totales calculados
+        var itemTax = taxResult.Items[^1];
+        nuevoItem.Subtotal = itemTax.Subtotal;
         var (_, itemPersistido) = await _ventaService.AgregarItemAsync(
             id,
             nuevoItem,
@@ -446,8 +447,7 @@ public sealed class VentasController : ControllerBase
             impuestos: taxResult.Iva,
             total:     taxResult.Total);
 
-        var itemTax = taxResult.Items.LastOrDefault();
-        var response = ItemVentaResponse.FromModel(itemPersistido, itemTax?.Iva, itemTax?.Total);
+        var response = ItemVentaResponse.FromModel(itemPersistido, itemTax.Iva, itemTax.Total);
 
         return CreatedAtAction(
             nameof(GetById),
@@ -528,8 +528,6 @@ public sealed class VentasController : ControllerBase
         if (errorCantidad is not null)
             return BadRequest(new { error = errorCantidad });
 
-        decimal nuevoSubtotalItem = Math.Round(item.PrecioUnitario * nuevaCantidad, 2, MidpointRounding.ToEven);
-
         // 6. Recalcular IVA y totales consolidados de la venta consultando MS-2
         var itemsParaCalculo = venta.Items.Select(i => new TaxItemDto
         {
@@ -562,23 +560,19 @@ public sealed class VentasController : ControllerBase
             });
         }
 
-        // 7. Persistir modificación del ítem y actualizar totales de la venta
+        // 7. Persistir modificación del ítem (subtotal de línea según MS-2) y actualizar totales de la venta
+        var itemTax = taxResult.Items[venta.Items.ToList().FindIndex(i => i.Id == itemId)];
         var (_, itemActualizado) = await _ventaService.ModificarCantidadItemAsync(
             id,
             itemId,
             nuevaCantidad:        nuevaCantidad,
             nuevoPesoKg:          nuevoPesoKg,
-            nuevoSubtotalItem:    nuevoSubtotalItem,
+            nuevoSubtotalItem:    itemTax.Subtotal,
             nuevoSubtotalVenta:   taxResult.Subtotal,
             nuevosImpuestosVenta: taxResult.Iva,
             nuevoTotalVenta:      taxResult.Total);
 
-        var indexItem = venta.Items.ToList().FindIndex(i => i.Id == itemId);
-        var itemTax = (indexItem >= 0 && indexItem < taxResult.Items.Count)
-            ? taxResult.Items[indexItem]
-            : null;
-
-        var response = ItemVentaResponse.FromModel(itemActualizado, itemTax?.Iva, itemTax?.Total);
+        var response = ItemVentaResponse.FromModel(itemActualizado, itemTax.Iva, itemTax.Total);
         return Ok(response);
     }
 

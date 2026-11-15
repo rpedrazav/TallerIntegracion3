@@ -55,3 +55,16 @@ Identidad, catálogo e IVA son fixtures controladas: **no acredita MS-1/MS-2/MS-
 El evento se verifica en el **outbox durable**, con publicación deshabilitada. No acredita entrega Kafka ni descuento de inventario. Aprobación: COMPLETADA, un pago TARJETA con referencia coincidente y un `sale.completed` con IDs/importes coincidentes. Rechazo: PENDIENTE, intento RECHAZADO, cero pagos y cero eventos. Ambos exigen exactamente una autorización externa.
 
 Evidencia por ejecución: `test-results/S2-055/<uuid>/<escenario>/` contiene tres capturas, `ui-result.json`, `verification.json`, `trace.zip` y perfil aislado. Los perfiles y trazas permanecen locales (las trazas pueden contener el JWT de prueba); publicar solo capturas y verificaciones sin tokens. Resultados xUnit: `docs/qa/S2-055/S2-055.trx`. Ver [reporte verificado](../../../docs/qa/S2-055/reporte.md).
+
+## S2-112 / TI3-743 — Admin y venta integrados
+
+Camino principal contra los servicios reales, sin mocks: ADMIN crea un producto → CAJERO abre turno → carrito → cobro en efectivo → cuadre → cierre. Falla ante cualquier respuesta HTTP ≥ 400 (salvo el 404 de «sin turno») o si los totales de la pantalla, el cobro, la venta persistida y el cuadre no coinciden.
+
+```powershell
+docker compose -f Docker/docker-compose.yml up -d
+run-apis.bat            # MS-1..MS-5 en localhost (Development crea admin@demo.cl y cajero@demo.cl)
+cd globalmart-frontend
+npm run test:e2e:integrado
+```
+
+Usa `integrated.html` (`API_MODE=local`) del mismo build. Con `E2E_INTEGRATED=1`, `launch.cjs` desactiva el bloqueo de red de los mocks. Las pruebas se marcan `@integrado` y `test:e2e:electron` las excluye, así que `ci:local` no necesita backend. Escribe en la BD local de desarrollo (un producto `E2E S2-112 …` y un turno por corrida). Kong no se acredita. [Reporte](../../../docs/qa/S2-112/reporte.md).

@@ -13,6 +13,7 @@ public interface ITaxCalculatorService
     /// </summary>
     /// <param name="items">Colección de items con precio y cantidad.</param>
     /// <param name="porcentajeIva">Porcentaje de IVA a aplicar (ej: 19 para 19%).</param>
+    /// <param name="moneda">Moneda del tenant; en CLP los importes se redondean a pesos enteros.</param>
     /// <returns>Breakdown completo del cálculo.</returns>
-    TaxBreakdown Calculate(IEnumerable<TaxItem> items, decimal porcentajeIva);
+    TaxBreakdown Calculate(IEnumerable<TaxItem> items, decimal porcentajeIva, string? moneda = null);
 }

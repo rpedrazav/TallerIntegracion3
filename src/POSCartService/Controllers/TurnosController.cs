@@ -113,7 +113,7 @@ public sealed class TurnosController : ControllerBase
     /// y lo compara con el monto declarado por el cajero.
     /// </summary>
     /// <remarks>
-    /// - efectivo_esperado = suma de Pago.Monto (Metodo=EFECTIVO) de ventas COMPLETADAS del turno activo.
+    /// - efectivo_esperado = suma de (Pago.Monto − Pago.Vuelto) en EFECTIVO de ventas COMPLETADAS del turno activo.
     /// - diferencia = monto_declarado − efectivo_esperado (positivo = sobrante, negativo = faltante).
     /// - No cierra el turno; es sólo consulta de cuadre.
     /// </remarks>

@@ -5,7 +5,7 @@ titulo: MS-2 · Tax & Compliance Service
 estado: parcial
 fuentes: [src/TaxComplianceService/, src/POSCartService/Services/TaxClient.cs]
 verificado_contra_codigo: true
-ultima_revision: 2026-10-24
+ultima_revision: 2026-11-15
 depende_de: [ms1-identity]
 publica: []
 consume: []
@@ -262,5 +262,7 @@ MS-5 (POSCartService) llama a MS-2 directamente (no vía Kong) en cada operació
 ## S2-063 — Redondeo reproducible por línea
 
 [IMPLEMENTADO] `TaxCalculatorService` calcula cada subtotal como `Round(precio × cantidad, 2, ToEven)` y su IVA como `Round(subtotal × tasa / 100, 2, ToEven)`. Total de línea = subtotal + IVA; la venta suma subtotales e IVA ya redondeados. Conserva tasas por tenant/ítem y exenciones. Esto también afecta a comprobantes que usan el mismo calculador: cambia el tratamiento de fracciones de centavo, no las tasas. El precio de entrada mantiene cuatro decimales y no se redondea antes de multiplicar.
+
+**S2-112 — CLP sin centavos [IMPLEMENTADO]:** si la moneda del tenant (`moneda` de `GET /tenants/{id}/config` en MS-1) es CLP, subtotal de línea e IVA se redondean a peso entero con `AwayFromZero` (,5 a ,9 sube; ,1 a ,4 baja). Aplica a `POST /api/tax/calculate` y a los comprobantes. Las otras monedas mantienen la regla de 2 decimales `ToEven`. Pruebas: `TaxCalculatorService_Tests.Calculate_CLP_RedondeaAPesoEntero`.
 
 Validación S2-063 del 2026-10-24: **42/42 pruebas Release aprobadas** (10 nuevas, 32 de regresión), con PostgreSQL temporal, HTTP MS-5 y calculador productivo MS-2 a través de handler HTTP. Regresión manual TC-01 aprobada. [Evidencia y límites](../../qa/S2-063/reporte.md).

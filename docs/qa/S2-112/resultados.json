@@ -1,0 +1,216 @@
+{
+  "config": {
+    "argv": [
+      "C:\\Program Files\\nodejs\\node.exe",
+      "C:\\Users\\dp877\\Desktop\\Universidad\\Semestre 6\\TallerIntegra3\\TallerIntegracion3\\globalmart-frontend\\node_modules\\@playwright\\test\\cli.js",
+      "test",
+      "--config",
+      "playwright.electron.config.ts",
+      "--grep",
+      "@integrado",
+      "--reporter=list,json"
+    ],
+    "configFile": "C:\\Users\\dp877\\Desktop\\Universidad\\Semestre 6\\TallerIntegra3\\TallerIntegracion3\\globalmart-frontend\\playwright.electron.config.ts",
+    "rootDir": "C:/Users/dp877/Desktop/Universidad/Semestre 6/TallerIntegra3/TallerIntegracion3/globalmart-frontend/e2e/electron",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "C:/Users/dp877/Desktop/Universidad/Semestre 6/TallerIntegra3/TallerIntegracion3/globalmart-frontend/test-results/electron",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "C:/Users/dp877/Desktop/Universidad/Semestre 6/TallerIntegra3/TallerIntegracion3/globalmart-frontend/e2e/electron",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      }
+    ],
+    "filteredProjects": [
+      {
+        "grep": {},
+        "grepInvert": null,
+        "outputDir": "C:\\Users\\dp877\\Desktop\\Universidad\\Semestre 6\\TallerIntegra3\\TallerIntegracion3\\globalmart-frontend\\test-results\\electron",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "name": "",
+        "testDir": "C:\\Users\\dp877\\Desktop\\Universidad\\Semestre 6\\TallerIntegra3\\TallerIntegracion3\\globalmart-frontend\\e2e\\electron",
+        "snapshotDir": "C:\\Users\\dp877\\Desktop\\Universidad\\Semestre 6\\TallerIntegra3\\TallerIntegracion3\\globalmart-frontend\\e2e\\electron",
+        "testIgnore": [],
+        "testMatch": "**/*.@(spec|test).?(c|m)[jt]s?(x)",
+        "timeout": 30000,
+        "use": {},
+        "dependencies": [],
+        "ignoreSnapshots": false,
+        "__projectId": ""
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "list"
+      ],
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "default",
+    "updateSourceMethod": "patch",
+    "version": "1.64.0",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "admin-venta.integrated.spec.ts",
+      "file": "admin-venta.integrated.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "@integrado ADMIN entra al panel y crea un producto en MS-3",
+          "ok": true,
+          "tags": [
+            "integrado"
+          ],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [
+                {
+                  "type": "serial",
+                  "location": {
+                    "file": "C:\\Users\\dp877\\Desktop\\Universidad\\Semestre 6\\TallerIntegra3\\TallerIntegracion3\\globalmart-frontend\\e2e\\electron\\admin-venta.integrated.spec.ts",
+                    "line": 0,
+                    "column": 0
+                  }
+                }
+              ],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1917,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-15T18:21:27.442Z",
+                  "annotations": [
+                    {
+                      "type": "serial",
+                      "location": {
+                        "file": "C:\\Users\\dp877\\Desktop\\Universidad\\Semestre 6\\TallerIntegra3\\TallerIntegracion3\\globalmart-frontend\\e2e\\electron\\admin-venta.integrated.spec.ts",
+                        "line": 0,
+                        "column": 0
+                      }
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "853bd9e7f308a7169970-ce0d929e0429e9914721",
+          "file": "admin-venta.integrated.spec.ts",
+          "line": 64,
+          "column": 1
+        },
+        {
+          "title": "@integrado CAJERO abre turno, vende en efectivo y cierra sin totales divergentes",
+          "ok": true,
+          "tags": [
+            "integrado"
+          ],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [
+                {
+                  "type": "serial",
+                  "location": {
+                    "file": "C:\\Users\\dp877\\Desktop\\Universidad\\Semestre 6\\TallerIntegra3\\TallerIntegracion3\\globalmart-frontend\\e2e\\electron\\admin-venta.integrated.spec.ts",
+                    "line": 0,
+                    "column": 0
+                  }
+                }
+              ],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 4978,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-15T18:21:29.394Z",
+                  "annotations": [
+                    {
+                      "type": "serial",
+                      "location": {
+                        "file": "C:\\Users\\dp877\\Desktop\\Universidad\\Semestre 6\\TallerIntegra3\\TallerIntegracion3\\globalmart-frontend\\e2e\\electron\\admin-venta.integrated.spec.ts",
+                        "line": 0,
+                        "column": 0
+                      }
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "853bd9e7f308a7169970-102f5ab91739ee6b49a5",
+          "file": "admin-venta.integrated.spec.ts",
+          "line": 80,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-11-15T18:21:26.910Z",
+    "duration": 7506.732,
+    "expected": 2,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

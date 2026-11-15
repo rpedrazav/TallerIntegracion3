@@ -84,8 +84,8 @@ var turnosController = new TurnosController(turnoService)
 };
 var cuadre = await turnosController.Cuadre(new CuadreRequest { MontoDeclarado = 200m });
 var cuadreResponse = (cuadre as OkObjectResult)?.Value as CuadreResponse;
-Check("Cuadre suma solo pagos EFECTIVO completados", cuadreResponse?.EfectivoEsperado == 175m);
-Check("Cuadre retorna monto declarado y diferencia", cuadreResponse?.MontoDeclarado == 200m && cuadreResponse.Diferencia == 25m);
+Check("Cuadre suma solo efectivo neto (recibido - vuelto) de ventas completadas", cuadreResponse?.EfectivoEsperado == 150m);
+Check("Cuadre retorna monto declarado y diferencia", cuadreResponse?.MontoDeclarado == 200m && cuadreResponse.Diferencia == 50m);
 
 Check("Se publica sale.completed después de completar", producer.Events.Count == 2);
 var evento = producer.Events.FirstOrDefault(e => e.VentaId == venta.Id);

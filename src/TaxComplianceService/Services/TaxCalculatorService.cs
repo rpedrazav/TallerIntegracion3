@@ -15,9 +15,15 @@ public class TaxCalculatorService : ITaxCalculatorService
     /// </summary>
     /// <param name="items">Colección de items con precio, cantidad y estado de exención opcional.</param>
     /// <param name="porcentajeIva">Porcentaje de IVA a aplicar (ej: 0 para exento, 19 para Chile, 21 para Argentina).</param>
+    /// <param name="moneda">Moneda del tenant. CLP no tiene centavos: cada importe se redondea a peso entero (,5 o más sube).</param>
     /// <returns>TaxBreakdown con subtotal, iva, total y el desglose detallado item por item.</returns>
-    public static TaxBreakdown Calculate(IEnumerable<TaxItem> items, decimal porcentajeIva)
+    public static TaxBreakdown Calculate(IEnumerable<TaxItem> items, decimal porcentajeIva, string? moneda = null)
     {
+        bool clp = string.Equals(moneda, "CLP", StringComparison.OrdinalIgnoreCase);
+        decimal Redondear(decimal monto) => clp
+            ? Math.Round(monto, 0, MidpointRounding.AwayFromZero)
+            : Math.Round(monto, 2, MidpointRounding.ToEven);
+
         if (items == null)
         {
             throw new ArgumentNullException(nameof(items), "La colección de items no puede ser nula.");
@@ -38,12 +44,12 @@ public class TaxCalculatorService : ITaxCalculatorService
             if (item == null) continue;
 
             // Redondeo por línea: la venta suma los importes facturados, no fracciones ocultas.
-            decimal itemSubtotal = Math.Round(item.Precio * item.Cantidad, 2, MidpointRounding.ToEven);
+            decimal itemSubtotal = Redondear(item.Precio * item.Cantidad);
             bool esExento = item.Exento || item.EsExento || (item.PorcentajeIva.HasValue && item.PorcentajeIva.Value == 0) || porcentajeIva == 0;
 
             decimal tasaAplicada = esExento ? 0m : (item.PorcentajeIva ?? porcentajeIva);
             decimal itemIva = esExento ? 0m
-                : Math.Round(itemSubtotal * (tasaAplicada / 100m), 2, MidpointRounding.ToEven);
+                : Redondear(itemSubtotal * (tasaAplicada / 100m));
             decimal itemTotal = itemSubtotal + itemIva;
 
             subtotal += itemSubtotal;
@@ -77,8 +83,8 @@ public class TaxCalculatorService : ITaxCalculatorService
     /// <summary>
     /// Implementación de ITaxCalculatorService para uso mediante inyección de dependencias.
     /// </summary>
-    TaxBreakdown ITaxCalculatorService.Calculate(IEnumerable<TaxItem> items, decimal porcentajeIva)
+    TaxBreakdown ITaxCalculatorService.Calculate(IEnumerable<TaxItem> items, decimal porcentajeIva, string? moneda)
     {
-        return Calculate(items, porcentajeIva);
+        return Calculate(items, porcentajeIva, moneda);
     }
 }

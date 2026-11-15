@@ -5,7 +5,7 @@ titulo: Estado Real de Implementación — GlobalMart OS
 estado: vigente
 fuentes: [docs/context/_reports/inventario.md, src/, globalmart-frontend/src/api/client.ts, globalmart-frontend/src/store/useTenantStore.ts, globalmart-frontend/src/pages/Admin.tsx, globalmart-frontend/src/pages/AdminRoles.tsx, globalmart-frontend/src/components/admin/UsuariosList.tsx, globalmart-frontend/src/components/admin/EditarUsuarioModal.tsx, globalmart-frontend/src/hardware/simulated-scale-adapter.ts, globalmart-frontend/src/hardware/serial-scale-adapter.ts, globalmart-frontend/src/hardware/scale-adapter-factory.ts, globalmart-frontend/src/hardware/scale-ipc.ts, globalmart-frontend/src/payments/terminal-ipc.ts, globalmart-frontend/src/payments/synchronizeCardPayment.ts, globalmart-frontend/src/preload.ts, globalmart-frontend/e2e/admin-flows.spec.ts, globalmart-frontend/e2e/admin.spec.ts, globalmart-frontend/e2e/weight-cart.spec.ts, globalmart-frontend/tests/admin-access.test.cjs, globalmart-frontend/tests/user-edit.test.cjs, globalmart-frontend/tests/user-deactivation.test.cjs, globalmart-frontend/tests/simulated-scale-adapter.test.cjs, globalmart-frontend/tests/serial-scale-adapter.test.cjs, globalmart-frontend/tests/scale-ipc.test.cjs, globalmart-frontend/tests/terminal-ipc.test.cjs, globalmart-frontend/tests/synchronized-card-payment.test.cjs, git log, docs/context/_reports/preguntas-abiertas.md, tests/GlobalMart.IntegrationTests/CobroSeguroIntegrationTests.cs, docs/qa/S2-035/reporte.md, new-ingresses.yaml]
 verificado_contra_codigo: true
-ultima_revision: 2026-11-14
+ultima_revision: 2026-11-15
 depende_de: []
 publica: []
 consume: []
@@ -76,7 +76,7 @@ S2-052 — 2026-10-19: **2/2 pruebas de integración HTTP locales aprobadas** pa
 - `GET /sucursales` — lista sucursales del tenant del JWT, con zona horaria efectiva [IMPLEMENTADO]
 - `POST /sucursales` — crea sucursal (solo ADMIN), zona horaria IANA opcional y validada, nombre único por tenant sin distinguir mayúsculas (409) [IMPLEMENTADO]
 - TenantMiddleware — extrae tenant_id del JWT e inyecta en DbContext [IMPLEMENTADO]
-- Seed de desarrollo: cajero@demo.cl (ver contraseña en [[como-ejecutar]]) [IMPLEMENTADO]
+- Seed de desarrollo: cajero@demo.cl y admin@demo.cl, idempotente por usuario (ver contraseña en [[como-ejecutar]]) [IMPLEMENTADO]
 
 **No implementado (PLANIFICADO):**
 - `POST /auth/refresh` — renovar token
@@ -489,3 +489,7 @@ S2-080 [IMPLEMENTADO — pruebas E2E controladas]: tres escenarios de Playwright
 ## S2-094 — sale.reversed por outbox (2026-11-14)
 
 [IMPLEMENTADO] Anulación en efectivo o reversa de tarjeta confirmada persisten venta, auditoría y evento `sale.reversed` en la misma transacción. Identidad estable = Anulacion.Id, relación a venta original por venta_id, snapshot de ítems/montos y publicación mediante worker existente. Rechazo/timeout no generan evento; reintentos conservan EventId y JSON. Sin migración adicional ni backfill de anulaciones históricas. Consumidor de reversas, reposición de stock y entrega Kafka/cluster [NO VERIFICADO]. [Contrato](eventos/sale-reversed-outbox.md), [reporte](../qa/S2-094/reporte.md).
+
+## S2-112 / TI3-743 — E2E de Admin y venta integrado (2026-11-15)
+
+[IMPLEMENTADO] `npm run test:e2e:integrado` (Electron real contra MS-1..MS-5 en localhost, sin mocks): ADMIN crea producto, CAJERO abre turno, vende en efectivo, cuadra y cierra. 2/2 aprobadas, exit 0. Corrige el puerto de MS-2 (`:5239`), el seed del ADMIN en BD ya sembradas y el cuadre, que ahora resta el vuelto. Además, en tenants CLP MS-2 redondea subtotales de línea e IVA a peso entero (,5 sube) y MS-5 guarda el subtotal de línea que entrega MS-2. No acredita Kong (503 hacia el host), Kafka ni stock. [Reporte](../qa/S2-112/reporte.md).

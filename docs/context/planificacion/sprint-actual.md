@@ -63,7 +63,7 @@ Total trasladado: **30 tareas**, 30 h originales comprimidas a **25 h** (ver Pla
 | S2-109 | TI3-740 | Resolver errores y recarga POS | Rodrigo | G5 | Must | 60 | Pendiente |
 | S2-110 | TI3-741 | Ejecutar demo completa de mostrador | Rodrigo | G5 | Must | 90 | Pendiente |
 | S2-111 | TI3-742 | Congelar criterios de salida del sprint | Daniel | H | Must | 30 | Checklist congelado — [checklist](../../qa/S2-111/checklist-salida.md) (2026-11-14): 112 Must trazados, ninguna meta cumple aún |
-| S2-112 | TI3-743 | Ejecutar E2E de Admin y venta | Daniel | H | Must | 60 | Pendiente |
+| S2-112 | TI3-743 | Ejecutar E2E de Admin y venta | Daniel | H | Must | 60 | Hecho (2/2, [reporte](../../qa/S2-112/reporte.md)) |
 | S2-113 | TI3-744 | Ejecutar E2E de tarjeta y pesaje | Daniel | H | Must | 60 | Pendiente |
 | S2-114 | TI3-745 | Medir cobertura y compilar todo | Daniel | H | Must | 60 | Pendiente |
 | S2-115 | TI3-746 | Auditar aislamiento y recuperación final | Daniel | H | Must | 90 | Pendiente |

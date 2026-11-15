@@ -13,4 +13,7 @@ public class TenantConfigResponse
     /// Porcentaje de IVA configurado para el tenant (ej: 19 para Chile, 21 para Argentina).
     /// </summary>
     public decimal PorcentajeIva { get; set; }
+
+    /// <summary>Moneda ISO del tenant (ej: CLP). Define cómo se redondean los importes.</summary>
+    public string? Moneda { get; set; }
 }

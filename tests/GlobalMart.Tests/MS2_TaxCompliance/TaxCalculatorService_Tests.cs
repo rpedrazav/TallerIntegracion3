@@ -248,4 +248,31 @@ public class TaxCalculatorService_Tests
         var act = () => TaxCalculatorService.Calculate(items, porcentajeIva: -5);
         act.Should().Throw<ArgumentOutOfRangeException>();
     }
+
+    // ════════════════════════════════════════════════════════════════════════
+    //  S2-112: CLP no tiene centavos. Subtotal de línea e IVA se redondean a
+    //  peso entero: ,5 a ,9 sube; ,1 a ,4 baja.
+    // ════════════════════════════════════════════════════════════════════════
+
+    [Theory]
+    [InlineData(1190, 2, 2380, 452, 2832)]      // IVA 452,20 → 452
+    [InlineData(50, 1, 50, 10, 60)]             // IVA 9,50 → 10 (,5 sube)
+    [InlineData(1234, 1, 1234, 234, 1468)]      // IVA 234,46 → 234 (,4 baja)
+    [InlineData(2990, 1.234, 3690, 701, 4391)]  // pesable: 3.689,66 → 3.690; IVA 701,10 → 701
+    public void Calculate_CLP_RedondeaAPesoEntero(decimal precio, decimal cantidad, decimal subtotal, decimal iva, decimal total)
+    {
+        var result = TaxCalculatorService.Calculate(new List<TaxItem> { new(precio: precio, cantidad: cantidad) }, 19, "CLP");
+
+        new[] { result.Subtotal, result.Iva, result.Total }.Should().Equal(subtotal, iva, total);
+        new[] { result.Items[0].Subtotal, result.Items[0].Iva, result.Items[0].Total }.Should().Equal(subtotal, iva, total);
+    }
+
+    [Fact]
+    public void Calculate_SinMonedaCLP_ConservaDosDecimales()
+    {
+        var result = TaxCalculatorService.Calculate(new List<TaxItem> { new(precio: 1190, cantidad: 2) }, 19, "USD");
+
+        result.Iva.Should().Be(452.20m);
+        result.Total.Should().Be(2832.20m);
+    }
 }

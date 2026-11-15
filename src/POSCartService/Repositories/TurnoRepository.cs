@@ -45,7 +45,7 @@ public class TurnoRepository : ITurnoRepository
     }
     public async Task<decimal> GetEfectivoTurnoAsync(Guid turnoId)
     {
-        // Suma Pago.Monto de ventas COMPLETADAS con método EFECTIVO del turno.
+        // Efectivo que quedó en caja: recibido menos vuelto, de ventas COMPLETADAS en EFECTIVO del turno.
         // IgnoreQueryFilters: el filtro multi-tenant ya fue validado en el controller
         // al verificar el turno activo del cajero autenticado.
         return await _context.Pagos
@@ -53,6 +53,6 @@ public class TurnoRepository : ITurnoRepository
             .Where(p => p.Venta.TurnoId == turnoId
                      && p.Venta.Estado   == EstadoVenta.COMPLETADA
                      && p.Metodo         == MetodoPago.EFECTIVO)
-            .SumAsync(p => p.Monto);
+            .SumAsync(p => p.Monto - p.Vuelto);
     }
 }
