@@ -493,3 +493,7 @@ S2-080 [IMPLEMENTADO — pruebas E2E controladas]: tres escenarios de Playwright
 ## S2-112 / TI3-743 — E2E de Admin y venta integrado (2026-11-15)
 
 [IMPLEMENTADO] `npm run test:e2e:integrado` (Electron real contra MS-1..MS-5 en localhost, sin mocks): ADMIN crea producto, CAJERO abre turno, vende en efectivo, cuadra y cierra. 2/2 aprobadas, exit 0. Corrige el puerto de MS-2 (`:5239`), el seed del ADMIN en BD ya sembradas y el cuadre, que ahora resta el vuelto. Además, en tenants CLP MS-2 redondea subtotales de línea e IVA a peso entero (,5 sube) y MS-5 guarda el subtotal de línea que entrega MS-2. No acredita Kong (503 hacia el host), Kafka ni stock. [Reporte](../qa/S2-112/reporte.md).
+
+## S2-113 / TI3-744 — E2E de tarjeta y pesaje integrado (2026-11-15)
+
+[IMPLEMENTADO] `npm run test:e2e:integrado` ahora suma 5 casos contra MS-1..MS-5 y el simulador de pasarela: tarjeta aprobada, rechazada con reintento, timeout, peso estable de la balanza simulada y entrada manual ante una falla de balanza. 5/5 (7/7 junto con S2-112), exit 0. Se verifica en `postgres-pos` que una falla no completa la venta ni deja más de un pago. Corrige la validación de UUID del simulador (rechazaba al tenant demo) y la URL de la pasarela en `run-apis`. Tras un timeout el intento queda PENDIENTE hasta que el cajero lo verifique o cancele. Terminal y balanza físicos siguen condicionados. [Reporte](../qa/S2-113/reporte.md).

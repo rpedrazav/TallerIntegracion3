@@ -2,7 +2,7 @@
 const crypto = require('crypto');
 const reversals = new Map();
 const byPayment = new Map();
-const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const scenarios = new Set(['sim-reversal-approved-v1', 'sim-reversal-declined-v1', 'sim-reversal-timeout-v1']);
 
 module.exports = function handleReversal(req, res, url, payments, sendJson, containsCardData) {
