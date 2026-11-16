@@ -3,7 +3,7 @@ id: anulacion-venta
 tipo: dominio
 titulo: Contrato de anulación total — S2-091
 estado: implementado-backend
-ultima_revision: 2026-11-14
+ultima_revision: 2026-11-15
 fuentes: [src/POSCartService/Services/VentaService.cs, src/POSCartService/Models/Anulacion.cs, src/POSCartService/Services/IPaymentGatewayClient.cs, Docker/simulator/server.js]
 ---
 
@@ -144,3 +144,7 @@ S2-091 entregó esta matriz como especificación. S2-092 incorpora `AnulacionVen
 ## S2-094 — Evento de anulación
 
 Venta ANULADA, auditoría y snapshot de `sale.reversed` se guardan atómicamente. EventId = Anulacion.Id; venta_id vincula la venta original. Reintentos HTTP o de publicación no crean otra reversa lógica. Tarjeta rechazada o incierta no produce este evento. Se conserva el outbox original de cobro. [Evidencia](../../qa/S2-094/reporte.md).
+
+## Evidencia S2-095 (2026-11-15)
+
+62/62 pruebas de anulación, permisos y outbox aprobadas con PostgreSQL. Snapshot sin mutación al repetir tarjeta aprobada/rechazada (incluso cambiando motivo), ante JWT/roles inválidos y al acceder a reversas de otro tenant, incluida PENDIENTE sin consultar la pasarela. Un evento de anulación solo aparece tras confirmación válida; rollback no deja evento parcial. [Reporte y artefacto](../../qa/S2-095/reporte.md). No cambia el contrato ni acredita despliegue remoto.

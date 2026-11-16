@@ -5,7 +5,7 @@ titulo: Sprint Actual — Sprint 3 (En Curso)
 estado: vigente
 fuentes: [tareas/plan_sprint3.xlsx, docs/qa/S2-111/checklist-salida.md, tareas/plan_sprint2_revisado.xlsx, docs/qa/S2-092/reporte.md, docs/qa/S2-106/reporte.md, docs/qa/S2-107/reporte.md, tareas/sprint2_youtrack_resultado.json, docs/defensa-sprint2/01-resumen.md, docs/context/estado-actual.md, aclaración del equipo (Daniel Prado, 2026-11-14)]
 verificado_contra_codigo: false
-ultima_revision: 2026-11-14
+ultima_revision: 2026-11-15
 depende_de: [sprints-anteriores, roadmap]
 publica: []
 consume: []
@@ -46,7 +46,7 @@ Total trasladado: **30 tareas**, 30 h originales comprimidas a **25 h** (ver Pla
 | S2-092 | TI3-723 | Exponer anulación de venta | Sebastián | G2 | Must | 60 | Backend implementado — [reporte](../../qa/S2-092/reporte.md) (2026-11-09); UI y remoto [NO VERIFICADO] |
 | S2-093 | TI3-724 | Reversar tarjeta por pasarela simulada | Sebastián | G2 | Must | 60 | Pendiente |
 | S2-094 | TI3-725 | Publicar sale.reversed por outbox | Sebastián | G2 | Must | 60 | Pendiente |
-| S2-095 | TI3-726 | Probar anulación y permisos | Sebastián | G2 | Must | 90 | Pendiente |
+| S2-095 | TI3-726 | Probar anulación y permisos | Sebastián | G2 | Must | 90 | 62/62 pruebas locales aprobadas — [reporte S2-095](../../qa/S2-095/reporte.md) (2026-11-15) |
 | S2-096 | TI3-727 | Definir política de errores Kafka | Nicolás | G2 | Must | 30 | Pendiente |
 | S2-097 | TI3-728 | Agrupar descuento e idempotencia | Nicolás | G2 | Must | 60 | Pendiente |
 | S2-098 | TI3-729 | Evitar stock negativo por evento | Nicolás | G2 | Must | 60 | Pendiente |
@@ -76,7 +76,7 @@ Total trasladado: **30 tareas**, 30 h originales comprimidas a **25 h** (ver Pla
 **Avance de la Semana 9 (al 2026-11-14):** 8 de 30 tareas tienen evidencia en código o en `docs/qa/` (S2-091, S2-092, S2-101..S2-104, S2-106, S2-107); las 22 restantes siguen **Pendientes**. «PASS REPORTADO» indica que el runner E2E se interrumpió sin resumen final ni exit code 0; no equivale a cierre independiente. Los criterios de aceptación de cada tarea están en la hoja `Sprint 2` del plan. Contrastar con [[estado-actual]] antes de cerrar una tarea en YouTrack.
 
 Bloques del arrastre:
-- **G2 — Anulación (Sebastián):** contrato y endpoint backend listos (S2-091/S2-092); faltan reversa de tarjeta, `sale.reversed` y pruebas (S2-093..S2-095).
+- **G2 — Anulación (Sebastián):** contrato, endpoint, reversa simulada y outbox implementados (S2-091..S2-094); S2-095 verifica 62/62 pruebas locales. UI y cluster no verificados; ver [evidencia](../../qa/S2-095/reporte.md).
 - **G2 — Consumidor Kafka MS-4 (Nicolás):** atomicidad del descuento, stock no negativo, commit de offsets y recuperación.
 - **G1 — Administración (Martín):** S2-101..S2-104 con evidencia; falta la regresión de cierre (S2-105).
 - **G5 — Terminal POS (Rodrigo):** S2-106/S2-107 con evidencia; faltan comprobante simulado, recarga y demo (S2-108..S2-110).

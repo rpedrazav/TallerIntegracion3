@@ -431,3 +431,7 @@ Se añade migración `AddReversasPago`. La aplicación ejecuta migraciones al in
 ## S2-112 — Subtotal de línea desde MS-2
 
 [IMPLEMENTADO] Al crear una venta, agregar un ítem o cambiar su cantidad, MS-5 ya no calcula `precio × cantidad` por su cuenta: guarda el subtotal de línea que devuelve MS-2 (en CLP, pesos enteros), igual que el subtotal, el IVA y el total. Así Σ líneas = subtotal de la venta.
+
+## S2-095 — Cobertura de anulación total
+
+[VERIFICADO LOCALMENTE] Las suites de efectivo y tarjeta comparten auxiliares JWT/snapshot y trait `Plan=S2-095`. 62/62 casos aprobados incluyendo regresión outbox: permisos, estados, eventos únicos, repetición y aislamiento de dos tenants. No se cambió el flujo productivo. [Matriz, reproducción y TRX](../../qa/S2-095/reporte.md).

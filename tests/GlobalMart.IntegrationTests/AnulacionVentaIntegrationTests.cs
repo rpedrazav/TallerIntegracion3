@@ -1,10 +1,6 @@
 extern alias POSCartServiceAlias;
 
-using System.IdentityModel.Tokens.Jwt;
 using System.Net;
-using System.Net.Http.Headers;
-using System.Security.Claims;
-using System.Text;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
@@ -13,13 +9,14 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using Microsoft.IdentityModel.Tokens;
 using Xunit;
+using static GlobalMart.IntegrationTests.AnulacionTestSupport;
 using Pos = POSCartServiceAlias::POSCartService;
 
 namespace GlobalMart.IntegrationTests;
 
 [Trait("Plan", "S2-092")]
+[Trait("Plan", "S2-095")]
 public sealed class AnulacionVentaIntegrationTests : IClassFixture<Ms5WebApplicationFactory>, IAsyncLifetime
 {
     private readonly Ms5WebApplicationFactory _factory;
@@ -67,37 +64,6 @@ public sealed class AnulacionVentaIntegrationTests : IClassFixture<Ms5WebApplica
         return venta;
     }
 
-    private HttpClient Client(Guid tenant, Guid admin, string? role = "ADMIN", bool expired = false, bool identity = true, WebApplicationFactory<POSCartServiceAlias::Program>? factory = null)
-    {
-        var client = (factory ?? _factory).CreateClient();
-        if (role is null) return client;
-        var config = _factory.Services.GetRequiredService<IConfiguration>();
-        var claims = new List<Claim> { new("tenant_id", tenant.ToString()), new(ClaimTypes.Role, role) };
-        if (identity) claims.Add(new Claim("sub", admin.ToString()));
-        var token = new JwtSecurityToken(config["Jwt:Issuer"], config["Jwt:Audience"], claims,
-            expires: expired ? DateTime.UtcNow.AddMinutes(-5) : DateTime.UtcNow.AddMinutes(10),
-            signingCredentials: new SigningCredentials(new SymmetricSecurityKey(Encoding.UTF8.GetBytes(config["Jwt:Key"]!)), SecurityAlgorithms.HmacSha256));
-        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", new JwtSecurityTokenHandler().WriteToken(token));
-        return client;
-    }
-    private static Task<HttpResponseMessage> Send(HttpClient client, Guid id, string body = "{\"motivo\":\"  Error total  \"}", string prefix = "")
-        => client.PostAsync($"{prefix}/ventas/{id}/anular", new StringContent(body, Encoding.UTF8, "application/json"));
-
-    private async Task<string> Snapshot(Guid tenant)
-    {
-        using var scope = _factory.Services.CreateScope();
-        var db = scope.ServiceProvider.GetRequiredService<Pos.Data.PosCartDbContext>();
-        db.CurrentTenantId = tenant;
-        // Proyecciones sin navegaciones cíclicas, contexto nuevo: detectar toda mutación relevante.
-        var ventas = await db.Ventas.OrderBy(v => v.Id).Select(v => new { v.Id, v.TenantId, v.Estado, v.Total, v.Subtotal, v.Impuestos, v.TurnoId, v.CajeroId, v.SucursalId, v.MetodoPago }).ToListAsync();
-        var items = await db.ItemsVenta.OrderBy(i => i.Id).Select(i => new { i.Id, i.VentaId, i.ProductoId, i.NombreProducto, i.Cantidad, i.PesoKg, i.PrecioUnitario, i.Subtotal }).ToListAsync();
-        var pagos = await db.Pagos.OrderBy(p => p.Id).Select(p => new { p.Id, p.VentaId, p.Metodo, p.Monto, p.Vuelto, p.Referencia }).ToListAsync();
-        var intentos = await db.IntentosPago.OrderBy(i => i.Id).Select(i => new { i.Id, i.Estado, i.IdempotencyKey, i.Monto, i.Moneda, i.Referencia, i.UpdatedAt }).ToListAsync();
-        var anulaciones = await db.Anulaciones.OrderBy(a => a.Id).Select(a => new { a.Id, a.VentaId, a.Motivo, a.AutorizadoPor, a.CreatedAt }).ToListAsync();
-        var outbox = await db.OutboxMessages.OrderBy(o => o.EventId).Select(o => new { o.EventId, o.Payload, o.Status }).ToListAsync();
-        return JsonSerializer.Serialize(new { ventas, items, pagos, intentos, anulaciones, outbox });
-    }
-
     [Theory]
     [InlineData("", "valida")]
     [InlineData("/api", "rechazado")]
@@ -105,7 +71,7 @@ public sealed class AnulacionVentaIntegrationTests : IClassFixture<Ms5WebApplica
     {
         var venta = await Seed(escenario);
         var admin = Guid.NewGuid(); // ADMIN no es el cajero y no tiene turno propio.
-        using var client = Client(venta.TenantId, admin);
+        using var client = Client(_factory, venta.TenantId, admin);
         using var response = await Send(client, venta.Id, prefix: prefix);
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var json = JsonDocument.Parse(await response.Content.ReadAsStringAsync()).RootElement;
@@ -132,10 +98,10 @@ public sealed class AnulacionVentaIntegrationTests : IClassFixture<Ms5WebApplica
         Assert.Equal(venta.TenantId, payload.GetProperty("tenant_id").GetGuid());
         Assert.Equal(119, payload.GetProperty("total").GetDecimal());
         Assert.Single(payload.GetProperty("items").EnumerateArray());
-        var snapshot = await Snapshot(venta.TenantId);
+        var snapshot = await Snapshot(_factory.Services, venta.TenantId);
         using var repeated = await Send(client, venta.Id);
         Assert.Equal(HttpStatusCode.Conflict, repeated.StatusCode);
-        Assert.Equal(snapshot, await Snapshot(venta.TenantId));
+        Assert.Equal(snapshot, await Snapshot(_factory.Services, venta.TenantId));
     }
 
     [Theory]
@@ -147,28 +113,28 @@ public sealed class AnulacionVentaIntegrationTests : IClassFixture<Ms5WebApplica
     [InlineData("SUPER_ADMIN", false, true, 403)]
     public async Task Permisos_RechazanSinMutacion(string? role, bool expired, bool identity, int expected)
     {
-        var venta = await Seed(); var before = await Snapshot(venta.TenantId);
-        using var client = Client(venta.TenantId, Guid.NewGuid(), role, expired, identity);
+        var venta = await Seed(); var before = await Snapshot(_factory.Services, venta.TenantId);
+        using var client = Client(_factory, venta.TenantId, Guid.NewGuid(), role, expired, identity);
         using var response = await Send(client, venta.Id);
         Assert.Equal(expected, (int)response.StatusCode);
-        Assert.Equal(before, await Snapshot(venta.TenantId));
+        Assert.Equal(before, await Snapshot(_factory.Services, venta.TenantId));
     }
 
     [Fact]
     public async Task TenantAjeno_EnAmbosSentidos_404ComoInexistente()
     {
         var a = await Seed(); var b = await Seed();
-        var beforeA = await Snapshot(a.TenantId); var beforeB = await Snapshot(b.TenantId);
+        var beforeA = await Snapshot(_factory.Services, a.TenantId); var beforeB = await Snapshot(_factory.Services, b.TenantId);
         foreach (var (owner, target) in new[] { (a, b), (b, a) })
         {
-            using var client = Client(owner.TenantId, Guid.NewGuid());
+            using var client = Client(_factory, owner.TenantId, Guid.NewGuid());
             client.DefaultRequestHeaders.Add("X-Tenant-ID", target.TenantId.ToString());
             using var response = await Send(client, target.Id);
             using var missing = await Send(client, Guid.NewGuid());
             Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
             Assert.Equal(await missing.Content.ReadAsStringAsync(), await response.Content.ReadAsStringAsync());
         }
-        Assert.Equal(beforeA, await Snapshot(a.TenantId)); Assert.Equal(beforeB, await Snapshot(b.TenantId));
+        Assert.Equal(beforeA, await Snapshot(_factory.Services, a.TenantId)); Assert.Equal(beforeB, await Snapshot(_factory.Services, b.TenantId));
     }
 
     [Theory]
@@ -187,11 +153,11 @@ public sealed class AnulacionVentaIntegrationTests : IClassFixture<Ms5WebApplica
     [InlineData("largo")]
     public async Task BodyInvalido_400SinMutacion(string body)
     {
-        var venta = await Seed(); var before = await Snapshot(venta.TenantId);
-        using var client = Client(venta.TenantId, Guid.NewGuid());
+        var venta = await Seed(); var before = await Snapshot(_factory.Services, venta.TenantId);
+        using var client = Client(_factory, venta.TenantId, Guid.NewGuid());
         using var response = await Send(client, venta.Id, body == "largo" ? JsonSerializer.Serialize(new { motivo = new string('a', 501) }) : body);
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        Assert.Equal(before, await Snapshot(venta.TenantId));
+        Assert.Equal(before, await Snapshot(_factory.Services, venta.TenantId));
     }
 
     [Theory]
@@ -210,19 +176,19 @@ public sealed class AnulacionVentaIntegrationTests : IClassFixture<Ms5WebApplica
     [InlineData("vuelto_negativo", "PAGO_INCONSISTENTE")]
     public async Task Conflictos_409SinMutacion(string escenario, string codigo)
     {
-        var venta = await Seed(escenario); var before = await Snapshot(venta.TenantId);
-        using var client = Client(venta.TenantId, Guid.NewGuid());
+        var venta = await Seed(escenario); var before = await Snapshot(_factory.Services, venta.TenantId);
+        using var client = Client(_factory, venta.TenantId, Guid.NewGuid());
         using var response = await Send(client, venta.Id);
         Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
         Assert.Equal(codigo, JsonDocument.Parse(await response.Content.ReadAsStringAsync()).RootElement.GetProperty("codigo").GetString());
-        Assert.Equal(before, await Snapshot(venta.TenantId));
+        Assert.Equal(before, await Snapshot(_factory.Services, venta.TenantId));
     }
 
     [Fact]
     public async Task Concurrentes_UnaSolaAnulacion()
     {
         var venta = await Seed();
-        using var a = Client(venta.TenantId, Guid.NewGuid()); using var b = Client(venta.TenantId, Guid.NewGuid());
+        using var a = Client(_factory, venta.TenantId, Guid.NewGuid()); using var b = Client(_factory, venta.TenantId, Guid.NewGuid());
         var responses = await Task.WhenAll(Send(a, venta.Id), Send(b, venta.Id));
         Assert.Single(responses, r => r.StatusCode == HttpStatusCode.OK);
         Assert.Single(responses, r => r.StatusCode == HttpStatusCode.Conflict);
@@ -236,17 +202,17 @@ public sealed class AnulacionVentaIntegrationTests : IClassFixture<Ms5WebApplica
     [Fact]
     public async Task ServicioSinAdmin_NoPermiteEvitarController()
     {
-        var venta = await Seed(); var before = await Snapshot(venta.TenantId);
+        var venta = await Seed(); var before = await Snapshot(_factory.Services, venta.TenantId);
         using var scope = _factory.Services.CreateScope();
         scope.ServiceProvider.GetRequiredService<Pos.Data.PosCartDbContext>().CurrentTenantId = venta.TenantId;
         var service = scope.ServiceProvider.GetRequiredService<Pos.Services.IVentaService>();
         await Assert.ThrowsAsync<UnauthorizedAccessException>(() => service.AnularAsync(venta.Id, Guid.NewGuid(), "motivo"));
-        Assert.Equal(before, await Snapshot(venta.TenantId));
+        Assert.Equal(before, await Snapshot(_factory.Services, venta.TenantId));
     }
     [Fact]
     public async Task FalloPersistencia_RollbackSinAnulacionParcial()
     {
-        var venta = await Seed(); var before = await Snapshot(venta.TenantId);
+        var venta = await Seed(); var before = await Snapshot(_factory.Services, venta.TenantId);
         var connection = _factory.Services.GetRequiredService<IConfiguration>().GetConnectionString("DefaultConnection");
         using var factory = _factory.WithWebHostBuilder(builder => builder.ConfigureTestServices(services =>
         {
@@ -255,11 +221,11 @@ public sealed class AnulacionVentaIntegrationTests : IClassFixture<Ms5WebApplica
             services.AddDbContext<Pos.Data.PosCartDbContext>(options =>
                 options.UseNpgsql(connection).AddInterceptors(new FalloAnulacion()));
         }));
-        using var client = Client(venta.TenantId, Guid.NewGuid(), factory: factory);
+        using var client = Client(factory, venta.TenantId, Guid.NewGuid());
         using var response = await Send(client, venta.Id);
         Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode);
         Assert.DoesNotContain("fallo controlado", await response.Content.ReadAsStringAsync());
-        Assert.Equal(before, await Snapshot(venta.TenantId));
+        Assert.Equal(before, await Snapshot(_factory.Services, venta.TenantId));
     }
 
     // Falla después de ejecutar SaveChanges, antes del commit: prueba rollback real.

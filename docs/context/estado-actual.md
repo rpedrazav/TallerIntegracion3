@@ -497,3 +497,7 @@ S2-080 [IMPLEMENTADO — pruebas E2E controladas]: tres escenarios de Playwright
 ## S2-113 / TI3-744 — E2E de tarjeta y pesaje integrado (2026-11-15)
 
 [IMPLEMENTADO] `npm run test:e2e:integrado` ahora suma 5 casos contra MS-1..MS-5 y el simulador de pasarela: tarjeta aprobada, rechazada con reintento, timeout, peso estable de la balanza simulada y entrada manual ante una falla de balanza. 5/5 (7/7 junto con S2-112), exit 0. Se verifica en `postgres-pos` que una falla no completa la venta ni deja más de un pago. Corrige la validación de UUID del simulador (rechazaba al tenant demo) y la URL de la pasarela en `run-apis`. Tras un timeout el intento queda PENDIENTE hasta que el cajero lo verifique o cancele. Terminal y balanza físicos siguen condicionados. [Reporte](../qa/S2-113/reporte.md).
+
+## S2-095 / TI3-726 — Pruebas de anulación y permisos (2026-11-15)
+
+[VERIFICADO LOCALMENTE] 62/62 pruebas: efectivo, tarjeta aprobada, rechazo, repetición, JWT/roles, tenant ajeno (reversa aprobada/rechazada/pendiente), concurrencia, rollback y reintento outbox. Comparaciones de snapshots verifican que rechazos y repeticiones conservan ventas, pagos, auditorías, reversas y eventos. Se compartieron auxiliares de pruebas; sin cambios productivos. PostgreSQL y simulador Node reales; transporte Kafka controlado. Broker real, UI, efectos MS-4 y cluster [NO VERIFICADO]. [Reporte y TRX](../qa/S2-095/reporte.md).
