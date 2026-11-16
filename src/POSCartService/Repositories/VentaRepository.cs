@@ -92,19 +92,6 @@ public class VentaRepository : IVentaRepository
     }
 
     /// <inheritdoc/>
-    public async Task<IReadOnlyList<Venta>> GetByCajeroAsync(Guid cajeroId, DateTime desde, DateTime hasta)
-    {
-        return await _context.Ventas
-            .Include(v => v.Items)
-            .Include(v => v.Pagos)
-            .Where(v => v.CajeroId == cajeroId
-                     && v.CreatedAt >= desde
-                     && v.CreatedAt <= hasta)
-            .OrderBy(v => v.CreatedAt)
-            .ToListAsync();
-    }
-
-    /// <inheritdoc/>
     public async Task<Venta> CrearAsync(Venta venta)
     {
         _context.Ventas.Add(venta);
@@ -343,7 +330,4 @@ public class VentaRepository : IVentaRepository
         }
     }
 
-    /// <inheritdoc/>
-    public Task RegistrarIntentoPagoAsync(IntentoPago intentoPago)
-        => ActualizarIntentoPagoAsync(intentoPago);
 }

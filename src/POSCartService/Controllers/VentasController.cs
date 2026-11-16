@@ -1,4 +1,3 @@
-using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using POSCartService.DTOs;
@@ -54,7 +53,7 @@ public sealed class VentasController : ControllerBase
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> Anular(Guid id, [FromBody] System.Text.Json.JsonElement request)
     {
-        if (!TryGetClaims(out var adminId, out var tenantId) || adminId == Guid.Empty || tenantId == Guid.Empty)
+        if (!User.TryGetClaims(out var adminId, out var tenantId) || adminId == Guid.Empty || tenantId == Guid.Empty)
             return Unauthorized(new { codigo = "IDENTIDAD_INVALIDA", error = "Token sin identidad o tenant válido." });
 
         // Contrato estricto: no ignorar una solicitud parcial ni identidad suministrada por cliente.
@@ -109,7 +108,7 @@ public sealed class VentasController : ControllerBase
     [Authorize(Roles = "ADMIN")]
     public async Task<IActionResult> ConsultarReversa(Guid id, [FromServices] ReversaTarjetaService reversas)
     {
-        if (!TryGetClaims(out var adminId, out var tenantId) || adminId == Guid.Empty || tenantId == Guid.Empty)
+        if (!User.TryGetClaims(out var adminId, out var tenantId) || adminId == Guid.Empty || tenantId == Guid.Empty)
             return Unauthorized();
         try
         {
@@ -129,22 +128,6 @@ public sealed class VentasController : ControllerBase
             _logger?.LogError(ex, "Error al reconciliar reversa de venta {VentaId}", id);
             return StatusCode(500, new { codigo = "ERROR_PERSISTENCIA", error = "No se pudo confirmar el resultado local; consulte nuevamente." });
         }
-    }
-
-    // ── Helpers ────────────────────────────────────────────────────────────────
-
-    private bool TryGetClaims(out Guid cajeroId, out Guid tenantId)
-    {
-        var cajeroClaim = User.FindFirst("cajero_id")?.Value
-            ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value
-            ?? User.FindFirst("sub")?.Value;
-        var tenantClaim = User.FindFirst("tenant_id")?.Value;
-
-        cajeroId = default;
-        tenantId = default;
-
-        return Guid.TryParse(cajeroClaim, out cajeroId)
-            && Guid.TryParse(tenantClaim, out tenantId);
     }
 
     // ── POST /ventas ───────────────────────────────────────────────────────────
@@ -170,7 +153,7 @@ public sealed class VentasController : ControllerBase
         CancellationToken cancellationToken)
     {
         // 1. Extraer claims del JWT
-        if (!TryGetClaims(out var cajeroId, out var tenantId))
+        if (!User.TryGetClaims(out var cajeroId, out var tenantId))
             return Unauthorized(new { error = "Token inválido: faltan cajero_id/sub o tenant_id." });
 
         // 2. Verificar turno activo — RN-04: solo se puede vender en turno ABIERTO
@@ -334,7 +317,7 @@ public sealed class VentasController : ControllerBase
         CancellationToken cancellationToken)
     {
         // 1. Extraer claims del JWT
-        if (!TryGetClaims(out _, out _))
+        if (!User.TryGetClaims(out _, out _))
             return Unauthorized(new { error = "Token inválido: faltan cajero_id/sub o tenant_id." });
 
         // 2. Verificar que la venta exista
@@ -481,7 +464,7 @@ public sealed class VentasController : ControllerBase
         CancellationToken cancellationToken)
     {
         // 1. Extraer claims del JWT
-        if (!TryGetClaims(out _, out _))
+        if (!User.TryGetClaims(out _, out _))
             return Unauthorized(new { error = "Token inválido: faltan cajero_id/sub o tenant_id." });
 
         // 2. Verificar que la venta exista
@@ -599,7 +582,7 @@ public sealed class VentasController : ControllerBase
         CancellationToken cancellationToken)
     {
         // 1. Extraer claims del JWT
-        if (!TryGetClaims(out _, out _))
+        if (!User.TryGetClaims(out _, out _))
             return Unauthorized(new { error = "Token inválido: faltan cajero_id/sub o tenant_id." });
 
         // 2. Verificar que la venta exista
@@ -704,7 +687,7 @@ public sealed class VentasController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetById(Guid id)
     {
-        if (!TryGetClaims(out _, out _))
+        if (!User.TryGetClaims(out _, out _))
             return Unauthorized(new { error = "Token inválido: faltan cajero_id/sub o tenant_id." });
 
         var venta = await _ventaService.GetByIdAsync(id);
@@ -725,7 +708,7 @@ public sealed class VentasController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> GetByTurno(Guid turnoId)
     {
-        if (!TryGetClaims(out _, out _))
+        if (!User.TryGetClaims(out _, out _))
             return Unauthorized(new { error = "Token inválido: faltan cajero_id/sub o tenant_id." });
 
         var ventas = await _ventaService.GetByTurnoAsync(turnoId);
@@ -760,7 +743,7 @@ public sealed class VentasController : ControllerBase
         [FromBody] CobrarVentaRequest request)
     {
         // 1. Extraer claims del JWT
-        if (!TryGetClaims(out _, out _))
+        if (!User.TryGetClaims(out _, out _))
             return Unauthorized(new { error = "Token inválido: faltan cajero_id/sub o tenant_id." });
 
         // 2. Verificar que la venta exista
@@ -817,7 +800,7 @@ public sealed class VentasController : ControllerBase
     [HttpPatch("{id:guid}/metodo-pago")]
     public async Task<IActionResult> CambiarMetodoPago([FromRoute] Guid id, [FromBody] CambiarMetodoPagoRequest request)
     {
-        if (!TryGetClaims(out var cajeroId, out var tenantId))
+        if (!User.TryGetClaims(out var cajeroId, out var tenantId))
             return Unauthorized(new { error = "Token inválido: faltan cajero_id/sub o tenant_id." });
         var turno = await _turnoService.GetActivo(cajeroId, tenantId);
         if (turno is null)
@@ -865,7 +848,7 @@ public sealed class VentasController : ControllerBase
         CancellationToken cancellationToken)
     {
         // 1. Extraer y validar claims del JWT (RN-07 / RN-01)
-        if (!TryGetClaims(out var cajeroId, out var tenantId))
+        if (!User.TryGetClaims(out var cajeroId, out var tenantId))
             return Unauthorized(new { error = "Token inválido: faltan cajero_id/sub o tenant_id." });
 
         // 2. Verificar turno activo del cajero en el tenant (RN-06)
@@ -1090,7 +1073,7 @@ public sealed class VentasController : ControllerBase
     [HttpGet("{id:guid}/intento-tarjeta")]
     public async Task<IActionResult> ConsultarIntentoTarjeta([FromRoute] Guid id, CancellationToken cancellationToken)
     {
-        if (!TryGetClaims(out var cajeroId, out var tenantId))
+        if (!User.TryGetClaims(out var cajeroId, out var tenantId))
             return Unauthorized(new { error = "Token inválido: faltan cajero_id/sub o tenant_id." });
         var venta = await _ventaService.GetByIdAsync(id);
         if (venta is null || venta.TenantId != tenantId || venta.CajeroId != cajeroId)
