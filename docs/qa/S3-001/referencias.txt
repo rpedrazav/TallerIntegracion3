@@ -1,0 +1,17 @@
+tests/GlobalMart.IntegrationTests/VentaOutboxTransactionTests.cs:25:                kafkaProducer: new UnexpectedKafkaProducer());
+tests/GlobalMart.IntegrationTests/OutboxBrokerRecoveryIntegrationTests.cs:37:                kafkaProducer: broker);
+tests/GlobalMart.IntegrationTests/PaymentEventSequenceContractTests.cs:133:        public Task<bool> ReservarIntentoPagoAsync(Pos.Models.IntentoPago intentoPago) =>
+tests/GlobalMart.IntegrationTests/PaymentEventSequenceContractTests.cs:135:        public Task RegistrarIntentoPagoAsync(Pos.Models.IntentoPago intentoPago) =>
+src/POSCartService/tests/POSCartService.CobroCuadreTest/Program.cs:27:var ventaService = new VentaService(ventaRepository, kafkaProducer: producer);
+src/POSCartService/tests/POSCartService.AgregarItemTest/Program.cs:693:        var ventaSvcKafka = new VentaService(ventaRepo, itemRepo, kafkaMock);
+src/POSCartService/Repositories/VentaRepository.cs:181:        if (!await ReservarIntentoPagoAsync(intento))
+src/POSCartService/Repositories/VentaRepository.cs:302:    public async Task<bool> ReservarIntentoPagoAsync(IntentoPago intentoPago)
+src/POSCartService/Repositories/VentaRepository.cs:347:    public Task RegistrarIntentoPagoAsync(IntentoPago intentoPago)
+src/POSCartService/Repositories/IVentaRepository.cs:65:    Task<bool> ReservarIntentoPagoAsync(IntentoPago intentoPago);
+src/POSCartService/Repositories/IVentaRepository.cs:71:    Task RegistrarIntentoPagoAsync(IntentoPago intentoPago);
+src/POSCartService/Services/IVentaService.cs:137:    Task<bool> ReservarIntentoPagoAsync(IntentoPago intentoPago);
+src/POSCartService/Services/IVentaService.cs:143:    Task RegistrarIntentoPagoAsync(IntentoPago intentoPago);
+src/POSCartService/Services/VentaService.cs:354:    public Task<bool> ReservarIntentoPagoAsync(IntentoPago intentoPago)
+src/POSCartService/Services/VentaService.cs:355:        => _ventaRepository.ReservarIntentoPagoAsync(intentoPago);
+src/POSCartService/Services/VentaService.cs:358:    public Task RegistrarIntentoPagoAsync(IntentoPago intentoPago)
+src/POSCartService/Services/VentaService.cs:359:        => _ventaRepository.RegistrarIntentoPagoAsync(intentoPago);
