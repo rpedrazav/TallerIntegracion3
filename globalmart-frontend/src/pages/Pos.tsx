@@ -15,6 +15,13 @@ import {
   synchronizeCardPayment,
   tryAcquirePaymentSingleFlight,
 } from '../payments/synchronizeCardPayment';
+import {
+  cancelPaymentAttemptSafely,
+  clearRecoveryAttempt,
+  loadRecoveryAttempt,
+  recoverPosStateOnReload,
+  saveRecoveryAttempt,
+} from '../payments/posRecovery';
 
 export interface ProductItem {
   id: string;
@@ -63,8 +70,11 @@ export default function Pos() {
   const [paymentChange, setPaymentChange] = useState<number | null>(null);
   const [paymentCashReceived, setPaymentCashReceived] = useState<number | null>(null);
   const [paymentReference, setPaymentReference] = useState<string | null>(null);
+  const [attemptReferenceView, setAttemptReferenceView] = useState<string | null>(null);
+  const [recoveryNotice, setRecoveryNotice] = useState<string | null>(null);
   const [draftPaymentMethod, setDraftPaymentMethod] = useState<'EFECTIVO' | 'TARJETA'>('EFECTIVO');
   const paymentInFlight = useRef(false);
+  const cancelInFlight = useRef(false);
   const paymentAttemptReference = useRef<string | null>(null);
   const scaleReadInFlight = useRef(false);
   const [isReadingScale, setIsReadingScale] = useState(false);
@@ -113,48 +123,32 @@ export default function Pos() {
         shiftConfirmed = true;
         const ventas = await posApi.salesByShift(turno.id);
         if (!active) return;
-        const pendingId = ventas.filter((item) => item.estado === 'PENDIENTE').pop()?.id;
-        const recovered = pendingId ? await posApi.getSale(pendingId) : null;
-        let pendiente = recovered?.estado === 'PENDIENTE' ? recovered : null;
-        if (pendiente?.metodo_pago === 'TARJETA') {
-          try {
-            const intento = await reconcileCardPayment({
-              ms5: posApi,
-              ventaId: pendiente.id,
-              referenciaEsperada: paymentAttemptReference.current,
-            });
-            if (!active) return;
-            paymentAttemptReference.current = intento.referenciaIntento;
-            if (intento.estado === 'uncertain') {
-              setPaymentState('uncertain');
-              setPaymentError('El intento de tarjeta sigue sin resultado confirmado. Verifica su estado antes de cobrar.');
-              setIsPaymentOpen(true);
-            } else if (intento.estado === 'approved' && intento.venta?.estado === 'COMPLETADA') {
-              pendiente = intento.venta;
-              setPaymentReference(intento.gatewayReference);
-              setPaymentState('approved');
-              setIsPaymentOpen(true);
-            } else if (intento.estado === 'approved') {
-              setPaymentState('uncertain');
-              setPaymentError('MS-5 no confirmó la venta como COMPLETADA. Verifica su estado antes de cobrar.');
-              setIsPaymentOpen(true);
-            } else if (intento.estado === 'declined') {
-              setPaymentState('declined');
-              setPaymentError('La pasarela rechazó el cobro.');
-              setIsPaymentOpen(true);
-            }
-          } catch {
-            if (!active) return;
-            setPaymentState('uncertain');
-            setPaymentError('No se pudo consultar el intento de tarjeta. Verifica el estado antes de otro cobro.');
-            setIsPaymentOpen(true);
-          }
-        }
+        const persistedAttempt = loadRecoveryAttempt(localStorage, turno.id);
+        const recovery = await recoverPosStateOnReload({
+          turnoId: turno.id,
+          ventas,
+          persistedAttempt,
+          ms5: posApi,
+          terminal: window.api?.terminal,
+        });
         if (!active) return;
+
+        if (recovery.shouldClearPersisted) {
+          clearRecoveryAttempt(localStorage, turno.id);
+        }
+
+        paymentAttemptReference.current = recovery.attemptReference;
+        setAttemptReferenceView(recovery.attemptReference);
+        setPaymentState(recovery.paymentState);
+        setPaymentReference(recovery.gatewayReference);
+        setPaymentError(recovery.errorMessage);
+        setRecoveryNotice(recovery.recoveryNotice);
+        setIsPaymentOpen(recovery.openModal);
+
         setTurnoId(turno.id);
-        saleRef.current = pendiente;
-        setVenta(pendiente);
-        if (pendingId) {
+        saleRef.current = recovery.venta;
+        setVenta(recovery.venta);
+        if (recovery.venta) {
           setDraftItems([]);
           setSearchResults([]);
         }
@@ -521,6 +515,23 @@ export default function Pos() {
     }
   };
 
+  const persistRecovery = useCallback((
+    current: VentaPendiente,
+    estado: Exclude<PaymentState, 'available'>,
+    claveIdempotencia: string | null,
+  ) => {
+    const activeTurnoId = turnoId ?? current.turno_id;
+    if (!activeTurnoId) return;
+    saveRecoveryAttempt(localStorage, {
+      ventaId: current.id,
+      turnoId: activeTurnoId,
+      metodoPago: current.metodo_pago === 'TARJETA' ? 'TARJETA' : 'EFECTIVO',
+      claveIdempotencia,
+      estado,
+      updatedAt: new Date().toISOString(),
+    });
+  }, [turnoId]);
+
   const handleCashPayment = async (method: PaymentMethod, cashReceived?: number) => {
     const current = saleRef.current;
     if (paymentState !== 'available' || method !== 'cash' || !current || current.estado !== 'PENDIENTE' || current.metodo_pago !== 'EFECTIVO'
@@ -531,11 +542,14 @@ export default function Pos() {
     setPaymentState('processing');
     setPaymentError('');
     setPaymentShortfall(null);
+    setRecoveryNotice(null);
+    persistRecovery(current, 'processing', null);
     try {
       const result = await posApi.chargeCash(current.id, cashReceived);
       if (result.venta?.id !== current.id || result.venta.estado !== 'COMPLETADA' || !Number.isFinite(result.vuelto)) {
         setPaymentState('uncertain');
         setPaymentError('MS-5 no devolvió una confirmación completa. Verifica la venta antes de otro intento.');
+        persistRecovery(current, 'uncertain', null);
         return;
       }
       saleRef.current = result.venta;
@@ -543,15 +557,18 @@ export default function Pos() {
       setPaymentCashReceived(Number.isFinite(result.montoRecibido) ? result.montoRecibido : cashReceived);
       setPaymentChange(result.vuelto);
       setPaymentState('approved');
+      persistRecovery(result.venta, 'approved', null);
     } catch (error: unknown) {
       if (axios.isAxiosError(error) && error.response?.status === 400) {
         const data = error.response.data as { error?: string; diferencia?: number } | undefined;
         setPaymentState('available');
         setPaymentError(data?.error || 'No se pudo cobrar la venta en efectivo.');
         setPaymentShortfall(data?.error === 'Monto insuficiente' && typeof data.diferencia === 'number' ? data.diferencia : null);
+        clearRecoveryAttempt(localStorage, turnoId ?? current.turno_id);
       } else {
         setPaymentState('uncertain');
         setPaymentError('No se pudo confirmar el resultado del cobro. Verifica la venta antes de otro intento.');
+        persistRecovery(current, 'uncertain', null);
       }
     } finally {
       paymentInFlight.current = false;
@@ -566,9 +583,12 @@ export default function Pos() {
     setPaymentState('processing');
     setPaymentError('');
     setPaymentReference(null);
+    setRecoveryNotice(null);
+    const claveIdempotencia = paymentAttemptReference.current ?? crypto.randomUUID();
+    paymentAttemptReference.current = claveIdempotencia;
+    setAttemptReferenceView(claveIdempotencia);
+    persistRecovery(current, 'processing', claveIdempotencia);
     try {
-      const claveIdempotencia = paymentAttemptReference.current ?? crypto.randomUUID();
-      paymentAttemptReference.current = claveIdempotencia;
       const result = await synchronizeCardPayment({
         terminal: window.api.terminal,
         ms5: posApi,
@@ -577,6 +597,8 @@ export default function Pos() {
         claveIdempotencia,
       });
       paymentAttemptReference.current = result.referenciaIntento;
+      setAttemptReferenceView(result.referenciaIntento);
+      const effectiveVenta = result.venta ?? current;
       if (result.venta) {
         saleRef.current = result.venta;
         setVenta(result.venta);
@@ -584,28 +606,34 @@ export default function Pos() {
       if (result.estado === 'declined') {
         setPaymentState('declined');
         setPaymentError('La pasarela rechazó el cobro.');
+        persistRecovery(effectiveVenta, 'declined', result.referenciaIntento);
         return;
       }
       if (result.estado === 'cancelled') {
         setPaymentState('cancelled');
+        clearRecoveryAttempt(localStorage, turnoId ?? effectiveVenta.turno_id);
         return;
       }
       if (result.estado === 'processing') return;
       if (result.estado === 'approved' && result.venta?.estado === 'COMPLETADA') {
         setPaymentReference(result.gatewayReference);
         setPaymentState('approved');
+        persistRecovery(result.venta, 'approved', result.referenciaIntento);
         return;
       }
       if (result.estado === 'approved') {
         setPaymentState('uncertain');
         setPaymentError('MS-5 no confirmó la venta como COMPLETADA. Verifica el estado antes de continuar.');
+        persistRecovery(effectiveVenta, 'uncertain', result.referenciaIntento ?? claveIdempotencia);
         return;
       }
       setPaymentState('uncertain');
       setPaymentError('MS-5 no devolvió una confirmación completa. Verifica la venta antes de otro intento.');
+      persistRecovery(effectiveVenta, 'uncertain', result.referenciaIntento ?? claveIdempotencia);
     } catch {
       setPaymentState('uncertain');
       setPaymentError('No se pudo confirmar el resultado de la pasarela. Verifica la venta antes de otro cobro.');
+      persistRecovery(current, 'uncertain', claveIdempotencia);
     } finally {
       releasePaymentSingleFlight(paymentInFlight);
     }
@@ -627,7 +655,10 @@ export default function Pos() {
       setVenta(updated);
       setPaymentState('available');
       setPaymentReference(null);
+      setRecoveryNotice(null);
       paymentAttemptReference.current = null;
+      setAttemptReferenceView(null);
+      clearRecoveryAttempt(localStorage, turnoId ?? updated.turno_id);
     } catch (error: unknown) {
       setPaymentError(saleErrorMessage(error));
     } finally {
@@ -649,6 +680,8 @@ export default function Pos() {
           referenciaEsperada: paymentAttemptReference.current,
         });
         paymentAttemptReference.current = intento.referenciaIntento;
+        setAttemptReferenceView(intento.referenciaIntento);
+        const effectiveVenta = intento.venta ?? current;
         if (intento.venta) {
           saleRef.current = intento.venta;
           setVenta(intento.venta);
@@ -656,12 +689,15 @@ export default function Pos() {
         if (intento.estado === 'approved' && intento.venta?.estado === 'COMPLETADA') {
           setPaymentReference(intento.gatewayReference);
           setPaymentState('approved');
+          persistRecovery(intento.venta, 'approved', intento.referenciaIntento);
         } else if (intento.estado === 'declined') {
           setPaymentState('declined');
           setPaymentError('La pasarela rechazó el pago. Puedes elegir otro método o reintentar manualmente.');
+          persistRecovery(effectiveVenta, 'declined', intento.referenciaIntento);
         } else {
           setPaymentState('uncertain');
           setPaymentError('El intento aún no tiene un resultado definitivo. No se iniciará otra autorización.');
+          persistRecovery(effectiveVenta, 'uncertain', intento.referenciaIntento);
         }
         return;
       }
@@ -671,9 +707,11 @@ export default function Pos() {
       if (updated.estado === 'COMPLETADA') {
         setPaymentState('approved');
         setPaymentError('La venta está completada. El vuelto no está disponible en esta consulta.');
+        persistRecovery(updated, 'approved', null);
       } else {
         setPaymentState('uncertain');
         setPaymentError('La venta aún figura pendiente. Confirma el resultado antes de intentar otro cobro.');
+        persistRecovery(updated, 'uncertain', null);
       }
     } catch {
       setPaymentState('uncertain');
@@ -683,18 +721,81 @@ export default function Pos() {
     }
   };
 
-  const retryDeclinedCard = () => {
-    if (paymentState !== 'declined' || saleRef.current?.metodo_pago !== 'TARJETA' || paymentInFlight.current) return;
+  const cancelCardAttempt = async () => {
+    const current = saleRef.current;
+    if (!current || current.metodo_pago !== 'TARJETA' || cancelInFlight.current) return;
+    if (paymentState !== 'processing' && paymentState !== 'uncertain') return;
+    cancelInFlight.current = true;
+    try {
+      const result = await cancelPaymentAttemptSafely({
+        ventaId: current.id,
+        monto: current.total,
+        referenciaIntento: paymentAttemptReference.current,
+        ms5: posApi,
+        terminal: window.api?.terminal,
+      });
+      if (result.venta) {
+        saleRef.current = result.venta;
+        setVenta(result.venta);
+      }
+      if (result.outcome === 'already_approved') {
+        paymentAttemptReference.current = result.attemptReference;
+        setAttemptReferenceView(result.attemptReference);
+        setPaymentReference(result.gatewayReference);
+        setPaymentState('approved');
+        setPaymentError('');
+        setRecoveryNotice(result.message);
+        if (result.venta) persistRecovery(result.venta, 'approved', result.attemptReference);
+      } else if (result.outcome === 'cancelled') {
+        paymentAttemptReference.current = null;
+        setAttemptReferenceView(null);
+        setPaymentReference(null);
+        setPaymentState('cancelled');
+        setPaymentError(result.message);
+        clearRecoveryAttempt(localStorage, turnoId ?? current.turno_id);
+        releasePaymentSingleFlight(paymentInFlight);
+      } else {
+        paymentAttemptReference.current = result.attemptReference;
+        setAttemptReferenceView(result.attemptReference);
+        setPaymentState('uncertain');
+        setPaymentError(result.message);
+        persistRecovery(result.venta ?? current, 'uncertain', result.attemptReference);
+      }
+    } finally {
+      cancelInFlight.current = false;
+    }
+  };
+
+  const continueAfterCancel = () => {
+    const current = saleRef.current;
+    if (paymentState !== 'cancelled' || !current || current.estado !== 'PENDIENTE' || paymentInFlight.current) return;
     setPaymentState('available');
     setPaymentError('');
     setPaymentReference(null);
+    setRecoveryNotice(null);
     paymentAttemptReference.current = null;
+    setAttemptReferenceView(null);
+    clearRecoveryAttempt(localStorage, turnoId ?? current.turno_id);
+  };
+
+  const retryDeclinedCard = () => {
+    const current = saleRef.current;
+    if (paymentState !== 'declined' || current?.metodo_pago !== 'TARJETA' || paymentInFlight.current) return;
+    setPaymentState('available');
+    setPaymentError('');
+    setPaymentReference(null);
+    setRecoveryNotice(null);
+    paymentAttemptReference.current = null;
+    setAttemptReferenceView(null);
+    clearRecoveryAttempt(localStorage, turnoId ?? current.turno_id);
   };
 
   const closePayment = () => {
     if (paymentState === 'processing') return;
     setIsPaymentOpen(false);
     if (paymentState === 'approved') {
+      const current = saleRef.current;
+      clearRecoveryAttempt(localStorage, turnoId ?? current?.turno_id);
       saleRef.current = null;
       setVenta(null);
       setPaymentState('available');
@@ -703,7 +804,9 @@ export default function Pos() {
       setPaymentError('');
       setPaymentShortfall(null);
       setPaymentReference(null);
+      setRecoveryNotice(null);
       paymentAttemptReference.current = null;
+      setAttemptReferenceView(null);
     }
   };
 
@@ -753,6 +856,8 @@ export default function Pos() {
         change={paymentChange}
         cashReceived={paymentCashReceived}
         reference={paymentReference}
+        attemptReference={attemptReferenceView}
+        recoveryNotice={recoveryNotice}
         errorMessage={paymentError}
         shortfall={paymentShortfall}
         terminalConnected={true}
@@ -764,23 +869,38 @@ export default function Pos() {
         onVerify={paymentState === 'uncertain' ? verifyPayment : undefined}
         onRetry={paymentState === 'declined' && venta.metodo_pago === 'TARJETA' ? retryDeclinedCard : undefined}
         onCancelAttempt={venta.metodo_pago === 'TARJETA' && (paymentState === 'processing' || paymentState === 'uncertain') ? () => {
-          setPaymentState('cancelled');
-          setPaymentError('');
-          setPaymentReference(null);
-          releasePaymentSingleFlight(paymentInFlight);
+          void cancelCardAttempt();
         } : undefined}
+        onContinueAfterCancel={paymentState === 'cancelled' && venta.estado === 'PENDIENTE' ? continueAfterCancel : undefined}
       />}
       {ventaError && (
         <div role="alert" style={{ padding: '0.75rem 1rem', border: '1px solid var(--color-danger)', background: 'var(--color-danger-bg)', color: 'var(--color-danger)', borderRadius: '8px' }}>
           {ventaError} {saleNeedsRefresh && <button type="button" onClick={retrySaleRefresh} disabled={pendingMutations > 0}>Actualizar venta</button>}
         </div>
       )}
-      {paymentState === 'uncertain' && venta && <div role="alert" style={{ padding: '0.75rem 1rem', border: '1px solid var(--color-warning)', background: 'var(--color-warning-bg)', color: 'var(--color-warning-text)', borderRadius: '8px' }}>Resultado del cobro sin confirmar. Abre Cobrar y verifica la venta antes de continuar.</div>}
+      {paymentState === 'uncertain' && venta && (
+        <div role="alert" style={{ padding: '0.75rem 1rem', border: '1px solid var(--color-warning)', background: 'var(--color-warning-bg)', color: 'var(--color-warning-text)', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.75rem' }}>
+          <span>Resultado del cobro sin confirmar para venta #{venta.id.slice(0, 8)}. Verifica el estado antes de continuar.</span>
+          {!isPaymentOpen && (
+            <button type="button" onClick={() => setIsPaymentOpen(true)}>
+              Verificar estado del cobro
+            </button>
+          )}
+        </div>
+      )}
+      {paymentState === 'cancelled' && venta && !isPaymentOpen && (
+        <div role="status" style={{ padding: '0.75rem 1rem', border: '1px solid var(--color-line)', background: 'var(--color-bg)', color: 'var(--color-ink)', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.75rem' }}>
+          <span>Intento cancelado para venta #{venta.id.slice(0, 8)}. Puedes continuar el cobro sin perder el carrito.</span>
+          <button type="button" onClick={() => setIsPaymentOpen(true)}>
+            Continuar cobro
+          </button>
+        </div>
+      )}
       {pendingMutations > 0 && <div role="status">Sincronizando ítems con MS-5...</div>}
       {isReadingScale && <div role="status">Esperando un peso estable de la balanza...</div>}
       {venta && (
         <div role="status" style={{ padding: '0.75rem 1rem', border: '1px solid var(--color-success)', background: 'var(--color-success-bg)', color: 'var(--color-success)', borderRadius: '8px' }}>
-          Venta {venta.estado === 'COMPLETADA' ? 'completada' : 'pendiente'} #{venta.id.slice(0, 8)}. Los ítems y totales provienen de MS-5.
+          Venta {venta.estado === 'COMPLETADA' ? 'completada' : 'pendiente'} #{venta.id.slice(0, 8)}. Los ítems y totales provienen de MS-5.{recoveryNotice ? ` ${recoveryNotice}` : ''}
         </div>
       )}
       {mensajeConfirmacion && (

@@ -18,6 +18,8 @@ interface PaymentModalProps {
   terminalConnected?: boolean;
   venta?: VentaPendiente | null;
   cashReceived?: number | null;
+  attemptReference?: string | null;
+  recoveryNotice?: string | null;
   onClose: () => void;
   onConfirm?: (method: PaymentMethod, cashReceived?: number) => void;
   onChangeMethod?: (method: PaymentMethod) => void;
@@ -25,6 +27,7 @@ interface PaymentModalProps {
   onVerify?: () => void;
   onRetry?: () => void;
   onCancelAttempt?: () => void;
+  onContinueAfterCancel?: () => void;
 }
 
 const money = (value: number) => `$ ${value.toLocaleString('es-CL')}`;
@@ -68,6 +71,8 @@ export default function PaymentModal({
   terminalConnected = true,
   venta,
   cashReceived: cashReceivedProp,
+  attemptReference,
+  recoveryNotice,
   onClose,
   onConfirm,
   onChangeMethod,
@@ -75,6 +80,7 @@ export default function PaymentModal({
   onVerify,
   onRetry,
   onCancelAttempt,
+  onContinueAfterCancel,
 }: PaymentModalProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [method, setMethod] = useState<PaymentMethod>(saleMethod);
@@ -173,6 +179,11 @@ export default function PaymentModal({
             </div>
           )}
           <span className="payment-modal__symbol" aria-hidden="true">{stateText[state].symbol}</span>
+          {recoveryNotice && (
+            <div className="payment-modal__recovery-notice" role="status">
+              {recoveryNotice}
+            </div>
+          )}
           <p>{stateText[state].detail}</p>
           {method === 'card' && (
             <div className="payment-modal__terminal-steps">
@@ -180,6 +191,18 @@ export default function PaymentModal({
                 <span className="payment-modal__step-label">Monto desde MS-5:</span>
                 <span className="payment-modal__step-value">{money(total)}</span>
               </div>
+              {venta && (state === 'uncertain' || state === 'cancelled') && (
+                <div className="payment-modal__step-row">
+                  <span className="payment-modal__step-label">Venta:</span>
+                  <span className="payment-modal__step-value">#{venta.id.slice(0, 8)}</span>
+                </div>
+              )}
+              {attemptReference && (state === 'uncertain' || state === 'processing') && (
+                <div className="payment-modal__step-row">
+                  <span className="payment-modal__step-label">Clave de intento:</span>
+                  <span className="payment-modal__step-value"><code>{attemptReference.slice(0, 8)}</code></span>
+                </div>
+              )}
               {state === 'processing' && (
                 <>
                   <div className="payment-modal__step-row">
@@ -258,6 +281,8 @@ export default function PaymentModal({
           </div>
         )}
         {state === 'uncertain' && onVerify && <button type="button" className="payment-modal__primary" onClick={onVerify}>Verificar venta</button>}
+        {state === 'uncertain' && onCancelAttempt && <button type="button" className="payment-modal__secondary" onClick={onCancelAttempt}>Cancelar intento</button>}
+        {state === 'cancelled' && onContinueAfterCancel && <button type="button" className="payment-modal__primary" onClick={onContinueAfterCancel}>Continuar cobro</button>}
         {state !== 'available' && state !== 'processing' && <button type="button" className="payment-modal__secondary" onClick={onClose}>Cerrar</button>}
       </div>
     </dialog>

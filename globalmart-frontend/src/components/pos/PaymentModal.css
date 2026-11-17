@@ -57,3 +57,4 @@
 .payment-modal__primary:disabled { background: var(--color-muted); color: var(--color-ink); cursor: not-allowed; }
 .payment-modal__waiting { color: var(--color-warning-text); font-weight: 700; }
 .payment-modal__processing-actions { display: flex; align-items: center; gap: 12px; }
+.payment-modal__recovery-notice { margin: 0 0 12px; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--color-warning, #f59e0b); background: var(--color-warning-bg, #fef3c7); color: var(--color-warning-text, #92400e); font-size: 0.85rem; text-align: left; }

@@ -43,7 +43,7 @@ interface SynchronizeCardPaymentOptions {
 }
 
 interface ReconcileCardPaymentOptions {
-  ms5: Ms5CardPaymentClient;
+  ms5: Pick<Ms5CardPaymentClient, 'cardAttemptStatus'>;
   ventaId: string;
   referenciaEsperada?: string | null;
 }
