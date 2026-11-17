@@ -61,6 +61,7 @@ export default function Pos() {
   const [paymentError, setPaymentError] = useState('');
   const [paymentShortfall, setPaymentShortfall] = useState<number | null>(null);
   const [paymentChange, setPaymentChange] = useState<number | null>(null);
+  const [paymentCashReceived, setPaymentCashReceived] = useState<number | null>(null);
   const [paymentReference, setPaymentReference] = useState<string | null>(null);
   const [draftPaymentMethod, setDraftPaymentMethod] = useState<'EFECTIVO' | 'TARJETA'>('EFECTIVO');
   const paymentInFlight = useRef(false);
@@ -457,6 +458,7 @@ export default function Pos() {
         setPaymentError('');
         setPaymentShortfall(null);
         setPaymentChange(null);
+        setPaymentCashReceived(null);
       }
       setIsPaymentOpen(true);
       return;
@@ -525,6 +527,7 @@ export default function Pos() {
       || cashReceived === undefined || !Number.isFinite(cashReceived) || cashReceived <= 0 || paymentInFlight.current) return;
 
     paymentInFlight.current = true;
+    setPaymentCashReceived(cashReceived);
     setPaymentState('processing');
     setPaymentError('');
     setPaymentShortfall(null);
@@ -537,6 +540,7 @@ export default function Pos() {
       }
       saleRef.current = result.venta;
       setVenta(result.venta);
+      setPaymentCashReceived(Number.isFinite(result.montoRecibido) ? result.montoRecibido : cashReceived);
       setPaymentChange(result.vuelto);
       setPaymentState('approved');
     } catch (error: unknown) {
@@ -695,6 +699,7 @@ export default function Pos() {
       setVenta(null);
       setPaymentState('available');
       setPaymentChange(null);
+      setPaymentCashReceived(null);
       setPaymentError('');
       setPaymentShortfall(null);
       setPaymentReference(null);
@@ -746,10 +751,12 @@ export default function Pos() {
         saleMethod={venta.metodo_pago === 'EFECTIVO' ? 'cash' : 'card'}
         state={paymentState}
         change={paymentChange}
+        cashReceived={paymentCashReceived}
         reference={paymentReference}
         errorMessage={paymentError}
         shortfall={paymentShortfall}
         terminalConnected={true}
+        venta={venta}
         onClose={closePayment}
         onConfirm={handlePayment}
         onChangeMethod={changePaymentMethod}

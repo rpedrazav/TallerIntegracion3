@@ -1,5 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
+import type { VentaPendiente } from '../../api/client';
 import type { TerminalState } from '../../payments/terminalStateMachine';
+import ComprobantePago from './ComprobantePago';
 import './PaymentModal.css';
 
 export type PaymentMethod = 'cash' | 'card';
@@ -14,6 +16,8 @@ interface PaymentModalProps {
   errorMessage?: string;
   shortfall?: number | null;
   terminalConnected?: boolean;
+  venta?: VentaPendiente | null;
+  cashReceived?: number | null;
   onClose: () => void;
   onConfirm?: (method: PaymentMethod, cashReceived?: number) => void;
   onChangeMethod?: (method: PaymentMethod) => void;
@@ -62,6 +66,8 @@ export default function PaymentModal({
   errorMessage,
   shortfall,
   terminalConnected = true,
+  venta,
+  cashReceived: cashReceivedProp,
   onClose,
   onConfirm,
   onChangeMethod,
@@ -75,6 +81,7 @@ export default function PaymentModal({
   const [cashInput, setCashInput] = useState('');
   const cashReceived = Number(cashInput);
   const cashIsValid = cashInput.trim() !== '' && Number.isFinite(cashReceived) && cashReceived > 0;
+  const effectiveCashReceived = cashReceivedProp ?? (cashIsValid ? cashReceived : null);
   const methodMatchesSale = method === saleMethod;
   const canConfirm = state === 'available' && methodMatchesSale && !!onConfirm && (method === 'card' || cashIsValid);
 
@@ -214,6 +221,14 @@ export default function PaymentModal({
           {state === 'approved' && method === 'cash' && change != null && <p className="payment-modal__change">Vuelto calculado por MS-5: <strong>{money(change)}</strong></p>}
           {errorMessage && <p>{errorMessage}</p>}
           {method === 'card' && reference && <p className="payment-modal__reference">Referencia opaca: <code>{reference}</code></p>}
+          {state === 'approved' && venta && (
+            <ComprobantePago
+              venta={venta}
+              reference={reference}
+              change={change}
+              cashReceived={effectiveCashReceived}
+            />
+          )}
         </div>
       )}
 
