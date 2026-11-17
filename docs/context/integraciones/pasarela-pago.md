@@ -5,7 +5,7 @@ titulo: Integración con Pasarela de Pago
 estado: parcial
 fuentes: [GlobalMart_ContextMaster.md#sec12, src/POSCartService/Services/IPaymentGatewayClient.cs, src/POSCartService/Services/PaymentGatewayClient.cs, src/POSCartService/Exceptions/PaymentAuthorizationUncertainException.cs, src/POSCartService/DTOs/PaymentGatewayDtos.cs, src/POSCartService/Program.cs, Docker/simulator/server.js, tests/GlobalMart.IntegrationTests/PaymentGatewayClientTests.cs, tests/GlobalMart.IntegrationTests/PaymentSimulatorIntegrationTests.cs, tests/GlobalMart.IntegrationTests/PaymentRetrySafetyTests.cs, tareas/sprint2_youtrack_resultado.json, Docker/env.example, .env.example, src/POSCartService/appsettings.json, tests/GlobalMart.IntegrationTests/CobroSeguroIntegrationTests.cs, docs/qa/S2-035/reporte.md, src/POSCartService/Services/VentaService.cs, src/POSCartService/Repositories/VentaRepository.cs, src/POSCartService/Controllers/VentasController.cs, src/POSCartService/Models/Pago.cs, src/POSCartService/DTOs/CobrarTarjetaDTOs.cs, tests/GlobalMart.IntegrationTests/CobrarTarjetaIntegrationTests.cs, tests/GlobalMart.IntegrationTests/PaymentEventSequenceContractTests.cs, globalmart-frontend/src/payments/terminal-ipc.ts, globalmart-frontend/src/payments/synchronizeCardPayment.ts, globalmart-frontend/src/preload.ts, globalmart-frontend/tests/terminal-ipc.test.cjs, globalmart-frontend/tests/synchronized-card-payment.test.cjs]
 verificado_contra_codigo: true
-ultima_revision: 2026-11-14
+ultima_revision: 2026-11-15
 depende_de: [ms5-pos]
 publica: []
 consume: []
@@ -416,3 +416,9 @@ Escenarios controlados por configuración **del backend** `PasarelaPago:Reversal
 ## S2-094 — Evento posterior a reversa confirmada
 
 La confirmación local de REVERSED guarda también `sale.reversed` en outbox, junto con reversa APROBADA, venta ANULADA y auditoría. Rechazo o incertidumbre no lo generan. No cambia el contrato HTTP del simulador. [Contrato del evento](../eventos/sale-reversed-outbox.md).
+
+## S2-113 — Simulador y entorno local (2026-11-15)
+
+- [IMPLEMENTADO] El simulador (`Docker/simulator/server.js`, `reversals.js`) acepta cualquier GUID hexadecimal en `tenant_id`, `request_id` y `sale_id`, como MS-5. Antes exigía UUID RFC v1–v5 y rechazaba al tenant demo `aaaaaaaa-0000-0000-0000-000000000001` con `VALIDATION_ERROR`.
+- [IMPLEMENTADO] En local, `run-apis.sh`/`.bat` lanzan MS-5 con `PasarelaPago__BaseUrl=http://localhost:5050`. `appsettings.json` sigue apuntando al dominio de ejemplo; el clúster define su propio valor [NO VERIFICADO].
+- E2E integrado aprobado, rechazado y timeout: [docs/qa/S2-113](../../qa/S2-113/reporte.md).

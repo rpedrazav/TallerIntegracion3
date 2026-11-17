@@ -61,6 +61,8 @@ public class Program
 
         var dbOptions = new DbContextOptionsBuilder<PosCartDbContext>()
             .UseInMemoryDatabase($"TestAgregarItemDb_{Guid.NewGuid()}")
+            // La atomicidad real se comprueba en VentaOutboxTransactionTests con PostgreSQL.
+            .ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.InMemoryEventId.TransactionIgnoredWarning))
             .Options;
 
         using var dbContext = new PosCartDbContext(dbOptions);
@@ -685,12 +687,9 @@ public class Program
         Check("GET-20", "JSON contiene 'created_at'", jsonVenta.Contains("\"created_at\":"));
 
         // ═══════════════════════════════════════════════════════════════════════════════
-        // SECCIÓN 11: Publicación del evento sale.completed a Kafka tras completar venta
+        // SECCIÓN 11: Persistencia del evento sale.completed en outbox tras completar venta
         // ═══════════════════════════════════════════════════════════════════════════════
-        Console.WriteLine("── 11. Publicación Kafka: sale.completed (idempotencia y payload) ─────────");
-
-        var kafkaMock = new TestKafkaProducerService();
-        var ventaSvcKafka = new VentaService(ventaRepo, itemRepo, kafkaMock);
+        Console.WriteLine("── 11. Outbox: sale.completed (identidad y payload) ─────────");
 
         // Crear una venta nueva con ítems para completar
         var ventaParaCompletar = new Venta
@@ -716,15 +715,16 @@ public class Program
             PrecioUnitario = 5000m,
             Subtotal       = 10000m
         };
-        await ventaSvcKafka.AgregarItemAsync(ventaParaCompletar.Id, itemParaCompletar, 10000m, 1900m, 11900m);
+        await ventaSvc.AgregarItemAsync(ventaParaCompletar.Id, itemParaCompletar, 10000m, 1900m, 11900m);
 
-        // KAFKA-01: CompletarAsync publica evento en sale.completed
-        var ventaFinalizada = await ventaSvcKafka.CompletarAsync(ventaParaCompletar.Id, 15000m, 3100m);
+        // KAFKA-01: CompletarAsync registra sale.completed en outbox
+        var ventaFinalizada = await ventaSvc.CompletarAsync(ventaParaCompletar.Id, 15000m, 3100m);
 
-        Check("KAFKA-01", "CompletarAsync publica evento sale.completed a través de IKafkaProducerService",
-            kafkaMock.EventosPublicados.Count == 1);
+        Check("KAFKA-01", "CompletarAsync registra un evento sale.completed en outbox",
+            ventaFinalizada.Estado == EstadoVenta.COMPLETADA && dbContext.OutboxMessages.Count() == 1);
 
-        var ev1 = kafkaMock.EventosPublicados.FirstOrDefault();
+        var ev1 = JsonSerializer.Deserialize<SaleCompletedEvent>(
+            (await dbContext.OutboxMessages.SingleAsync(m => m.VentaId == ventaParaCompletar.Id)).Payload);
 
         // KAFKA-02: event_id es un GUID único válido no vacío
         Check("KAFKA-02", "El evento contiene 'event_id' como un GUID válido no vacío",
@@ -748,11 +748,12 @@ public class Program
             }
         };
         await ventaRepo.CrearAsync(ventaParaCompletar2);
-        await ventaSvcKafka.CompletarAsync(ventaParaCompletar2.Id, 5000m, 1430m);
+        await ventaSvc.CompletarAsync(ventaParaCompletar2.Id, 5000m, 1430m);
 
-        var ev2 = kafkaMock.EventosPublicados.LastOrDefault();
+        var ev2 = JsonSerializer.Deserialize<SaleCompletedEvent>(
+            (await dbContext.OutboxMessages.SingleAsync(m => m.VentaId == ventaParaCompletar2.Id)).Payload);
 
-        Check("KAFKA-03", "Cada evento publicado genera un 'event_id' único y diferente (idempotencia en consumer)",
+        Check("KAFKA-03", "Cada evento persistido genera un 'event_id' único y diferente (ventas distintas)",
             ev1 is not null && ev2 is not null && ev1.EventId != ev2.EventId);
 
         // KAFKA-04: venta_id, tenant_id, cajero_id, sucursal_id coinciden con la venta
@@ -789,8 +790,7 @@ public class Program
             jsonEvento.Contains("\"items\":") &&
             jsonEvento.Contains("\"producto_id\":"));
 
-        // KAFKA-08: Resiliencia fire-and-forget si Kafka falla
-        kafkaMock.SimularFallaKafka = true;
+        // KAFKA-08: El evento queda pendiente sin ejecutar un publisher
         var ventaFallaKafka = new Venta
         {
             TurnoId    = turno.Id,
@@ -809,18 +809,18 @@ public class Program
         Venta? ventaCompletadaSinError = null;
         try
         {
-            ventaCompletadaSinError = await ventaSvcKafka.CompletarAsync(ventaFallaKafka.Id, 2000m, 810m);
+            ventaCompletadaSinError = await ventaSvc.CompletarAsync(ventaFallaKafka.Id, 2000m, 810m);
         }
         catch
         {
             fallaLanzada = true;
         }
-        kafkaMock.SimularFallaKafka = false;
 
-        Check("KAFKA-08", "Si Kafka falla, la venta se completa en BD sin arrojar error (resiliencia fire-and-forget)",
-            !fallaLanzada && ventaCompletadaSinError is not null && ventaCompletadaSinError.Estado == EstadoVenta.COMPLETADA);
+        Check("KAFKA-08", "La venta se completa y el evento queda pendiente de publicación",
+            !fallaLanzada && ventaCompletadaSinError is not null && ventaCompletadaSinError.Estado == EstadoVenta.COMPLETADA
+            && await dbContext.OutboxMessages.AnyAsync(m => m.VentaId == ventaFallaKafka.Id && m.Status == OutboxStatus.PENDIENTE));
 
-        // KAFKA-09: VentaService sin Kafka (null) completa sin error
+        // KAFKA-09: VentaService sin dependencia Kafka completa sin error
         var ventaSinKafka = new Venta
         {
             TurnoId    = turno.Id,
@@ -835,11 +835,11 @@ public class Program
         };
         await ventaRepo.CrearAsync(ventaSinKafka);
         var resSinKafka = await ventaSvc.CompletarAsync(ventaSinKafka.Id, 2000m, 810m);
-        Check("KAFKA-09", "VentaService sin productor Kafka (null) completa la venta sin errores",
+        Check("KAFKA-09", "VentaService sin dependencia Kafka completa la venta sin errores",
             resSinKafka.Estado == EstadoVenta.COMPLETADA);
 
-        // KAFKA-10: Endpoint POST /ventas/{id}/cobrar dispara la publicación a Kafka
-        var controllerKafka = new VentasController(ventaSvcKafka, turnoSvc, catalogMock, taxMock);
+        // KAFKA-10: Endpoint POST /ventas/{id}/cobrar registra el evento en outbox
+        var controllerKafka = new VentasController(ventaSvc, turnoSvc, catalogMock, taxMock);
         var httpCtxK = new DefaultHttpContext();
         httpCtxK.User = new ClaimsPrincipal(new ClaimsIdentity(new[]
         {
@@ -866,13 +866,13 @@ public class Program
         };
         await ventaRepo.CrearAsync(ventaParaCobrarController);
 
-        var conteoAntes = kafkaMock.EventosPublicados.Count;
+        var conteoAntes = dbContext.OutboxMessages.Count();
         var resCobrarCtrl = await controllerKafka.Cobrar(
             ventaParaCobrarController.Id,
             new CobrarVentaRequest { MontoRecibido = 10000m });
 
-        Check("KAFKA-10", "POST /ventas/{id}/cobrar completa la venta y publica evento sale.completed a Kafka",
-            resCobrarCtrl is OkObjectResult && kafkaMock.EventosPublicados.Count == conteoAntes + 1);
+        Check("KAFKA-10", "POST /ventas/{id}/cobrar completa la venta y registra sale.completed en outbox",
+            resCobrarCtrl is OkObjectResult && dbContext.OutboxMessages.Count() == conteoAntes + 1);
 
         Console.WriteLine();
 
@@ -891,7 +891,7 @@ public class Program
             Console.WriteLine("   • PUT /ventas/{id}/items/{itemId}: modifica cantidad y recalcula subtotales/totales");
             Console.WriteLine("   • DELETE /ventas/{id}/items/{itemId}: elimina ítem y actualiza totales (MS-2)");
             Console.WriteLine("   • GET /ventas/{id}: retorna estado completo del carrito con ítems y totales");
-            Console.WriteLine("   • Publicación sale.completed: KafkaProducerService publica evento con event_id único (GUID)");
+            Console.WriteLine("   • Outbox sale.completed: evento persistido con event_id único (GUID)");
         }
         else
         {
@@ -974,33 +974,3 @@ class TestTaxClient : ITaxClient
         return Task.FromResult<TaxCalculationResult?>(result);
     }
 }
-
-class TestKafkaProducerService : IKafkaProducerService
-{
-    public List<SaleCompletedEvent> EventosPublicados { get; } = new();
-    public List<(string Topico, string Mensaje, string? Clave)> MensajesGenericos { get; } = new();
-    public bool SimularFallaKafka { get; set; } = false;
-
-    public Task PublicarAsync(
-        string topico,
-        string mensaje,
-        string? clave = null,
-        CancellationToken cancellationToken = default)
-    {
-        if (SimularFallaKafka)
-            throw new Exception("Error de conexión con Kafka (simulado)");
-
-        MensajesGenericos.Add((topico, mensaje, clave));
-        return Task.CompletedTask;
-    }
-
-    public Task PublicarSaleCompletedAsync(SaleCompletedEvent evento, CancellationToken cancellationToken = default)
-    {
-        if (SimularFallaKafka)
-            throw new Exception("Error al publicar sale.completed en Kafka (simulado)");
-
-        EventosPublicados.Add(evento);
-        return Task.CompletedTask;
-    }
-}
-

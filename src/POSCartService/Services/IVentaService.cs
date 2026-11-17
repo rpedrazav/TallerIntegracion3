@@ -130,18 +130,6 @@ public interface IVentaService
     /// <exception cref="InvalidOperationException">Si la venta no está en estado PENDIENTE o no es TARJETA.</exception>
     Task<Venta> CompletarTarjetaAsync(Guid ventaId, IntentoPago intentoPago);
 
-    /// <summary>
-    /// Reserva y confirma el intento antes de autorizar en la pasarela. Devuelve false
-    /// si la clave ya existe o la venta tiene un cobro aprobado/en curso/incierto.
-    /// </summary>
-    Task<bool> ReservarIntentoPagoAsync(IntentoPago intentoPago);
-
-    /// <summary>
-    /// Actualiza un intento previamente reservado sin modificar el estado de la venta.
-    /// Se usa cuando la pasarela rechaza o no responde dentro del tiempo límite.
-    /// </summary>
-    Task RegistrarIntentoPagoAsync(IntentoPago intentoPago);
-
     Task<IntentoPago> IniciarIntentoPagoAsync(Guid ventaId, Guid requestId);
     Task<IntentoPago?> GetUltimoIntentoPagoAsync(Guid ventaId);
     Task ActualizarIntentoPagoAsync(IntentoPago intentoPago);

@@ -1,65 +1,14 @@
 // S2-112: camino principal contra los servicios reales (MS-1..MS-5 en localhost, sin mocks).
 // Requiere docker compose + run-apis levantados. Ver e2e/electron/README.md.
-import { test as base, expect, _electron, Page, Response } from '@playwright/test';
-import * as fs from 'node:fs';
-import * as path from 'node:path';
+import { test, expect, api, tokenOf, login, snap, MS5 } from './integrated-fixture';
 
-const tenantId = 'aaaaaaaa-0000-0000-0000-000000000001';
-const MS1 = 'http://localhost:5124';
-const MS5 = 'http://localhost:5000';
 const run = Date.now().toString();
 const product = { name: `E2E S2-112 ${run}`, barcode: `780112${run.slice(-7)}`, price: 1025 }; // 2 × 1.025 = 2.050; IVA 389,5 → 390 (CLP sin centavos, ,5 sube)
 const fondo = 20000;
 
 interface Sale { id: string; subtotal: number; impuestos: number; total: number; estado: string; items: { subtotal: number }[] }
 
-async function api(url: string, token?: string, init: RequestInit = {}) {
-  const res = await fetch(url, { ...init, headers: { 'Content-Type': 'application/json', 'x-tenant-id': tenantId, ...(token ? { Authorization: `Bearer ${token}` } : {}) } });
-  return { status: res.status, body: await res.json().catch(() => null) };
-}
-const tokenOf = async (email: string) =>
-  (await api(`${MS1}/auth/login`, undefined, { method: 'POST', body: JSON.stringify({ email, password: 'demo1234', tenantId }) })).body.token as string;
-
-const test = base.extend<{ app: Page; apiErrors: string[] }>({
-  apiErrors: async ({}, use) => use([]),
-  app: async ({ apiErrors }, use, info) => {
-    const profile = info.outputPath('profile');
-    fs.mkdirSync(profile, { recursive: true });
-    const env: NodeJS.ProcessEnv = { ...process.env, E2E_USER_DATA: profile, E2E_INTEGRATED: '1' };
-    delete env.ELECTRON_RUN_AS_NODE;
-    const electron = await _electron.launch({ args: [path.resolve('e2e/electron/launch.cjs')], env });
-    await expect.poll(() => electron.windows().some(w => w.url().startsWith('file:'))).toBe(true);
-    const page = electron.windows().find(w => w.url().startsWith('file:'))!;
-    await electron.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows().forEach(w => { w.webContents.closeDevTools(); w.setSize(1440, 900); }));
-    await page.goto(page.url().replace('index.html', 'integrated.html'));
-    // Toda respuesta >= 400 es un error de API, salvo el 404 esperado de "sin turno abierto".
-    page.on('response', (r: Response) => {
-      const expected404 = r.status() === 404 && r.url().endsWith('/api/turnos/activo');
-      if (r.url().startsWith('http://localhost') && r.status() >= 400 && !expected404) apiErrors.push(`${r.request().method()} ${r.url()} → ${r.status()}`);
-    });
-    page.on('dialog', d => d.accept());
-    await electron.context().tracing.start({ screenshots: true, snapshots: true });
-    try {
-      await use(page);
-      expect(apiErrors, 'El camino principal no debe tener errores de API').toEqual([]);
-    } finally {
-      if (info.status !== info.expectedStatus) {
-        await page.screenshot({ path: info.outputPath('failure.png') }).catch(() => undefined);
-        await electron.context().tracing.stop({ path: info.outputPath('trace.zip') });
-      } else await electron.context().tracing.stop();
-      await electron.close();
-    }
-  },
-});
 test.describe.configure({ mode: 'serial', timeout: 90000 });
-
-async function login(page: Page, email: string) {
-  await page.locator('input[type=text]').fill(tenantId);
-  await page.locator('input[type=email]').fill(email);
-  await page.locator('input[type=password]').fill('demo1234');
-  await page.getByRole('button', { name: 'Ingresar', exact: true }).click();
-}
-const snap = (page: Page, name: string) => page.screenshot({ path: test.info().outputPath(`${name}.png`) });
 
 test('@integrado ADMIN entra al panel y crea un producto en MS-3', async ({ app: page }) => {
   await login(page, 'admin@demo.cl');

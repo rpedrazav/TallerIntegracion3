@@ -68,3 +68,9 @@ npm run test:e2e:integrado
 ```
 
 Usa `integrated.html` (`API_MODE=local`) del mismo build. Con `E2E_INTEGRATED=1`, `launch.cjs` desactiva el bloqueo de red de los mocks. Las pruebas se marcan `@integrado` y `test:e2e:electron` las excluye, así que `ci:local` no necesita backend. Escribe en la BD local de desarrollo (un producto `E2E S2-112 …` y un turno por corrida). Kong no se acredita. [Reporte](../../../docs/qa/S2-112/reporte.md).
+
+## S2-113 / TI3-744 — Tarjeta y pesaje integrados
+
+Mismo comando (`npm run test:e2e:integrado`) y mismo fixture ([integrated-fixture.ts](integrated-fixture.ts)). Cubre tarjeta aprobada, rechazada con reintento, timeout de pasarela, peso estable de la balanza simulada y entrada manual ante una falla de balanza. Comprueba en `postgres-pos` (vía `docker exec`) que una falla no completa la venta ni deja más de un pago.
+
+Requiere el simulador de `docker compose` en `:5050` y MS-5 con `PasarelaPago__BaseUrl=http://localhost:5050` (lo define `run-apis`). El escenario de pasarela se agrega a la solicitud real de cobro y la falla de balanza se provoca en el handler IPC del main; no se interceptan respuestas. El caso de timeout tarda ~45 s. [Reporte](../../../docs/qa/S2-113/reporte.md).

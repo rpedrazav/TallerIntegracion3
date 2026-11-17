@@ -1,4 +1,3 @@
-using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using POSCartService.DTOs;
@@ -27,13 +26,7 @@ public sealed class TurnosController : ControllerBase
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> Abrir([FromBody] AbrirTurnoRequest request)
     {
-        var cajeroClaim = User.FindFirst("cajero_id")?.Value
-            ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value
-            ?? User.FindFirst("sub")?.Value;
-        var tenantClaim = User.FindFirst("tenant_id")?.Value;
-
-        if (!Guid.TryParse(cajeroClaim, out var cajeroId)
-            || !Guid.TryParse(tenantClaim, out var tenantId))
+        if (!User.TryGetClaims(out var cajeroId, out var tenantId))
         {
             return Unauthorized(new { error = "Token inválido: faltan cajero_id/sub o tenant_id" });
         }
@@ -65,13 +58,7 @@ public sealed class TurnosController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Activo()
     {
-        var cajeroClaim = User.FindFirst("cajero_id")?.Value
-            ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value
-            ?? User.FindFirst("sub")?.Value;
-        var tenantClaim = User.FindFirst("tenant_id")?.Value;
-
-        if (!Guid.TryParse(cajeroClaim, out var cajeroId)
-            || !Guid.TryParse(tenantClaim, out var tenantId))
+        if (!User.TryGetClaims(out var cajeroId, out var tenantId))
         {
             return Unauthorized(new { error = "Token inválido: faltan cajero_id/sub o tenant_id" });
         }
@@ -88,13 +75,7 @@ public sealed class TurnosController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Cerrar()
     {
-        var cajeroClaim = User.FindFirst("cajero_id")?.Value
-            ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value
-            ?? User.FindFirst("sub")?.Value;
-        var tenantClaim = User.FindFirst("tenant_id")?.Value;
-
-        if (!Guid.TryParse(cajeroClaim, out var cajeroId)
-            || !Guid.TryParse(tenantClaim, out var tenantId))
+        if (!User.TryGetClaims(out var cajeroId, out var tenantId))
         {
             return Unauthorized(new { error = "Token inválido: faltan cajero_id/sub o tenant_id" });
         }
@@ -129,13 +110,7 @@ public sealed class TurnosController : ControllerBase
     public async Task<IActionResult> Cuadre([FromBody] CuadreRequest request)
     {
         // 1. Extraer claims del JWT
-        var cajeroClaim = User.FindFirst("cajero_id")?.Value
-            ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value
-            ?? User.FindFirst("sub")?.Value;
-        var tenantClaim = User.FindFirst("tenant_id")?.Value;
-
-        if (!Guid.TryParse(cajeroClaim, out var cajeroId)
-            || !Guid.TryParse(tenantClaim, out var tenantId))
+        if (!User.TryGetClaims(out var cajeroId, out var tenantId))
         {
             return Unauthorized(new { error = "Token inválido: faltan cajero_id/sub o tenant_id." });
         }
@@ -163,4 +138,4 @@ public sealed class TurnosController : ControllerBase
             Diferencia       = diferencia
         });
     }
-}
+}

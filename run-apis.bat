@@ -7,7 +7,7 @@ start "MS-1 Tenant Identity Service" cmd /k "cd src\TenantIdentityService && dot
 start "MS-2 Tax Compliance Service" cmd /k "cd src\TaxComplianceService && dotnet run"
 start "MS-3 Catalog Pricing Service" cmd /k "cd src\CatalogPricingService && dotnet run"
 start "MS-4 Warehouse Inventory Service" cmd /k "cd src\WarehouseInventoryService && dotnet run"
-start "MS-5 POS Cart Service" cmd /k "cd src\POSCartService && dotnet run"
+start "MS-5 POS Cart Service" cmd /k "cd src\POSCartService && set PasarelaPago__BaseUrl=http://localhost:5050&& dotnet run"
 start "Payment Simulator" cmd /k "node Docker\simulator\server.js"
 
 echo ------------------------------------------------------------

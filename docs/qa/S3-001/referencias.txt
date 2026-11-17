@@ -1,0 +1,61 @@
+S3-001 — Registro de búsqueda estática reproducible
+Fecha: 2026-11-16
+
+Alcance de búsqueda: src, tests, globalmart-frontend, scripts, configuración Kong e Ingress. Las definiciones en fakes de pruebas se distinguen de llamadas productivas. No se ejecutaron pruebas ni build.
+
+1) RegistrarIntentoPagoAsync y ReservarIntentoPagoAsync
+Comando:
+  rg -n 'RegistrarIntentoPagoAsync|ReservarIntentoPagoAsync' src tests globalmart-frontend scripts
+Hallazgos:
+  VentaService expone ambos wrappers en 354–359.
+  IVentaService los declara en 137 y 143.
+  RegistrarIntentoPagoAsync del repositorio solo reenvía a ActualizarIntentoPagoAsync (VentaRepository:347–348); la llamada desde producción no aparece.
+  ReservarIntentoPagoAsync del repositorio sí se llama dentro de IniciarIntentoPagoAsync (VentaRepository:181); conservarlo.
+  PaymentEventSequenceContractTests tiene miembros de fake, no llamadas reales a estos wrappers.
+
+2) Parámetro Kafka descartado
+Comando:
+  rg -n 'kafkaProducer:' src tests globalmart-frontend scripts
+Hallazgos:
+  VentaService recibe parámetro en línea 19 y lo descarta en línea 27.
+  Hay cuatro construcciones de prueba/manuales que lo pasan: OutboxBrokerRecoveryIntegrationTests:37, VentaOutboxTransactionTests:25, CobroCuadreTest/Program.cs:27 y AgregarItemTest/Program.cs:693.
+
+3) Operación GetByCajeroAsync fuera del alcance directo
+Comando:
+  rg -n 'GetByCajeroAsync\(' --glob '*.cs' src tests
+Hallazgos:
+  Únicamente la firma de IVentaRepository:26, la implementación de VentaRepository:95 y el fake en PaymentEventSequenceContractTests:121.
+
+4) Rutas de turnos y clientes
+Comandos:
+  rg -n 'turnos/(abrir|activo|cerrar|cuadre)|/api/turnos' globalmart-frontend/src globalmart-frontend/e2e tests Docker new-ingresses.yaml
+  rg -n 'turnos-route|paths:|/api/turnos' Docker/config/kong.yaml
+Hallazgos:
+  Frontend client.ts:157–174 invoca /api/turnos para las cuatro operaciones.
+  Kong declara /api/turnos en kong.yaml:154–165; Ingress remoto usa path raíz para el servicio POS en new-ingresses.yaml:68–73.
+  RoutePrefixIntegrationTests prueba /turnos/activo y /api/turnos/activo. El alias sin /api es validado por test, pero no se encontró invocación desde UI ni configuración de despliegue.
+
+5) Prefijos de ventas
+Comandos:
+  rg -n 'salesByShift|getSale|addSaleItem|updateSaleItem|deleteSaleItem|createSale|chargeCash|chargeCard|cardAttempt|changePaymentMethod|/ventas' globalmart-frontend/src/api/client.ts
+  rg -n 'pos:|remote:|local:|gateway:' globalmart-frontend/src/config/api.ts
+Hallazgos:
+  client.ts usa rutas relativas /ventas/...; URL base cambia por modo: remote/local sin /api y gateway con /api (config/api.ts:35–58).
+  El controller registra ambos prefijos, por lo que ambos son usados en los distintos modos de frontend.
+
+6) Acciones de anulación y reversa
+Comandos:
+  rg -n 'anular|reversa-tarjeta' globalmart-frontend/src/api/client.ts tests/GlobalMart.IntegrationTests
+Hallazgos:
+  No hay llamada de cliente frontend; las pruebas ReversaTarjetaIntegrationTests y AnulacionVentaIntegrationTests cubren los contratos. No clasificarlas como código muerto.
+
+7) Métodos públicos y ramas de controllers
+Comandos:
+  rg -n '^\s*(public|private|protected|internal)\s+.*\(' src/POSCartService/Controllers/VentasController.cs src/POSCartService/Controllers/TurnosController.cs src/POSCartService/Services/VentaService.cs
+  rg -n '\[Http|\[Route|\bif\s*\(' src/POSCartService/Controllers/VentasController.cs src/POSCartService/Controllers/TurnosController.cs
+Hallazgos:
+  Todos los métodos públicos del servicio tienen llamadas desde controller, salvo los dos wrappers reportados.
+  Las cuatro acciones de TurnosController tienen llamadas UI o pruebas; las acciones de VentasController están conectadas al API/frontend o cubiertas como contrato de integración.
+  No se encontró evidencia estática para declarar inalcanzable una condición de negocio revisada.
+
+Límite: ausencia de referencia estática dentro del repositorio no excluye reflexión, integración externa no versionada o consumidores de API no inspeccionados.

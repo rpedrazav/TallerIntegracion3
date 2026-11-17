@@ -16,15 +16,11 @@ public class VentaService : IVentaService
     public VentaService(
         IVentaRepository ventaRepository,
         IItemVentaRepository? itemVentaRepository = null,
-        IKafkaProducerService? kafkaProducer = null,
         IHttpContextAccessor? httpContextAccessor = null,
         ReversaTarjetaService? reversas = null)
     {
         _ventaRepository     = ventaRepository ?? throw new ArgumentNullException(nameof(ventaRepository));
         _itemVentaRepository = itemVentaRepository;
-        // La publicación directa se reemplazó por outbox en S2-008. Se conserva el
-        // parámetro opcional para no romper los ejecutables de prueba existentes.
-        _ = kafkaProducer;
         _httpContextAccessor = httpContextAccessor;
         _reversas = reversas;
     }
@@ -104,42 +100,7 @@ public class VentaService : IVentaService
             Vuelto  = vuelto
         };
 
-        var eventId = Guid.NewGuid();
-        var timestamp = DateTime.UtcNow;
-        var evento = new SaleCompletedEvent
-        {
-            EventId       = eventId,
-            SchemaVersion = 1,
-            TenantId      = venta.TenantId,
-            VentaId       = venta.Id,
-            CajeroId      = venta.CajeroId,
-            SucursalId    = venta.SucursalId,
-            Subtotal      = venta.Subtotal,
-            Iva           = venta.Impuestos,
-            Total         = venta.Total,
-            MetodoPago    = venta.MetodoPago.ToString(),
-            Timestamp     = timestamp,
-            Items         = venta.Items.Select(i => new SaleCompletedItemEvent
-            {
-                ProductoId     = i.ProductoId,
-                Cantidad       = i.Cantidad,
-                PrecioUnitario = i.PrecioUnitario
-            }).ToList()
-        };
-        var outboxMessage = new OutboxMessage
-        {
-            EventId          = eventId,
-            TenantId         = venta.TenantId,
-            VentaId          = venta.Id,
-            EventType        = "sale.completed",
-            SchemaVersion    = evento.SchemaVersion,
-            Topic            = "sale.completed",
-            MessageKey       = venta.TenantId.ToString(),
-            Payload          = JsonSerializer.Serialize(evento),
-            Status           = OutboxStatus.PENDIENTE,
-            CreatedAt        = timestamp,
-            NextAttemptAt    = timestamp
-        };
+        var outboxMessage = CrearOutboxVentaCompletada(venta);
 
         return await _ventaRepository.CompletarConOutboxAsync(venta.Id, pago, outboxMessage);
     }
@@ -306,6 +267,17 @@ public class VentaService : IVentaService
             Referencia = intentoPago.Referencia
         };
 
+        var outboxMessage = CrearOutboxVentaCompletada(venta);
+
+        intentoPago.TenantId  = venta.TenantId;
+        intentoPago.VentaId   = venta.Id;
+        intentoPago.CreatedAt = intentoPago.CreatedAt == default ? outboxMessage.CreatedAt : intentoPago.CreatedAt;
+
+        return await _ventaRepository.CompletarTarjetaConOutboxAsync(venta.Id, pago, intentoPago, outboxMessage);
+    }
+
+    private static OutboxMessage CrearOutboxVentaCompletada(Venta venta)
+    {
         var eventId = Guid.NewGuid();
         var timestamp = DateTime.UtcNow;
         var evento = new SaleCompletedEvent
@@ -328,35 +300,21 @@ public class VentaService : IVentaService
                 PrecioUnitario = i.PrecioUnitario
             }).ToList()
         };
-        var outboxMessage = new OutboxMessage
+        return new OutboxMessage
         {
-            EventId       = eventId,
-            TenantId      = venta.TenantId,
-            VentaId       = venta.Id,
-            EventType     = "sale.completed",
-            SchemaVersion = evento.SchemaVersion,
-            Topic         = "sale.completed",
-            MessageKey    = venta.TenantId.ToString(),
-            Payload       = JsonSerializer.Serialize(evento),
-            Status        = OutboxStatus.PENDIENTE,
-            CreatedAt     = timestamp,
-            NextAttemptAt = timestamp
+            EventId          = eventId,
+            TenantId         = venta.TenantId,
+            VentaId          = venta.Id,
+            EventType        = "sale.completed",
+            SchemaVersion    = evento.SchemaVersion,
+            Topic            = "sale.completed",
+            MessageKey       = venta.TenantId.ToString(),
+            Payload          = JsonSerializer.Serialize(evento),
+            Status           = OutboxStatus.PENDIENTE,
+            CreatedAt        = timestamp,
+            NextAttemptAt    = timestamp
         };
-
-        intentoPago.TenantId  = venta.TenantId;
-        intentoPago.VentaId   = venta.Id;
-        intentoPago.CreatedAt = intentoPago.CreatedAt == default ? timestamp : intentoPago.CreatedAt;
-
-        return await _ventaRepository.CompletarTarjetaConOutboxAsync(venta.Id, pago, intentoPago, outboxMessage);
     }
-
-    /// <inheritdoc/>
-    public Task<bool> ReservarIntentoPagoAsync(IntentoPago intentoPago)
-        => _ventaRepository.ReservarIntentoPagoAsync(intentoPago);
-
-    /// <inheritdoc/>
-    public Task RegistrarIntentoPagoAsync(IntentoPago intentoPago)
-        => _ventaRepository.RegistrarIntentoPagoAsync(intentoPago);
 
     public Task<IntentoPago> IniciarIntentoPagoAsync(Guid ventaId, Guid requestId)
         => _ventaRepository.IniciarIntentoPagoAsync(ventaId, requestId);
@@ -367,5 +325,3 @@ public class VentaService : IVentaService
     public Task ActualizarIntentoPagoAsync(IntentoPago intentoPago)
         => _ventaRepository.ActualizarIntentoPagoAsync(intentoPago);
 }
-
-

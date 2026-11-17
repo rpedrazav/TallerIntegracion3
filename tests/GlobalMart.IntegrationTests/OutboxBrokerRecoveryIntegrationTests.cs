@@ -33,8 +33,7 @@ public sealed class OutboxBrokerRecoveryIntegrationTests
         await using (var chargeContext = NewContext(database.Options, tenantId))
         {
             var ventaService = new Pos.Services.VentaService(
-                new Pos.Repositories.VentaRepository(chargeContext),
-                kafkaProducer: broker);
+                new Pos.Repositories.VentaRepository(chargeContext));
 
             var completed = await ventaService.CompletarAsync(ventaId, 150m, 31m);
             Assert.Equal(Pos.Models.EstadoVenta.COMPLETADA, completed.Estado);

@@ -21,8 +21,7 @@ public sealed class VentaOutboxTransactionTests
         await using (var db = NewContext(database.Options, tenantId))
         {
             var service = new Pos.Services.VentaService(
-                new Pos.Repositories.VentaRepository(db),
-                kafkaProducer: new UnexpectedKafkaProducer());
+                new Pos.Repositories.VentaRepository(db));
 
             var completed = await service.CompletarAsync(ventaId, 150m, 31m);
             Assert.Equal(Pos.Models.EstadoVenta.COMPLETADA, completed.Estado);
@@ -141,21 +140,6 @@ public sealed class VentaOutboxTransactionTests
     private static Pos.Data.PosCartDbContext NewContext(
         DbContextOptions<Pos.Data.PosCartDbContext> options,
         Guid tenantId) => new(options) { CurrentTenantId = tenantId };
-
-    private sealed class UnexpectedKafkaProducer : Pos.Services.IKafkaProducerService
-    {
-        public Task PublicarAsync(
-            string topico,
-            string mensaje,
-            string? clave = null,
-            CancellationToken cancellationToken = default) =>
-            throw new InvalidOperationException("S2-008 no debe publicar directamente en Kafka.");
-
-        public Task PublicarSaleCompletedAsync(
-            Pos.Messaging.SaleCompletedEvent evento,
-            CancellationToken cancellationToken = default) =>
-            throw new InvalidOperationException("S2-008 no debe publicar directamente en Kafka.");
-    }
 
     private sealed class TestDatabase : IAsyncDisposable
     {

@@ -1,0 +1,17 @@
+
+Running 9 tests using 1 worker
+
+  ok 1 e2e\electron\admin-venta.integrated.spec.ts:13:5 › @integrado ADMIN entra al panel y crea un producto en MS-3 (2.2s)
+  ok 2 e2e\electron\admin-venta.integrated.spec.ts:29:5 › @integrado CAJERO abre turno, vende en efectivo y cierra sin totales divergentes (5.9s)
+  ok 3 e2e\electron\pos.spec.ts:57:1 › login → apertura de turno → POS con sesión IPC persistente (2.9s)
+  ok 4 e2e\electron\pos.spec.ts:103:1 › credenciales rechazadas mantienen sesión vacía y no entran al POS (1.1s)
+
+  ok 5 e2e\electron\tarjeta-pesaje.integrated.spec.ts:66:5 › @integrado tarjeta aprobada completa la venta con un solo pago (5.7s)
+
+  ok 6 e2e\electron\tarjeta-pesaje.integrated.spec.ts:81:5 › @integrado tarjeta rechazada no completa la venta y el reintento cobra una sola vez (4.8s)
+
+  ok 7 e2e\electron\tarjeta-pesaje.integrated.spec.ts:101:5 › @integrado timeout de pasarela deja la venta pendiente y no permite un segundo cargo (46.6s)
+  ok 8 e2e\electron\tarjeta-pesaje.integrated.spec.ts:129:5 › @integrado peso estable de la balanza simulada llega a MS-5 como una línea (2.5s)
+  ok 9 e2e\electron\tarjeta-pesaje.integrated.spec.ts:143:5 › @integrado balanza con falla permite entrada manual y conserva una sola línea (2.5s)
+
+  9 passed (1.2m)
