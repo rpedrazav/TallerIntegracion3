@@ -33,7 +33,8 @@ public sealed class ReversaTarjetaIntegrationTests : IAsyncLifetime
         var port = ((IPEndPoint)listener.LocalEndpoint).Port; listener.Stop();
         var root = new DirectoryInfo(AppContext.BaseDirectory);
         while (root != null && !File.Exists(Path.Combine(root.FullName, "Docker/simulator/server.js"))) root = root.Parent;
-        var start = new ProcessStartInfo("node", Path.Combine(root!.FullName, "Docker/simulator/server.js")) { UseShellExecute = false, RedirectStandardOutput = true, RedirectStandardError = true };
+        var start = new ProcessStartInfo("node") { UseShellExecute = false, RedirectStandardOutput = true, RedirectStandardError = true };
+        start.ArgumentList.Add(Path.Combine(root!.FullName, "Docker/simulator/server.js")); // con comillas: la ruta puede tener espacios
         start.Environment["PORT"] = port.ToString(); start.Environment["HOST"] = "127.0.0.1";
         _node = Process.Start(start)!;
         _node.BeginOutputReadLine(); _node.BeginErrorReadLine();

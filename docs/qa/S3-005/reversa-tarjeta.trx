@@ -1,0 +1,542 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="ae727096-b0fc-43f2-9f43-7db36ba78324" name="dp877@DANI 2026-11-16 23:29:11" runUser="DANI\dp877" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2026-11-16T23:29:11.3731836-03:00" queuing="2026-11-16T23:29:11.3731839-03:00" start="2026-11-16T23:29:03.6938836-03:00" finish="2026-11-16T23:29:30.7451182-03:00" />
+  <TestSettings name="default" id="9613379b-0265-47ee-8db0-a25f658f6f4c">
+    <Deployment runDeploymentRoot="dp877_DANI_2026-11-16_23_29_11" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="d93e9ced-ee14-4382-9e94-a7b77999d72c" testId="f58d71ea-a8e0-33ae-e29e-cd9143d02557" testName="GlobalMart.IntegrationTests.ReversaTarjetaIntegrationTests.Concurrentes_ReservanUnaReversaYUnaAuditoria" computerName="DANI" duration="00:00:00.1646992" startTime="2026-11-16T23:29:21.1772612-03:00" endTime="2026-11-16T23:29:21.1772613-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="d93e9ced-ee14-4382-9e94-a7b77999d72c" />
+    <UnitTestResult executionId="023a408d-886b-471f-bdfb-eba1e10ae34a" testId="94da4701-a4c3-c57a-67e7-2cc3113dd15c" testName="GlobalMart.IntegrationTests.ReversaTarjetaIntegrationTests.RespuestaInconsistente_NoFingeReembolso(field: &quot;status&quot;)" computerName="DANI" duration="00:00:00.0557313" startTime="2026-11-16T23:29:23.2374360-03:00" endTime="2026-11-16T23:29:23.2374361-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="023a408d-886b-471f-bdfb-eba1e10ae34a" />
+    <UnitTestResult executionId="14a20b90-4483-4ea7-a686-9473fe2b931f" testId="ee6d35d8-1e29-72e4-7bd2-3b14fda2420a" testName="GlobalMart.IntegrationTests.ReversaTarjetaIntegrationTests.RespuestaInconsistente_NoFingeReembolso(field: &quot;amount&quot;)" computerName="DANI" duration="00:00:00.0770578" startTime="2026-11-16T23:29:21.8732380-03:00" endTime="2026-11-16T23:29:21.8732381-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="14a20b90-4483-4ea7-a686-9473fe2b931f" />
+    <UnitTestResult executionId="9ceba75a-d963-4543-9cf2-d67e789e1be9" testId="b4c77283-5994-055f-9c95-6ad2fbbcd374" testName="GlobalMart.IntegrationTests.ReversaTarjetaIntegrationTests.Timeout_ConservaVenta_GetRecuperaSinOtraReversa" computerName="DANI" duration="00:00:01.0976140" startTime="2026-11-16T23:29:29.9520074-03:00" endTime="2026-11-16T23:29:29.9520077-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="9ceba75a-d963-4543-9cf2-d67e789e1be9" />
+    <UnitTestResult executionId="8205a1bc-7dc5-4e87-b473-44521a803ce3" testId="cbf49e2b-a56b-9679-79be-47246df538cd" testName="GlobalMart.IntegrationTests.ReversaTarjetaIntegrationTests.FalloLocalTrasAprobacion_ReservaPersisteYConsultaRecupera" computerName="DANI" duration="00:00:00.1213326" startTime="2026-11-16T23:29:30.6734114-03:00" endTime="2026-11-16T23:29:30.6734116-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="8205a1bc-7dc5-4e87-b473-44521a803ce3" />
+    <UnitTestResult executionId="8d701c3d-fbfb-41b0-8b9d-1685fe255c17" testId="6701826f-3f0a-95b6-3547-57aa82b104c9" testName="GlobalMart.IntegrationTests.ReversaTarjetaIntegrationTests.Permisos_Aislamiento(role: &quot;ADMIN&quot;, foreign: False, expired: False, identity: False, status: 401)" computerName="DANI" duration="00:00:00.0485342" startTime="2026-11-16T23:29:19.0763492-03:00" endTime="2026-11-16T23:29:19.0763493-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="8d701c3d-fbfb-41b0-8b9d-1685fe255c17" />
+    <UnitTestResult executionId="cef2f512-d4ee-4c71-8890-226d67def802" testId="46eec6e0-8c14-c46a-42b2-fb2460d7613b" testName="GlobalMart.IntegrationTests.ReversaTarjetaIntegrationTests.Precondiciones_NoLlamanPasarela(scenario: &quot;sin_referencia&quot;, code: &quot;PAGO_INCONSISTENTE&quot;)" computerName="DANI" duration="00:00:00.0877599" startTime="2026-11-16T23:29:12.0689678-03:00" endTime="2026-11-16T23:29:12.0689681-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="cef2f512-d4ee-4c71-8890-226d67def802" />
+    <UnitTestResult executionId="18069f48-e3a5-4b27-ae29-16df2624b4e2" testId="747ab6eb-fdec-04b1-ed92-c4a51241bd6a" testName="GlobalMart.IntegrationTests.ReversaTarjetaIntegrationTests.ResultadoPersistido_RepetirNoReenvia(scenario: &quot;approved&quot;, status: 200, state: APROBADA)" computerName="DANI" duration="00:00:00.0663604" startTime="2026-11-16T23:29:28.2570943-03:00" endTime="2026-11-16T23:29:28.2570944-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="18069f48-e3a5-4b27-ae29-16df2624b4e2" />
+    <UnitTestResult executionId="364b5dc4-4717-4397-8298-5966649838cd" testId="d2511579-6ace-0116-8943-9962daeaa59f" testName="GlobalMart.IntegrationTests.ReversaTarjetaIntegrationTests.Permisos_Aislamiento(role: &quot;REPONEDOR&quot;, foreign: False, expired: False, identity: True, status: 403)" computerName="DANI" duration="00:00:00.0548772" startTime="2026-11-16T23:29:17.6201735-03:00" endTime="2026-11-16T23:29:17.6201742-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="364b5dc4-4717-4397-8298-5966649838cd" />
+    <UnitTestResult executionId="85779bfe-c314-4a4d-8cd4-71f306e5237e" testId="0fd79fa0-02e0-049b-b1e6-bb1db7610289" testName="GlobalMart.IntegrationTests.ReversaTarjetaIntegrationTests.ResultadoPersistido_RepetirNoReenvia(scenario: &quot;declined&quot;, status: 409, state: RECHAZADA)" computerName="DANI" duration="00:00:00.0816591" startTime="2026-11-16T23:29:27.6003907-03:00" endTime="2026-11-16T23:29:27.6003910-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="85779bfe-c314-4a4d-8cd4-71f306e5237e" />
+    <UnitTestResult executionId="913f85c4-141c-4623-a006-a007101c5ddd" testId="b0720739-33cb-c221-cb74-13f68f9cb5fc" testName="GlobalMart.IntegrationTests.ReversaTarjetaIntegrationTests.ReversaExistente_NoEsVisibleNiModificablePorOtroTenant(scenario: &quot;declined&quot;, status: 409)" computerName="DANI" duration="00:00:00.0820869" startTime="2026-11-16T23:29:25.2491438-03:00" endTime="2026-11-16T23:29:25.2491444-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="913f85c4-141c-4623-a006-a007101c5ddd" />
+    <UnitTestResult executionId="5da04e83-adff-4bc9-8c4a-df17d9f961c0" testId="e0f4b221-b1f4-ce7a-35b0-c3e2c59b5a77" testName="GlobalMart.IntegrationTests.ReversaTarjetaIntegrationTests.Permisos_Aislamiento(role: &quot;ADMIN&quot;, foreign: True, expired: False, identity: True, status: 404)" computerName="DANI" duration="00:00:00.0436975" startTime="2026-11-16T23:29:16.9291291-03:00" endTime="2026-11-16T23:29:16.9291292-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="5da04e83-adff-4bc9-8c4a-df17d9f961c0" />
+    <UnitTestResult executionId="9318869a-2e54-407e-8f03-e2ed27708f5b" testId="8250a99c-7d1a-9996-9619-7ceeed02908b" testName="GlobalMart.IntegrationTests.ReversaTarjetaIntegrationTests.RespuestaInconsistente_NoFingeReembolso(field: &quot;tenant_id&quot;)" computerName="DANI" duration="00:00:00.0535191" startTime="2026-11-16T23:29:23.8843593-03:00" endTime="2026-11-16T23:29:23.8843594-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="9318869a-2e54-407e-8f03-e2ed27708f5b" />
+    <UnitTestResult executionId="2ffc5e8a-eec9-4f3d-8dff-949243a99a40" testId="f67ea42f-2f71-9f51-fe65-e75e20b44f8d" testName="GlobalMart.IntegrationTests.ReversaTarjetaIntegrationTests.Permisos_Aislamiento(role: &quot;ADMIN&quot;, foreign: False, expired: True, identity: True, status: 401)" computerName="DANI" duration="00:00:00.0536498" startTime="2026-11-16T23:29:16.2912353-03:00" endTime="2026-11-16T23:29:16.2912354-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="2ffc5e8a-eec9-4f3d-8dff-949243a99a40" />
+    <UnitTestResult executionId="c0b5ff13-2b08-4dd0-9fa8-7372310c9ddf" testId="365c1fa1-9cf3-f86e-b298-a6c4227a3f74" testName="GlobalMart.IntegrationTests.ReversaTarjetaIntegrationTests.ReversaExistente_NoEsVisibleNiModificablePorOtroTenant(scenario: &quot;approved&quot;, status: 200)" computerName="DANI" duration="00:00:00.0797139" startTime="2026-11-16T23:29:24.5586959-03:00" endTime="2026-11-16T23:29:24.5586960-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="c0b5ff13-2b08-4dd0-9fa8-7372310c9ddf" />
+    <UnitTestResult executionId="66fba50a-6125-4516-8111-279e017a5a9e" testId="27adcf52-3e42-e3da-c9f8-4a9c378e2890" testName="GlobalMart.IntegrationTests.ReversaTarjetaIntegrationTests.Permisos_Aislamiento(role: &quot;CAJERO&quot;, foreign: False, expired: False, identity: True, status: 403)" computerName="DANI" duration="00:00:00.0311527" startTime="2026-11-16T23:29:19.7309559-03:00" endTime="2026-11-16T23:29:19.7309560-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="66fba50a-6125-4516-8111-279e017a5a9e" />
+    <UnitTestResult executionId="12e57c91-1c0c-4ce3-b9c3-a6cf78f9292f" testId="f5e83ba7-9dec-22e7-1f64-e167edf6bf32" testName="GlobalMart.IntegrationTests.ReversaTarjetaIntegrationTests.Permisos_Aislamiento(role: null, foreign: False, expired: False, identity: True, status: 401)" computerName="DANI" duration="00:00:00.0562241" startTime="2026-11-16T23:29:20.4104415-03:00" endTime="2026-11-16T23:29:20.4104418-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="12e57c91-1c0c-4ce3-b9c3-a6cf78f9292f" />
+    <UnitTestResult executionId="c5398da2-aff1-404b-8a41-27bfde0cb528" testId="48810fcc-bde1-28a4-729e-b8f167e86cd9" testName="GlobalMart.IntegrationTests.ReversaTarjetaIntegrationTests.Precondiciones_NoLlamanPasarela(scenario: &quot;incierto&quot;, code: &quot;PAGO_INCIERTO&quot;)" computerName="DANI" duration="00:00:01.6379582" startTime="2026-11-16T23:29:11.3330341-03:00" endTime="2026-11-16T23:29:11.3330573-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="c5398da2-aff1-404b-8a41-27bfde0cb528" />
+    <UnitTestResult executionId="b0015b98-ecf5-4b95-b85a-40e2f2b08442" testId="d0ecabb2-116f-0ec8-0600-a704a973bcda" testName="GlobalMart.IntegrationTests.ReversaTarjetaIntegrationTests.RespuestaInconsistente_NoFingeReembolso(field: &quot;gateway_reference&quot;)" computerName="DANI" duration="00:00:00.0843165" startTime="2026-11-16T23:29:22.5902750-03:00" endTime="2026-11-16T23:29:22.5902753-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="b0015b98-ecf5-4b95-b85a-40e2f2b08442" />
+    <UnitTestResult executionId="0d6cc87e-c51c-4969-b21f-59811992a29f" testId="266f81b3-662a-c50c-6e51-a2a2e06b636f" testName="GlobalMart.IntegrationTests.ReversaTarjetaIntegrationTests.Precondiciones_NoLlamanPasarela(scenario: &quot;cerrado&quot;, code: &quot;TURNO_NO_ANULABLE&quot;)" computerName="DANI" duration="00:00:00.0532298" startTime="2026-11-16T23:29:12.7450508-03:00" endTime="2026-11-16T23:29:12.7450510-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="0d6cc87e-c51c-4969-b21f-59811992a29f" />
+    <UnitTestResult executionId="ff3ca710-c501-405d-8c38-1a8e55783518" testId="94647e2d-3436-ac1f-c461-e5ebd120da28" testName="GlobalMart.IntegrationTests.ReversaTarjetaIntegrationTests.Permisos_Aislamiento(role: &quot;SUPER_ADMIN&quot;, foreign: False, expired: False, identity: True, status: 403)" computerName="DANI" duration="00:00:00.2071155" startTime="2026-11-16T23:29:18.4207615-03:00" endTime="2026-11-16T23:29:18.4207618-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="ff3ca710-c501-405d-8c38-1a8e55783518" />
+    <UnitTestResult executionId="ef11704a-5a7a-4a62-b6da-6c8088249cf9" testId="70ff7824-203c-4a7c-3930-7f7c84e6db86" testName="GlobalMart.IntegrationTests.ReversaTarjetaIntegrationTests.PasarelaNoDisponible_ConservaPendienteSinReenvio" computerName="DANI" duration="00:00:02.2897512" startTime="2026-11-16T23:29:15.6341696-03:00" endTime="2026-11-16T23:29:15.6341697-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="ef11704a-5a7a-4a62-b6da-6c8088249cf9" />
+    <UnitTestResult executionId="2757fed9-750b-4f9d-a94e-b0ac5a6150ae" testId="9d912399-c461-a2ff-e18b-3e9b593a46a5" testName="GlobalMart.IntegrationTests.ReversaTarjetaIntegrationTests.ReversaExistente_NoEsVisibleNiModificablePorOtroTenant(scenario: &quot;timeout&quot;, status: 409)" computerName="DANI" duration="00:00:01.0798284" startTime="2026-11-16T23:29:26.9281559-03:00" endTime="2026-11-16T23:29:26.9281561-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="2757fed9-750b-4f9d-a94e-b0ac5a6150ae" />
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="GlobalMart.IntegrationTests.ReversaTarjetaIntegrationTests.RespuestaInconsistente_NoFingeReembolso(field: &quot;tenant_id&quot;)" storage="c:\users\dp877\desktop\universidad\semestre 6\tallerintegra3\tallerintegracion3\tests\globalmart.integrationtests\bin\debug\net8.0\globalmart.integrationtests.dll" id="8250a99c-7d1a-9996-9619-7ceeed02908b">
+      <Execution id="9318869a-2e54-407e-8f03-e2ed27708f5b" />
+      <TestMethod codeBase="C:\Users\dp877\Desktop\Universidad\Semestre 6\TallerIntegra3\TallerIntegracion3\tests\GlobalMart.IntegrationTests\bin\Debug\net8.0\GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.ReversaTarjetaIntegrationTests" name="RespuestaInconsistente_NoFingeReembolso" />
+    </UnitTest>
+    <UnitTest name="GlobalMart.IntegrationTests.ReversaTarjetaIntegrationTests.ReversaExistente_NoEsVisibleNiModificablePorOtroTenant(scenario: &quot;timeout&quot;, status: 409)" storage="c:\users\dp877\desktop\universidad\semestre 6\tallerintegra3\tallerintegracion3\tests\globalmart.integrationtests\bin\debug\net8.0\globalmart.integrationtests.dll" id="9d912399-c461-a2ff-e18b-3e9b593a46a5">
+      <Execution id="2757fed9-750b-4f9d-a94e-b0ac5a6150ae" />
+      <TestMethod codeBase="C:\Users\dp877\Desktop\Universidad\Semestre 6\TallerIntegra3\TallerIntegracion3\tests\GlobalMart.IntegrationTests\bin\Debug\net8.0\GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.ReversaTarjetaIntegrationTests" name="ReversaExistente_NoEsVisibleNiModificablePorOtroTenant" />
+    </UnitTest>
+    <UnitTest name="GlobalMart.IntegrationTests.ReversaTarjetaIntegrationTests.RespuestaInconsistente_NoFingeReembolso(field: &quot;gateway_reference&quot;)" storage="c:\users\dp877\desktop\universidad\semestre 6\tallerintegra3\tallerintegracion3\tests\globalmart.integrationtests\bin\debug\net8.0\globalmart.integrationtests.dll" id="d0ecabb2-116f-0ec8-0600-a704a973bcda">
+      <Execution id="b0015b98-ecf5-4b95-b85a-40e2f2b08442" />
+      <TestMethod codeBase="C:\Users\dp877\Desktop\Universidad\Semestre 6\TallerIntegra3\TallerIntegracion3\tests\GlobalMart.IntegrationTests\bin\Debug\net8.0\GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.ReversaTarjetaIntegrationTests" name="RespuestaInconsistente_NoFingeReembolso" />
+    </UnitTest>
+    <UnitTest name="GlobalMart.IntegrationTests.ReversaTarjetaIntegrationTests.Permisos_Aislamiento(role: &quot;ADMIN&quot;, foreign: True, expired: False, identity: True, status: 404)" storage="c:\users\dp877\desktop\universidad\semestre 6\tallerintegra3\tallerintegracion3\tests\globalmart.integrationtests\bin\debug\net8.0\globalmart.integrationtests.dll" id="e0f4b221-b1f4-ce7a-35b0-c3e2c59b5a77">
+      <Execution id="5da04e83-adff-4bc9-8c4a-df17d9f961c0" />
+      <TestMethod codeBase="C:\Users\dp877\Desktop\Universidad\Semestre 6\TallerIntegra3\TallerIntegracion3\tests\GlobalMart.IntegrationTests\bin\Debug\net8.0\GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.ReversaTarjetaIntegrationTests" name="Permisos_Aislamiento" />
+    </UnitTest>
+    <UnitTest name="GlobalMart.IntegrationTests.ReversaTarjetaIntegrationTests.FalloLocalTrasAprobacion_ReservaPersisteYConsultaRecupera" storage="c:\users\dp877\desktop\universidad\semestre 6\tallerintegra3\tallerintegracion3\tests\globalmart.integrationtests\bin\debug\net8.0\globalmart.integrationtests.dll" id="cbf49e2b-a56b-9679-79be-47246df538cd">
+      <Execution id="8205a1bc-7dc5-4e87-b473-44521a803ce3" />
+      <TestMethod codeBase="C:\Users\dp877\Desktop\Universidad\Semestre 6\TallerIntegra3\TallerIntegracion3\tests\GlobalMart.IntegrationTests\bin\Debug\net8.0\GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.ReversaTarjetaIntegrationTests" name="FalloLocalTrasAprobacion_ReservaPersisteYConsultaRecupera" />
+    </UnitTest>
+    <UnitTest name="GlobalMart.IntegrationTests.ReversaTarjetaIntegrationTests.Permisos_Aislamiento(role: &quot;ADMIN&quot;, foreign: False, expired: True, identity: True, status: 401)" storage="c:\users\dp877\desktop\universidad\semestre 6\tallerintegra3\tallerintegracion3\tests\globalmart.integrationtests\bin\debug\net8.0\globalmart.integrationtests.dll" id="f67ea42f-2f71-9f51-fe65-e75e20b44f8d">
+      <Execution id="2ffc5e8a-eec9-4f3d-8dff-949243a99a40" />
+      <TestMethod codeBase="C:\Users\dp877\Desktop\Universidad\Semestre 6\TallerIntegra3\TallerIntegracion3\tests\GlobalMart.IntegrationTests\bin\Debug\net8.0\GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.ReversaTarjetaIntegrationTests" name="Permisos_Aislamiento" />
+    </UnitTest>
+    <UnitTest name="GlobalMart.IntegrationTests.ReversaTarjetaIntegrationTests.RespuestaInconsistente_NoFingeReembolso(field: &quot;amount&quot;)" storage="c:\users\dp877\desktop\universidad\semestre 6\tallerintegra3\tallerintegracion3\tests\globalmart.integrationtests\bin\debug\net8.0\globalmart.integrationtests.dll" id="ee6d35d8-1e29-72e4-7bd2-3b14fda2420a">
+      <Execution id="14a20b90-4483-4ea7-a686-9473fe2b931f" />
+      <TestMethod codeBase="C:\Users\dp877\Desktop\Universidad\Semestre 6\TallerIntegra3\TallerIntegracion3\tests\GlobalMart.IntegrationTests\bin\Debug\net8.0\GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.ReversaTarjetaIntegrationTests" name="RespuestaInconsistente_NoFingeReembolso" />
+    </UnitTest>
+    <UnitTest name="GlobalMart.IntegrationTests.ReversaTarjetaIntegrationTests.Concurrentes_ReservanUnaReversaYUnaAuditoria" storage="c:\users\dp877\desktop\universidad\semestre 6\tallerintegra3\tallerintegracion3\tests\globalmart.integrationtests\bin\debug\net8.0\globalmart.integrationtests.dll" id="f58d71ea-a8e0-33ae-e29e-cd9143d02557">
+      <Execution id="d93e9ced-ee14-4382-9e94-a7b77999d72c" />
+      <TestMethod codeBase="C:\Users\dp877\Desktop\Universidad\Semestre 6\TallerIntegra3\TallerIntegracion3\tests\GlobalMart.IntegrationTests\bin\Debug\net8.0\GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.ReversaTarjetaIntegrationTests" name="Concurrentes_ReservanUnaReversaYUnaAuditoria" />
+    </UnitTest>
+    <UnitTest name="GlobalMart.IntegrationTests.ReversaTarjetaIntegrationTests.Precondiciones_NoLlamanPasarela(scenario: &quot;cerrado&quot;, code: &quot;TURNO_NO_ANULABLE&quot;)" storage="c:\users\dp877\desktop\universidad\semestre 6\tallerintegra3\tallerintegracion3\tests\globalmart.integrationtests\bin\debug\net8.0\globalmart.integrationtests.dll" id="266f81b3-662a-c50c-6e51-a2a2e06b636f">
+      <Execution id="0d6cc87e-c51c-4969-b21f-59811992a29f" />
+      <TestMethod codeBase="C:\Users\dp877\Desktop\Universidad\Semestre 6\TallerIntegra3\TallerIntegracion3\tests\GlobalMart.IntegrationTests\bin\Debug\net8.0\GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.ReversaTarjetaIntegrationTests" name="Precondiciones_NoLlamanPasarela" />
+    </UnitTest>
+    <UnitTest name="GlobalMart.IntegrationTests.ReversaTarjetaIntegrationTests.Precondiciones_NoLlamanPasarela(scenario: &quot;incierto&quot;, code: &quot;PAGO_INCIERTO&quot;)" storage="c:\users\dp877\desktop\universidad\semestre 6\tallerintegra3\tallerintegracion3\tests\globalmart.integrationtests\bin\debug\net8.0\globalmart.integrationtests.dll" id="48810fcc-bde1-28a4-729e-b8f167e86cd9">
+      <Execution id="c5398da2-aff1-404b-8a41-27bfde0cb528" />
+      <TestMethod codeBase="C:\Users\dp877\Desktop\Universidad\Semestre 6\TallerIntegra3\TallerIntegracion3\tests\GlobalMart.IntegrationTests\bin\Debug\net8.0\GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.ReversaTarjetaIntegrationTests" name="Precondiciones_NoLlamanPasarela" />
+    </UnitTest>
+    <UnitTest name="GlobalMart.IntegrationTests.ReversaTarjetaIntegrationTests.ReversaExistente_NoEsVisibleNiModificablePorOtroTenant(scenario: &quot;declined&quot;, status: 409)" storage="c:\users\dp877\desktop\universidad\semestre 6\tallerintegra3\tallerintegracion3\tests\globalmart.integrationtests\bin\debug\net8.0\globalmart.integrationtests.dll" id="b0720739-33cb-c221-cb74-13f68f9cb5fc">
+      <Execution id="913f85c4-141c-4623-a006-a007101c5ddd" />
+      <TestMethod codeBase="C:\Users\dp877\Desktop\Universidad\Semestre 6\TallerIntegra3\TallerIntegracion3\tests\GlobalMart.IntegrationTests\bin\Debug\net8.0\GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.ReversaTarjetaIntegrationTests" name="ReversaExistente_NoEsVisibleNiModificablePorOtroTenant" />
+    </UnitTest>
+    <UnitTest name="GlobalMart.IntegrationTests.ReversaTarjetaIntegrationTests.ReversaExistente_NoEsVisibleNiModificablePorOtroTenant(scenario: &quot;approved&quot;, status: 200)" storage="c:\users\dp877\desktop\universidad\semestre 6\tallerintegra3\tallerintegracion3\tests\globalmart.integrationtests\bin\debug\net8.0\globalmart.integrationtests.dll" id="365c1fa1-9cf3-f86e-b298-a6c4227a3f74">
+      <Execution id="c0b5ff13-2b08-4dd0-9fa8-7372310c9ddf" />
+      <TestMethod codeBase="C:\Users\dp877\Desktop\Universidad\Semestre 6\TallerIntegra3\TallerIntegracion3\tests\GlobalMart.IntegrationTests\bin\Debug\net8.0\GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.ReversaTarjetaIntegrationTests" name="ReversaExistente_NoEsVisibleNiModificablePorOtroTenant" />
+    </UnitTest>
+    <UnitTest name="GlobalMart.IntegrationTests.ReversaTarjetaIntegrationTests.Permisos_Aislamiento(role: &quot;REPONEDOR&quot;, foreign: False, expired: False, identity: True, status: 403)" storage="c:\users\dp877\desktop\universidad\semestre 6\tallerintegra3\tallerintegracion3\tests\globalmart.integrationtests\bin\debug\net8.0\globalmart.integrationtests.dll" id="d2511579-6ace-0116-8943-9962daeaa59f">
+      <Execution id="364b5dc4-4717-4397-8298-5966649838cd" />
+      <TestMethod codeBase="C:\Users\dp877\Desktop\Universidad\Semestre 6\TallerIntegra3\TallerIntegracion3\tests\GlobalMart.IntegrationTests\bin\Debug\net8.0\GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.ReversaTarjetaIntegrationTests" name="Permisos_Aislamiento" />
+    </UnitTest>
+    <UnitTest name="GlobalMart.IntegrationTests.ReversaTarjetaIntegrationTests.Precondiciones_NoLlamanPasarela(scenario: &quot;sin_referencia&quot;, code: &quot;PAGO_INCONSISTENTE&quot;)" storage="c:\users\dp877\desktop\universidad\semestre 6\tallerintegra3\tallerintegracion3\tests\globalmart.integrationtests\bin\debug\net8.0\globalmart.integrationtests.dll" id="46eec6e0-8c14-c46a-42b2-fb2460d7613b">
+      <Execution id="cef2f512-d4ee-4c71-8890-226d67def802" />
+      <TestMethod codeBase="C:\Users\dp877\Desktop\Universidad\Semestre 6\TallerIntegra3\TallerIntegracion3\tests\GlobalMart.IntegrationTests\bin\Debug\net8.0\GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.ReversaTarjetaIntegrationTests" name="Precondiciones_NoLlamanPasarela" />
+    </UnitTest>
+    <UnitTest name="GlobalMart.IntegrationTests.ReversaTarjetaIntegrationTests.Permisos_Aislamiento(role: &quot;SUPER_ADMIN&quot;, foreign: False, expired: False, identity: True, status: 403)" storage="c:\users\dp877\desktop\universidad\semestre 6\tallerintegra3\tallerintegracion3\tests\globalmart.integrationtests\bin\debug\net8.0\globalmart.integrationtests.dll" id="94647e2d-3436-ac1f-c461-e5ebd120da28">
+      <Execution id="ff3ca710-c501-405d-8c38-1a8e55783518" />
+      <TestMethod codeBase="C:\Users\dp877\Desktop\Universidad\Semestre 6\TallerIntegra3\TallerIntegracion3\tests\GlobalMart.IntegrationTests\bin\Debug\net8.0\GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.ReversaTarjetaIntegrationTests" name="Permisos_Aislamiento" />
+    </UnitTest>
+    <UnitTest name="GlobalMart.IntegrationTests.ReversaTarjetaIntegrationTests.Permisos_Aislamiento(role: &quot;CAJERO&quot;, foreign: False, expired: False, identity: True, status: 403)" storage="c:\users\dp877\desktop\universidad\semestre 6\tallerintegra3\tallerintegracion3\tests\globalmart.integrationtests\bin\debug\net8.0\globalmart.integrationtests.dll" id="27adcf52-3e42-e3da-c9f8-4a9c378e2890">
+      <Execution id="66fba50a-6125-4516-8111-279e017a5a9e" />
+      <TestMethod codeBase="C:\Users\dp877\Desktop\Universidad\Semestre 6\TallerIntegra3\TallerIntegracion3\tests\GlobalMart.IntegrationTests\bin\Debug\net8.0\GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.ReversaTarjetaIntegrationTests" name="Permisos_Aislamiento" />
+    </UnitTest>
+    <UnitTest name="GlobalMart.IntegrationTests.ReversaTarjetaIntegrationTests.ResultadoPersistido_RepetirNoReenvia(scenario: &quot;approved&quot;, status: 200, state: APROBADA)" storage="c:\users\dp877\desktop\universidad\semestre 6\tallerintegra3\tallerintegracion3\tests\globalmart.integrationtests\bin\debug\net8.0\globalmart.integrationtests.dll" id="747ab6eb-fdec-04b1-ed92-c4a51241bd6a">
+      <Execution id="18069f48-e3a5-4b27-ae29-16df2624b4e2" />
+      <TestMethod codeBase="C:\Users\dp877\Desktop\Universidad\Semestre 6\TallerIntegra3\TallerIntegracion3\tests\GlobalMart.IntegrationTests\bin\Debug\net8.0\GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.ReversaTarjetaIntegrationTests" name="ResultadoPersistido_RepetirNoReenvia" />
+    </UnitTest>
+    <UnitTest name="GlobalMart.IntegrationTests.ReversaTarjetaIntegrationTests.Permisos_Aislamiento(role: &quot;ADMIN&quot;, foreign: False, expired: False, identity: False, status: 401)" storage="c:\users\dp877\desktop\universidad\semestre 6\tallerintegra3\tallerintegracion3\tests\globalmart.integrationtests\bin\debug\net8.0\globalmart.integrationtests.dll" id="6701826f-3f0a-95b6-3547-57aa82b104c9">
+      <Execution id="8d701c3d-fbfb-41b0-8b9d-1685fe255c17" />
+      <TestMethod codeBase="C:\Users\dp877\Desktop\Universidad\Semestre 6\TallerIntegra3\TallerIntegracion3\tests\GlobalMart.IntegrationTests\bin\Debug\net8.0\GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.ReversaTarjetaIntegrationTests" name="Permisos_Aislamiento" />
+    </UnitTest>
+    <UnitTest name="GlobalMart.IntegrationTests.ReversaTarjetaIntegrationTests.Permisos_Aislamiento(role: null, foreign: False, expired: False, identity: True, status: 401)" storage="c:\users\dp877\desktop\universidad\semestre 6\tallerintegra3\tallerintegracion3\tests\globalmart.integrationtests\bin\debug\net8.0\globalmart.integrationtests.dll" id="f5e83ba7-9dec-22e7-1f64-e167edf6bf32">
+      <Execution id="12e57c91-1c0c-4ce3-b9c3-a6cf78f9292f" />
+      <TestMethod codeBase="C:\Users\dp877\Desktop\Universidad\Semestre 6\TallerIntegra3\TallerIntegracion3\tests\GlobalMart.IntegrationTests\bin\Debug\net8.0\GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.ReversaTarjetaIntegrationTests" name="Permisos_Aislamiento" />
+    </UnitTest>
+    <UnitTest name="GlobalMart.IntegrationTests.ReversaTarjetaIntegrationTests.RespuestaInconsistente_NoFingeReembolso(field: &quot;status&quot;)" storage="c:\users\dp877\desktop\universidad\semestre 6\tallerintegra3\tallerintegracion3\tests\globalmart.integrationtests\bin\debug\net8.0\globalmart.integrationtests.dll" id="94da4701-a4c3-c57a-67e7-2cc3113dd15c">
+      <Execution id="023a408d-886b-471f-bdfb-eba1e10ae34a" />
+      <TestMethod codeBase="C:\Users\dp877\Desktop\Universidad\Semestre 6\TallerIntegra3\TallerIntegracion3\tests\GlobalMart.IntegrationTests\bin\Debug\net8.0\GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.ReversaTarjetaIntegrationTests" name="RespuestaInconsistente_NoFingeReembolso" />
+    </UnitTest>
+    <UnitTest name="GlobalMart.IntegrationTests.ReversaTarjetaIntegrationTests.ResultadoPersistido_RepetirNoReenvia(scenario: &quot;declined&quot;, status: 409, state: RECHAZADA)" storage="c:\users\dp877\desktop\universidad\semestre 6\tallerintegra3\tallerintegracion3\tests\globalmart.integrationtests\bin\debug\net8.0\globalmart.integrationtests.dll" id="0fd79fa0-02e0-049b-b1e6-bb1db7610289">
+      <Execution id="85779bfe-c314-4a4d-8cd4-71f306e5237e" />
+      <TestMethod codeBase="C:\Users\dp877\Desktop\Universidad\Semestre 6\TallerIntegra3\TallerIntegracion3\tests\GlobalMart.IntegrationTests\bin\Debug\net8.0\GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.ReversaTarjetaIntegrationTests" name="ResultadoPersistido_RepetirNoReenvia" />
+    </UnitTest>
+    <UnitTest name="GlobalMart.IntegrationTests.ReversaTarjetaIntegrationTests.Timeout_ConservaVenta_GetRecuperaSinOtraReversa" storage="c:\users\dp877\desktop\universidad\semestre 6\tallerintegra3\tallerintegracion3\tests\globalmart.integrationtests\bin\debug\net8.0\globalmart.integrationtests.dll" id="b4c77283-5994-055f-9c95-6ad2fbbcd374">
+      <Execution id="9ceba75a-d963-4543-9cf2-d67e789e1be9" />
+      <TestMethod codeBase="C:\Users\dp877\Desktop\Universidad\Semestre 6\TallerIntegra3\TallerIntegracion3\tests\GlobalMart.IntegrationTests\bin\Debug\net8.0\GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.ReversaTarjetaIntegrationTests" name="Timeout_ConservaVenta_GetRecuperaSinOtraReversa" />
+    </UnitTest>
+    <UnitTest name="GlobalMart.IntegrationTests.ReversaTarjetaIntegrationTests.PasarelaNoDisponible_ConservaPendienteSinReenvio" storage="c:\users\dp877\desktop\universidad\semestre 6\tallerintegra3\tallerintegracion3\tests\globalmart.integrationtests\bin\debug\net8.0\globalmart.integrationtests.dll" id="70ff7824-203c-4a7c-3930-7f7c84e6db86">
+      <Execution id="ef11704a-5a7a-4a62-b6da-6c8088249cf9" />
+      <TestMethod codeBase="C:\Users\dp877\Desktop\Universidad\Semestre 6\TallerIntegra3\TallerIntegracion3\tests\GlobalMart.IntegrationTests\bin\Debug\net8.0\GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.ReversaTarjetaIntegrationTests" name="PasarelaNoDisponible_ConservaPendienteSinReenvio" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="f58d71ea-a8e0-33ae-e29e-cd9143d02557" executionId="d93e9ced-ee14-4382-9e94-a7b77999d72c" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="94da4701-a4c3-c57a-67e7-2cc3113dd15c" executionId="023a408d-886b-471f-bdfb-eba1e10ae34a" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="ee6d35d8-1e29-72e4-7bd2-3b14fda2420a" executionId="14a20b90-4483-4ea7-a686-9473fe2b931f" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="b4c77283-5994-055f-9c95-6ad2fbbcd374" executionId="9ceba75a-d963-4543-9cf2-d67e789e1be9" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="cbf49e2b-a56b-9679-79be-47246df538cd" executionId="8205a1bc-7dc5-4e87-b473-44521a803ce3" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="6701826f-3f0a-95b6-3547-57aa82b104c9" executionId="8d701c3d-fbfb-41b0-8b9d-1685fe255c17" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="46eec6e0-8c14-c46a-42b2-fb2460d7613b" executionId="cef2f512-d4ee-4c71-8890-226d67def802" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="747ab6eb-fdec-04b1-ed92-c4a51241bd6a" executionId="18069f48-e3a5-4b27-ae29-16df2624b4e2" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="d2511579-6ace-0116-8943-9962daeaa59f" executionId="364b5dc4-4717-4397-8298-5966649838cd" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="0fd79fa0-02e0-049b-b1e6-bb1db7610289" executionId="85779bfe-c314-4a4d-8cd4-71f306e5237e" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="b0720739-33cb-c221-cb74-13f68f9cb5fc" executionId="913f85c4-141c-4623-a006-a007101c5ddd" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="e0f4b221-b1f4-ce7a-35b0-c3e2c59b5a77" executionId="5da04e83-adff-4bc9-8c4a-df17d9f961c0" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="8250a99c-7d1a-9996-9619-7ceeed02908b" executionId="9318869a-2e54-407e-8f03-e2ed27708f5b" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="f67ea42f-2f71-9f51-fe65-e75e20b44f8d" executionId="2ffc5e8a-eec9-4f3d-8dff-949243a99a40" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="365c1fa1-9cf3-f86e-b298-a6c4227a3f74" executionId="c0b5ff13-2b08-4dd0-9fa8-7372310c9ddf" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="27adcf52-3e42-e3da-c9f8-4a9c378e2890" executionId="66fba50a-6125-4516-8111-279e017a5a9e" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="f5e83ba7-9dec-22e7-1f64-e167edf6bf32" executionId="12e57c91-1c0c-4ce3-b9c3-a6cf78f9292f" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="48810fcc-bde1-28a4-729e-b8f167e86cd9" executionId="c5398da2-aff1-404b-8a41-27bfde0cb528" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="d0ecabb2-116f-0ec8-0600-a704a973bcda" executionId="b0015b98-ecf5-4b95-b85a-40e2f2b08442" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="266f81b3-662a-c50c-6e51-a2a2e06b636f" executionId="0d6cc87e-c51c-4969-b21f-59811992a29f" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="94647e2d-3436-ac1f-c461-e5ebd120da28" executionId="ff3ca710-c501-405d-8c38-1a8e55783518" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="70ff7824-203c-4a7c-3930-7f7c84e6db86" executionId="ef11704a-5a7a-4a62-b6da-6c8088249cf9" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="9d912399-c461-a2ff-e18b-3e9b593a46a5" executionId="2757fed9-750b-4f9d-a94e-b0ac5a6150ae" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="Resultados sin formato de lista" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="Todos los resultados cargados" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Completed">
+    <Counters total="23" executed="23" passed="23" failed="0" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Output>
+      <StdOut>[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v2.8.2+699d445a1a (64-bit .NET 8.0.31)&#xD;
+[xUnit.net 00:00:01.65]   Discovering: GlobalMart.IntegrationTests&#xD;
+[xUnit.net 00:00:01.82]   Discovered:  GlobalMart.IntegrationTests&#xD;
+[xUnit.net 00:00:01.82]   Starting:    GlobalMart.IntegrationTests&#xD;
+info: Microsoft.EntityFrameworkCore.Migrations[20405]&#xD;
+      No migrations were applied. The database is already up to date.&#xD;
+info: POSCartService.Services.OutboxPublisherWorker[0]&#xD;
+      Worker de outbox deshabilitado por configuraci�n&#xD;
+info: Microsoft.EntityFrameworkCore.Migrations[20405]&#xD;
+      No migrations were applied. The database is already up to date.&#xD;
+warn: Microsoft.AspNetCore.HttpsPolicy.HttpsRedirectionMiddleware[3]&#xD;
+      Failed to determine the https port for redirect.&#xD;
+warn: Microsoft.EntityFrameworkCore.Query[20504]&#xD;
+      Compiling a query which loads related collections for more than one collection navigation, either via 'Include' or through projection, but no 'QuerySplittingBehavior' has been configured. By default, Entity Framework will use 'QuerySplittingBehavior.SingleQuery', which can potentially result in slow query performance. See https://go.microsoft.com/fwlink/?linkid=2134277 for more information. To identify the query that's triggering this warning call 'ConfigureWarnings(w =&gt; w.Throw(RelationalEventId.MultipleCollectionIncludeWarning))'.&#xD;
+info: Microsoft.EntityFrameworkCore.Migrations[20405]&#xD;
+      No migrations were applied. The database is already up to date.&#xD;
+info: POSCartService.Services.OutboxPublisherWorker[0]&#xD;
+      Worker de outbox deshabilitado por configuraci�n&#xD;
+info: Microsoft.EntityFrameworkCore.Migrations[20405]&#xD;
+      No migrations were applied. The database is already up to date.&#xD;
+warn: Microsoft.AspNetCore.HttpsPolicy.HttpsRedirectionMiddleware[3]&#xD;
+      Failed to determine the https port for redirect.&#xD;
+info: Microsoft.EntityFrameworkCore.Migrations[20405]&#xD;
+      No migrations were applied. The database is already up to date.&#xD;
+info: POSCartService.Services.OutboxPublisherWorker[0]&#xD;
+      Worker de outbox deshabilitado por configuraci�n&#xD;
+info: Microsoft.EntityFrameworkCore.Migrations[20405]&#xD;
+      No migrations were applied. The database is already up to date.&#xD;
+warn: Microsoft.AspNetCore.HttpsPolicy.HttpsRedirectionMiddleware[3]&#xD;
+      Failed to determine the https port for redirect.&#xD;
+info: Microsoft.EntityFrameworkCore.Migrations[20405]&#xD;
+      No migrations were applied. The database is already up to date.&#xD;
+info: POSCartService.Services.OutboxPublisherWorker[0]&#xD;
+      Worker de outbox deshabilitado por configuraci�n&#xD;
+info: Microsoft.EntityFrameworkCore.Migrations[20405]&#xD;
+      No migrations were applied. The database is already up to date.&#xD;
+warn: Microsoft.AspNetCore.HttpsPolicy.HttpsRedirectionMiddleware[3]&#xD;
+      Failed to determine the https port for redirect.&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[100]&#xD;
+      Start processing HTTP request POST http://127.0.0.1:64875/simulator/reversals&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[100]&#xD;
+      Sending HTTP request POST http://127.0.0.1:64875/simulator/reversals&#xD;
+warn: POSCartService.Services.ReversaTarjetaService[0]&#xD;
+      Reversa incierta TenantId=5c44aeb5-e11b-4579-bc58-e18e7d42eb72 VentaId=8ef29773-64af-4be6-b278-832165b44990 ReversaId=aa4a2afc-1aed-4766-a9a3-f4b17429a344 ErrorType=TaskCanceledException&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[100]&#xD;
+      Start processing HTTP request GET http://127.0.0.1:64875/simulator/reversals/aa4a2afc-1aed-4766-a9a3-f4b17429a344?tenant_id=5c44aeb5-e11b-4579-bc58-e18e7d42eb72&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[100]&#xD;
+      Sending HTTP request GET http://127.0.0.1:64875/simulator/reversals/aa4a2afc-1aed-4766-a9a3-f4b17429a344?tenant_id=5c44aeb5-e11b-4579-bc58-e18e7d42eb72&#xD;
+warn: POSCartService.Services.ReversaTarjetaService[0]&#xD;
+      Reversa incierta TenantId=5c44aeb5-e11b-4579-bc58-e18e7d42eb72 VentaId=8ef29773-64af-4be6-b278-832165b44990 ReversaId=aa4a2afc-1aed-4766-a9a3-f4b17429a344 ErrorType=TaskCanceledException&#xD;
+warn: Microsoft.EntityFrameworkCore.Query[20504]&#xD;
+      Compiling a query which loads related collections for more than one collection navigation, either via 'Include' or through projection, but no 'QuerySplittingBehavior' has been configured. By default, Entity Framework will use 'QuerySplittingBehavior.SingleQuery', which can potentially result in slow query performance. See https://go.microsoft.com/fwlink/?linkid=2134277 for more information. To identify the query that's triggering this warning call 'ConfigureWarnings(w =&gt; w.Throw(RelationalEventId.MultipleCollectionIncludeWarning))'.&#xD;
+info: Microsoft.EntityFrameworkCore.Migrations[20405]&#xD;
+      No migrations were applied. The database is already up to date.&#xD;
+info: POSCartService.Services.OutboxPublisherWorker[0]&#xD;
+      Worker de outbox deshabilitado por configuraci�n&#xD;
+info: Microsoft.EntityFrameworkCore.Migrations[20405]&#xD;
+      No migrations were applied. The database is already up to date.&#xD;
+warn: Microsoft.AspNetCore.HttpsPolicy.HttpsRedirectionMiddleware[3]&#xD;
+      Failed to determine the https port for redirect.&#xD;
+info: Microsoft.EntityFrameworkCore.Migrations[20405]&#xD;
+      No migrations were applied. The database is already up to date.&#xD;
+info: POSCartService.Services.OutboxPublisherWorker[0]&#xD;
+      Worker de outbox deshabilitado por configuraci�n&#xD;
+info: Microsoft.EntityFrameworkCore.Migrations[20405]&#xD;
+      No migrations were applied. The database is already up to date.&#xD;
+warn: Microsoft.AspNetCore.HttpsPolicy.HttpsRedirectionMiddleware[3]&#xD;
+      Failed to determine the https port for redirect.&#xD;
+info: Microsoft.EntityFrameworkCore.Migrations[20405]&#xD;
+      No migrations were applied. The database is already up to date.&#xD;
+info: POSCartService.Services.OutboxPublisherWorker[0]&#xD;
+      Worker de outbox deshabilitado por configuraci�n&#xD;
+info: Microsoft.EntityFrameworkCore.Migrations[20405]&#xD;
+      No migrations were applied. The database is already up to date.&#xD;
+warn: Microsoft.AspNetCore.HttpsPolicy.HttpsRedirectionMiddleware[3]&#xD;
+      Failed to determine the https port for redirect.&#xD;
+info: Microsoft.EntityFrameworkCore.Migrations[20405]&#xD;
+      No migrations were applied. The database is already up to date.&#xD;
+info: POSCartService.Services.OutboxPublisherWorker[0]&#xD;
+      Worker de outbox deshabilitado por configuraci�n&#xD;
+info: Microsoft.EntityFrameworkCore.Migrations[20405]&#xD;
+      No migrations were applied. The database is already up to date.&#xD;
+warn: Microsoft.AspNetCore.HttpsPolicy.HttpsRedirectionMiddleware[3]&#xD;
+      Failed to determine the https port for redirect.&#xD;
+info: Microsoft.EntityFrameworkCore.Migrations[20405]&#xD;
+      No migrations were applied. The database is already up to date.&#xD;
+info: POSCartService.Services.OutboxPublisherWorker[0]&#xD;
+      Worker de outbox deshabilitado por configuraci�n&#xD;
+info: Microsoft.EntityFrameworkCore.Migrations[20405]&#xD;
+      No migrations were applied. The database is already up to date.&#xD;
+warn: Microsoft.AspNetCore.HttpsPolicy.HttpsRedirectionMiddleware[3]&#xD;
+      Failed to determine the https port for redirect.&#xD;
+info: Microsoft.EntityFrameworkCore.Migrations[20405]&#xD;
+      No migrations were applied. The database is already up to date.&#xD;
+info: POSCartService.Services.OutboxPublisherWorker[0]&#xD;
+      Worker de outbox deshabilitado por configuraci�n&#xD;
+info: Microsoft.EntityFrameworkCore.Migrations[20405]&#xD;
+      No migrations were applied. The database is already up to date.&#xD;
+warn: Microsoft.AspNetCore.HttpsPolicy.HttpsRedirectionMiddleware[3]&#xD;
+      Failed to determine the https port for redirect.&#xD;
+info: Microsoft.EntityFrameworkCore.Migrations[20405]&#xD;
+      No migrations were applied. The database is already up to date.&#xD;
+info: POSCartService.Services.OutboxPublisherWorker[0]&#xD;
+      Worker de outbox deshabilitado por configuraci�n&#xD;
+info: Microsoft.EntityFrameworkCore.Migrations[20405]&#xD;
+      No migrations were applied. The database is already up to date.&#xD;
+warn: Microsoft.AspNetCore.HttpsPolicy.HttpsRedirectionMiddleware[3]&#xD;
+      Failed to determine the https port for redirect.&#xD;
+info: Microsoft.EntityFrameworkCore.Migrations[20405]&#xD;
+      No migrations were applied. The database is already up to date.&#xD;
+info: POSCartService.Services.OutboxPublisherWorker[0]&#xD;
+      Worker de outbox deshabilitado por configuraci�n&#xD;
+info: Microsoft.EntityFrameworkCore.Migrations[20405]&#xD;
+      No migrations were applied. The database is already up to date.&#xD;
+warn: Microsoft.AspNetCore.HttpsPolicy.HttpsRedirectionMiddleware[3]&#xD;
+      Failed to determine the https port for redirect.&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[100]&#xD;
+      Start processing HTTP request POST http://127.0.0.1:64950/simulator/reversals&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[100]&#xD;
+      Sending HTTP request POST http://127.0.0.1:64950/simulator/reversals&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[101]&#xD;
+      Received HTTP response headers after 3.5217ms - 200&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[101]&#xD;
+      End processing HTTP request after 7.8773ms - 200&#xD;
+info: Microsoft.EntityFrameworkCore.Migrations[20405]&#xD;
+      No migrations were applied. The database is already up to date.&#xD;
+info: POSCartService.Services.OutboxPublisherWorker[0]&#xD;
+      Worker de outbox deshabilitado por configuraci�n&#xD;
+info: Microsoft.EntityFrameworkCore.Migrations[20405]&#xD;
+      No migrations were applied. The database is already up to date.&#xD;
+warn: Microsoft.AspNetCore.HttpsPolicy.HttpsRedirectionMiddleware[3]&#xD;
+      Failed to determine the https port for redirect.&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[100]&#xD;
+      Start processing HTTP request POST http://127.0.0.1:64965/simulator/reversals&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[100]&#xD;
+      Sending HTTP request POST http://127.0.0.1:64965/simulator/reversals&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[101]&#xD;
+      Received HTTP response headers after 2.1401ms - 200&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[101]&#xD;
+      End processing HTTP request after 4.0862ms - 200&#xD;
+warn: POSCartService.Services.ReversaTarjetaService[0]&#xD;
+      Reversa incierta TenantId=7f6b6b60-dcb7-41ca-b4e3-a4fe64fb88d1 VentaId=9562c036-d923-492e-98bb-1d766129eb2f ReversaId=b178c290-32d2-4f47-a2bd-bf01fd5f0af9 ErrorType=ExternalServiceException&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[100]&#xD;
+      Start processing HTTP request GET http://127.0.0.1:64965/simulator/reversals/b178c290-32d2-4f47-a2bd-bf01fd5f0af9?tenant_id=7f6b6b60-dcb7-41ca-b4e3-a4fe64fb88d1&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[100]&#xD;
+      Sending HTTP request GET http://127.0.0.1:64965/simulator/reversals/b178c290-32d2-4f47-a2bd-bf01fd5f0af9?tenant_id=7f6b6b60-dcb7-41ca-b4e3-a4fe64fb88d1&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[101]&#xD;
+      Received HTTP response headers after 1.1768ms - 200&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[101]&#xD;
+      End processing HTTP request after 1.2483ms - 200&#xD;
+info: Microsoft.EntityFrameworkCore.Migrations[20405]&#xD;
+      No migrations were applied. The database is already up to date.&#xD;
+info: POSCartService.Services.OutboxPublisherWorker[0]&#xD;
+      Worker de outbox deshabilitado por configuraci�n&#xD;
+info: Microsoft.EntityFrameworkCore.Migrations[20405]&#xD;
+      No migrations were applied. The database is already up to date.&#xD;
+warn: Microsoft.AspNetCore.HttpsPolicy.HttpsRedirectionMiddleware[3]&#xD;
+      Failed to determine the https port for redirect.&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[100]&#xD;
+      Start processing HTTP request POST http://127.0.0.1:64975/simulator/reversals&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[100]&#xD;
+      Sending HTTP request POST http://127.0.0.1:64975/simulator/reversals&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[101]&#xD;
+      Received HTTP response headers after 2.7317ms - 200&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[101]&#xD;
+      End processing HTTP request after 3.3312ms - 200&#xD;
+warn: POSCartService.Services.ReversaTarjetaService[0]&#xD;
+      Reversa incierta TenantId=d6dbd6ef-9b85-4748-95da-947506048eb6 VentaId=1208bbfb-f948-477f-8eab-13c62eab5a05 ReversaId=32282815-1b1f-4f16-a0a0-381c7567b097 ErrorType=ExternalServiceException&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[100]&#xD;
+      Start processing HTTP request GET http://127.0.0.1:64975/simulator/reversals/32282815-1b1f-4f16-a0a0-381c7567b097?tenant_id=d6dbd6ef-9b85-4748-95da-947506048eb6&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[100]&#xD;
+      Sending HTTP request GET http://127.0.0.1:64975/simulator/reversals/32282815-1b1f-4f16-a0a0-381c7567b097?tenant_id=d6dbd6ef-9b85-4748-95da-947506048eb6&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[101]&#xD;
+      Received HTTP response headers after 0.797ms - 200&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[101]&#xD;
+      End processing HTTP request after 0.8772ms - 200&#xD;
+info: Microsoft.EntityFrameworkCore.Migrations[20405]&#xD;
+      No migrations were applied. The database is already up to date.&#xD;
+info: POSCartService.Services.OutboxPublisherWorker[0]&#xD;
+      Worker de outbox deshabilitado por configuraci�n&#xD;
+info: Microsoft.EntityFrameworkCore.Migrations[20405]&#xD;
+      No migrations were applied. The database is already up to date.&#xD;
+warn: Microsoft.AspNetCore.HttpsPolicy.HttpsRedirectionMiddleware[3]&#xD;
+      Failed to determine the https port for redirect.&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[100]&#xD;
+      Start processing HTTP request POST http://127.0.0.1:64985/simulator/reversals&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[100]&#xD;
+      Sending HTTP request POST http://127.0.0.1:64985/simulator/reversals&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[101]&#xD;
+      Received HTTP response headers after 1.8353ms - 200&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[101]&#xD;
+      End processing HTTP request after 1.9921ms - 200&#xD;
+warn: POSCartService.Services.ReversaTarjetaService[0]&#xD;
+      Reversa incierta TenantId=0919a0fd-84fd-45fc-82ba-93817fb62137 VentaId=ceb80aaa-3fe7-47e0-9e83-416c7137aad0 ReversaId=27f2c052-5699-45ae-8d6f-1e4a983ef310 ErrorType=ExternalServiceException&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[100]&#xD;
+      Start processing HTTP request GET http://127.0.0.1:64985/simulator/reversals/27f2c052-5699-45ae-8d6f-1e4a983ef310?tenant_id=0919a0fd-84fd-45fc-82ba-93817fb62137&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[100]&#xD;
+      Sending HTTP request GET http://127.0.0.1:64985/simulator/reversals/27f2c052-5699-45ae-8d6f-1e4a983ef310?tenant_id=0919a0fd-84fd-45fc-82ba-93817fb62137&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[101]&#xD;
+      Received HTTP response headers after 0.6603ms - 200&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[101]&#xD;
+      End processing HTTP request after 0.7232ms - 200&#xD;
+info: Microsoft.EntityFrameworkCore.Migrations[20405]&#xD;
+      No migrations were applied. The database is already up to date.&#xD;
+info: POSCartService.Services.OutboxPublisherWorker[0]&#xD;
+      Worker de outbox deshabilitado por configuraci�n&#xD;
+info: Microsoft.EntityFrameworkCore.Migrations[20405]&#xD;
+      No migrations were applied. The database is already up to date.&#xD;
+warn: Microsoft.AspNetCore.HttpsPolicy.HttpsRedirectionMiddleware[3]&#xD;
+      Failed to determine the https port for redirect.&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[100]&#xD;
+      Start processing HTTP request POST http://127.0.0.1:64995/simulator/reversals&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[100]&#xD;
+      Sending HTTP request POST http://127.0.0.1:64995/simulator/reversals&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[101]&#xD;
+      Received HTTP response headers after 1.911ms - 200&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[101]&#xD;
+      End processing HTTP request after 2.0839ms - 200&#xD;
+warn: POSCartService.Services.ReversaTarjetaService[0]&#xD;
+      Reversa incierta TenantId=1ea9ad65-66d9-4a51-ae86-75a0a7a40f7c VentaId=e6a662b4-b12e-4979-9b83-27b7c4b0dddb ReversaId=cfb58c77-19a2-4da1-905a-ccf39d1cc4dc ErrorType=ExternalServiceException&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[100]&#xD;
+      Start processing HTTP request GET http://127.0.0.1:64995/simulator/reversals/cfb58c77-19a2-4da1-905a-ccf39d1cc4dc?tenant_id=1ea9ad65-66d9-4a51-ae86-75a0a7a40f7c&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[100]&#xD;
+      Sending HTTP request GET http://127.0.0.1:64995/simulator/reversals/cfb58c77-19a2-4da1-905a-ccf39d1cc4dc?tenant_id=1ea9ad65-66d9-4a51-ae86-75a0a7a40f7c&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[101]&#xD;
+      Received HTTP response headers after 0.675ms - 200&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[101]&#xD;
+      End processing HTTP request after 0.7391ms - 200&#xD;
+info: Microsoft.EntityFrameworkCore.Migrations[20405]&#xD;
+      No migrations were applied. The database is already up to date.&#xD;
+info: POSCartService.Services.OutboxPublisherWorker[0]&#xD;
+      Worker de outbox deshabilitado por configuraci�n&#xD;
+info: Microsoft.EntityFrameworkCore.Migrations[20405]&#xD;
+      No migrations were applied. The database is already up to date.&#xD;
+warn: Microsoft.AspNetCore.HttpsPolicy.HttpsRedirectionMiddleware[3]&#xD;
+      Failed to determine the https port for redirect.&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[100]&#xD;
+      Start processing HTTP request POST http://127.0.0.1:65005/simulator/reversals&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[100]&#xD;
+      Sending HTTP request POST http://127.0.0.1:65005/simulator/reversals&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[101]&#xD;
+      Received HTTP response headers after 2.2858ms - 200&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[101]&#xD;
+      End processing HTTP request after 2.3635ms - 200&#xD;
+info: Microsoft.EntityFrameworkCore.Migrations[20405]&#xD;
+      No migrations were applied. The database is already up to date.&#xD;
+info: POSCartService.Services.OutboxPublisherWorker[0]&#xD;
+      Worker de outbox deshabilitado por configuraci�n&#xD;
+info: Microsoft.EntityFrameworkCore.Migrations[20405]&#xD;
+      No migrations were applied. The database is already up to date.&#xD;
+warn: Microsoft.AspNetCore.HttpsPolicy.HttpsRedirectionMiddleware[3]&#xD;
+      Failed to determine the https port for redirect.&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[100]&#xD;
+      Start processing HTTP request POST http://127.0.0.1:65016/simulator/reversals&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[100]&#xD;
+      Sending HTTP request POST http://127.0.0.1:65016/simulator/reversals&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[101]&#xD;
+      Received HTTP response headers after 1.7013ms - 200&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[101]&#xD;
+      End processing HTTP request after 1.7802ms - 200&#xD;
+info: Microsoft.EntityFrameworkCore.Migrations[20405]&#xD;
+      No migrations were applied. The database is already up to date.&#xD;
+info: POSCartService.Services.OutboxPublisherWorker[0]&#xD;
+      Worker de outbox deshabilitado por configuraci�n&#xD;
+info: Microsoft.EntityFrameworkCore.Migrations[20405]&#xD;
+      No migrations were applied. The database is already up to date.&#xD;
+warn: Microsoft.AspNetCore.HttpsPolicy.HttpsRedirectionMiddleware[3]&#xD;
+      Failed to determine the https port for redirect.&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[100]&#xD;
+      Start processing HTTP request POST http://127.0.0.1:65027/simulator/reversals&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[100]&#xD;
+      Sending HTTP request POST http://127.0.0.1:65027/simulator/reversals&#xD;
+warn: POSCartService.Services.ReversaTarjetaService[0]&#xD;
+      Reversa incierta TenantId=1dbdea01-2f36-4eb5-8b94-0b83101c8427 VentaId=57586891-cbb6-435b-bb36-6e546b4302b5 ReversaId=425cbe59-3161-45ee-91a5-334fbfe132a3 ErrorType=TaskCanceledException&#xD;
+info: Microsoft.EntityFrameworkCore.Migrations[20405]&#xD;
+      No migrations were applied. The database is already up to date.&#xD;
+info: POSCartService.Services.OutboxPublisherWorker[0]&#xD;
+      Worker de outbox deshabilitado por configuraci�n&#xD;
+info: Microsoft.EntityFrameworkCore.Migrations[20405]&#xD;
+      No migrations were applied. The database is already up to date.&#xD;
+warn: Microsoft.AspNetCore.HttpsPolicy.HttpsRedirectionMiddleware[3]&#xD;
+      Failed to determine the https port for redirect.&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[100]&#xD;
+      Start processing HTTP request POST http://127.0.0.1:65038/simulator/reversals&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[100]&#xD;
+      Sending HTTP request POST http://127.0.0.1:65038/simulator/reversals&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[101]&#xD;
+      Received HTTP response headers after 1.9636ms - 200&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[101]&#xD;
+      End processing HTTP request after 2.0485ms - 200&#xD;
+info: Microsoft.EntityFrameworkCore.Migrations[20405]&#xD;
+      No migrations were applied. The database is already up to date.&#xD;
+info: POSCartService.Services.OutboxPublisherWorker[0]&#xD;
+      Worker de outbox deshabilitado por configuraci�n&#xD;
+info: Microsoft.EntityFrameworkCore.Migrations[20405]&#xD;
+      No migrations were applied. The database is already up to date.&#xD;
+warn: Microsoft.AspNetCore.HttpsPolicy.HttpsRedirectionMiddleware[3]&#xD;
+      Failed to determine the https port for redirect.&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[100]&#xD;
+      Start processing HTTP request POST http://127.0.0.1:65048/simulator/reversals&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[100]&#xD;
+      Sending HTTP request POST http://127.0.0.1:65048/simulator/reversals&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[101]&#xD;
+      Received HTTP response headers after 1.8476ms - 200&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[101]&#xD;
+      End processing HTTP request after 1.9269ms - 200&#xD;
+info: Microsoft.EntityFrameworkCore.Migrations[20405]&#xD;
+      No migrations were applied. The database is already up to date.&#xD;
+info: POSCartService.Services.OutboxPublisherWorker[0]&#xD;
+      Worker de outbox deshabilitado por configuraci�n&#xD;
+info: Microsoft.EntityFrameworkCore.Migrations[20405]&#xD;
+      No migrations were applied. The database is already up to date.&#xD;
+warn: Microsoft.AspNetCore.HttpsPolicy.HttpsRedirectionMiddleware[3]&#xD;
+      Failed to determine the https port for redirect.&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[100]&#xD;
+      Start processing HTTP request POST http://127.0.0.1:65058/simulator/reversals&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[100]&#xD;
+      Sending HTTP request POST http://127.0.0.1:65058/simulator/reversals&#xD;
+warn: POSCartService.Services.ReversaTarjetaService[0]&#xD;
+      Reversa incierta TenantId=cf8c7083-aabc-48dc-b0a3-b884a8d89a9f VentaId=5831bfbd-2d97-47d6-ae05-3baa418f8cc5 ReversaId=1f4381ab-a8f0-4223-bb37-43575aa6a733 ErrorType=TaskCanceledException&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[100]&#xD;
+      Start processing HTTP request GET http://127.0.0.1:65058/simulator/reversals/1f4381ab-a8f0-4223-bb37-43575aa6a733?tenant_id=cf8c7083-aabc-48dc-b0a3-b884a8d89a9f&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[100]&#xD;
+      Sending HTTP request GET http://127.0.0.1:65058/simulator/reversals/1f4381ab-a8f0-4223-bb37-43575aa6a733?tenant_id=cf8c7083-aabc-48dc-b0a3-b884a8d89a9f&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[101]&#xD;
+      Received HTTP response headers after 1.5425ms - 200&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[101]&#xD;
+      End processing HTTP request after 1.6325ms - 200&#xD;
+info: Microsoft.EntityFrameworkCore.Migrations[20405]&#xD;
+      No migrations were applied. The database is already up to date.&#xD;
+info: POSCartService.Services.OutboxPublisherWorker[0]&#xD;
+      Worker de outbox deshabilitado por configuraci�n&#xD;
+info: Microsoft.EntityFrameworkCore.Migrations[20405]&#xD;
+      No migrations were applied. The database is already up to date.&#xD;
+info: Microsoft.EntityFrameworkCore.Migrations[20405]&#xD;
+      No migrations were applied. The database is already up to date.&#xD;
+info: POSCartService.Services.OutboxPublisherWorker[0]&#xD;
+      Worker de outbox deshabilitado por configuraci�n&#xD;
+warn: Microsoft.AspNetCore.HttpsPolicy.HttpsRedirectionMiddleware[3]&#xD;
+      Failed to determine the https port for redirect.&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[100]&#xD;
+      Start processing HTTP request POST http://127.0.0.1:65069/simulator/reversals&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[100]&#xD;
+      Sending HTTP request POST http://127.0.0.1:65069/simulator/reversals&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[101]&#xD;
+      Received HTTP response headers after 1.9046ms - 200&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[101]&#xD;
+      End processing HTTP request after 1.9853ms - 200&#xD;
+fail: Microsoft.EntityFrameworkCore.Update[10000]&#xD;
+      An exception occurred in the database while saving changes for context type 'POSCartService.Data.PosCartDbContext'.&#xD;
+      System.InvalidOperationException: Fallo controlado despu�s de escritura y antes de commit&#xD;
+         at GlobalMart.IntegrationTests.ReversaTarjetaIntegrationTests.FailConfirmation.SavedChangesAsync(SaveChangesCompletedEventData eventData, Int32 result, CancellationToken cancellationToken) in C:\Users\dp877\Desktop\Universidad\Semestre 6\TallerIntegra3\TallerIntegracion3\tests\GlobalMart.IntegrationTests\ReversaTarjetaIntegrationTests.cs:line 275&#xD;
+         at Microsoft.EntityFrameworkCore.Diagnostics.CoreLoggerExtensions.SaveChangesCompletedAsync(IDiagnosticsLogger`1 diagnostics, DbContext context, Int32 entitiesSavedCount, CancellationToken cancellationToken)&#xD;
+         at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)&#xD;
+      System.InvalidOperationException: Fallo controlado despu�s de escritura y antes de commit&#xD;
+         at GlobalMart.IntegrationTests.ReversaTarjetaIntegrationTests.FailConfirmation.SavedChangesAsync(SaveChangesCompletedEventData eventData, Int32 result, CancellationToken cancellationToken) in C:\Users\dp877\Desktop\Universidad\Semestre 6\TallerIntegra3\TallerIntegracion3\tests\GlobalMart.IntegrationTests\ReversaTarjetaIntegrationTests.cs:line 275&#xD;
+         at Microsoft.EntityFrameworkCore.Diagnostics.CoreLoggerExtensions.SaveChangesCompletedAsync(IDiagnosticsLogger`1 diagnostics, DbContext context, Int32 entitiesSavedCount, CancellationToken cancellationToken)&#xD;
+         at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)&#xD;
+fail: POSCartService.Controllers.VentasController[0]&#xD;
+      Error al anular venta 256bf14d-268c-43f5-9d5a-4c037b5e8c5a del tenant 7d7de62c-4fa0-46d6-9c5e-d1c1ea031755&#xD;
+      System.InvalidOperationException: Fallo controlado despu�s de escritura y antes de commit&#xD;
+         at GlobalMart.IntegrationTests.ReversaTarjetaIntegrationTests.FailConfirmation.SavedChangesAsync(SaveChangesCompletedEventData eventData, Int32 result, CancellationToken cancellationToken) in C:\Users\dp877\Desktop\Universidad\Semestre 6\TallerIntegra3\TallerIntegracion3\tests\GlobalMart.IntegrationTests\ReversaTarjetaIntegrationTests.cs:line 275&#xD;
+         at Microsoft.EntityFrameworkCore.Diagnostics.CoreLoggerExtensions.SaveChangesCompletedAsync(IDiagnosticsLogger`1 diagnostics, DbContext context, Int32 entitiesSavedCount, CancellationToken cancellationToken)&#xD;
+         at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)&#xD;
+         at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)&#xD;
+         at POSCartService.Services.ReversaTarjetaService.ConfirmarAsync(ReversaPago snapshot, ReversalResponse result) in C:\Users\dp877\Desktop\Universidad\Semestre 6\TallerIntegra3\TallerIntegracion3\src\POSCartService\Services\ReversaTarjetaService.cs:line 146&#xD;
+         at POSCartService.Services.ReversaTarjetaService.ConfirmarAsync(ReversaPago snapshot, ReversalResponse result) in C:\Users\dp877\Desktop\Universidad\Semestre 6\TallerIntegra3\TallerIntegracion3\src\POSCartService\Services\ReversaTarjetaService.cs:line 147&#xD;
+         at POSCartService.Services.ReversaTarjetaService.AnularAsync(Guid ventaId, String motivo) in C:\Users\dp877\Desktop\Universidad\Semestre 6\TallerIntegra3\TallerIntegracion3\src\POSCartService\Services\ReversaTarjetaService.cs:line 28&#xD;
+         at POSCartService.Services.VentaService.AnularAsync(Guid ventaId, Guid cajeroId, String motivo) in C:\Users\dp877\Desktop\Universidad\Semestre 6\TallerIntegra3\TallerIntegracion3\src\POSCartService\Services\VentaService.cs:line 127&#xD;
+         at POSCartService.Controllers.VentasController.Anular(Guid id, JsonElement request) in C:\Users\dp877\Desktop\Universidad\Semestre 6\TallerIntegra3\TallerIntegracion3\src\POSCartService\Controllers\VentasController.cs:line 71&#xD;
+warn: Microsoft.AspNetCore.HttpsPolicy.HttpsRedirectionMiddleware[3]&#xD;
+      Failed to determine the https port for redirect.&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[100]&#xD;
+      Start processing HTTP request GET http://127.0.0.1:65069/simulator/reversals/576fe624-198d-45b9-8ee4-deb545cf7e4d?tenant_id=7d7de62c-4fa0-46d6-9c5e-d1c1ea031755&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[100]&#xD;
+      Sending HTTP request GET http://127.0.0.1:65069/simulator/reversals/576fe624-198d-45b9-8ee4-deb545cf7e4d?tenant_id=7d7de62c-4fa0-46d6-9c5e-d1c1ea031755&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.ClientHandler[101]&#xD;
+      Received HTTP response headers after 1.2415ms - 200&#xD;
+info: System.Net.Http.HttpClient.PasarelaPago.LogicalHandler[101]&#xD;
+      End processing HTTP request after 1.3068ms - 200&#xD;
+[xUnit.net 00:00:25.99]   Finished:    GlobalMart.IntegrationTests&#xD;
+</StdOut>
+    </Output>
+  </ResultSummary>
+</TestRun>
