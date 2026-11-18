@@ -30,11 +30,15 @@ public sealed record SaleEventProcessingResult(
     SaleEventProcessingStatus Status,
     string? Error = null)
 {
-    public bool Retry => Status == SaleEventProcessingStatus.TransientFailure;
+    public bool CommitOffset => Status is
+        SaleEventProcessingStatus.Processed or
+        SaleEventProcessingStatus.Duplicate or
+        SaleEventProcessingStatus.InvalidPayload or
+        SaleEventProcessingStatus.Unrecoverable;
+
+    public bool Retry => !CommitOffset;
 
     public bool SendToErrorTopic => Status is
         SaleEventProcessingStatus.InvalidPayload or
         SaleEventProcessingStatus.Unrecoverable;
-
-    public bool CommitOffset => !Retry;
 }

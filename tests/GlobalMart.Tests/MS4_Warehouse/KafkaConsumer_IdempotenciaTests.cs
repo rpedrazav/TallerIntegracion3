@@ -237,6 +237,7 @@ public class KafkaConsumer_IdempotenciaTests : IDisposable
     [InlineData(SaleEventProcessingStatus.InvalidPayload, true, true, false)]
     [InlineData(SaleEventProcessingStatus.Unrecoverable, true, true, false)]
     [InlineData(SaleEventProcessingStatus.TransientFailure, false, false, true)]
+    [InlineData((SaleEventProcessingStatus)999, false, false, true)]
     public void ResultadoProcesamiento_DefinePoliticaDeOffsetYError(
         SaleEventProcessingStatus status,
         bool commitOffset,
