@@ -15,6 +15,10 @@ public class Lote
     public Guid ProductoId { get; set; }
 
     [Required]
+    [Column("sucursal_id")]
+    public Guid SucursalId { get; set; }
+
+    [Required]
     [Column("fecha_vencimiento")]
     public DateOnly FechaVencimiento { get; set; }
 

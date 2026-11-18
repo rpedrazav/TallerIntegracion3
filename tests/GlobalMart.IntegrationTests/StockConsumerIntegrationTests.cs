@@ -52,6 +52,7 @@ public class StockConsumerIntegrationTests : IClassFixture<Ms4WebApplicationFact
             {
                 Id = loteId,
                 ProductoId = productId,
+                SucursalId = sucursalId,
                 TenantId = tenantId,
                 FechaVencimiento = DateOnly.FromDateTime(DateTime.UtcNow.AddYears(1)),
                 Cantidad = stockInicial,
