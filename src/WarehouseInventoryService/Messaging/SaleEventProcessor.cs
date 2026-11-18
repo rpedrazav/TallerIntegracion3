@@ -124,41 +124,14 @@ public class SaleEventProcessor : ISaleEventProcessor
             }
             else
             {
-                // TI3-254: Caso borde — producto sin registro en tabla Stock.
-                // Se crea el registro con stock negativo (discrepancia a resolver).
                 _logger.LogWarning(
-                    "Producto {ProductoId} sin registro de stock en sucursal {SucursalId}. Creando registro (TI3-254)",
-                    item.ProductoId, evento.SucursalId);
-
-                var stockCreado = _stockRepository
-                    .CrearYDescontar(item.ProductoId, item.Cantidad, evento.TenantId, evento.SucursalId)
-                    .GetAwaiter()
-                    .GetResult();
-
-                _logger.LogInformation(
-                    "Movimiento de stock: {Movimiento}",
-                    new
-                    {
-                        tipo = "VENTA",
-                        producto_id = item.ProductoId,
-                        sucursal_id = evento.SucursalId,
-                        tenant_id = evento.TenantId,
-                        venta_id = evento.VentaId,
-                        cantidad_descontada = item.Cantidad,
-                        stock_anterior = 0m,
-                        stock_nuevo = stockCreado.CantidadActual,
-                        registro_creado = true,
-                        timestamp = DateTime.UtcNow
-                    });
-
-                _context.Movimientos.Add(new MovimientoStock
-                {
-                    ProductoId = item.ProductoId,
-                    Tipo = "VENTA",
-                    Cantidad = item.Cantidad,
-                    Motivo = $"Venta {evento.VentaId} — registro creado, stock 0 → {stockCreado.CantidadActual}",
-                    TenantId = evento.TenantId
-                });
+                    "Stock inexistente o insuficiente para producto {ProductoId} en sucursal {SucursalId}; evento {EventId} pendiente",
+                    item.ProductoId,
+                    evento.SucursalId,
+                    eventId);
+                return new(
+                    SaleEventProcessingStatus.TransientFailure,
+                    $"Stock inexistente o insuficiente para producto {item.ProductoId}");
             }
         }
 

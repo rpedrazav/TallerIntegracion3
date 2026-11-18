@@ -16,7 +16,7 @@ namespace GlobalMart.Tests.MS4_Warehouse;
 /// Tests unitarios para el procesador de eventos de venta de MS-4 (WarehouseInventoryService).
 /// Cubre:
 /// - TI3-253: Log estructurado y registro de MovimientoStock para auditoría al descontar stock.
-/// - TI3-254: Manejo de caso borde cuando un producto no tiene registro en Stock -> CrearYDescontar.
+/// - S2-098: Rechazo recuperable cuando no existe stock suficiente.
 /// </summary>
 public class SaleEventProcessor_MovimientoStockTests : IDisposable
 {
@@ -99,49 +99,52 @@ public class SaleEventProcessor_MovimientoStockTests : IDisposable
     }
 
     // ────────────────────────────────────────────────────────────────────────
-    // TI3-254: Caso borde — Producto sin registro en tabla Stock -> CrearYDescontar
+    // S2-098: Stock inexistente o insuficiente -> reintento sin descuento
     // ────────────────────────────────────────────────────────────────────────
 
     [Fact]
-    public void ProcesarEvento_SinStockPrevio_LlamaCrearYDescontarYRegistraMovimiento()
+    public void ProcesarEvento_SinStockPrevio_RetornaFalloTransitorioSinRegistrar()
     {
         // Arrange
         var payload = CrearPayload(EventId, ProductoId, cantidad: 3);
 
-        // Descontar falla (retorna null) porque no existe registro
         _stockRepoMock
             .Setup(r => r.Descontar(ProductoId, 3, TenantId, SucursalId))
             .ReturnsAsync((Stock?)null);
-
-        // CrearYDescontar crea el registro con stock negativo
-        _stockRepoMock
-            .Setup(r => r.CrearYDescontar(ProductoId, 3, TenantId, SucursalId))
-            .ReturnsAsync(new Stock
-            {
-                ProductoId = ProductoId,
-                SucursalId = SucursalId,
-                TenantId = TenantId,
-                CantidadActual = -3,
-                StockMinimo = 0
-            });
 
         // Act
         var resultado = _processor.ProcesarEvento(payload);
 
         // Assert
-        resultado.Status.Should().Be(SaleEventProcessingStatus.Processed);
+        resultado.Status.Should().Be(SaleEventProcessingStatus.TransientFailure);
+        resultado.Retry.Should().BeTrue();
+        _context.Movimientos.Should().BeEmpty();
+        _context.EventosKafkaProcesados.Should().BeEmpty();
+    }
 
-        // Se debió invocar CrearYDescontar
-        _stockRepoMock.Verify(
-            r => r.CrearYDescontar(ProductoId, 3, TenantId, SucursalId),
-            Times.Once);
+    [Fact]
+    public void ProcesarEvento_StockInsuficiente_NoBajaDeCero()
+    {
+        _context.CurrentTenantId = TenantId;
+        _context.Stocks.Add(new Stock
+        {
+            ProductoId = ProductoId,
+            SucursalId = SucursalId,
+            TenantId = TenantId,
+            CantidadActual = 2
+        });
+        _context.SaveChanges();
+        var processor = new SaleEventProcessor(
+            _context,
+            new StockRepository(_context),
+            Mock.Of<ILogger<SaleEventProcessor>>());
 
-        // Movimiento registrado en tabla de auditoría indicando registro creado
-        var movimiento = _context.Movimientos.FirstOrDefault(m => m.ProductoId == ProductoId);
-        movimiento.Should().NotBeNull();
-        movimiento!.Tipo.Should().Be("VENTA");
-        movimiento.Cantidad.Should().Be(3);
-        movimiento.Motivo.Should().Contain("registro creado");
+        var resultado = processor.ProcesarEvento(CrearPayload(EventId, ProductoId, cantidad: 3));
+
+        resultado.Status.Should().Be(SaleEventProcessingStatus.TransientFailure);
+        _context.Stocks.Single().CantidadActual.Should().Be(2);
+        _context.Movimientos.Should().BeEmpty();
+        _context.EventosKafkaProcesados.Should().BeEmpty();
     }
 
     [Fact]

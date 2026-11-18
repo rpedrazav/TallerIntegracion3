@@ -25,7 +25,7 @@ public class StockRepository : IStockRepository
     public async Task<Stock?> Descontar(Guid productoId, decimal cantidad, Guid tenantId, Guid sucursalId)
     {
         var stock = await GetByProducto(productoId, sucursalId, tenantId);
-        if (stock is null)
+        if (stock is null || stock.CantidadActual < cantidad)
         {
             return null;
         }
@@ -34,22 +34,4 @@ public class StockRepository : IStockRepository
         return stock;
     }
 
-    /// <summary>
-    /// TI3-254: Crea un registro de stock con cantidad_actual = 0 y descuenta.
-    /// El stock quedará negativo, indicando una discrepancia (venta sin inventario previo).
-    /// </summary>
-    public Task<Stock> CrearYDescontar(Guid productoId, decimal cantidad, Guid tenantId, Guid sucursalId)
-    {
-        var stock = new Stock
-        {
-            ProductoId = productoId,
-            SucursalId = sucursalId,
-            TenantId = tenantId,
-            CantidadActual = -cantidad, // Negativo: se vendió sin stock previo
-            StockMinimo = 0
-        };
-
-        _context.Stocks.Add(stock);
-        return Task.FromResult(stock);
-    }
 }

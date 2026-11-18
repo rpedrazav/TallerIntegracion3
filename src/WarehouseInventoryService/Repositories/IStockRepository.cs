@@ -14,14 +14,8 @@ public interface IStockRepository
 
     /// <summary>
     /// Prepara el descuento de stock para que el consumidor persista el evento completo.
-    /// Retorna null si no existe stock para esa combinación producto/sucursal/tenant.
+    /// Retorna null si no existe stock o la cantidad disponible es insuficiente.
     /// </summary>
     Task<Stock?> Descontar(Guid productoId, decimal cantidad, Guid tenantId, Guid sucursalId);
 
-    /// <summary>
-    /// TI3-254: Prepara un registro de stock con cantidad_actual = 0 y luego descuenta.
-    /// Se usa cuando el consumer recibe un producto que no tiene registro en la tabla Stock.
-    /// El stock quedará negativo, señalando una discrepancia a resolver por reposición.
-    /// </summary>
-    Task<Stock> CrearYDescontar(Guid productoId, decimal cantidad, Guid tenantId, Guid sucursalId);
 }
