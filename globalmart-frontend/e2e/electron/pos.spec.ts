@@ -107,3 +107,74 @@ test('credenciales rechazadas mantienen sesión vacía y no entran al POS', asyn
   expect(await page.evaluate(() => window.api.getToken())).toBeNull();
   await expect(page.getByRole('button', { name: 'INICIAR VENTA', exact: true })).toHaveCount(0);
 });
+
+test('S3-028: modo local (Kong) completa login, apertura de turno, venta y cobro en efectivo sin /api duplicado', async ({ pos: page }) => {
+  let opened = false;
+  const product = { id: '44444444-4444-4444-4444-444444444444', nombre: 'Leche Kong 1L', codigoBarras: '780999', precioBase: 1000, esPesoVariable: false };
+  const saleId = '11111111-1111-1111-1111-111111111111';
+  const baseSale = {
+    id: saleId,
+    turno_id: shift,
+    subtotal: 1000,
+    impuestos: 190,
+    total: 1190,
+    metodo_pago: 'EFECTIVO',
+    estado: 'PENDIENTE',
+    created_at: '2026-11-17T22:55:00.000Z',
+    items: [{ id: '33333333-3333-3333-3333-333333333333', producto_id: product.id, nombre_producto: product.nombre, cantidad: 1, precio_unitario: 1000, subtotal: 1000 }],
+  };
+  const requestedPaths: string[] = [];
+
+  await page.route('http://localhost:8000/**', async route => {
+    const req = route.request();
+    const url = new URL(req.url());
+    requestedPaths.push(`${req.method()} ${url.pathname}`);
+    expect(url.pathname).not.toContain('/api/api/');
+
+    if (url.pathname === '/api/auth/login' && req.method() === 'POST') {
+      return route.fulfill({ json: { token, usuario: { id: 'e2e-cashier', nombre: 'Cajero E2E', email: credentials.email, activeRole: 'CAJERO', roles: ['CAJERO'] } } });
+    }
+    if (url.pathname === '/api/turnos/activo' && req.method() === 'GET') {
+      return route.fulfill({ status: opened ? 200 : 404, json: opened ? { id: shift, tenantId: tenant, sucursalId: branch, estado: 0 } : { error: 'Sin turno abierto' } });
+    }
+    if (url.pathname === '/api/turnos/abrir' && req.method() === 'POST') {
+      opened = true;
+      return route.fulfill({ json: { id: shift } });
+    }
+    if (url.pathname === `/api/ventas/turno/${shift}` && req.method() === 'GET') {
+      return route.fulfill({ json: [] });
+    }
+    if (url.pathname === '/api/products/search' && req.method() === 'GET') {
+      return route.fulfill({ json: { data: [product], totalCount: 1, page: 1, pageSize: 15 } });
+    }
+    if (url.pathname === '/api/ventas' && req.method() === 'POST') {
+      return route.fulfill({ status: 201, json: baseSale });
+    }
+    if (url.pathname === `/api/ventas/${saleId}/cobrar` && req.method() === 'POST') {
+      return route.fulfill({ json: { venta: { ...baseSale, estado: 'COMPLETADA' }, montoRecibido: 2000, vuelto: 810 } });
+    }
+    throw new Error(`Unexpected API in local mode: ${req.method()} ${url.pathname}`);
+  });
+
+  await login(page);
+  await page.getByLabel('Monto inicial de caja').fill('20000');
+  await page.getByRole('button', { name: 'Abrir Turno', exact: true }).click();
+  await expect(page.getByText('Carrito vacío', { exact: true })).toBeVisible();
+
+  await page.getByPlaceholder('Escanea o busca un producto...').fill('Leche');
+  await page.getByText('Leche Kong 1L', { exact: true }).click();
+  await page.getByRole('button', { name: 'INICIAR VENTA', exact: true }).click();
+  await expect(page.getByText(/Venta pendiente #11111111/)).toBeVisible();
+
+  await page.getByRole('button', { name: 'COBRAR', exact: true }).click();
+  await page.getByLabel('Monto recibido').fill('2000');
+  await page.getByRole('button', { name: 'Confirmar efectivo' }).click();
+  await expect(page.getByRole('dialog')).toContainText('Cobro aprobado');
+  await expect(page.getByRole('dialog')).toContainText('Vuelto calculado por MS-5: $ 810');
+  await expect(page.getByRole('dialog')).toContainText('*** COMPROBANTE DE PAGO SIMULADO ***');
+
+  expect(requestedPaths).toContain('POST /api/auth/login');
+  expect(requestedPaths).toContain('POST /api/turnos/abrir');
+  expect(requestedPaths).toContain('POST /api/ventas');
+  expect(requestedPaths).toContain(`POST /api/ventas/${saleId}/cobrar`);
+});
