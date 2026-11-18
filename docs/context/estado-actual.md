@@ -5,13 +5,17 @@ titulo: Estado Real de Implementación — GlobalMart OS
 estado: vigente
 fuentes: [docs/context/_reports/inventario.md, src/, globalmart-frontend/src/api/client.ts, globalmart-frontend/src/store/useTenantStore.ts, globalmart-frontend/src/pages/Admin.tsx, globalmart-frontend/src/pages/AdminRoles.tsx, globalmart-frontend/src/components/admin/UsuariosList.tsx, globalmart-frontend/src/components/admin/EditarUsuarioModal.tsx, globalmart-frontend/src/hardware/simulated-scale-adapter.ts, globalmart-frontend/src/hardware/serial-scale-adapter.ts, globalmart-frontend/src/hardware/scale-adapter-factory.ts, globalmart-frontend/src/hardware/scale-ipc.ts, globalmart-frontend/src/payments/terminal-ipc.ts, globalmart-frontend/src/payments/synchronizeCardPayment.ts, globalmart-frontend/src/preload.ts, globalmart-frontend/e2e/admin-flows.spec.ts, globalmart-frontend/e2e/admin.spec.ts, globalmart-frontend/e2e/weight-cart.spec.ts, globalmart-frontend/tests/admin-access.test.cjs, globalmart-frontend/tests/user-edit.test.cjs, globalmart-frontend/tests/user-deactivation.test.cjs, globalmart-frontend/tests/simulated-scale-adapter.test.cjs, globalmart-frontend/tests/serial-scale-adapter.test.cjs, globalmart-frontend/tests/scale-ipc.test.cjs, globalmart-frontend/tests/terminal-ipc.test.cjs, globalmart-frontend/tests/synchronized-card-payment.test.cjs, git log, docs/context/_reports/preguntas-abiertas.md, tests/GlobalMart.IntegrationTests/CobroSeguroIntegrationTests.cs, docs/qa/S2-035/reporte.md, new-ingresses.yaml]
 verificado_contra_codigo: true
-ultima_revision: 2026-11-15
+ultima_revision: 2026-11-17
 depende_de: []
 publica: []
 consume: []
 reglas: []
 ---
 # Estado Real de Implementación — GlobalMart OS
+
+## TI3-727 / S2-096 — Política de errores Kafka (2026-11-17)
+
+[IMPLEMENTADO Y PROBADO LOCALMENTE] MS-4 distingue eventos procesados, duplicados, payloads inválidos, eventos irrecuperables y fallos transitorios. Procesados y duplicados confirman offset; inválidos e irrecuperables se publican en `sale.completed.error` y solo se confirman tras esa entrega; un fallo transitorio vuelve al mismo offset sin confirmarlo. Pruebas unitarias MS-4: 30/30 aprobadas. Con Kafka y PostgreSQL locales reales se verificó el destino de error y que una caída de PostgreSQL mantuvo offset 1, log-end 2 y lag 1; tras recuperación avanzó a offset 2 y lag 0. La transacción única para varios ítems corresponde a S2-097 y permanece pendiente. Kafka en el clúster sigue [NO VERIFICADO] porque el namespace no tiene broker.
 
 ## TI3-735 / S2-104 — Accesibilidad administrativa por teclado (2026-11-11)
 

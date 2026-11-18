@@ -5,7 +5,7 @@ titulo: Docker Compose — Infraestructura de Desarrollo
 estado: implementado
 fuentes: [Docker/docker-compose.yml, Docker/env.example, Docker/scripts/]
 verificado_contra_codigo: true
-ultima_revision: 2026-09-28
+ultima_revision: 2026-11-17
 depende_de: [stack]
 publica: []
 consume: []
@@ -50,7 +50,7 @@ Todos los contenedores en red `minimarket-net` (bridge). Comunicación entre ser
 ## Topics Kafka inicializados
 
 ```
-sale.completed, stock.alert, expiry.alert, sale.reversed, stock.updated,
+sale.completed, sale.completed.error, stock.alert, expiry.alert, sale.reversed, stock.updated,
 purchase.received, fx.rate.updated, points.updated, tenant.created,
 tenant.updated, user.registered, product.created, product.price_updated,
 shift.closed, stock.low, product.expiring_soon, purchase_order.received

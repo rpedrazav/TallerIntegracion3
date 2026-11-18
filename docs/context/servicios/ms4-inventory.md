@@ -3,11 +3,11 @@ id: ms4-inventory
 tipo: microservicio
 titulo: MS-4 · Warehouse & Inventory Service
 estado: parcial
-fuentes: [src/WarehouseInventoryService/]
+fuentes: [src/WarehouseInventoryService/, tests/GlobalMart.Tests/MS4_Warehouse/, Docker/docker-compose.yml]
 verificado_contra_codigo: true
-ultima_revision: 2026-11-01
+ultima_revision: 2026-11-17
 depende_de: [ms5-pos]
-publica: []
+publica: [sale.completed.error]
 consume: [sale.completed]
 reglas: [RN-04, RN-05, RF-09, RF-10, WI-04, WI-05, WI-13, WI-14]
 ---
@@ -71,24 +71,19 @@ GroupId: config["Kafka:GroupId"] ?? "warehouse-inventory-service"
 AutoOffsetReset: Earliest
 EnableAutoCommit: false  ← commit manual después de procesar
 
-Flujo por mensaje:
-1. Deserializa SaleCompletedEvent { VentaId, TenantId, SucursalId, Items[] }
-2. Verifica idempotencia: ¿eventId (=VentaId) ya está en EventosKafkaProcesados?
-   → Si sí: descarta (log Info) y hace commit
-   → Si no: continúa
-3. Setea context.CurrentTenantId = evento.TenantId (multi-tenant manual, no HTTP)
-4. Por cada item: llama stockRepository.Descontar(productoId, cantidad, tenantId, sucursalId)
-5. Si stock no encontrado: log Warning, continúa
-6. Registra EventoKafkaProcesado { EventId=VentaId, ProcesadoAt=UtcNow }
-7. context.SaveChanges()
-8. consumer.Commit(result)
-
-IMPORTANTE: Si ProcesarEvento lanza excepción → log Error + commit igualmente (no retry infinito)
+Política S2-096:
+- Processed / Duplicate → commit.
+- InvalidPayload / Unrecoverable → publica en "sale.completed.error"; commit solo tras entrega confirmada.
+- TransientFailure o excepción → seek al mismo offset, espera 1 segundo y reintenta sin commit.
 ```
+
+El mensaje de error conserva topic, partición, offset, tipo, causa, payload original y timestamp. S2-096 no agrupa los descuentos de varios ítems en una transacción; esa atomicidad corresponde a S2-097.
 
 ## Test de integración
 
 El flujo de integración publica un evento `sale.completed` real en Kafka, prepara stock y lote en `WarehouseDbContext`, y consulta `GET /stock/{productId}?sucursal_id=` con polling hasta verificar que `cantidad_actual` disminuye según la cantidad vendida.
+
+S2-096 verificó además con Kafka y PostgreSQL locales reales que un payload inválido llega a `sale.completed.error`. Durante una caída de PostgreSQL, el grupo conservó offset 1 con log-end 2 y lag 1; después de recuperar la base avanzó a offset 2 y lag 0. Pruebas unitarias dirigidas: 30/30 aprobadas.
 
 ## Modelo de datos
 
