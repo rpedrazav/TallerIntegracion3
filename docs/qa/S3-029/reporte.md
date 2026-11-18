@@ -30,4 +30,30 @@ Servicios con `dotnet run` en el host y `docker compose` para PostgreSQL. Desde 
 1. `Docker/config/kong.yaml` apunta a `tenant-identity-service:5001`, `pos-cart-service:5005`, etc., servicios que `docker-compose.yml` no define → Kong responde 503.
 2. `kong.yaml` no declara `consumers`/`jwt_secrets` → el plugin JWT responde 401 «No credentials found for given 'iss'».
 
-Para esta ejecución se usó un Kong temporal (`kong:3.6`) con una copia del yaml apuntando a `host.docker.internal:5124/5203/5000/5050` y un consumer con `key: GlobalMartOS` y la clave de desarrollo de MS-1. No se modificó `kong.yaml` del repo. Sin ese ajuste, **todas** las suites `@integrado` fallan en el login; queda como tarea aparte.
+Para esta ejecución se usó un Kong temporal (`kong:3.6`) con una copia del yaml apuntando a `host.docker.internal:5124/5203/5000/5050` y un consumer con `key: GlobalMartOS` y la clave de desarrollo de MS-1. No se modificó `kong.yaml` del repo. Sin ese ajuste, **todas** las suites `@integrado` fallaban en el login. Corregido en el repo; ver la sección siguiente.
+
+## Corrección de Kong local (2026-11-18)
+
+Cambios en `Docker/config/kong.yaml` (solo lo usa `docker compose`; el clúster usa Ingress por servicio en `k8s/manifests` y no tiene Kong):
+
+- Upstreams a `host.docker.internal`: MS-1 `:5124`, MS-3 `:5203`, MS-4 `:5205`, MS-5 `:5000` y simulador `:5050` (sirve tanto el contenedor como `node Docker/simulator/server.js` de `run-apis`). El contenedor `kong` ya tenía `extra_hosts: host-gateway`.
+- Ruta nueva `/api/stock` → MS-4 (la usa `AdminInventario` en modo `local`).
+- Consumer `globalmart-dev` con `jwt_secrets` (`key: GlobalMartOS`, HS256, clave `Jwt:Key` de MS-1, solo desarrollo).
+
+Docs actualizados: [kong](../../context/infraestructura/kong.md), [como-ejecutar](../../context/proyecto/como-ejecutar.md) y el [README E2E](../../../globalmart-frontend/e2e/electron/README.md).
+
+Verificación con el Kong de `docker compose` recreado con este yaml y los servicios de `dotnet run` en el host:
+
+| Comprobación | Resultado |
+|---|---|
+| `POST /api/auth/login` vía `:8000` | 200 |
+| `GET /api/products`, `/api/users`, `/api/sucursales` con token | 200 |
+| `GET /api/products` sin token | 401 |
+| `GET /api/simulator/health` vía `:8000` | 200 |
+| `cierre-turno.integrated.spec.ts` | 1/1 pasa |
+| `tarjeta-pesaje.integrated.spec.ts` | 5/5 pasa |
+| `admin-venta.integrated.spec.ts` | 0/2: falla el primer caso (el segundo no corre, suite serial) |
+
+Fallo de `admin-venta`: Kong responde el login con 200 en menos de 1,3 s, pero la app se queda en «Autenticando…» más de 5 s (el `expect` espera 5 s). La traza muestra que el tiempo extra ocurre después de la respuesta, en `window.api.setToken` (IPC → `electron-store`). Una sonda temporal repitió el bloqueo de ~5 s en un login de cajero. No depende de Kong. Causa raíz [NO VERIFICADO]; queda pendiente. En la ejecución anterior de este reporte (Kong temporal) esta suite pasó 2/2.
+
+Entorno: la imagen local `node:20-alpine` del contenedor `payment-simulator` falla con `exec format error`. Se detuvo el contenedor y se usó `node Docker/simulator/server.js` en el host.

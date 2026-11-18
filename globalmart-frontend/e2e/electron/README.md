@@ -67,10 +67,10 @@ cd globalmart-frontend
 npm run test:e2e:integrado
 ```
 
-Usa `integrated.html` (`API_MODE=local`) del mismo build. Con `E2E_INTEGRATED=1`, `launch.cjs` desactiva el bloqueo de red de los mocks. Las pruebas se marcan `@integrado` y `test:e2e:electron` las excluye, así que `ci:local` no necesita backend. Escribe en la BD local de desarrollo (un producto `E2E S2-112 …` y un turno por corrida). Kong no se acredita. [Reporte](../../../docs/qa/S2-112/reporte.md).
+Usa `integrated.html` (`API_MODE=local`) del mismo build: desde S3-027 la UI pasa por Kong en `http://localhost:8000/api`, que reenvía a los servicios de `run-apis` vía `host.docker.internal` y valida el JWT con el consumer de desarrollo de `Docker/config/kong.yaml` (S3-029). El fixture sigue usando MS-1/MS-3/MS-5 directos para preparar datos. Con `E2E_INTEGRATED=1`, `launch.cjs` desactiva el bloqueo de red de los mocks. Las pruebas se marcan `@integrado` y `test:e2e:electron` las excluye, así que `ci:local` no necesita backend. Escribe en la BD local de desarrollo (un producto `E2E S2-112 …` y un turno por corrida). Si el login falla con 503 o 401 desde `:8000`, ver la sección de Kong en `docs/context/proyecto/como-ejecutar.md`. [Reporte](../../../docs/qa/S2-112/reporte.md).
 
 ## S2-113 / TI3-744 — Tarjeta y pesaje integrados
 
 Mismo comando (`npm run test:e2e:integrado`) y mismo fixture ([integrated-fixture.ts](integrated-fixture.ts)). Cubre tarjeta aprobada, rechazada con reintento, timeout de pasarela, peso estable de la balanza simulada y entrada manual ante una falla de balanza. Comprueba en `postgres-pos` (vía `docker exec`) que una falla no completa la venta ni deja más de un pago.
 
-Requiere el simulador de `docker compose` en `:5050` y MS-5 con `PasarelaPago__BaseUrl=http://localhost:5050` (lo define `run-apis`). El escenario de pasarela se agrega a la solicitud real de cobro y la falla de balanza se provoca en el handler IPC del main; no se interceptan respuestas. El caso de timeout tarda ~45 s. [Reporte](../../../docs/qa/S2-113/reporte.md).
+Requiere el simulador en `:5050` (contenedor de `docker compose` o `node Docker/simulator/server.js`, que `run-apis` lanza si el puerto está libre) y MS-5 con `PasarelaPago__BaseUrl=http://localhost:5050` (lo define `run-apis`). El escenario de pasarela se agrega a la solicitud real de cobro y la falla de balanza se provoca en el handler IPC del main; no se interceptan respuestas. El caso de timeout tarda ~45 s. [Reporte](../../../docs/qa/S2-113/reporte.md).

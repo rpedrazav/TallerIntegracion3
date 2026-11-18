@@ -3,9 +3,9 @@ id: como-ejecutar
 tipo: proyecto
 titulo: Cómo Ejecutar GlobalMart OS
 estado: implementado
-fuentes: [Docker/docker-compose.yml, DOCKER.md, run-apis.bat, .github/workflows/ci.yml]
+fuentes: [Docker/docker-compose.yml, Docker/config/kong.yaml, DOCKER.md, run-apis.bat, .github/workflows/ci.yml]
 verificado_contra_codigo: true
-ultima_revision: 2026-10-16
+ultima_revision: 2026-11-18
 depende_de: [stack, docker-compose]
 publica: []
 consume: []
@@ -50,7 +50,7 @@ docker compose -f Docker/docker-compose.yml ps
 ```
 
 Puertos de infraestructura:
-- **Kong API Gateway (Proxy):** `http://localhost:8000` (Admin: `:8001`)
+- **Kong API Gateway (Proxy):** `http://localhost:8000` (Admin: `:8001`). Enruta a los microservicios del host (`host.docker.internal:5124/5203/5205/5000/5050`) y valida el JWT de MS-1 con un consumer de desarrollo (S3-029). Ver [[kong]].
 - **Simulador de Pagos:** `http://localhost:5050` (Gateway: `http://localhost:8000/simulator/payments`)
 - **Apache Kafka:** `localhost:9092` (Zookeeper: `:2181`)
 - **Kafdrop (Kafka UI):** `http://localhost:9000`
@@ -103,9 +103,10 @@ npm start    # Abre la app Electron
 
 Por defecto conecta a los endpoints remotos (`API_MODE=remote`). Para conectar a los servicios locales o Kong:
 ```bash
-API_MODE=gateway npm start   # Tráfico vía Kong (:8000)
-API_MODE=local npm start     # Tráfico directo a microservicios
+API_MODE=local npm start     # Tráfico vía Kong (:8000) hacia los servicios de run-apis
 ```
+
+`local` requiere `docker compose` (Kong) y `run-apis` en ejecución. Si Kong responde 503/502, el microservicio de ese puerto no está levantado en el host; si responde 401 «No credentials found for given 'iss'», el `kong.yaml` cargado no tiene el consumer JWT (recrear el contenedor: `docker compose -f Docker/docker-compose.yml up -d --force-recreate kong`).
 
 **Seed local de desarrollo (credenciales de prueba):**
 - Email: `cajero@demo.cl`
