@@ -58,10 +58,10 @@ test('login → apertura de turno → POS con sesión IPC persistente', async ({
   let opened = false;
   let openings = 0;
   let activeChecks = 0;
-  await page.route('http://127.0.0.1:4199/**', async route => {
+  await page.route('http://localhost:8000/**', async route => {
     const req = route.request();
     const url = new URL(req.url());
-    if (url.pathname === '/auth/login' && req.method() === 'POST') {
+    if (url.pathname === '/api/auth/login' && req.method() === 'POST') {
       expect(req.postDataJSON()).toEqual(credentials);
       expect(req.headers()['x-tenant-id']).toBe(tenant);
       return route.fulfill({ json: { token, usuario: { id: 'e2e-cashier', nombre: 'Cajero E2E', email: credentials.email, activeRole: 'CAJERO', roles: ['CAJERO'] } } });
@@ -77,11 +77,11 @@ test('login → apertura de turno → POS con sesión IPC persistente', async ({
       opened = true; openings++;
       return route.fulfill({ json: { id: shift } });
     }
-    if (url.pathname === `/ventas/turno/${shift}` && req.method() === 'GET') {
+    if (url.pathname === `/api/ventas/turno/${shift}` && req.method() === 'GET') {
       expect(opened).toBe(true);
       return route.fulfill({ json: [] });
     }
-    if (url.pathname === '/products' && req.method() === 'GET') {
+    if (url.pathname === '/api/products' && req.method() === 'GET') {
       return route.fulfill({ json: { data: [], totalCount: 0, page: 1, pageSize: 500 } });
     }
     throw new Error(`Unexpected API: ${req.method()} ${url.pathname}`);
@@ -101,7 +101,7 @@ test('login → apertura de turno → POS con sesión IPC persistente', async ({
 });
 
 test('credenciales rechazadas mantienen sesión vacía y no entran al POS', async ({ pos: page }) => {
-  await page.route('http://127.0.0.1:4199/auth/login', route => route.fulfill({ status: 401, json: { error: 'Credenciales inválidas' } }));
+  await page.route('http://localhost:8000/api/auth/login', route => route.fulfill({ status: 401, json: { error: 'Credenciales inválidas' } }));
   await login(page);
   await expect(page.getByText('Credenciales o Tenant ID incorrectos.')).toBeVisible();
   expect(await page.evaluate(() => window.api.getToken())).toBeNull();

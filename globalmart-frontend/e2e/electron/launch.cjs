@@ -5,9 +5,9 @@ if (!process.env.E2E_USER_DATA) throw new Error('E2E_USER_DATA is required');
 app.setPath('userData', process.env.E2E_USER_DATA);
 // S2-112 talks to the real local services, so it skips the mock-only network block.
 if (!process.env.E2E_INTEGRATED) app.whenReady().then(() => {
-  // Only the synthetic destination can reach Playwright's interception layer.
+  // Only the synthetic local Kong origin can reach Playwright's interception layer.
   // The fixture aborts every request without an explicit matching mock.
   session.defaultSession.webRequest.onBeforeRequest({ urls: ['http://*/*', 'https://*/*'] },
-    (details, callback) => callback({ cancel: new URL(details.url).origin !== 'http://127.0.0.1:4199' }));
+    (details, callback) => callback({ cancel: new URL(details.url).origin !== 'http://localhost:8000' }));
 });
 require(path.resolve(__dirname, '../../.webpack/electron-e2e/main.js'));

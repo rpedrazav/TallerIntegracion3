@@ -6,14 +6,6 @@ const API_TIMEOUT_MS = 15000;
 function createClient(baseURL: string, protectedApi: boolean): AxiosInstance {
   const client = axios.create({ baseURL, timeout: API_TIMEOUT_MS });
 
-  // Normalizar para evitar duplicación de /api cuando baseURL ya lo contiene (modo gateway)
-  client.interceptors.request.use((config) => {
-    if (config.baseURL?.endsWith('/api') && config.url?.startsWith('/api/')) {
-      config.url = config.url.substring(4);
-    }
-    return config;
-  });
-
   if (protectedApi) {
     client.interceptors.request.use(async (config) => {
       const token = await window.api.getToken();
@@ -154,23 +146,23 @@ export interface EstadoIntentoTarjeta {
 
 export const posApi = {
   activeShift: async (): Promise<TurnoActivo> => {
-    const response = await pos.get<TurnoActivo>('/api/turnos/activo');
+    const response = await pos.get<TurnoActivo>('/turnos/activo');
     return response.data;
   },
   openShift: async (sucursalId: string, montoInicial: number): Promise<TurnoActivo> => {
-    const response = await pos.post<TurnoActivo>('/api/turnos/abrir', {
+    const response = await pos.post<TurnoActivo>('/turnos/abrir', {
       sucursal_id: sucursalId, monto_fondo_inicial: montoInicial,
     });
     return response.data;
   },
   balanceShift: async (montoDeclarado: number): Promise<CuadreResult> => {
-    const response = await pos.post<CuadreResult>('/api/turnos/cuadre', {
+    const response = await pos.post<CuadreResult>('/turnos/cuadre', {
       monto_declarado: montoDeclarado,
     });
     return response.data;
   },
   closeShift: async (): Promise<TurnoActivo> => {
-    const response = await pos.post<TurnoActivo>('/api/turnos/cerrar');
+    const response = await pos.post<TurnoActivo>('/turnos/cerrar');
     return response.data;
   },
   salesByShift: async (shiftId: string): Promise<VentaPendiente[]> => {

@@ -19,11 +19,12 @@ webpack([
     MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY: JSON.stringify(path.join(output, 'preload.js')),
   })]),
   config('preload', 'electron-preload', 'src/preload.ts'),
-  config('renderer', 'web', 'src/renderer.tsx'),
+  config('renderer', 'web', 'src/renderer.tsx', [new webpack.DefinePlugin({
+    'process.env.API_MODE': JSON.stringify('local'),
+  })]),
 ], (error, stats) => {
   if (error || stats.hasErrors()) { console.error(error || stats.toString()); process.exitCode = 1; return; }
-  const html = env => `<!doctype html><html><meta charset="utf-8"><title>GlobalMart E2E</title><div id="root"></div><script>window.env=${env}</script><script src="renderer.js"></script></html>`;
-  fs.writeFileSync(path.join(output, 'index.html'), html(`{API_MODE:'local',IDENTITY_API_URL:'http://127.0.0.1:4199',CATALOG_API_URL:'http://127.0.0.1:4199',POS_API_URL:'http://127.0.0.1:4199'}`));
-  // S2-112: same build against the real services on localhost (API_MODE local).
-  fs.writeFileSync(path.join(output, 'integrated.html'), html(`{API_MODE:'local'}`));
+  const html = '<!doctype html><html><meta charset="utf-8"><title>GlobalMart E2E</title><div id="root"></div><script src="renderer.js"></script></html>';
+  fs.writeFileSync(path.join(output, 'index.html'), html);
+  fs.writeFileSync(path.join(output, 'integrated.html'), html);
 });
