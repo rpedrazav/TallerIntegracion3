@@ -1,0 +1,62 @@
+S3-004 / TI3-755 — Registro de verificación estática de referencias
+Fecha: 2026-11-17
+
+Alcance: búsqueda global con `git grep` sobre todos los archivos versionados del repositorio en rama `dev` (código productivo `src/` y `globalmart-frontend/src/`, pruebas `tests/` y `globalmart-frontend/{e2e,tests}/`, CI `.github/workflows/*`, `Docker/`, `k8s/`, `scripts/` y documentación vigente `docs/`, `DOCKER.md`, `AGENTS.md`, `CLAUDE.md`, `SKILLS.md`). Se excluyeron únicamente la definición misma de la tarea (`tareas/tareas_sprint3_youtrack.csv`, `tareas/plan_sprint3.xlsx`) y el índice histórico de commits (`docs/defensa-sprint2/inventario-commits.json`).
+
+No se modificó código productivo ni se eliminaron archivos en esta entrega (la eliminación corresponde a TI3-775, Semana 10).
+
+1) Scripts temporales fix*.js en raíz y globalmart-frontend/
+Comando:
+  git grep -n -E 'fix[2-5]?\.js|fix_btn\.js|fix_pos\.js|fix_tbody\.js|fix_td\.js|run_fix\.js' -- ':!tareas/tareas_sprint3_youtrack.csv' ':!docs/defensa-sprint2/inventario-commits.json'
+Resultado:
+  0 coincidencias en todo el repositorio.
+
+2) Fragmento tbody.txt y scripts temporales test*.json, test.js, test_insert.js, poblar_bd.js
+Comando:
+  git grep -n -E 'tbody\.txt|test2?\.json|test_abrir\.json|test_auth\.json|test_bad\.json|test_insert\.js|poblar_bd\.js' -- ':!tareas/tareas_sprint3_youtrack.csv' ':!docs/defensa-sprint2/inventario-commits.json'
+Resultado:
+  - tbody.txt: únicamente citado por `globalmart-frontend/run_fix.js:3` (otro archivo basura de la misma lista).
+  - Resto: 0 coincidencias.
+Verificación adicional para `test.js`:
+  git grep -n -F 'test.js' -- ':!tareas/tareas_sprint3_youtrack.csv' ':!docs/defensa-sprint2/inventario-commits.json'
+Resultado:
+  Únicamente coincidencias parciales correspondientes a `Docker/simulator/reversals.test.js` y `build-test.js` dentro de `globalmart-frontend/package-lock.json`. 0 referencias a `/test.js` ni a `globalmart-frontend/test.js`.
+
+3) Scripts y dumps SQL sueltos (script.py, query.sql, generate_sql.ps1, insert_productos.sql)
+Comando:
+  git grep -n -E 'script\.py|query\.sql|generate_sql\.ps1|insert_productos\.sql' -- ':!tareas/tareas_sprint3_youtrack.csv' ':!docs/defensa-sprint2/inventario-commits.json'
+Resultado:
+  - insert_productos.sql: únicamente citado por `generate_sql.ps1:3` (otro archivo basura de la misma lista).
+  - Resto: 0 coincidencias.
+
+4) Lockfile vacío en raíz (`package-lock.json`)
+Comando:
+  git grep -n -F 'package-lock.json' -- .github docs DOCKER.md Docker k8s scripts src tests globalmart-frontend
+Resultado:
+  - `.github/workflows/ci.yml:37` -> `globalmart-frontend/package-lock.json`
+  - `.github/workflows/ci.yml:86` -> `globalmart-frontend/package-lock.json`
+  - `.github/workflows/electron-e2e.yml:21` -> `globalmart-frontend/package-lock.json`
+  - `DOCKER.md:24` -> referencia genérica a `npm ci` del frontend.
+  0 referencias al `package-lock.json` vacío de la raíz (`"packages": {}`).
+
+5) Binarios y archivo comprimido de kubelogin (`kubectl-oidc_login.exe`, `kubelogin.zip`, `kubelogin_extracted/*`)
+Comando:
+  git grep -n -E 'kubelogin|oidc_login|oidc-login' -- ':!tareas/tareas_sprint3_youtrack.csv' ':!docs/defensa-sprint2/inventario-commits.json' ':!kubelogin_extracted'
+Resultado:
+  - `docs/manual_de_usuario_kubernetes_para_estudiantes.md:22,27`: indica instalar el complemento `kubectl oidc-login` localmente, sin referenciar binarios ni zips en el repositorio.
+  - `Deploy-To-K8s.ps1:5`: comentario local añadiendo `$PWD` al PATH (script manual fuera de CI).
+  0 referencias en código productivo, pruebas o CI.
+
+6) Archivos de raíz confirmados en uso (NO eliminar)
+Comando:
+  git grep -n -E 'new-ingresses\.yaml|run-apis\.(bat|sh)|GlobalMart_ContextMaster\.md' -- .github docs Docker k8s scripts src tests globalmart-frontend/src globalmart-frontend/e2e
+Resultado:
+  - `new-ingresses.yaml`: referenciado en `docs/context/estado-actual.md` y `docs/qa/S3-001/reporte.md`.
+  - `run-apis.bat` / `run-apis.sh`: referenciados en `globalmart-frontend/e2e/electron/README.md`, `globalmart-frontend/src/config/api.ts`, `docs/qa/S2-112/reporte.md`, `docs/qa/S2-113/reporte.md` y `docs/qa/S3-005/reporte.md`.
+  - `GlobalMart_ContextMaster.md`: referenciado en >20 nodos de `docs/context/` y `globalmart-frontend/src/types/auth.types.ts`.
+
+7) Logs locales no versionados
+Comando:
+  git status --ignored --short
+Resultado:
+  28 archivos `*-integration.log` en la raíz del workspace local, ya ignorados por regla `*.log` en `.gitignore` (no versionados en Git).
