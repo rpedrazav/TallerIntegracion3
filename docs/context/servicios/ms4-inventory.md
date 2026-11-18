@@ -56,8 +56,8 @@ src/WarehouseInventoryService/
 | GET | `/health` | Público | [IMPLEMENTADO] |
 
 ### No implementados
-- `POST /recepciones` — recepción de mercancía [PLANIFICADO]
-- `GET /lotes` — gestión de lotes y fechas de caducidad [PLANIFICADO]
+- `POST /recepciones` — [CONTRATO S3-002](../dominio/fefo.md); implementación pendiente
+- `GET /lotes?porVencer=&sucursal_id=` — [CONTRATO S3-002](../dominio/fefo.md); implementación pendiente
 - `POST /mermas` — registrar merma [PLANIFICADO]
 - `POST /transferencias` — transferir stock entre sucursales [PLANIFICADO]
 - `POST /conteos` — conteo físico [PLANIFICADO]
@@ -89,32 +89,31 @@ S2-096 verificó además con Kafka y PostgreSQL locales reales que un payload in
 
 ```
 Stock
-  id          GUID PK
-  tenant_id   GUID (discriminador)
-  producto_id GUID
-  sucursal_id GUID
-  cantidad    decimal
-  stock_minimo decimal?
+  (producto_id, sucursal_id) PK
+  tenant_id       GUID
+  cantidad_actual decimal(12,4)
+  stock_minimo    decimal(12,4)
 
 Lote
-  id               GUID PK
-  tenant_id        GUID
-  producto_id      GUID
-  sucursal_id      GUID
-  cantidad         decimal
-  fecha_vencimiento DateTime?
-  fecha_recepcion  DateTime
+  id                GUID PK
+  tenant_id         GUID
+  producto_id       GUID
+  fecha_vencimiento DateOnly
+  cantidad          decimal(12,4)
+  ubicacion         string(100)
+  sucursal_id       PENDIENTE S3-014
 
 MovimientoStock
   id          GUID PK
   tenant_id   GUID
-  stock_id    GUID FK
-  tipo        string ("venta"|"recepcion"|"ajuste"|"merma")
-  cantidad    decimal
-  creado_en   DateTime
+  producto_id GUID
+  tipo        string(20)
+  cantidad    decimal(12,4)
+  motivo      string(255)
+  timestamp   DateTime
 
 EventoKafkaProcesado
-  event_id     GUID PK   ← = VentaId del evento sale.completed
+  event_id     GUID PK   ← EventId; VentaId solo como fallback
   procesado_at DateTime
 ```
 
@@ -148,6 +147,7 @@ EventoKafkaProcesado
 | Brecha | Impacto |
 |--------|---------|
 | MS-5 no produce sale.completed | WI-13/14 sin entrada real |
+| `Lote` no tiene `SucursalId` | Recepciones y consultas FEFO por sucursal requieren migración S3-014 |
 | Sin FEFO en selección de lotes | RN-05 no cumplido |
 | Sin recepciones implementadas | RF-10 no implementado |
 | Sin alertas Kafka | stock.alert/expiry.alert no se generan |
@@ -164,8 +164,11 @@ EventoKafkaProcesado
 - `src/WarehouseInventoryService/Controllers/StockController.cs`
 - `src/WarehouseInventoryService/Controllers/SeedController.cs`
 - `src/WarehouseInventoryService/Data/SeedData.cs`
+- `src/WarehouseInventoryService/Models/Lote.cs`
+- `src/WarehouseInventoryService/Models/Stock.cs`
+- `src/WarehouseInventoryService/Models/MovimientoStock.cs`
 - `src/WarehouseInventoryService/Data/Migrations/20260927195722_AddEventosKafkaProcesados.cs`
 
 ## Integración de ramas — 2026-11-01
 
-El consumidor delega en `ISaleEventProcessor` para idempotencia, movimientos y creación de stock faltante. `POST /seed` requiere JWT, rol ADMIN, tenant demo y entorno Development; fuera de Development devuelve 404 con autenticación válida. Se elimina el mapeo alternativo de `/seed` y se unifica la configuración JWT. `GET /stock/{productId}` rechaza IDs vacíos con 400.
+El consumidor delega en `ISaleEventProcessor` para idempotencia y movimientos. Un stock inexistente o insuficiente queda pendiente de recuperación sin confirmar el offset. `POST /seed` requiere JWT, rol ADMIN, tenant demo y entorno Development; fuera de Development devuelve 404 con autenticación válida. Se elimina el mapeo alternativo de `/seed` y se unifica la configuración JWT. `GET /stock/{productId}` rechaza IDs vacíos con 400.

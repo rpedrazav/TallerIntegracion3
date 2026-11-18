@@ -13,6 +13,10 @@ reglas: []
 ---
 # Estado Real de Implementación — GlobalMart OS
 
+## S3-002 — Contrato mínimo de recepciones y lotes FEFO (2026-11-17)
+
+[CONTRATO DEFINIDO; IMPLEMENTACIÓN PENDIENTE] Se fijaron request, respuesta, errores y validaciones de `POST /recepciones` y `GET /lotes?porVencer=&sucursal_id=` reutilizando los campos reales de `Lote`. El contrato exige JWT, tenant del token y rol ADMIN/REPONEDOR; la recepción futura será atómica con stock y movimiento. El modelo actual carece de `SucursalId`, brecha asignada a S3-014. Mermas, transferencias, conteos, alertas Kafka y descuento FEFO quedan fuera de S3-002. [Contrato](dominio/fefo.md).
+
 ## S2-099 — Commit y recuperación Kafka (2026-11-17)
 
 [IMPLEMENTADO Y PROBADO LOCALMENTE] El consumidor confirma offset solo para `Processed`, `Duplicate` o poison messages tratados explícitamente (`InvalidPayload`/`Unrecoverable` publicados en `sale.completed.error`). `TransientFailure` y cualquier estado desconocido vuelven al mismo offset sin confirmarlo. El loop registra cada reintento y cada confirmación con su resultado. Política dirigida y regresión MS-4: 33/33 aprobadas. La recuperación real ante caída de PostgreSQL fue verificada en S2-096; no se repitió contra el clúster sin broker.
@@ -156,8 +160,8 @@ S2-052 — 2026-10-19: **2/2 pruebas de integración HTTP locales aprobadas** pa
 
 **No implementado (PLANIFICADO):**
 - `POST /stock/ajuste` — ajuste manual
-- `POST /recepciones` — recepción de mercancía (FEFO)
-- `GET /lotes` — gestión de lotes
+- `POST /recepciones` — contrato S3-002 definido; endpoint pendiente
+- `GET /lotes?porVencer=&sucursal_id=` — contrato S3-002 definido; endpoint pendiente
 - `POST /mermas`, `POST /transferencias`, `POST /conteos`
 - Generación de alertas Kafka (`stock.alert`, `expiry.alert`)
 - FEFO en selección de lotes para venta
