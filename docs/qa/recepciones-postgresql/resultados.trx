@@ -1,0 +1,80 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="0574d322-958a-42e6-b360-d3df5a73a2f5" name="@nicoos 2026-11-18 18:09:14" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2026-11-18T18:09:14.8590402-03:00" queuing="2026-11-18T18:09:14.8590402-03:00" start="2026-11-18T18:09:13.1051045-03:00" finish="2026-11-18T18:09:15.0055773-03:00" />
+  <TestSettings name="default" id="2ed1482c-74b9-4258-95d1-e78ea85d0707">
+    <Deployment runDeploymentRoot="_nicoos_2026-11-18_18_09_14" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="f6341ac1-6846-43cf-863b-deaf5d33ea22" testId="28ca8b2c-391e-454e-f79d-cc2ef80d6d1d" testName="GlobalMart.IntegrationTests.RecepcionesPostgresIntegrationTests.RecepcionInvalida_NoModificaInventario" computerName="nicoos" duration="00:00:00.0330448" startTime="2026-11-18T18:09:14.9490239-03:00" endTime="2026-11-18T18:09:14.9490240-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="f6341ac1-6846-43cf-863b-deaf5d33ea22" />
+    <UnitTestResult executionId="41aa9b0e-8d0a-421e-a24c-8a53dccffa40" testId="a7bce7cc-d9ed-d4d9-7660-925979bf15aa" testName="GlobalMart.IntegrationTests.RecepcionesPostgresIntegrationTests.OtroTenant_NoVeNiModificaLaRecepcion" computerName="nicoos" duration="00:00:00.5637806" startTime="2026-11-18T18:09:14.7982694-03:00" endTime="2026-11-18T18:09:14.7982835-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="41aa9b0e-8d0a-421e-a24c-8a53dccffa40" />
+    <UnitTestResult executionId="38991767-650f-4198-9efe-1ad7b2c7054f" testId="f24609f6-adaf-1b1c-635d-159c68beb78a" testName="GlobalMart.IntegrationTests.RecepcionesPostgresIntegrationTests.RecepcionValida_CreaLote_SumaStock_YRegistraMovimiento" computerName="nicoos" duration="00:00:00.1132257" startTime="2026-11-18T18:09:14.9152823-03:00" endTime="2026-11-18T18:09:14.9152824-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="38991767-650f-4198-9efe-1ad7b2c7054f" />
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="GlobalMart.IntegrationTests.RecepcionesPostgresIntegrationTests.RecepcionInvalida_NoModificaInventario" storage="/home/nicotussi/documentos/universidad/semestre 6/integraiii/repo/tallerintegracion3/tests/globalmart.integrationtests/bin/debug/net8.0/globalmart.integrationtests.dll" id="28ca8b2c-391e-454e-f79d-cc2ef80d6d1d">
+      <Execution id="f6341ac1-6846-43cf-863b-deaf5d33ea22" />
+      <TestMethod codeBase="/home/nicotussi/Documentos/Universidad/SEMESTRE 6/INTEGRAIII/repo/TallerIntegracion3/tests/GlobalMart.IntegrationTests/bin/Debug/net8.0/GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.RecepcionesPostgresIntegrationTests" name="RecepcionInvalida_NoModificaInventario" />
+    </UnitTest>
+    <UnitTest name="GlobalMart.IntegrationTests.RecepcionesPostgresIntegrationTests.OtroTenant_NoVeNiModificaLaRecepcion" storage="/home/nicotussi/documentos/universidad/semestre 6/integraiii/repo/tallerintegracion3/tests/globalmart.integrationtests/bin/debug/net8.0/globalmart.integrationtests.dll" id="a7bce7cc-d9ed-d4d9-7660-925979bf15aa">
+      <Execution id="41aa9b0e-8d0a-421e-a24c-8a53dccffa40" />
+      <TestMethod codeBase="/home/nicotussi/Documentos/Universidad/SEMESTRE 6/INTEGRAIII/repo/TallerIntegracion3/tests/GlobalMart.IntegrationTests/bin/Debug/net8.0/GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.RecepcionesPostgresIntegrationTests" name="OtroTenant_NoVeNiModificaLaRecepcion" />
+    </UnitTest>
+    <UnitTest name="GlobalMart.IntegrationTests.RecepcionesPostgresIntegrationTests.RecepcionValida_CreaLote_SumaStock_YRegistraMovimiento" storage="/home/nicotussi/documentos/universidad/semestre 6/integraiii/repo/tallerintegracion3/tests/globalmart.integrationtests/bin/debug/net8.0/globalmart.integrationtests.dll" id="f24609f6-adaf-1b1c-635d-159c68beb78a">
+      <Execution id="38991767-650f-4198-9efe-1ad7b2c7054f" />
+      <TestMethod codeBase="/home/nicotussi/Documentos/Universidad/SEMESTRE 6/INTEGRAIII/repo/TallerIntegracion3/tests/GlobalMart.IntegrationTests/bin/Debug/net8.0/GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.RecepcionesPostgresIntegrationTests" name="RecepcionValida_CreaLote_SumaStock_YRegistraMovimiento" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="28ca8b2c-391e-454e-f79d-cc2ef80d6d1d" executionId="f6341ac1-6846-43cf-863b-deaf5d33ea22" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="a7bce7cc-d9ed-d4d9-7660-925979bf15aa" executionId="41aa9b0e-8d0a-421e-a24c-8a53dccffa40" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="f24609f6-adaf-1b1c-635d-159c68beb78a" executionId="38991767-650f-4198-9efe-1ad7b2c7054f" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="Results Not in a List" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="All Loaded Results" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Completed">
+    <Counters total="3" executed="3" passed="3" failed="0" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Output>
+      <StdOut>[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v2.8.2+699d445a1a (64-bit .NET 8.0.34)
+[xUnit.net 00:00:00.07]   Discovering: GlobalMart.IntegrationTests
+[xUnit.net 00:00:00.17]   Discovered:  GlobalMart.IntegrationTests
+[xUnit.net 00:00:00.18]   Starting:    GlobalMart.IntegrationTests
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (6ms) [Parameters=[@__ef_filter__CurrentTenantId_0='?' (DbType = Guid), @__tenantId_0='?' (DbType = Guid), @__productoId_1='?' (DbType = Guid), @__sucursalId_2='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
+      SELECT s.producto_id, s.sucursal_id, s.cantidad_actual, s.stock_minimo, s.tenant_id
+      FROM stock AS s
+      WHERE s.tenant_id = @__ef_filter__CurrentTenantId_0 AND s.tenant_id = @__tenantId_0 AND s.producto_id = @__productoId_1 AND s.sucursal_id = @__sucursalId_2
+      LIMIT 2
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (6ms) [Parameters=[@p0='?' (DbType = Guid), @p1='?' (DbType = Decimal), @p2='?' (DbType = Date), @p3='?' (DbType = Guid), @p4='?' (DbType = Guid), @p5='?' (DbType = Guid), @p6='?', @p7='?' (DbType = Guid), @p8='?' (DbType = Decimal), @p9='?', @p10='?' (DbType = Guid), @p11='?' (DbType = Guid), @p12='?' (DbType = DateTime), @p13='?', @p14='?' (DbType = Guid), @p15='?' (DbType = Guid), @p16='?' (DbType = Decimal), @p17='?' (DbType = Decimal), @p18='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
+      INSERT INTO lotes (id, cantidad, fecha_vencimiento, producto_id, sucursal_id, tenant_id, ubicacion)
+      VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6);
+      INSERT INTO movimientos_stock (id, cantidad, motivo, producto_id, tenant_id, timestamp, tipo)
+      VALUES (@p7, @p8, @p9, @p10, @p11, @p12, @p13);
+      INSERT INTO stock (producto_id, sucursal_id, cantidad_actual, stock_minimo, tenant_id)
+      VALUES (@p14, @p15, @p16, @p17, @p18);
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@__ef_filter__CurrentTenantId_0='?' (DbType = Guid), @__tenantId_0='?' (DbType = Guid), @__sucursalId_Value_1='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
+      SELECT s.producto_id, s.sucursal_id, s.cantidad_actual, s.stock_minimo, s.tenant_id
+      FROM stock AS s
+      WHERE s.tenant_id = @__ef_filter__CurrentTenantId_0 AND s.tenant_id = @__tenantId_0 AND s.sucursal_id = @__sucursalId_Value_1
+      ORDER BY s.sucursal_id, s.producto_id
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@__ef_filter__CurrentTenantId_0='?' (DbType = Guid), @__tenantId_0='?' (DbType = Guid), @__productoId_1='?' (DbType = Guid), @__sucursalId_2='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
+      SELECT s.producto_id, s.sucursal_id, s.cantidad_actual, s.stock_minimo, s.tenant_id
+      FROM stock AS s
+      WHERE s.tenant_id = @__ef_filter__CurrentTenantId_0 AND s.tenant_id = @__tenantId_0 AND s.producto_id = @__productoId_1 AND s.sucursal_id = @__sucursalId_2
+      LIMIT 2
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@p0='?' (DbType = Guid), @p1='?' (DbType = Decimal), @p2='?' (DbType = Date), @p3='?' (DbType = Guid), @p4='?' (DbType = Guid), @p5='?' (DbType = Guid), @p6='?', @p7='?' (DbType = Guid), @p8='?' (DbType = Decimal), @p9='?', @p10='?' (DbType = Guid), @p11='?' (DbType = Guid), @p12='?' (DbType = DateTime), @p13='?', @p15='?' (DbType = Guid), @p16='?' (DbType = Guid), @p14='?' (DbType = Decimal)], CommandType='Text', CommandTimeout='30']
+      INSERT INTO lotes (id, cantidad, fecha_vencimiento, producto_id, sucursal_id, tenant_id, ubicacion)
+      VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6);
+      INSERT INTO movimientos_stock (id, cantidad, motivo, producto_id, tenant_id, timestamp, tipo)
+      VALUES (@p7, @p8, @p9, @p10, @p11, @p12, @p13);
+      UPDATE stock SET cantidad_actual = @p14
+      WHERE producto_id = @p15 AND sucursal_id = @p16;
+[xUnit.net 00:00:01.60]   Finished:    GlobalMart.IntegrationTests
+</StdOut>
+    </Output>
+  </ResultSummary>
+</TestRun>
