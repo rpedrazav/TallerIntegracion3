@@ -55,7 +55,7 @@ src/WarehouseInventoryService/
 | GET | `/stock/{productId}?sucursal_id=` | JWT | [IMPLEMENTADO] |
 | GET | `/stock?sucursal_id=` | JWT | [IMPLEMENTADO] |
 | POST | `/stock/ajuste` | JWT + ADMIN/REPONEDOR | [IMPLEMENTADO] |
-| POST | `/recepciones` | JWT + ADMIN/REPONEDOR | [IMPLEMENTADO LOCALMENTE; integración completa S3-017 pendiente] |
+| POST | `/recepciones` | JWT + ADMIN/REPONEDOR | [IMPLEMENTADO; PostgreSQL 3/3 EN RAMA `local`] |
 | POST | `/seed` | JWT + ADMIN del tenant demo (solo Development) | [IMPLEMENTADO] TI3-258 |
 | GET | `/health` | Público | [IMPLEMENTADO] |
 
@@ -64,6 +64,36 @@ src/WarehouseInventoryService/
 - `POST /mermas` — registrar merma [PLANIFICADO]
 - `POST /transferencias` — transferir stock entre sucursales [PLANIFICADO]
 - `POST /conteos` — conteo físico [PLANIFICADO]
+
+## Contrato de `POST /recepciones`
+
+Registra mercadería recibida. No acepta `tenantId`: `TenantMiddleware` lo obtiene del claim `tenant_id`. Solo roles `ADMIN` y `REPONEDOR` pueden ejecutar la operación, y el JWT original se reenvía a MS-3 y MS-1 para comprobar que el producto activo y la sucursal activa son visibles para el mismo tenant.
+
+Request:
+
+```json
+{
+  "productoId": "11111111-1111-4111-8111-111111111111",
+  "sucursalId": "22222222-2222-4222-8222-222222222222",
+  "cantidad": 24.5,
+  "fechaVencimiento": "2027-02-15",
+  "ubicacion": "Bodega A-03"
+}
+```
+
+| Regla | Resultado si no se cumple |
+|---|---|
+| IDs no vacíos; cantidad mayor que cero, máximo `99999999` y hasta 4 decimales | 400 sin mutación |
+| Vencimiento igual o posterior a la fecha UTC actual; ubicación opcional de hasta 100 caracteres | 400 sin mutación |
+| Producto activo visible en MS-3 con el JWT recibido | 404 sin mutación |
+| Sucursal activa incluida por MS-1 para el JWT recibido | 404 sin mutación |
+| MS-1/MS-3 disponibles y con respuesta válida | 503 sin mutación |
+
+HTTP 201 devuelve `id`, `productoId`, `sucursalId`, `cantidad`, `fechaVencimiento` y `ubicacion`; no expone `tenantId`. `RecepcionService` abre una transacción serializable, crea `Lote`, suma `Stock.CantidadActual` y agrega un `MovimientoStock` positivo de tipo `RECEPCION`. Un único `SaveChanges` precede al commit; cualquier fallo descarta las tres mutaciones.
+
+Flujo backend: `RecepcionesController → RecepcionValidator → RecepcionService → WarehouseDbContext`. No existe todavía una pantalla frontend de recepciones.
+
+**Límites:** no hay idempotencia de recepciones, por lo que repetir una solicitud válida vuelve a sumar stock. Este endpoint no descuenta cantidades de `Lote`, no elige lotes por vencimiento, no implementa `GET /lotes`, mermas, transferencias ni alertas Kafka. **FEFO permanece PLANIFICADO** hasta que la venta descuente lotes por `FechaVencimiento ASC`. Despliegue remoto [NO VERIFICADO]. Contrato ampliado: [[fefo]].
 
 ## Kafka Consumer (lo más importante del servicio)
 
@@ -86,7 +116,7 @@ El mensaje de error conserva topic, partición, offset, tipo, causa, payload ori
 
 El flujo de integración publica un evento `sale.completed` real en Kafka, prepara stock y lote en `WarehouseDbContext`, y consulta `GET /stock/{productId}?sucursal_id=` con polling hasta verificar que `cantidad_actual` disminuye según la cantidad vendida.
 
-S2-096 verificó además con Kafka y PostgreSQL locales reales que un payload inválido llega a `sale.completed.error`. Durante una caída de PostgreSQL, el grupo conservó offset 1 con log-end 2 y lag 1; después de recuperar la base avanzó a offset 2 y lag 0. S2-097 prueba que un fallo en el segundo ítem no persiste el primero, movimientos ni idempotencia. S2-098 prueba que una solicitud superior a la disponibilidad no modifica el stock ni registra el evento. S2-099 agrega el estado desconocido como caso seguro de reintento. S2-100 aprobó 2/2 integraciones con broker y PostgreSQL reales para duplicado y recuperación de fallo en el segundo ítem. S3-014 aplicó la migración de `SucursalId` sobre PostgreSQL limpio y preexistente sin alterar stock ni lotes. S3-015 verificó con PostgreSQL que una recepción crea lote, stock y movimiento juntos, y que un fallo forzado revierte todo. S3-016 verificó que cuatro tipos de entrada inválida se rechazan antes de persistir. Pruebas unitarias dirigidas: 38/38 aprobadas. [Evidencia S2-100](../../qa/S2-100/reporte.md).
+S2-096 verificó además con Kafka y PostgreSQL locales reales que un payload inválido llega a `sale.completed.error`. Durante una caída de PostgreSQL, el grupo conservó offset 1 con log-end 2 y lag 1; después de recuperar la base avanzó a offset 2 y lag 0. S2-097 prueba que un fallo en el segundo ítem no persiste el primero, movimientos ni idempotencia. S2-098 prueba que una solicitud superior a la disponibilidad no modifica el stock ni registra el evento. S2-099 agrega el estado desconocido como caso seguro de reintento. S2-100 aprobó 2/2 integraciones con broker y PostgreSQL reales para duplicado y recuperación de fallo en el segundo ítem. S3-014 aplicó la migración de `SucursalId` sobre PostgreSQL limpio y preexistente sin alterar stock ni lotes. S3-015 verificó con PostgreSQL que una recepción crea lote, stock y movimiento juntos, y que un fallo forzado revierte todo. S3-016 verificó que cuatro tipos de entrada inválida se rechazan antes de persistir. En la rama `local`, recepciones aprobó 3/3 integraciones HTTP con PostgreSQL 16 y aislamiento entre tenants; MS-1/MS-3 fueron stubs tenant-aware. Pruebas unitarias dirigidas: 38/38 aprobadas. [Evidencia S2-100](../../qa/S2-100/reporte.md).
 
 ## Modelo de datos
 
@@ -134,7 +164,7 @@ EventoKafkaProcesado
 | WI-14 | Descontar Stock por Venta | [IMPLEMENTADO] (cuando llegan eventos) |
 | WI-02 | Ajustar Stock Manualmente | [IMPLEMENTADO EN CÓDIGO; integración remota NO VERIFICADA] |
 | WI-03 | Registrar Merma | [PLANIFICADO] |
-| WI-04 | Registrar Recepción de Mercancía | [IMPLEMENTADO LOCALMENTE; integración S3-017 pendiente] |
+| WI-04 | Registrar Recepción de Mercancía | [IMPLEMENTADO; PostgreSQL 3/3 EN RAMA `local`] |
 | WI-05 | Aplicar Regla FEFO | [PLANIFICADO] |
 | WI-06 | Ingresar Fecha Caducidad | [PLANIFICADO] |
 | WI-07 | Asignar Lote a Nevera | [PLANIFICADO] |
