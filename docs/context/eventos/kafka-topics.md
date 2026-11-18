@@ -131,6 +131,8 @@ S2-097 agrupa en un único `SaveChanges` los descuentos, movimientos y la idempo
 
 S2-098 clasifica stock inexistente o insuficiente como `TransientFailure`: no confirma el offset ni envía el evento a la cola de error, porque una reposición permite recuperarlo. No se persisten cantidades negativas, movimientos ni idempotencia mientras falte stock.
 
+S2-099 restringe el commit a procesamiento válido, duplicado o poison message entregado al destino de error. Fallos transitorios, excepciones y estados desconocidos hacen `seek` al mismo offset y se registran para reproceso; las confirmaciones también quedan registradas con el resultado.
+
 ## Conexiones
 - Produce → [[ms5-pos]] [IMPLEMENTADO]
 - Consume → [[ms4-inventory]] [IMPLEMENTADO]

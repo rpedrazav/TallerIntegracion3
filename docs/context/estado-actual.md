@@ -13,6 +13,10 @@ reglas: []
 ---
 # Estado Real de Implementación — GlobalMart OS
 
+## S2-099 — Commit y recuperación Kafka (2026-11-17)
+
+[IMPLEMENTADO Y PROBADO LOCALMENTE] El consumidor confirma offset solo para `Processed`, `Duplicate` o poison messages tratados explícitamente (`InvalidPayload`/`Unrecoverable` publicados en `sale.completed.error`). `TransientFailure` y cualquier estado desconocido vuelven al mismo offset sin confirmarlo. El loop registra cada reintento y cada confirmación con su resultado. Política dirigida y regresión MS-4: 33/33 aprobadas. La recuperación real ante caída de PostgreSQL fue verificada en S2-096; no se repitió contra el clúster sin broker.
+
 ## S2-098 — Evitar stock negativo por evento (2026-11-17)
 
 [IMPLEMENTADO Y PROBADO LOCALMENTE] `StockRepository` valida existencia y disponibilidad antes de preparar cada descuento. Stock inexistente o insuficiente produce `TransientFailure`: el consumidor registra la incidencia, no confirma el offset y reintenta sin guardar descuentos, movimientos ni `EventId`. Se eliminó la creación de stock negativo. Prueba dirigida: una solicitud de 3 unidades con disponibilidad 2 conserva stock 2. Suite MS-4: 32/32 aprobadas. PostgreSQL y Kafka reales para este escenario [NO VERIFICADOS].
