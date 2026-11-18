@@ -13,9 +13,13 @@ reglas: []
 ---
 # Estado Real de Implementación — GlobalMart OS
 
+## Pruebas de recepciones con PostgreSQL (2026-11-18)
+
+[IMPLEMENTADO Y PROBADO LOCALMENTE] `POST /recepciones` aprobó 3/3 integraciones HTTP sobre PostgreSQL 16 y migraciones reales: recepción válida con lote, stock y movimiento; cantidad cero sin mutación; y segundo tenant sin visibilidad ni capacidad de modificar la recepción del dueño. MS-1/MS-3 fueron stubs tenant-aware que validaron el reenvío del JWT. Exit code 0; clúster remoto [NO VERIFICADO]. [Evidencia](../qa/recepciones-postgresql/reporte.md).
+
 ## S3-016 — Validar recepciones en MS-4 (2026-11-18)
 
-[IMPLEMENTADO Y PROBADO LOCALMENTE] `POST /recepciones` valida antes de abrir la transacción: cantidad positiva con máximo cuatro decimales, vencimiento no pasado, IDs y ubicación válidos, producto activo visible en MS-3 y sucursal activa visible en MS-1 con el mismo JWT. Errores locales devuelven 400, referencias inexistentes/ajenas/inactivas devuelven 404 y dependencias no disponibles o inválidas devuelven 503. Producto inexistente, sucursal ajena, cantidad cero y vencimiento pasado no crearon stock, lote ni movimiento. Regresión MS-4: 38/38 aprobadas. Integración HTTP completa con servicios y PostgreSQL corresponde a S3-017; despliegue remoto [NO VERIFICADO].
+[IMPLEMENTADO Y PROBADO LOCALMENTE] `POST /recepciones` valida antes de abrir la transacción: cantidad positiva con máximo cuatro decimales, vencimiento no pasado, IDs y ubicación válidos, producto activo visible en MS-3 y sucursal activa visible en MS-1 con el mismo JWT. Errores locales devuelven 400, referencias inexistentes/ajenas/inactivas devuelven 404 y dependencias no disponibles o inválidas devuelven 503. Producto inexistente, sucursal ajena, cantidad cero y vencimiento pasado no crearon stock, lote ni movimiento. Regresión MS-4: 38/38 aprobadas; integración HTTP PostgreSQL: 3/3 aprobadas. Despliegue remoto [NO VERIFICADO].
 
 ## S3-015 — Registrar recepciones en MS-4 (2026-11-18)
 

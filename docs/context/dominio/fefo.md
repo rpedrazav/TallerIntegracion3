@@ -3,7 +3,7 @@ id: fefo
 tipo: dominio
 titulo: Contrato mínimo de recepciones y lotes FEFO
 estado: parcial
-fuentes: [src/WarehouseInventoryService/Controllers/RecepcionesController.cs, src/WarehouseInventoryService/Services/RecepcionService.cs, src/WarehouseInventoryService/Services/RecepcionValidator.cs, src/WarehouseInventoryService/Models/Lote.cs, src/WarehouseInventoryService/Data/Migrations/20261118181528_AddSucursalToLote.cs, tareas/plan_sprint3.xlsx]
+fuentes: [src/WarehouseInventoryService/Controllers/RecepcionesController.cs, src/WarehouseInventoryService/Services/RecepcionService.cs, src/WarehouseInventoryService/Services/RecepcionValidator.cs, tests/GlobalMart.IntegrationTests/RecepcionesPostgresIntegrationTests.cs, docs/qa/recepciones-postgresql/reporte.md, tareas/plan_sprint3.xlsx]
 verificado_contra_codigo: true
 ultima_revision: 2026-11-18
 depende_de: [ms4-inventory]
@@ -15,7 +15,7 @@ reglas: [RN-01, RN-05, RF-10, WI-04, WI-05]
 
 ## Estado y alcance
 
-**IMPLEMENTACIÓN PARCIAL.** S3-015 implementó `POST /recepciones` con escritura atómica, JWT, rol y tenant del token; S3-016 agregó las validaciones de referencias y dominio. `GET /lotes?porVencer=` y el descuento FEFO siguen sin implementar.
+**IMPLEMENTACIÓN PARCIAL.** `POST /recepciones` está implementado y aprobó 3/3 integraciones HTTP con PostgreSQL real, incluida la separación entre tenants. `GET /lotes?porVencer=` y el descuento FEFO siguen sin implementar.
 
 El alcance reutiliza `Lote.Id`, `ProductoId`, `SucursalId`, `FechaVencimiento`, `Cantidad`, `Ubicacion` y `TenantId`. S3-014 agregó `SucursalId` obligatorio y su migración porque el stock se administra por sucursal. No se agrega `FechaRecepcion`: el contrato no la requiere y el modelo actual no la tiene.
 
@@ -137,6 +137,8 @@ No se agregan capas ni repositorios alternativos. Controller valida identidad/fo
 - `src/WarehouseInventoryService/Controllers/RecepcionesController.cs`
 - `src/WarehouseInventoryService/Services/RecepcionService.cs`
 - `src/WarehouseInventoryService/Services/RecepcionValidator.cs`
+- `tests/GlobalMart.IntegrationTests/RecepcionesPostgresIntegrationTests.cs`
+- `docs/qa/recepciones-postgresql/reporte.md`
 - `src/WarehouseInventoryService/Models/Lote.cs`
 - `src/WarehouseInventoryService/Models/Stock.cs`
 - `src/WarehouseInventoryService/Models/MovimientoStock.cs`
