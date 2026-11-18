@@ -17,6 +17,7 @@ builder.Services.AddCors(options => options.AddPolicy("ElectronApp", policy =>
 builder.Services.AddDbContext<WarehouseInventoryService.Data.WarehouseDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddScoped<IStockRepository, StockRepository>();
+builder.Services.AddScoped<WarehouseInventoryService.Services.RecepcionService>();
 builder.Services.AddScoped<WarehouseInventoryService.Messaging.ISaleEventProcessor, WarehouseInventoryService.Messaging.SaleEventProcessor>();
 builder.Services.AddHttpClient();
 if (builder.Configuration.GetValue("Kafka:Enabled", true))
