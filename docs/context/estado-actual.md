@@ -13,6 +13,10 @@ reglas: []
 ---
 # Estado Real de Implementación — GlobalMart OS
 
+## S2-100 — Duplicados y fallo intermedio con broker (2026-11-17)
+
+[IMPLEMENTADO Y PROBADO LOCALMENTE] Dos pruebas de integración con Kafka y PostgreSQL reales aprobaron 2/2: publicar dos veces el mismo `EventId` descuenta una sola vez, y un fallo por stock insuficiente en el segundo ítem no persiste el primer descuento, movimientos ni idempotencia. Tras reponer stock, el mismo evento se reprocesó y confirmó ambos descuentos juntos. La fixture usa un topic único por corrida. Clúster remoto [NO VERIFICADO]. [Evidencia](../qa/S2-100/reporte.md).
+
 ## S2-099 — Commit y recuperación Kafka (2026-11-17)
 
 [IMPLEMENTADO Y PROBADO LOCALMENTE] El consumidor confirma offset solo para `Processed`, `Duplicate` o poison messages tratados explícitamente (`InvalidPayload`/`Unrecoverable` publicados en `sale.completed.error`). `TransientFailure` y cualquier estado desconocido vuelven al mismo offset sin confirmarlo. El loop registra cada reintento y cada confirmación con su resultado. Política dirigida y regresión MS-4: 33/33 aprobadas. La recuperación real ante caída de PostgreSQL fue verificada en S2-096; no se repitió contra el clúster sin broker.

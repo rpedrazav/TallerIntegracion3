@@ -83,7 +83,7 @@ El mensaje de error conserva topic, partición, offset, tipo, causa, payload ori
 
 El flujo de integración publica un evento `sale.completed` real en Kafka, prepara stock y lote en `WarehouseDbContext`, y consulta `GET /stock/{productId}?sucursal_id=` con polling hasta verificar que `cantidad_actual` disminuye según la cantidad vendida.
 
-S2-096 verificó además con Kafka y PostgreSQL locales reales que un payload inválido llega a `sale.completed.error`. Durante una caída de PostgreSQL, el grupo conservó offset 1 con log-end 2 y lag 1; después de recuperar la base avanzó a offset 2 y lag 0. S2-097 prueba que un fallo en el segundo ítem no persiste el primero, movimientos ni idempotencia. S2-098 prueba que una solicitud superior a la disponibilidad no modifica el stock ni registra el evento. S2-099 agrega el estado desconocido como caso seguro de reintento. Pruebas unitarias dirigidas: 33/33 aprobadas.
+S2-096 verificó además con Kafka y PostgreSQL locales reales que un payload inválido llega a `sale.completed.error`. Durante una caída de PostgreSQL, el grupo conservó offset 1 con log-end 2 y lag 1; después de recuperar la base avanzó a offset 2 y lag 0. S2-097 prueba que un fallo en el segundo ítem no persiste el primero, movimientos ni idempotencia. S2-098 prueba que una solicitud superior a la disponibilidad no modifica el stock ni registra el evento. S2-099 agrega el estado desconocido como caso seguro de reintento. S2-100 aprobó 2/2 integraciones con broker y PostgreSQL reales para duplicado y recuperación de fallo en el segundo ítem. Pruebas unitarias dirigidas: 33/33 aprobadas. [Evidencia S2-100](../../qa/S2-100/reporte.md).
 
 ## Modelo de datos
 

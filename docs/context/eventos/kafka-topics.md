@@ -133,6 +133,8 @@ S2-098 clasifica stock inexistente o insuficiente como `TransientFailure`: no co
 
 S2-099 restringe el commit a procesamiento válido, duplicado o poison message entregado al destino de error. Fallos transitorios, excepciones y estados desconocidos hacen `seek` al mismo offset y se registran para reproceso; las confirmaciones también quedan registradas con el resultado.
 
+S2-100 verificó con Kafka y PostgreSQL locales reales que dos mensajes con el mismo `EventId` producen un solo descuento y que un fallo en el segundo ítem no deja cambios parciales. Al recuperar stock, el evento pendiente se reprocesa completo. Resultado: 2/2 integraciones aprobadas; clúster remoto [NO VERIFICADO].
+
 ## Conexiones
 - Produce → [[ms5-pos]] [IMPLEMENTADO]
 - Consume → [[ms4-inventory]] [IMPLEMENTADO]
