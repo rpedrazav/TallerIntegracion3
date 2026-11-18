@@ -3,9 +3,9 @@ id: fefo
 tipo: dominio
 titulo: Contrato mínimo de recepciones y lotes FEFO
 estado: contrato-definido
-fuentes: [src/WarehouseInventoryService/Models/Lote.cs, src/WarehouseInventoryService/Models/Stock.cs, src/WarehouseInventoryService/Models/MovimientoStock.cs, tareas/plan_sprint3.xlsx]
+fuentes: [src/WarehouseInventoryService/Models/Lote.cs, src/WarehouseInventoryService/Models/Stock.cs, src/WarehouseInventoryService/Models/MovimientoStock.cs, src/WarehouseInventoryService/Data/Migrations/20261118181528_AddSucursalToLote.cs, tareas/plan_sprint3.xlsx]
 verificado_contra_codigo: true
-ultima_revision: 2026-11-17
+ultima_revision: 2026-11-18
 depende_de: [ms4-inventory]
 publica: []
 consume: []
@@ -17,7 +17,7 @@ reglas: [RN-01, RN-05, RF-10, WI-04, WI-05]
 
 **CONTRATO DEFINIDO; ENDPOINTS NO IMPLEMENTADOS.** Este documento fija el contrato futuro de `POST /recepciones` y `GET /lotes?porVencer=` para MS-4. No certifica recepción ni descuento FEFO en ejecución.
 
-El alcance reutiliza `Lote.Id`, `ProductoId`, `FechaVencimiento`, `Cantidad`, `Ubicacion` y `TenantId`. El modelo real todavía no contiene `SucursalId`; S3-014 debe agregarlo y migrarlo porque el stock se administra por sucursal y un lote sin sucursal no puede consultarse ni descontarse correctamente. No se agrega `FechaRecepcion`: la tarea no la requiere y el modelo actual no la tiene.
+El alcance reutiliza `Lote.Id`, `ProductoId`, `SucursalId`, `FechaVencimiento`, `Cantidad`, `Ubicacion` y `TenantId`. S3-014 agregó `SucursalId` obligatorio y su migración porque el stock se administra por sucursal. No se agrega `FechaRecepcion`: el contrato no la requiere y el modelo actual no la tiene.
 
 Ambos endpoints exigen JWT válido y rol `ADMIN` o `REPONEDOR`. `tenantId` se obtiene exclusivamente del claim `tenant_id`; nunca se acepta en body o query.
 
@@ -137,4 +137,5 @@ No se agregan capas ni repositorios alternativos. Controller valida identidad/fo
 - `src/WarehouseInventoryService/Models/Stock.cs`
 - `src/WarehouseInventoryService/Models/MovimientoStock.cs`
 - `src/WarehouseInventoryService/Data/Migrations/20260913033948_InitialCreate_Warehouse.cs`
+- `src/WarehouseInventoryService/Data/Migrations/20261118181528_AddSucursalToLote.cs`
 - `tareas/plan_sprint3.xlsx` (S3-002)

@@ -5,7 +5,7 @@ titulo: MS-4 · Warehouse & Inventory Service
 estado: parcial
 fuentes: [src/WarehouseInventoryService/, tests/GlobalMart.Tests/MS4_Warehouse/, Docker/docker-compose.yml]
 verificado_contra_codigo: true
-ultima_revision: 2026-11-17
+ultima_revision: 2026-11-18
 depende_de: [ms5-pos]
 publica: [sale.completed.error]
 consume: [sale.completed]
@@ -31,7 +31,8 @@ src/WarehouseInventoryService/
 │   ├── SeedData.cs               ← Seed de stock sincronizado con catálogo
 │   └── Migrations/
 │       ├── 20260913033948_InitialCreate_Warehouse.cs
-│       └── 20260927195722_AddEventosKafkaProcesados.cs
+│       ├── 20260927195722_AddEventosKafkaProcesados.cs
+│       └── 20261118181528_AddSucursalToLote.cs
 ├── Messaging/
 │   ├── KafkaConsumerService.cs   ← IHostedService, suscrito a "sale.completed"
 │   ├── SaleEventProcessor.cs     ← Procesador de eventos con idempotencia y auditoría
@@ -83,7 +84,7 @@ El mensaje de error conserva topic, partición, offset, tipo, causa, payload ori
 
 El flujo de integración publica un evento `sale.completed` real en Kafka, prepara stock y lote en `WarehouseDbContext`, y consulta `GET /stock/{productId}?sucursal_id=` con polling hasta verificar que `cantidad_actual` disminuye según la cantidad vendida.
 
-S2-096 verificó además con Kafka y PostgreSQL locales reales que un payload inválido llega a `sale.completed.error`. Durante una caída de PostgreSQL, el grupo conservó offset 1 con log-end 2 y lag 1; después de recuperar la base avanzó a offset 2 y lag 0. S2-097 prueba que un fallo en el segundo ítem no persiste el primero, movimientos ni idempotencia. S2-098 prueba que una solicitud superior a la disponibilidad no modifica el stock ni registra el evento. S2-099 agrega el estado desconocido como caso seguro de reintento. S2-100 aprobó 2/2 integraciones con broker y PostgreSQL reales para duplicado y recuperación de fallo en el segundo ítem. Pruebas unitarias dirigidas: 33/33 aprobadas. [Evidencia S2-100](../../qa/S2-100/reporte.md).
+S2-096 verificó además con Kafka y PostgreSQL locales reales que un payload inválido llega a `sale.completed.error`. Durante una caída de PostgreSQL, el grupo conservó offset 1 con log-end 2 y lag 1; después de recuperar la base avanzó a offset 2 y lag 0. S2-097 prueba que un fallo en el segundo ítem no persiste el primero, movimientos ni idempotencia. S2-098 prueba que una solicitud superior a la disponibilidad no modifica el stock ni registra el evento. S2-099 agrega el estado desconocido como caso seguro de reintento. S2-100 aprobó 2/2 integraciones con broker y PostgreSQL reales para duplicado y recuperación de fallo en el segundo ítem. S3-014 aplicó la migración de `SucursalId` sobre PostgreSQL limpio y preexistente sin alterar stock ni lotes. Pruebas unitarias dirigidas: 33/33 aprobadas. [Evidencia S2-100](../../qa/S2-100/reporte.md).
 
 ## Modelo de datos
 
@@ -101,7 +102,7 @@ Lote
   fecha_vencimiento DateOnly
   cantidad          decimal(12,4)
   ubicacion         string(100)
-  sucursal_id       PENDIENTE S3-014
+  sucursal_id       GUID
 
 MovimientoStock
   id          GUID PK
@@ -147,7 +148,6 @@ EventoKafkaProcesado
 | Brecha | Impacto |
 |--------|---------|
 | MS-5 no produce sale.completed | WI-13/14 sin entrada real |
-| `Lote` no tiene `SucursalId` | Recepciones y consultas FEFO por sucursal requieren migración S3-014 |
 | Sin FEFO en selección de lotes | RN-05 no cumplido |
 | Sin recepciones implementadas | RF-10 no implementado |
 | Sin alertas Kafka | stock.alert/expiry.alert no se generan |
@@ -168,6 +168,7 @@ EventoKafkaProcesado
 - `src/WarehouseInventoryService/Models/Stock.cs`
 - `src/WarehouseInventoryService/Models/MovimientoStock.cs`
 - `src/WarehouseInventoryService/Data/Migrations/20260927195722_AddEventosKafkaProcesados.cs`
+- `src/WarehouseInventoryService/Data/Migrations/20261118181528_AddSucursalToLote.cs`
 
 ## Integración de ramas — 2026-11-01
 

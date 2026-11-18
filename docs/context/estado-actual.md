@@ -13,9 +13,13 @@ reglas: []
 ---
 # Estado Real de Implementación — GlobalMart OS
 
+## S3-014 — Modelo Lote y migración de MS-4 (2026-11-18)
+
+[IMPLEMENTADO Y PROBADO LOCALMENTE] `Lote` conserva fecha de vencimiento, cantidad disponible y tenant, y agrega `SucursalId` obligatorio. La migración `AddSucursalToLote` se aplicó sobre una base limpia y sobre el esquema anterior con stock y lote existentes; ambos registros conservaron sus valores. Regresión dirigida de MS-4: 33/33 aprobadas. Base remota [NO VERIFICADA].
+
 ## S3-002 — Contrato mínimo de recepciones y lotes FEFO (2026-11-17)
 
-[CONTRATO DEFINIDO; IMPLEMENTACIÓN PENDIENTE] Se fijaron request, respuesta, errores y validaciones de `POST /recepciones` y `GET /lotes?porVencer=&sucursal_id=` reutilizando los campos reales de `Lote`. El contrato exige JWT, tenant del token y rol ADMIN/REPONEDOR; la recepción futura será atómica con stock y movimiento. El modelo actual carece de `SucursalId`, brecha asignada a S3-014. Mermas, transferencias, conteos, alertas Kafka y descuento FEFO quedan fuera de S3-002. [Contrato](dominio/fefo.md).
+[CONTRATO DEFINIDO; ENDPOINTS PENDIENTES] Se fijaron request, respuesta, errores y validaciones de `POST /recepciones` y `GET /lotes?porVencer=&sucursal_id=` reutilizando los campos reales de `Lote`. El contrato exige JWT, tenant del token y rol ADMIN/REPONEDOR; la recepción futura será atómica con stock y movimiento. S3-014 agregó `SucursalId` y su migración. Mermas, transferencias, conteos, alertas Kafka y descuento FEFO quedan fuera de S3-002. [Contrato](dominio/fefo.md).
 
 ## S2-100 — Duplicados y fallo intermedio con broker (2026-11-17)
 
