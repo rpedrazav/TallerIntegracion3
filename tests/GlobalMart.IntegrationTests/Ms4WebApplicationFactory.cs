@@ -16,6 +16,8 @@ namespace GlobalMart.IntegrationTests;
 
 public class Ms4WebApplicationFactory : WebApplicationFactory<WarehouseInventoryServiceAlias::Program>
 {
+    public string Topic { get; } = $"sale.completed.integration.{Guid.NewGuid():N}";
+
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Development");
@@ -24,7 +26,9 @@ public class Ms4WebApplicationFactory : WebApplicationFactory<WarehouseInventory
             configuration.AddInMemoryCollection(new Dictionary<string, string?>
             {
                 ["Kafka:BootstrapServers"] = "localhost:9092",
-                ["Kafka:GroupId"] = $"integration-test-{Guid.NewGuid():N}"
+                ["Kafka:GroupId"] = $"integration-test-{Guid.NewGuid():N}",
+                ["Kafka:Topic"] = Topic,
+                ["Kafka:ErrorTopic"] = $"{Topic}.error"
             });
         });
 

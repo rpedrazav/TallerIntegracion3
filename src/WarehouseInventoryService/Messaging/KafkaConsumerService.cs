@@ -13,8 +13,8 @@ namespace WarehouseInventoryService.Messaging;
 /// </summary>
 public sealed class KafkaConsumerService : IHostedService, IDisposable
 {
-    private const string Topic = "sale.completed";
-    private const string ErrorTopic = "sale.completed.error";
+    private string Topic => _configuration["Kafka:Topic"] ?? "sale.completed";
+    private string ErrorTopic => _configuration["Kafka:ErrorTopic"] ?? "sale.completed.error";
     private static readonly TimeSpan RetryDelay = TimeSpan.FromSeconds(1);
 
     private readonly ILogger<KafkaConsumerService> _logger;
