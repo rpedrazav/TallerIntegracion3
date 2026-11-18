@@ -5,9 +5,9 @@ titulo: Kafka Topics — Diseño vs Implementación Real
 estado: parcial
 fuentes: [src/POSCartService/Services/KafkaProducerService.cs, src/POSCartService/Services/OutboxPublisherWorker.cs, src/POSCartService/Messaging/SaleCompletedEvent.cs, src/WarehouseInventoryService/Messaging/KafkaConsumerService.cs, tests/GlobalMart.IntegrationTests/OutboxBrokerRecoveryIntegrationTests.cs, Docker/docker-compose.yml, Docker/scripts/init-kafka-topics.sh]
 verificado_contra_codigo: true
-ultima_revision: 2026-11-14
+ultima_revision: 2026-11-17
 depende_de: [ms5-pos, ms4-inventory]
-publica: [sale.completed, sale.reversed]
+publica: [sale.completed, sale.completed.error, sale.reversed]
 consume: [sale.completed]
 diseno_publica: [sale.completed, sale.reversed, stock.alert, expiry.alert, stock.updated, purchase.received, fx.rate.updated, points.updated]
 diseno_consume: [sale.completed, sale.reversed, stock.alert, expiry.alert, stock.updated, purchase.received, fx.rate.updated, points.updated]
@@ -15,19 +15,19 @@ reglas: [RN-04, RF-09]
 ---
 # Kafka Topics — Diseño vs Implementación Real
 
-> Contraste entre los topics diseñados en el ContextMaster y lo que realmente existe en el código. **Estado:** MS-5 publica `sale.completed` y `sale.reversed` desde outbox; MS-4 consume únicamente `sale.completed`.
+> Contraste entre los topics diseñados en el ContextMaster y lo que realmente existe en el código. **Estado:** MS-5 publica `sale.completed` y `sale.reversed` desde outbox; MS-4 consume `sale.completed` y envía errores permanentes a `sale.completed.error`.
 
 ## Topics aprovisionados (docker-compose init)
 
 El `kafka-init-topics` del docker-compose crea estos topics al iniciar:
 
 ```
-sale.completed          stock.alert           expiry.alert
-sale.reversed           stock.updated         purchase.received
-fx.rate.updated         points.updated        tenant.created
-tenant.updated          user.registered       product.created
-product.price_updated   shift.closed          stock.low
-product.expiring_soon   purchase_order.received
+sale.completed          sale.completed.error  stock.alert
+expiry.alert            sale.reversed         stock.updated
+purchase.received       fx.rate.updated       points.updated
+tenant.created          tenant.updated        user.registered
+product.created         product.price_updated shift.closed
+stock.low               product.expiring_soon purchase_order.received
 ```
 
 **Nota:** `stock.low` y `product.expiring_soon` son aliases de `stock.alert` y `expiry.alert` (topics duplicados en init).
@@ -37,6 +37,7 @@ product.expiring_soon   purchase_order.received
 | Topic | Productor real | Consumidor real | Estado |
 |-------|---------------|-----------------|--------|
 | `sale.completed` | ✅ MS-5 OutboxPublisherWorker | ✅ MS-4 KafkaConsumerService | [IMPLEMENTADO] |
+| `sale.completed.error` | ✅ MS-4 KafkaConsumerService | ❌ NINGUNO | [IMPLEMENTADO S2-096; destino de error] |
 | `stock.alert` | ❌ NINGUNO | ❌ NINGUNO | [PLANIFICADO] |
 | `expiry.alert` | ❌ NINGUNO | ❌ NINGUNO | [PLANIFICADO] |
 | `sale.reversed` | ✅ MS-5 OutboxPublisherWorker | ❌ NINGUNO | [PRODUCTOR IMPLEMENTADO S2-094; consumidor pendiente] |
@@ -80,7 +81,7 @@ public sealed class SaleCompletedItemEvent
 
 ## Diseño del ContextMaster (9 topics)
 
-El ContextMaster documenta 9 topics. El código y docker-compose tienen 17 topics definidos (algunos adicionales al diseño original).
+El ContextMaster documenta 9 topics. El código y docker-compose tienen 18 topics definidos (algunos adicionales al diseño original).
 
 ## Flujo diseñado (cuándo esté implementado)
 
@@ -123,6 +124,8 @@ await _ventaRepository.CompletarConOutboxAsync(venta.Id, pago, outboxMessage);
 La persistencia y publicación de `sale.completed` están cubiertas con PostgreSQL real y un productor controlado: el cobro deja venta, pago y outbox pendiente en un solo commit; el worker conserva identidad y payload entre intentos, reprograma un fallo transitorio y marca `PUBLICADO` tras el éxito. S2-010 agrega el escenario completo de indisponibilidad y recuperación del productor, con una única entrega lógica del JSON persistido. La caída de un proceso Kafka real permanece [NO VERIFICADO].
 
 El consumo de `sale.completed` por MS-4 también está cubierto mediante un test de integración que publica un evento real, espera el procesamiento asíncrono y verifica el descuento de stock a través de la API de inventario.
+
+S2-096 verificó localmente `sale.completed.error` con Kafka real y la retención de offset ante caída de PostgreSQL: offset 1/log-end 2 durante el fallo, offset 2/log-end 2 tras recuperación. En el clúster permanece [NO VERIFICADO] por ausencia de broker.
 
 ## Conexiones
 - Produce → [[ms5-pos]] [IMPLEMENTADO]

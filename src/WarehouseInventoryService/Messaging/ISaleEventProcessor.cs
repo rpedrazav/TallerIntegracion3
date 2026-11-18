@@ -12,8 +12,29 @@ public interface ISaleEventProcessor
     /// </summary>
     /// <param name="payload">JSON del evento sale.completed.</param>
     /// <returns>
-    /// true si el evento fue procesado exitosamente.
-    /// false si el evento ya había sido procesado (duplicado descartado).
+    /// Resultado que distingue procesamiento, duplicado y errores permanentes.
     /// </returns>
-    bool ProcesarEvento(string payload);
+    SaleEventProcessingResult ProcesarEvento(string? payload);
+}
+
+public enum SaleEventProcessingStatus
+{
+    Processed,
+    Duplicate,
+    InvalidPayload,
+    Unrecoverable,
+    TransientFailure
+}
+
+public sealed record SaleEventProcessingResult(
+    SaleEventProcessingStatus Status,
+    string? Error = null)
+{
+    public bool Retry => Status == SaleEventProcessingStatus.TransientFailure;
+
+    public bool SendToErrorTopic => Status is
+        SaleEventProcessingStatus.InvalidPayload or
+        SaleEventProcessingStatus.Unrecoverable;
+
+    public bool CommitOffset => !Retry;
 }

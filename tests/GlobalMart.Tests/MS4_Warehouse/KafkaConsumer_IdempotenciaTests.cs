@@ -94,7 +94,7 @@ public class KafkaConsumer_IdempotenciaTests : IDisposable
         var resultado = _processor.ProcesarEvento(payload);
 
         // Assert — Se procesó exitosamente
-        resultado.Should().BeTrue();
+        resultado.Status.Should().Be(SaleEventProcessingStatus.Processed);
 
         // Assert — El event_id quedó registrado en la tabla de idempotencia
         _context.EventosKafkaProcesados.Any(e => e.EventId == EventId).Should().BeTrue();
@@ -118,8 +118,8 @@ public class KafkaConsumer_IdempotenciaTests : IDisposable
         var segunda = _processor.ProcesarEvento(payload);
 
         // Assert
-        primera.Should().BeTrue("la primera vez se debe procesar");
-        segunda.Should().BeFalse("la segunda vez debe ser descartada (duplicado)");
+        primera.Status.Should().Be(SaleEventProcessingStatus.Processed);
+        segunda.Status.Should().Be(SaleEventProcessingStatus.Duplicate);
 
         // Assert — Solo se registró UNA entrada en la tabla de idempotencia
         _context.EventosKafkaProcesados.Count().Should().Be(1);
@@ -143,9 +143,9 @@ public class KafkaConsumer_IdempotenciaTests : IDisposable
         var r3 = _processor.ProcesarEvento(payload);
 
         // Assert
-        r1.Should().BeTrue();
-        r2.Should().BeFalse();
-        r3.Should().BeFalse();
+        r1.Status.Should().Be(SaleEventProcessingStatus.Processed);
+        r2.Status.Should().Be(SaleEventProcessingStatus.Duplicate);
+        r3.Status.Should().Be(SaleEventProcessingStatus.Duplicate);
 
         // Assert — Solo un registro en la tabla de idempotencia
         _context.EventosKafkaProcesados.Count().Should().Be(1);
@@ -169,8 +169,8 @@ public class KafkaConsumer_IdempotenciaTests : IDisposable
         var r2 = _processor.ProcesarEvento(payload2);
 
         // Assert — Ambos se procesan porque tienen distinto event_id
-        r1.Should().BeTrue();
-        r2.Should().BeTrue();
+        r1.Status.Should().Be(SaleEventProcessingStatus.Processed);
+        r2.Status.Should().Be(SaleEventProcessingStatus.Processed);
 
         // Assert — Dos registros en la tabla de idempotencia
         _context.EventosKafkaProcesados.Count().Should().Be(2);
@@ -182,21 +182,33 @@ public class KafkaConsumer_IdempotenciaTests : IDisposable
     }
 
     [Fact]
-    public void ProcesarEvento_PayloadInvalido_RetornaFalseSinRegistrar()
+    public void ProcesarEvento_PayloadInvalido_ClasificaSinRegistrar()
     {
         // Act
         var resultado = _processor.ProcesarEvento("esto no es JSON válido {{{");
 
         // Assert
-        resultado.Should().BeFalse();
+        resultado.Status.Should().Be(SaleEventProcessingStatus.InvalidPayload);
         _context.EventosKafkaProcesados.Count().Should().Be(0);
         _stockRepoMock.Verify(
             r => r.Descontar(It.IsAny<Guid>(), It.IsAny<decimal>(), It.IsAny<Guid>(), It.IsAny<Guid>()),
             Times.Never);
     }
 
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("   ")]
+    public void ProcesarEvento_PayloadVacio_ClasificaInvalido(string? payload)
+    {
+        var resultado = _processor.ProcesarEvento(payload);
+
+        resultado.Status.Should().Be(SaleEventProcessingStatus.InvalidPayload);
+        _context.EventosKafkaProcesados.Count().Should().Be(0);
+    }
+
     [Fact]
-    public void ProcesarEvento_EventoSinItems_RetornaFalseSinRegistrar()
+    public void ProcesarEvento_EventoSinItems_ClasificaIrrecuperableSinRegistrar()
     {
         // Arrange — Evento sin items
         var evento = new
@@ -215,8 +227,27 @@ public class KafkaConsumer_IdempotenciaTests : IDisposable
         var resultado = _processor.ProcesarEvento(payload);
 
         // Assert
-        resultado.Should().BeFalse();
+        resultado.Status.Should().Be(SaleEventProcessingStatus.Unrecoverable);
         _context.EventosKafkaProcesados.Count().Should().Be(0);
+    }
+
+    [Theory]
+    [InlineData(SaleEventProcessingStatus.Processed, true, false, false)]
+    [InlineData(SaleEventProcessingStatus.Duplicate, true, false, false)]
+    [InlineData(SaleEventProcessingStatus.InvalidPayload, true, true, false)]
+    [InlineData(SaleEventProcessingStatus.Unrecoverable, true, true, false)]
+    [InlineData(SaleEventProcessingStatus.TransientFailure, false, false, true)]
+    public void ResultadoProcesamiento_DefinePoliticaDeOffsetYError(
+        SaleEventProcessingStatus status,
+        bool commitOffset,
+        bool sendToErrorTopic,
+        bool retry)
+    {
+        var resultado = new SaleEventProcessingResult(status);
+
+        resultado.CommitOffset.Should().Be(commitOffset);
+        resultado.SendToErrorTopic.Should().Be(sendToErrorTopic);
+        resultado.Retry.Should().Be(retry);
     }
 
     public void Dispose()
