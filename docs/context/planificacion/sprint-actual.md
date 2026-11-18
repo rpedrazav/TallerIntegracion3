@@ -5,7 +5,7 @@ titulo: Sprint Actual — Sprint 3 (En Curso)
 estado: vigente
 fuentes: [tareas/plan_sprint3.xlsx, docs/qa/S2-111/checklist-salida.md, tareas/plan_sprint2_revisado.xlsx, docs/qa/S2-092/reporte.md, docs/qa/S2-106/reporte.md, docs/qa/S2-107/reporte.md, tareas/sprint2_youtrack_resultado.json, docs/defensa-sprint2/01-resumen.md, docs/context/estado-actual.md, aclaración del equipo (Daniel Prado, 2026-11-14)]
 verificado_contra_codigo: false
-ultima_revision: 2026-11-15
+ultima_revision: 2026-11-18
 depende_de: [sprints-anteriores, roadmap]
 publica: []
 consume: []
@@ -114,6 +114,8 @@ Plan completo: [plan_sprint3.xlsx](../../../tareas/plan_sprint3.xlsx). Guía par
 **Limitación aceptada:** el namespace del clúster no tiene Kafka, así que allí la venta no descuenta stock. FEFO completo se demuestra con `docker compose`.
 
 **Bug de cierre de turno:** reportado como congelamiento de la app al cerrar turno; no se reproduce en `dev` (2026-11-14). Se reemplaza igual `window.confirm` por un modal y se agrega un E2E.
+
+**Modal de cierre ya existe (2026-11-18, S3-029):** el modal base de S3-036 se adelantó para poder automatizar el E2E. Vive en `CerrarTurnoPage.tsx` como `<dialog>` nativo (`confirmDialogRef` + `showModal()`), no en un componente aparte. **S3-036 (Diego) parte de ese mismo archivo y bloque**: puede pulir estilo o moverlo al partir `CerrarTurnoPage.tsx`, pero no crear un segundo modal. Contrato que usa `e2e/electron/cierre-turno.integrated.spec.ts` y que no debe cambiar sin actualizar el spec: diálogo con nombre «Confirmar cierre de turno» y `aria-modal="true"`; botones «Cancelar» (foco inicial) y «Confirmar cierre»; `Escape` y clic en el fondo cancelan; el foco vuelve a «🔒 Confirmar y Cerrar Turno»; muestra el monto declarado en `es-CL`. `admin-venta.integrated.spec.ts` también hace clic en «Confirmar cierre».
 
 Pendientes conocidos que no entran en el sprint, según [[estado-actual]]: refresh/revocación de JWT, auditoría de usuarios en la UI y entrega de eventos Kafka en el clúster [NO VERIFICADO].
 
