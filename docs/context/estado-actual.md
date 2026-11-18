@@ -13,9 +13,13 @@ reglas: []
 ---
 # Estado Real de Implementación — GlobalMart OS
 
+## S3-016 — Validar recepciones en MS-4 (2026-11-18)
+
+[IMPLEMENTADO Y PROBADO LOCALMENTE] `POST /recepciones` valida antes de abrir la transacción: cantidad positiva con máximo cuatro decimales, vencimiento no pasado, IDs y ubicación válidos, producto activo visible en MS-3 y sucursal activa visible en MS-1 con el mismo JWT. Errores locales devuelven 400, referencias inexistentes/ajenas/inactivas devuelven 404 y dependencias no disponibles o inválidas devuelven 503. Producto inexistente, sucursal ajena, cantidad cero y vencimiento pasado no crearon stock, lote ni movimiento. Regresión MS-4: 38/38 aprobadas. Integración HTTP completa con servicios y PostgreSQL corresponde a S3-017; despliegue remoto [NO VERIFICADO].
+
 ## S3-015 — Registrar recepciones en MS-4 (2026-11-18)
 
-[IMPLEMENTADO Y PROBADO LOCALMENTE; VALIDACIONES PENDIENTES] `POST /recepciones` exige JWT y rol ADMIN/REPONEDOR, toma el tenant exclusivamente del token y guarda lote, incremento de stock y movimiento `RECEPCION` en una transacción serializable. PostgreSQL real: HTTP 201 creó los tres registros; un fallo de persistencia forzado devolvió 500 y conservó stock, lote y movimiento sin cambios parciales; sin JWT devolvió 401. Regresión MS-4: 34/34 aprobadas. Validaciones de producto, sucursal, cantidad y vencimiento corresponden a S3-016; despliegue remoto [NO VERIFICADO].
+[IMPLEMENTADO Y PROBADO LOCALMENTE] `POST /recepciones` exige JWT y rol ADMIN/REPONEDOR, toma el tenant exclusivamente del token y guarda lote, incremento de stock y movimiento `RECEPCION` en una transacción serializable. PostgreSQL real: HTTP 201 creó los tres registros; un fallo de persistencia forzado devolvió 500 y conservó stock, lote y movimiento sin cambios parciales; sin JWT devolvió 401. S3-016 completó las validaciones previas. Despliegue remoto [NO VERIFICADO].
 
 ## S3-014 — Modelo Lote y migración de MS-4 (2026-11-18)
 
@@ -23,7 +27,7 @@ reglas: []
 
 ## S3-002 — Contrato mínimo de recepciones y lotes FEFO (2026-11-17)
 
-[CONTRATO DEFINIDO; IMPLEMENTACIÓN PARCIAL] Se fijaron request, respuesta, errores y validaciones de `POST /recepciones` y `GET /lotes?porVencer=&sucursal_id=` reutilizando los campos reales de `Lote`. S3-014 agregó `SucursalId` y S3-015 implementó la recepción atómica con JWT y tenant del token; sus validaciones quedan para S3-016 y la consulta de lotes sigue pendiente. Mermas, transferencias, conteos, alertas Kafka y descuento FEFO quedan fuera de S3-002. [Contrato](dominio/fefo.md).
+[CONTRATO DEFINIDO; IMPLEMENTACIÓN PARCIAL] Se fijaron request, respuesta, errores y validaciones de `POST /recepciones` y `GET /lotes?porVencer=&sucursal_id=` reutilizando los campos reales de `Lote`. S3-014 agregó `SucursalId`, S3-015 implementó la recepción atómica y S3-016 completó sus validaciones; la consulta de lotes sigue pendiente. Mermas, transferencias, conteos, alertas Kafka y descuento FEFO quedan fuera de S3-002. [Contrato](dominio/fefo.md).
 
 ## S2-100 — Duplicados y fallo intermedio con broker (2026-11-17)
 
@@ -165,7 +169,7 @@ S2-052 — 2026-10-19: **2/2 pruebas de integración HTTP locales aprobadas** pa
 ### MS-4 · Warehouse & Inventory Service [PARCIAL]
 **Implementado:**
 - `GET /stock/{productId}?sucursal_id=` — consulta stock [IMPLEMENTADO]
-- `POST /recepciones` — crea lote, suma stock y registra movimiento atómicamente; validaciones S3-016 pendientes [PARCIAL]
+- `POST /recepciones` — valida referencias y dominio, crea lote, suma stock y registra movimiento atómicamente [IMPLEMENTADO LOCALMENTE]
 - `KafkaConsumerService` — consume `sale.completed`, descuenta stock con idempotencia [IMPLEMENTADO]
 - Tabla `EventosKafkaProcesados` — garantiza exactly-once processing [IMPLEMENTADO]
 - TenantMiddleware [IMPLEMENTADO]

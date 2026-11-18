@@ -3,7 +3,7 @@ id: fefo
 tipo: dominio
 titulo: Contrato mínimo de recepciones y lotes FEFO
 estado: parcial
-fuentes: [src/WarehouseInventoryService/Models/Lote.cs, src/WarehouseInventoryService/Models/Stock.cs, src/WarehouseInventoryService/Models/MovimientoStock.cs, src/WarehouseInventoryService/Data/Migrations/20261118181528_AddSucursalToLote.cs, tareas/plan_sprint3.xlsx]
+fuentes: [src/WarehouseInventoryService/Controllers/RecepcionesController.cs, src/WarehouseInventoryService/Services/RecepcionService.cs, src/WarehouseInventoryService/Services/RecepcionValidator.cs, src/WarehouseInventoryService/Models/Lote.cs, src/WarehouseInventoryService/Data/Migrations/20261118181528_AddSucursalToLote.cs, tareas/plan_sprint3.xlsx]
 verificado_contra_codigo: true
 ultima_revision: 2026-11-18
 depende_de: [ms4-inventory]
@@ -15,7 +15,7 @@ reglas: [RN-01, RN-05, RF-10, WI-04, WI-05]
 
 ## Estado y alcance
 
-**IMPLEMENTACIÓN PARCIAL.** S3-015 implementó `POST /recepciones` con escritura atómica, JWT, rol y tenant del token. Las validaciones de referencias y dominio corresponden a S3-016. `GET /lotes?porVencer=` y el descuento FEFO siguen sin implementar.
+**IMPLEMENTACIÓN PARCIAL.** S3-015 implementó `POST /recepciones` con escritura atómica, JWT, rol y tenant del token; S3-016 agregó las validaciones de referencias y dominio. `GET /lotes?porVencer=` y el descuento FEFO siguen sin implementar.
 
 El alcance reutiliza `Lote.Id`, `ProductoId`, `SucursalId`, `FechaVencimiento`, `Cantidad`, `Ubicacion` y `TenantId`. S3-014 agregó `SucursalId` obligatorio y su migración porque el stock se administra por sucursal. No se agrega `FechaRecepcion`: el contrato no la requiere y el modelo actual no la tiene.
 
@@ -68,7 +68,8 @@ HTTP 201:
 
 | Estado | Condición | Mutación |
 |---|---|---|
-| 400 | JSON/campos inválidos, cantidad o fecha fuera de regla, producto o sucursal inexistente/inactiva/ajena | Ninguna |
+| 400 | JSON/campos inválidos, cantidad, fecha o ubicación fuera de regla | Ninguna |
+| 404 | Producto o sucursal inexistente, inactiva o ajena al tenant | Ninguna |
 | 401 | JWT ausente, inválido o sin `tenant_id` | Ninguna |
 | 403 | Rol distinto de `ADMIN` o `REPONEDOR` | Ninguna |
 | 503 | No fue posible validar producto o sucursal | Ninguna |
@@ -133,6 +134,9 @@ No se agregan capas ni repositorios alternativos. Controller valida identidad/fo
 
 ## Fuentes
 
+- `src/WarehouseInventoryService/Controllers/RecepcionesController.cs`
+- `src/WarehouseInventoryService/Services/RecepcionService.cs`
+- `src/WarehouseInventoryService/Services/RecepcionValidator.cs`
 - `src/WarehouseInventoryService/Models/Lote.cs`
 - `src/WarehouseInventoryService/Models/Stock.cs`
 - `src/WarehouseInventoryService/Models/MovimientoStock.cs`

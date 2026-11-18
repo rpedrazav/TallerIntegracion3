@@ -17,7 +17,7 @@ reglas: [RN-04, RN-05, RF-09, RF-10, WI-04, WI-05, WI-13, WI-14]
 
 `GET /stock?sucursal_id=` lista existencias del tenant. `POST /stock/ajuste` exige ADMIN o REPONEDOR, valida cantidad no negativa y cuatro decimales, comprueba producto en MS-3 y sucursal activa en MS-1 con el JWT original, y registra el delta en `MovimientoStock`. `GET /health` comprueba disponibilidad HTTP. JWT usa issuer/audience/firma compatibles con MS-1. Pruebas de integración PostgreSQL de ajuste y aislamiento de tenant aprobadas. En `student-rpedraza`, MS-4 está desplegado y probó ajuste/listado remoto, 401 sin JWT, 403 para CAJERO y 400 para cantidad negativa. `warehouse_db` es una base independiente en el PostgreSQL existente del POS porque el clúster agotó su cuota global de PVC y la cuota de servicios del namespace. Allí no hay broker Kafka: `Kafka__Enabled=false` desactiva el consumidor y la sincronización de stock por eventos queda [NO VERIFICADO].
 
-> Gestiona el stock de productos por sucursal. La recepción atómica está implementada parcialmente; validaciones, descuento FEFO, mermas y alertas siguen pendientes.
+> Gestiona el stock de productos por sucursal. La recepción atómica y sus validaciones están implementadas; descuento FEFO, mermas y alertas siguen pendientes.
 
 ## Estructura del proyecto
 
@@ -45,7 +45,7 @@ src/WarehouseInventoryService/
 │   ├── MovimientoStock.cs
 │   └── EventoKafkaProcesado.cs   ← tabla para idempotencia
 ├── Repositories/  IStockRepository · StockRepository
-└── Services/  RecepcionService
+└── Services/  RecepcionService · RecepcionValidator
 ```
 
 ## Endpoints reales
@@ -55,7 +55,7 @@ src/WarehouseInventoryService/
 | GET | `/stock/{productId}?sucursal_id=` | JWT | [IMPLEMENTADO] |
 | GET | `/stock?sucursal_id=` | JWT | [IMPLEMENTADO] |
 | POST | `/stock/ajuste` | JWT + ADMIN/REPONEDOR | [IMPLEMENTADO] |
-| POST | `/recepciones` | JWT + ADMIN/REPONEDOR | [PARCIAL: escritura atómica; validaciones S3-016 pendientes] |
+| POST | `/recepciones` | JWT + ADMIN/REPONEDOR | [IMPLEMENTADO LOCALMENTE; integración completa S3-017 pendiente] |
 | POST | `/seed` | JWT + ADMIN del tenant demo (solo Development) | [IMPLEMENTADO] TI3-258 |
 | GET | `/health` | Público | [IMPLEMENTADO] |
 
@@ -86,7 +86,7 @@ El mensaje de error conserva topic, partición, offset, tipo, causa, payload ori
 
 El flujo de integración publica un evento `sale.completed` real en Kafka, prepara stock y lote en `WarehouseDbContext`, y consulta `GET /stock/{productId}?sucursal_id=` con polling hasta verificar que `cantidad_actual` disminuye según la cantidad vendida.
 
-S2-096 verificó además con Kafka y PostgreSQL locales reales que un payload inválido llega a `sale.completed.error`. Durante una caída de PostgreSQL, el grupo conservó offset 1 con log-end 2 y lag 1; después de recuperar la base avanzó a offset 2 y lag 0. S2-097 prueba que un fallo en el segundo ítem no persiste el primero, movimientos ni idempotencia. S2-098 prueba que una solicitud superior a la disponibilidad no modifica el stock ni registra el evento. S2-099 agrega el estado desconocido como caso seguro de reintento. S2-100 aprobó 2/2 integraciones con broker y PostgreSQL reales para duplicado y recuperación de fallo en el segundo ítem. S3-014 aplicó la migración de `SucursalId` sobre PostgreSQL limpio y preexistente sin alterar stock ni lotes. S3-015 verificó con PostgreSQL que una recepción crea lote, stock y movimiento juntos, y que un fallo forzado revierte todo. Pruebas unitarias dirigidas: 34/34 aprobadas. [Evidencia S2-100](../../qa/S2-100/reporte.md).
+S2-096 verificó además con Kafka y PostgreSQL locales reales que un payload inválido llega a `sale.completed.error`. Durante una caída de PostgreSQL, el grupo conservó offset 1 con log-end 2 y lag 1; después de recuperar la base avanzó a offset 2 y lag 0. S2-097 prueba que un fallo en el segundo ítem no persiste el primero, movimientos ni idempotencia. S2-098 prueba que una solicitud superior a la disponibilidad no modifica el stock ni registra el evento. S2-099 agrega el estado desconocido como caso seguro de reintento. S2-100 aprobó 2/2 integraciones con broker y PostgreSQL reales para duplicado y recuperación de fallo en el segundo ítem. S3-014 aplicó la migración de `SucursalId` sobre PostgreSQL limpio y preexistente sin alterar stock ni lotes. S3-015 verificó con PostgreSQL que una recepción crea lote, stock y movimiento juntos, y que un fallo forzado revierte todo. S3-016 verificó que cuatro tipos de entrada inválida se rechazan antes de persistir. Pruebas unitarias dirigidas: 38/38 aprobadas. [Evidencia S2-100](../../qa/S2-100/reporte.md).
 
 ## Modelo de datos
 
@@ -134,7 +134,7 @@ EventoKafkaProcesado
 | WI-14 | Descontar Stock por Venta | [IMPLEMENTADO] (cuando llegan eventos) |
 | WI-02 | Ajustar Stock Manualmente | [IMPLEMENTADO EN CÓDIGO; integración remota NO VERIFICADA] |
 | WI-03 | Registrar Merma | [PLANIFICADO] |
-| WI-04 | Registrar Recepción de Mercancía | [PARCIAL: validaciones S3-016 pendientes] |
+| WI-04 | Registrar Recepción de Mercancía | [IMPLEMENTADO LOCALMENTE; integración S3-017 pendiente] |
 | WI-05 | Aplicar Regla FEFO | [PLANIFICADO] |
 | WI-06 | Ingresar Fecha Caducidad | [PLANIFICADO] |
 | WI-07 | Asignar Lote a Nevera | [PLANIFICADO] |
@@ -151,7 +151,6 @@ EventoKafkaProcesado
 |--------|---------|
 | MS-5 no produce sale.completed | WI-13/14 sin entrada real |
 | Sin FEFO en selección de lotes | RN-05 no cumplido |
-| Recepciones sin validación de referencias y dominio | S3-016 pendiente |
 | Sin alertas Kafka | stock.alert/expiry.alert no se generan |
 | Sin comentario en código sobre FEFO | "No implementa selección de lote por FEFO (ver ticket separado)" |
 
@@ -166,6 +165,7 @@ EventoKafkaProcesado
 - `src/WarehouseInventoryService/Controllers/StockController.cs`
 - `src/WarehouseInventoryService/Controllers/RecepcionesController.cs`
 - `src/WarehouseInventoryService/Services/RecepcionService.cs`
+- `src/WarehouseInventoryService/Services/RecepcionValidator.cs`
 - `src/WarehouseInventoryService/Controllers/SeedController.cs`
 - `src/WarehouseInventoryService/Data/SeedData.cs`
 - `src/WarehouseInventoryService/Models/Lote.cs`
@@ -174,6 +174,7 @@ EventoKafkaProcesado
 - `src/WarehouseInventoryService/Data/Migrations/20260927195722_AddEventosKafkaProcesados.cs`
 - `src/WarehouseInventoryService/Data/Migrations/20261118181528_AddSucursalToLote.cs`
 - `tests/GlobalMart.Tests/MS4_Warehouse/RecepcionService_Tests.cs`
+- `tests/GlobalMart.Tests/MS4_Warehouse/RecepcionValidator_Tests.cs`
 
 ## Integración de ramas — 2026-11-01
 
