@@ -84,3 +84,16 @@ _ReSharper*/
 *.svclog
 *.scc
 .obsidian/
+
+# ─── Limpieza de raíz y utilidades locales (S3-004 / S3-024 / TI3-775) ─────────
+*.exe
+kubectl-oidc_login*
+kubelogin*.zip
+kubelogin_extracted/
+/fix*.js
+/test.js
+/test*.json
+/script.py
+/*.sql
+/generate_sql.ps1
+/package-lock.json
