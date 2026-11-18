@@ -10,7 +10,7 @@ KAFKA_TOPIC_PARTITIONS="${KAFKA_TOPIC_PARTITIONS:-1}"
 KAFKA_TOPIC_REPLICATION_FACTOR="${KAFKA_TOPIC_REPLICATION_FACTOR:-1}"
 
 # Lista de topics por defecto si no está definida en el entorno
-DEFAULT_TOPICS="sale.completed,stock.alert,expiry.alert,sale.reversed,stock.updated,purchase.received,fx.rate.updated,points.updated,tenant.created,tenant.updated,user.registered,product.created,product.price_updated,shift.closed,stock.low,product.expiring_soon,purchase_order.received"
+DEFAULT_TOPICS="sale.completed,sale.completed.error,stock.alert,expiry.alert,sale.reversed,stock.updated,purchase.received,fx.rate.updated,points.updated,tenant.created,tenant.updated,user.registered,product.created,product.price_updated,shift.closed,stock.low,product.expiring_soon,purchase_order.received"
 KAFKA_INIT_TOPICS="${KAFKA_INIT_TOPICS:-$DEFAULT_TOPICS}"
 
 echo "============================================================"
