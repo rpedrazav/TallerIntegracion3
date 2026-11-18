@@ -127,6 +127,8 @@ El consumo de `sale.completed` por MS-4 también está cubierto mediante un test
 
 S2-096 verificó localmente `sale.completed.error` con Kafka real y la retención de offset ante caída de PostgreSQL: offset 1/log-end 2 durante el fallo, offset 2/log-end 2 tras recuperación. En el clúster permanece [NO VERIFICADO] por ausencia de broker.
 
+S2-097 agrupa en un único `SaveChanges` los descuentos, movimientos y la idempotencia de cada `sale.completed`. La prueba dirigida revierte lógicamente el primer ítem cuando falla el segundo y deja el evento disponible para el reintento de S2-096; PostgreSQL y Kafka reales para este escenario permanecen [NO VERIFICADOS].
+
 ## Conexiones
 - Produce → [[ms5-pos]] [IMPLEMENTADO]
 - Consume → [[ms4-inventory]] [IMPLEMENTADO]

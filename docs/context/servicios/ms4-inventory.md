@@ -77,13 +77,13 @@ Política S2-096:
 - TransientFailure o excepción → seek al mismo offset, espera 1 segundo y reintenta sin commit.
 ```
 
-El mensaje de error conserva topic, partición, offset, tipo, causa, payload original y timestamp. S2-096 no agrupa los descuentos de varios ítems en una transacción; esa atomicidad corresponde a S2-097.
+El mensaje de error conserva topic, partición, offset, tipo, causa, payload original y timestamp. Desde S2-097, el repositorio solo prepara los cambios y el procesador persiste todos los descuentos, movimientos y `EventId` mediante un único `SaveChanges`; si un ítem falla no queda ningún cambio parcial.
 
 ## Test de integración
 
 El flujo de integración publica un evento `sale.completed` real en Kafka, prepara stock y lote en `WarehouseDbContext`, y consulta `GET /stock/{productId}?sucursal_id=` con polling hasta verificar que `cantidad_actual` disminuye según la cantidad vendida.
 
-S2-096 verificó además con Kafka y PostgreSQL locales reales que un payload inválido llega a `sale.completed.error`. Durante una caída de PostgreSQL, el grupo conservó offset 1 con log-end 2 y lag 1; después de recuperar la base avanzó a offset 2 y lag 0. Pruebas unitarias dirigidas: 30/30 aprobadas.
+S2-096 verificó además con Kafka y PostgreSQL locales reales que un payload inválido llega a `sale.completed.error`. Durante una caída de PostgreSQL, el grupo conservó offset 1 con log-end 2 y lag 1; después de recuperar la base avanzó a offset 2 y lag 0. S2-097 prueba que un fallo en el segundo ítem no persiste el primero, movimientos ni idempotencia. Pruebas unitarias dirigidas: 31/31 aprobadas.
 
 ## Modelo de datos
 
