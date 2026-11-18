@@ -13,6 +13,10 @@ reglas: []
 ---
 # Estado Real de Implementación — GlobalMart OS
 
+## S2-098 — Evitar stock negativo por evento (2026-11-17)
+
+[IMPLEMENTADO Y PROBADO LOCALMENTE] `StockRepository` valida existencia y disponibilidad antes de preparar cada descuento. Stock inexistente o insuficiente produce `TransientFailure`: el consumidor registra la incidencia, no confirma el offset y reintenta sin guardar descuentos, movimientos ni `EventId`. Se eliminó la creación de stock negativo. Prueba dirigida: una solicitud de 3 unidades con disponibilidad 2 conserva stock 2. Suite MS-4: 32/32 aprobadas. PostgreSQL y Kafka reales para este escenario [NO VERIFICADOS].
+
 ## S2-097 — Descuento e idempotencia atómicos (2026-11-17)
 
 [IMPLEMENTADO Y PROBADO LOCALMENTE] MS-4 prepara todos los descuentos, movimientos y el registro de `EventId` en un mismo `WarehouseDbContext` y los persiste con un único `SaveChanges`, por lo que EF Core los agrupa en una transacción. Si falla cualquier ítem no se persiste ninguno ni se registra la idempotencia; el consumidor conserva el offset para reintentar según S2-096. Prueba dirigida: al fallar el segundo ítem, el primer stock permanece intacto y no existen movimiento ni `EventId`. Suite MS-4: 31/31 aprobadas. PostgreSQL y Kafka reales para este escenario [NO VERIFICADOS].

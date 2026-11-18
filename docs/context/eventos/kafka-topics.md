@@ -129,6 +129,8 @@ S2-096 verificó localmente `sale.completed.error` con Kafka real y la retenció
 
 S2-097 agrupa en un único `SaveChanges` los descuentos, movimientos y la idempotencia de cada `sale.completed`. La prueba dirigida revierte lógicamente el primer ítem cuando falla el segundo y deja el evento disponible para el reintento de S2-096; PostgreSQL y Kafka reales para este escenario permanecen [NO VERIFICADOS].
 
+S2-098 clasifica stock inexistente o insuficiente como `TransientFailure`: no confirma el offset ni envía el evento a la cola de error, porque una reposición permite recuperarlo. No se persisten cantidades negativas, movimientos ni idempotencia mientras falte stock.
+
 ## Conexiones
 - Produce → [[ms5-pos]] [IMPLEMENTADO]
 - Consume → [[ms4-inventory]] [IMPLEMENTADO]
