@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Confluent.Kafka;
 
 namespace WarehouseInventoryService.Messaging;
@@ -7,17 +8,20 @@ namespace WarehouseInventoryService.Messaging;
 /// Por cada evento recibido, delega el procesamiento a ISaleEventProcessor que se encarga de:
 /// verificar idempotencia (EventosKafkaProcesados), deserializar el payload, iterar los items
 /// y descontar stock vía IStockRepository.Descontar.
-/// Si el procesamiento de un mensaje falla, se loguea el error y se continúa con el siguiente
-/// mensaje sin bloquear el consumer.
+/// Confirma procesados y duplicados; los errores permanentes se envían a sale.completed.error.
+/// Los fallos transitorios vuelven al mismo offset sin confirmarlo.
 /// </summary>
 public sealed class KafkaConsumerService : IHostedService, IDisposable
 {
     private const string Topic = "sale.completed";
+    private const string ErrorTopic = "sale.completed.error";
+    private static readonly TimeSpan RetryDelay = TimeSpan.FromSeconds(1);
 
     private readonly ILogger<KafkaConsumerService> _logger;
     private readonly IConfiguration _configuration;
     private readonly IServiceScopeFactory _scopeFactory;
     private IConsumer<string, string>? _consumer;
+    private IProducer<string, string>? _errorProducer;
     private CancellationTokenSource? _cts;
     private Task? _consumeLoopTask;
 
@@ -33,15 +37,21 @@ public sealed class KafkaConsumerService : IHostedService, IDisposable
 
     public Task StartAsync(CancellationToken cancellationToken)
     {
+        var bootstrapServers = _configuration["Kafka:BootstrapServers"] ?? "localhost:9092";
         var config = new ConsumerConfig
         {
-            BootstrapServers = _configuration["Kafka:BootstrapServers"] ?? "localhost:9092",
+            BootstrapServers = bootstrapServers,
             GroupId = _configuration["Kafka:GroupId"] ?? "warehouse-inventory-service",
             AutoOffsetReset = AutoOffsetReset.Earliest,
             EnableAutoCommit = false
         };
 
         _consumer = new ConsumerBuilder<string, string>(config).Build();
+        _errorProducer = new ProducerBuilder<string, string>(new ProducerConfig
+        {
+            BootstrapServers = bootstrapServers,
+            Acks = Acks.All
+        }).Build();
         _consumer.Subscribe(Topic);
 
         _cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
@@ -77,27 +87,78 @@ public sealed class KafkaConsumerService : IHostedService, IDisposable
                 {
                     using var scope = _scopeFactory.CreateScope();
                     var processor = scope.ServiceProvider.GetRequiredService<ISaleEventProcessor>();
-                    processor.ProcesarEvento(result.Message.Value);
+                    var processingResult = processor.ProcesarEvento(result.Message.Value);
+
+                    if (processingResult.Retry)
+                    {
+                        Retry(result, processingResult.Error, cancellationToken);
+                        continue;
+                    }
+
+                    if (processingResult.SendToErrorTopic)
+                    {
+                        SendToErrorTopic(result, processingResult);
+                    }
+
+                    if (processingResult.CommitOffset)
+                    {
+                        _consumer.Commit(result);
+                    }
                 }
                 catch (Exception ex)
                 {
-                    // No bloquear el consumer: se loguea el error y se continúa con el siguiente mensaje.
-                    _logger.LogError(
-                        ex,
-                        "Error procesando evento del topic {Topic} (offset {Offset}); se continúa con el siguiente mensaje",
-                        Topic,
-                        result.Offset);
+                    Retry(result, ex.Message, cancellationToken, ex);
                 }
-
-                // Se hace commit siempre (procesado, duplicado descartado, o fallido),
-                // para no reintentar indefinidamente el mismo mensaje.
-                _consumer.Commit(result);
             }
         }
         catch (OperationCanceledException)
         {
             // Esperado al detener el servicio.
         }
+    }
+
+    private void SendToErrorTopic(
+        ConsumeResult<string, string> result,
+        SaleEventProcessingResult processingResult)
+    {
+        if (_errorProducer is null)
+        {
+            throw new InvalidOperationException("Productor de errores Kafka no inicializado");
+        }
+
+        var payload = JsonSerializer.Serialize(new
+        {
+            source_topic = result.Topic,
+            source_partition = result.Partition.Value,
+            source_offset = result.Offset.Value,
+            error_type = processingResult.Status.ToString(),
+            error = processingResult.Error,
+            original_payload = result.Message.Value,
+            failed_at = DateTime.UtcNow
+        });
+
+        _errorProducer.ProduceAsync(ErrorTopic, new Message<string, string>
+        {
+            Key = result.Message.Key,
+            Value = payload
+        }).GetAwaiter().GetResult();
+    }
+
+    private void Retry(
+        ConsumeResult<string, string> result,
+        string? error,
+        CancellationToken cancellationToken,
+        Exception? exception = null)
+    {
+        _logger.LogWarning(
+            exception,
+            "Fallo transitorio en {Topic} offset {Offset}: {Error}. Offset no confirmado; se reintenta",
+            Topic,
+            result.Offset,
+            error);
+
+        _consumer!.Seek(result.TopicPartitionOffset);
+        Task.Delay(RetryDelay, cancellationToken).GetAwaiter().GetResult();
     }
 
     public async Task StopAsync(CancellationToken cancellationToken)
@@ -110,6 +171,7 @@ public sealed class KafkaConsumerService : IHostedService, IDisposable
         }
 
         _consumer?.Close();
+        _errorProducer?.Flush(TimeSpan.FromSeconds(5));
         _logger.LogInformation("KafkaConsumerService detenido");
     }
 
@@ -117,6 +179,7 @@ public sealed class KafkaConsumerService : IHostedService, IDisposable
     {
         _cts?.Dispose();
         _consumer?.Dispose();
+        _errorProducer?.Dispose();
     }
 }
 

@@ -13,7 +13,7 @@ namespace WarehouseInventoryService.Messaging;
 /// Flujo:
 ///   1. Deserializa el JSON del evento
 ///   2. Verifica si el event_id ya fue procesado (tabla EventosKafkaProcesados)
-///   3. Si es duplicado → retorna false (descartado)
+///   3. Si es duplicado → retorna Duplicate (descartado)
 ///   4. Si es nuevo → descuenta stock por cada item y registra el evento
 /// </summary>
 public class SaleEventProcessor : ISaleEventProcessor
@@ -38,8 +38,13 @@ public class SaleEventProcessor : ISaleEventProcessor
     }
 
     /// <inheritdoc />
-    public bool ProcesarEvento(string payload)
+    public SaleEventProcessingResult ProcesarEvento(string? payload)
     {
+        if (string.IsNullOrWhiteSpace(payload))
+        {
+            return new(SaleEventProcessingStatus.InvalidPayload, "El payload está vacío");
+        }
+
         SaleCompletedEvent? evento;
         try
         {
@@ -48,13 +53,18 @@ public class SaleEventProcessor : ISaleEventProcessor
         catch (JsonException ex)
         {
             _logger.LogError(ex, "Payload inválido: {Payload}", payload);
-            return false;
+            return new(SaleEventProcessingStatus.InvalidPayload, ex.Message);
         }
 
-        if (evento is null || evento.Items.Count == 0)
+        if (evento is null)
         {
-            _logger.LogWarning("Evento sale.completed sin items o nulo: {Payload}", payload);
-            return false;
+            return new(SaleEventProcessingStatus.InvalidPayload, "El payload no contiene un evento");
+        }
+
+        if (evento.Items is null || evento.Items.Count == 0)
+        {
+            _logger.LogWarning("Evento sale.completed sin items: {Payload}", payload);
+            return new(SaleEventProcessingStatus.Unrecoverable, "El evento no contiene items");
         }
 
         // Idempotencia: usa EventId (GUID único del evento) si está presente, o VentaId como fallback.
@@ -72,7 +82,7 @@ public class SaleEventProcessor : ISaleEventProcessor
             _logger.LogInformation(
                 "Evento {EventId} ya fue procesado anteriormente, se descarta (idempotencia)",
                 eventId);
-            return false;
+            return new(SaleEventProcessingStatus.Duplicate);
         }
 
         foreach (var item in evento.Items)
@@ -165,6 +175,6 @@ public class SaleEventProcessor : ISaleEventProcessor
         });
         _context.SaveChanges();
 
-        return true;
+        return new(SaleEventProcessingStatus.Processed);
     }
 }

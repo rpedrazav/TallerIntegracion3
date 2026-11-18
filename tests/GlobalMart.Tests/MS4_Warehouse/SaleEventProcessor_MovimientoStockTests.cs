@@ -98,7 +98,7 @@ public class SaleEventProcessor_MovimientoStockTests : IDisposable
         var resultado = _processor.ProcesarEvento(payload);
 
         // Assert
-        resultado.Should().BeTrue();
+        resultado.Status.Should().Be(SaleEventProcessingStatus.Processed);
 
         var movimiento = _context.Movimientos.FirstOrDefault(m => m.ProductoId == ProductoId);
         movimiento.Should().NotBeNull();
@@ -144,7 +144,7 @@ public class SaleEventProcessor_MovimientoStockTests : IDisposable
         var resultado = _processor.ProcesarEvento(payload);
 
         // Assert
-        resultado.Should().BeTrue();
+        resultado.Status.Should().Be(SaleEventProcessingStatus.Processed);
 
         // Se debió invocar CrearYDescontar
         _stockRepoMock.Verify(
@@ -188,7 +188,7 @@ public class SaleEventProcessor_MovimientoStockTests : IDisposable
         var resultado = _processor.ProcesarEvento(payload);
 
         // Assert
-        resultado.Should().BeTrue();
+        resultado.Status.Should().Be(SaleEventProcessingStatus.Processed);
         _context.Movimientos.Count().Should().Be(2);
     }
 
