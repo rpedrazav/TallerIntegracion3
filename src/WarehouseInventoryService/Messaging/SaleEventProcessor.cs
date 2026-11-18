@@ -87,14 +87,6 @@ public class SaleEventProcessor : ISaleEventProcessor
 
         foreach (var item in evento.Items)
         {
-            // Obtener stock anterior para el log estructurado (TI3-253)
-            var stockAnterior = _stockRepository
-                .GetByProducto(item.ProductoId, evento.SucursalId, evento.TenantId)
-                .GetAwaiter()
-                .GetResult();
-
-            decimal cantidadAnterior = stockAnterior?.CantidadActual ?? 0m;
-
             var stockActualizado = _stockRepository
                 .Descontar(item.ProductoId, item.Cantidad, evento.TenantId, evento.SucursalId)
                 .GetAwaiter()
@@ -102,6 +94,8 @@ public class SaleEventProcessor : ISaleEventProcessor
 
             if (stockActualizado is not null)
             {
+                var cantidadAnterior = stockActualizado.CantidadActual + item.Cantidad;
+
                 // TI3-253: Log estructurado con todos los campos del movimiento
                 _logger.LogInformation(
                     "Movimiento de stock: {Movimiento}",
@@ -173,6 +167,8 @@ public class SaleEventProcessor : ISaleEventProcessor
             EventId = eventId,
             ProcesadoAt = DateTime.UtcNow
         });
+
+        // Una única llamada agrupa descuentos, movimientos e idempotencia en la transacción de EF Core.
         _context.SaveChanges();
 
         return new(SaleEventProcessingStatus.Processed);

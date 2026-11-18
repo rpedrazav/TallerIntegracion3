@@ -13,9 +13,13 @@ reglas: []
 ---
 # Estado Real de Implementación — GlobalMart OS
 
+## S2-097 — Descuento e idempotencia atómicos (2026-11-17)
+
+[IMPLEMENTADO Y PROBADO LOCALMENTE] MS-4 prepara todos los descuentos, movimientos y el registro de `EventId` en un mismo `WarehouseDbContext` y los persiste con un único `SaveChanges`, por lo que EF Core los agrupa en una transacción. Si falla cualquier ítem no se persiste ninguno ni se registra la idempotencia; el consumidor conserva el offset para reintentar según S2-096. Prueba dirigida: al fallar el segundo ítem, el primer stock permanece intacto y no existen movimiento ni `EventId`. Suite MS-4: 31/31 aprobadas. PostgreSQL y Kafka reales para este escenario [NO VERIFICADOS].
+
 ## TI3-727 / S2-096 — Política de errores Kafka (2026-11-17)
 
-[IMPLEMENTADO Y PROBADO LOCALMENTE] MS-4 distingue eventos procesados, duplicados, payloads inválidos, eventos irrecuperables y fallos transitorios. Procesados y duplicados confirman offset; inválidos e irrecuperables se publican en `sale.completed.error` y solo se confirman tras esa entrega; un fallo transitorio vuelve al mismo offset sin confirmarlo. Pruebas unitarias MS-4: 30/30 aprobadas. Con Kafka y PostgreSQL locales reales se verificó el destino de error y que una caída de PostgreSQL mantuvo offset 1, log-end 2 y lag 1; tras recuperación avanzó a offset 2 y lag 0. La transacción única para varios ítems corresponde a S2-097 y permanece pendiente. Kafka en el clúster sigue [NO VERIFICADO] porque el namespace no tiene broker.
+[IMPLEMENTADO Y PROBADO LOCALMENTE] MS-4 distingue eventos procesados, duplicados, payloads inválidos, eventos irrecuperables y fallos transitorios. Procesados y duplicados confirman offset; inválidos e irrecuperables se publican en `sale.completed.error` y solo se confirman tras esa entrega; un fallo transitorio vuelve al mismo offset sin confirmarlo. Pruebas unitarias MS-4: 30/30 aprobadas. Con Kafka y PostgreSQL locales reales se verificó el destino de error y que una caída de PostgreSQL mantuvo offset 1, log-end 2 y lag 1; tras recuperación avanzó a offset 2 y lag 0. Kafka en el clúster sigue [NO VERIFICADO] porque el namespace no tiene broker.
 
 ## TI3-735 / S2-104 — Accesibilidad administrativa por teclado (2026-11-11)
 

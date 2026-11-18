@@ -31,8 +31,6 @@ public class StockRepository : IStockRepository
         }
 
         stock.CantidadActual -= cantidad;
-
-        await _context.SaveChangesAsync();
         return stock;
     }
 
@@ -40,7 +38,7 @@ public class StockRepository : IStockRepository
     /// TI3-254: Crea un registro de stock con cantidad_actual = 0 y descuenta.
     /// El stock quedará negativo, indicando una discrepancia (venta sin inventario previo).
     /// </summary>
-    public async Task<Stock> CrearYDescontar(Guid productoId, decimal cantidad, Guid tenantId, Guid sucursalId)
+    public Task<Stock> CrearYDescontar(Guid productoId, decimal cantidad, Guid tenantId, Guid sucursalId)
     {
         var stock = new Stock
         {
@@ -52,7 +50,6 @@ public class StockRepository : IStockRepository
         };
 
         _context.Stocks.Add(stock);
-        await _context.SaveChangesAsync();
-        return stock;
+        return Task.FromResult(stock);
     }
 }

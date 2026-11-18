@@ -13,13 +13,13 @@ public interface IStockRepository
     Task<Stock?> GetByProducto(Guid productoId, Guid sucursalId, Guid tenantId);
 
     /// <summary>
-    /// Descuenta una cantidad del stock de un producto en una sucursal dentro de un tenant.
+    /// Prepara el descuento de stock para que el consumidor persista el evento completo.
     /// Retorna null si no existe stock para esa combinación producto/sucursal/tenant.
     /// </summary>
     Task<Stock?> Descontar(Guid productoId, decimal cantidad, Guid tenantId, Guid sucursalId);
 
     /// <summary>
-    /// TI3-254: Crea un registro de stock con cantidad_actual = 0 y luego descuenta.
+    /// TI3-254: Prepara un registro de stock con cantidad_actual = 0 y luego descuenta.
     /// Se usa cuando el consumer recibe un producto que no tiene registro en la tabla Stock.
     /// El stock quedará negativo, señalando una discrepancia a resolver por reposición.
     /// </summary>

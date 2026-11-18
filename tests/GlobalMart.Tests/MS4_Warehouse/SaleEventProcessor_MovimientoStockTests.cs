@@ -1,6 +1,7 @@
 using System.Text.Json;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Logging;
 using Moq;
 using WarehouseInventoryService.Data;
@@ -73,17 +74,6 @@ public class SaleEventProcessor_MovimientoStockTests : IDisposable
         var payload = CrearPayload(EventId, ProductoId, cantidad: 4);
 
         _stockRepoMock
-            .Setup(r => r.GetByProducto(ProductoId, SucursalId, TenantId))
-            .ReturnsAsync(new Stock
-            {
-                ProductoId = ProductoId,
-                SucursalId = SucursalId,
-                TenantId = TenantId,
-                CantidadActual = 20,
-                StockMinimo = 5
-            });
-
-        _stockRepoMock
             .Setup(r => r.Descontar(ProductoId, 4, TenantId, SucursalId))
             .ReturnsAsync(new Stock
             {
@@ -117,11 +107,6 @@ public class SaleEventProcessor_MovimientoStockTests : IDisposable
     {
         // Arrange
         var payload = CrearPayload(EventId, ProductoId, cantidad: 3);
-
-        // No existe en BD
-        _stockRepoMock
-            .Setup(r => r.GetByProducto(ProductoId, SucursalId, TenantId))
-            .ReturnsAsync((Stock?)null);
 
         // Descontar falla (retorna null) porque no existe registro
         _stockRepoMock
@@ -190,6 +175,65 @@ public class SaleEventProcessor_MovimientoStockTests : IDisposable
         // Assert
         resultado.Status.Should().Be(SaleEventProcessingStatus.Processed);
         _context.Movimientos.Count().Should().Be(2);
+    }
+
+    [Fact]
+    public void ProcesarEvento_SiFallaSegundoItem_NoPersistePrimerDescuentoNiEventId()
+    {
+        var producto2 = Guid.Parse("cccccccc-0000-0000-0000-000000000002");
+        var databaseRoot = new InMemoryDatabaseRoot();
+        var options = new DbContextOptionsBuilder<WarehouseDbContext>()
+            .UseInMemoryDatabase(Guid.NewGuid().ToString(), databaseRoot)
+            .Options;
+
+        using (var seed = new WarehouseDbContext(options) { CurrentTenantId = TenantId })
+        {
+            seed.Stocks.AddRange(
+                new Stock { ProductoId = ProductoId, SucursalId = SucursalId, TenantId = TenantId, CantidadActual = 10 },
+                new Stock { ProductoId = producto2, SucursalId = SucursalId, TenantId = TenantId, CantidadActual = 10 });
+            seed.SaveChanges();
+        }
+
+        using var processingContext = new WarehouseDbContext(options) { CurrentTenantId = TenantId };
+        var realRepository = new StockRepository(processingContext);
+        var repository = new Mock<IStockRepository>();
+        var descuentos = 0;
+        repository
+            .Setup(r => r.Descontar(It.IsAny<Guid>(), It.IsAny<decimal>(), TenantId, SucursalId))
+            .Returns((Guid productoId, decimal cantidad, Guid tenantId, Guid sucursalId) =>
+            {
+                if (++descuentos == 2)
+                {
+                    throw new InvalidOperationException("Fallo simulado en segundo ítem");
+                }
+
+                return realRepository.Descontar(productoId, cantidad, tenantId, sucursalId);
+            });
+
+        var payload = JsonSerializer.Serialize(new
+        {
+            event_id = EventId,
+            venta_id = VentaId,
+            tenant_id = TenantId,
+            sucursal_id = SucursalId,
+            items = new[]
+            {
+                new { producto_id = ProductoId, cantidad = 2m },
+                new { producto_id = producto2, cantidad = 3m }
+            }
+        });
+        var processor = new SaleEventProcessor(
+            processingContext,
+            repository.Object,
+            Mock.Of<ILogger<SaleEventProcessor>>());
+
+        var act = () => processor.ProcesarEvento(payload);
+
+        act.Should().Throw<InvalidOperationException>();
+        using var verificationContext = new WarehouseDbContext(options) { CurrentTenantId = TenantId };
+        verificationContext.Stocks.Single(s => s.ProductoId == ProductoId).CantidadActual.Should().Be(10);
+        verificationContext.Movimientos.Should().BeEmpty();
+        verificationContext.EventosKafkaProcesados.Should().BeEmpty();
     }
 
     public void Dispose()
