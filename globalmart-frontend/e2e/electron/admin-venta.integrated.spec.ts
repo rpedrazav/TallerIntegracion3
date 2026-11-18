@@ -111,6 +111,7 @@ test('@integrado CAJERO abre turno, vende en efectivo y cierra sin totales diver
   await snap(page, '05-cuadre');
   const closed = page.waitForResponse(r => r.url().endsWith('/api/turnos/cerrar'));
   await page.getByRole('button', { name: /Confirmar y Cerrar Turno/ }).click();
+  await page.getByRole('button', { name: 'Confirmar cierre' }).click();
   expect((await closed).status()).toBe(200);
   await expect(page.getByText('¡Turno cerrado exitosamente!')).toBeVisible();
   await snap(page, '06-turno-cerrado');

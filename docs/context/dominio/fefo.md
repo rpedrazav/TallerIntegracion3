@@ -1,85 +1,140 @@
 ---
 id: fefo
 tipo: dominio
-titulo: Regla FEFO — First Expired, First Out
-estado: planificado
-fuentes: [src/WarehouseInventoryService/Models/Lote.cs, GlobalMart_ContextMaster.md#sec6-ms4]
+titulo: Contrato mínimo de recepciones y lotes FEFO
+estado: contrato-definido
+fuentes: [src/WarehouseInventoryService/Models/Lote.cs, src/WarehouseInventoryService/Models/Stock.cs, src/WarehouseInventoryService/Models/MovimientoStock.cs, tareas/plan_sprint3.xlsx]
 verificado_contra_codigo: true
-ultima_revision: 2026-09-28
+ultima_revision: 2026-11-17
 depende_de: [ms4-inventory]
 publica: []
 consume: []
-reglas: [RN-05, RF-10, WI-04, WI-05]
+reglas: [RN-01, RN-05, RF-10, WI-04, WI-05]
 ---
-# Regla FEFO — First Expired, First Out
+# Contrato mínimo de recepciones y lotes FEFO — S3-002
 
-> Política de despacho de inventario que garantiza que el lote con menor fecha de vencimiento se consume primero. Crítica para productos perecederos en minimarkets.
+## Estado y alcance
 
-## Estado actual
+**CONTRATO DEFINIDO; ENDPOINTS NO IMPLEMENTADOS.** Este documento fija el contrato futuro de `POST /recepciones` y `GET /lotes?porVencer=` para MS-4. No certifica recepción ni descuento FEFO en ejecución.
 
-**PLANIFICADO** — El modelo `Lote` existe con `FechaVencimiento`, pero no hay lógica FEFO implementada. El propio KafkaConsumerService documenta: `"No implementa selección de lote por FEFO (ver ticket separado)"`.
+El alcance reutiliza `Lote.Id`, `ProductoId`, `FechaVencimiento`, `Cantidad`, `Ubicacion` y `TenantId`. El modelo real todavía no contiene `SucursalId`; S3-014 debe agregarlo y migrarlo porque el stock se administra por sucursal y un lote sin sucursal no puede consultarse ni descontarse correctamente. No se agrega `FechaRecepcion`: la tarea no la requiere y el modelo actual no la tiene.
 
-## Por qué FEFO y no FIFO
+Ambos endpoints exigen JWT válido y rol `ADMIN` o `REPONEDOR`. `tenantId` se obtiene exclusivamente del claim `tenant_id`; nunca se acepta en body o query.
 
-FIFO (First In, First Out) despacha el más antiguo en fecha de ingreso, pero si un proveedor entregó lotes con vencimiento posterior, pueden quedar productos por vencer antes. FEFO garantiza despachar siempre el que expira primero, independientemente de cuándo llegó.
+## `POST /recepciones`
 
-## Flujo diseñado (cuando se implemente)
+Registra un lote y aumenta el stock agregado del mismo producto y sucursal. Ruta canónica: `POST /recepciones`; no se define alias adicional.
 
-```
-1. POST /recepciones  { productoId, cantidad, fechaVencimiento, sucursalId }
-   → Crear Lote { productoId, sucursalId, cantidad, fechaVencimiento, fechaRecepcion }
-   → Validar capacidad de nevera (si aplica)
-   → Actualizar Stock.Cantidad total
+### Request
 
-2. Al descontar stock (desde sale.completed):
-   → Consultar lotes ORDENADOS por fechaVencimiento ASC (más próximos primero)
-   → Descontar de los lotes con menor fecha hasta cubrir la cantidad vendida
-   → Si un lote se agota → pasar al siguiente
-
-3. Alertas:
-   → Si FechaVencimiento < NOW() + umbralDias → publicar expiry.alert a Kafka
-   → MS-7 despacha notificación al Reponedor
-```
-
-## Modelo de datos (implementado)
-
-```csharp
-// src/WarehouseInventoryService/Models/Lote.cs
-public class Lote
+```json
 {
-    public Guid Id { get; set; }
-    public Guid TenantId { get; set; }
-    public Guid ProductoId { get; set; }
-    public Guid SucursalId { get; set; }
-    public decimal Cantidad { get; set; }
-    public DateTime? FechaVencimiento { get; set; }
-    public DateTime FechaRecepcion { get; set; }
+  "productoId": "11111111-1111-4111-8111-111111111111",
+  "sucursalId": "22222222-2222-4222-8222-222222222222",
+  "cantidad": 24.5,
+  "fechaVencimiento": "2027-02-15",
+  "ubicacion": "Bodega A-03"
 }
 ```
 
-## Restricciones de diseño
+| Campo | Regla |
+|---|---|
+| `productoId` | UUID no vacío; producto activo del tenant autenticado. |
+| `sucursalId` | UUID no vacío; sucursal activa del mismo tenant. |
+| `cantidad` | Mayor que 0, máximo `99999999`, hasta 4 decimales (`decimal(12,4)`). |
+| `fechaVencimiento` | Fecha ISO `YYYY-MM-DD`, igual o posterior a la fecha actual; no incluye hora. |
+| `ubicacion` | Opcional; se aplica `Trim`, máximo 100 caracteres; ausencia equivale a cadena vacía. |
 
-- Solo aplica a productos con `EsPesoVariable = false` o con `FechaVencimiento` no nula
-- El umbral de alerta de caducidad es configurable por tenant
-- Un producto sin fecha de vencimiento (ej: sal, aceite industrial) no requiere FEFO
+El request no acepta `id`, `tenantId`, stock resultante, tipo de movimiento ni fechas generadas por el servidor. Propiedades desconocidas deben rechazarse con 400 para no ignorar accidentalmente datos fuera de alcance.
 
-## Casos de uso
+### Respuesta creada
 
-| ID | Caso de Uso | Estado |
-|----|-------------|--------|
-| WI-04 | Registrar Recepción de Mercancía | [PLANIFICADO] |
-| WI-05 | Aplicar Regla FEFO | [PLANIFICADO] |
-| WI-06 | Ingresar Fecha Caducidad de Lote | [PLANIFICADO] |
-| WI-07 | Asignar Lote a Nevera | [PLANIFICADO] |
-| WI-08 | Controlar Volumen Nevera | [PLANIFICADO] |
-| WI-10 | Generar Alerta Caducidad | [PLANIFICADO] |
+HTTP 201:
+
+```json
+{
+  "id": "33333333-3333-4333-8333-333333333333",
+  "productoId": "11111111-1111-4111-8111-111111111111",
+  "sucursalId": "22222222-2222-4222-8222-222222222222",
+  "cantidad": 24.5,
+  "fechaVencimiento": "2027-02-15",
+  "ubicacion": "Bodega A-03"
+}
+```
+
+`id` lo genera el servidor. `tenantId` no se expone. La implementación futura debe guardar en una sola transacción el lote, el incremento de `Stock.CantidadActual` y un `MovimientoStock` positivo de tipo `RECEPCION`; ante cualquier fallo no queda mutación parcial.
+
+### Errores
+
+| Estado | Condición | Mutación |
+|---|---|---|
+| 400 | JSON/campos inválidos, cantidad o fecha fuera de regla, producto o sucursal inexistente/inactiva/ajena | Ninguna |
+| 401 | JWT ausente, inválido o sin `tenant_id` | Ninguna |
+| 403 | Rol distinto de `ADMIN` o `REPONEDOR` | Ninguna |
+| 503 | No fue posible validar producto o sucursal | Ninguna |
+| 500 | Fallo inesperado de persistencia | Rollback completo; mensaje genérico |
+
+Los errores de validación devuelven `{ "message": "..." }`, siguiendo MS-4. No revelan si una referencia pertenece a otro tenant.
+
+## `GET /lotes?porVencer=`
+
+Lista lotes disponibles de una sucursal que vencen dentro de un rango inclusivo. Ruta:
+
+```http
+GET /lotes?porVencer=30&sucursal_id=22222222-2222-4222-8222-222222222222
+Authorization: Bearer <JWT>
+```
+
+| Parámetro | Regla |
+|---|---|
+| `porVencer` | Obligatorio, entero entre 0 y 365. `0` consulta los que vencen hoy. |
+| `sucursal_id` | Obligatorio, UUID no vacío de una sucursal activa del tenant. |
+
+Filtros obligatorios: `TenantId` del JWT, `SucursalId` solicitado, `Cantidad > 0` y `FechaVencimiento` entre la fecha actual y `fecha actual + porVencer`, ambas inclusive. Orden estable: `FechaVencimiento ASC`, luego `Id ASC`.
+
+HTTP 200; una consulta sin resultados devuelve `[]`:
+
+```json
+[
+  {
+    "id": "33333333-3333-4333-8333-333333333333",
+    "productoId": "11111111-1111-4111-8111-111111111111",
+    "sucursalId": "22222222-2222-4222-8222-222222222222",
+    "cantidad": 24.5,
+    "fechaVencimiento": "2027-02-15",
+    "ubicacion": "Bodega A-03"
+  }
+]
+```
+
+Parámetros inválidos o sucursal inexistente/inactiva/ajena devuelven 400; autenticación y roles usan 401/403. La respuesta nunca incluye lotes agotados, vencidos, de otro tenant o de otra sucursal.
+
+## Flujo directo previsto
+
+```text
+AdminInventario → api/client → RecepcionesController → servicio de inventario → WarehouseDbContext
+```
+
+No se agregan capas ni repositorios alternativos. Controller valida identidad/forma; servicio aplica reglas y transacción; `WarehouseDbContext` persiste `Lote`, `Stock` y `MovimientoStock`.
+
+## Fuera de alcance de S3-002
+
+- Implementar los endpoints, DTOs, validadores, migración o pantalla.
+- Mermas, transferencias, conteos y capacidad de neveras.
+- Publicar `stock.alert`, `expiry.alert`, `stock.updated` u otro evento Kafka.
+- Descontar lotes por FEFO al vender; se implementará y probará en tareas posteriores.
+- Idempotencia de recepciones o integración con proveedores/órdenes de compra.
 
 ## Conexiones
-- Implementación: [[ms4-inventory]]
-- Alertas: [[ms7-analytics]]
-- Reglas: [[reglas-negocio]] (RN-05)
+
+- Servicio: [[ms4-inventory]]
+- Aislamiento: [[multi-tenant]]
+- Reglas: [[reglas-negocio]] (RN-01, RN-05)
 
 ## Fuentes
+
 - `src/WarehouseInventoryService/Models/Lote.cs`
-- `src/WarehouseInventoryService/Messaging/KafkaConsumerService.cs` (comentario "No implementa FEFO")
-- `GlobalMart_ContextMaster.md` §6 MS-4
+- `src/WarehouseInventoryService/Models/Stock.cs`
+- `src/WarehouseInventoryService/Models/MovimientoStock.cs`
+- `src/WarehouseInventoryService/Data/Migrations/20260913033948_InitialCreate_Warehouse.cs`
+- `tareas/plan_sprint3.xlsx` (S3-002)

@@ -5,7 +5,7 @@ titulo: Pantallas del Frontend — GlobalMart OS
 estado: parcial
 fuentes: [globalmart-frontend/src/pages/, globalmart-frontend/src/components/, globalmart-frontend/src/api/client.ts, globalmart-frontend/src/hardware/scale-cart.ts, globalmart-frontend/src/payments/SimulatedTerminalAdapter.ts, globalmart-frontend/src/payments/terminal-ipc.ts, globalmart-frontend/src/payments/synchronizeCardPayment.ts, globalmart-frontend/src/preload.ts, globalmart-frontend/tests/scale-main-preload.integration.test.cjs, globalmart-frontend/tests/user-edit.test.cjs, globalmart-frontend/tests/user-deactivation.test.cjs, globalmart-frontend/e2e/admin-flows.spec.ts, globalmart-frontend/e2e/productos-admin.spec.ts, globalmart-frontend/e2e/weight-cart.spec.ts, globalmart-frontend/tests/terminal-port.test.cjs, globalmart-frontend/tests/terminal-ipc.test.cjs, globalmart-frontend/tests/synchronized-card-payment.test.cjs]
 verificado_contra_codigo: true
-ultima_revision: 2026-11-11
+ultima_revision: 2026-11-18
 depende_de: [estructura, ms1-identity, ms5-pos, guia-estilo]
 publica: []
 consume: []
@@ -142,7 +142,8 @@ La búsqueda del POS consulta `GET /products/search` por nombre o código parcia
 //   - Subtotales por categoría (Billetes / Monedas) y Total Declarado en gaveta
 //   - Botón "Limpiar Conteo"
 //   - Arqueo y Cuadre: posApi.balanceShift llama POST /api/turnos/cuadre
-//   - Cierre de turno: posApi.closeShift llama POST /api/turnos/cerrar
+//   - Cierre de turno: botón abre modal <dialog> (Cancelar / Confirmar cierre, Escape cancela) → posApi.closeShift llama POST /api/turnos/cerrar
+//   - E2E: e2e/electron/cierre-turno.integrated.spec.ts (S3-029, caso docs/qa/S3-006). S3-036 extiende este mismo <dialog>, no crea otro.
 ```
 
 ## Admin.tsx [PARCIAL]

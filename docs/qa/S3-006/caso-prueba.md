@@ -3,7 +3,7 @@
 Fecha: 2026-11-16. Meta: Q — Calidad y regresión. Fuente: `tareas/plan_sprint3.xlsx`, S3-006.
 
 **Aceptación:** el caso cubre la confirmación con modal y verifica que la app sigue respondiendo tras cerrar.
-**Revisión:** pendiente con Diego (dueño de S3-036). Estado: BORRADOR.
+**Revisión:** pendiente con Diego (dueño de S3-036). Estado: AUTOMATIZADO en S3-029 (`e2e/electron/cierre-turno.integrated.spec.ts`). Los nombres *(acordar)* quedaron fijados en el modal de `CerrarTurnoPage.tsx`; S3-036 trabaja sobre ese mismo modal (ver `docs/context/planificacion/sprint-actual.md`).
 
 ## Contexto
 
