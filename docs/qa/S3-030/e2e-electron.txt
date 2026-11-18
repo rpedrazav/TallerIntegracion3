@@ -1,0 +1,24 @@
+== test:e2e:electron (mock), corrida 1 ==
+  x  1 e2e\electron\pos.spec.ts:57:1 › login → apertura de turno → POS con sesión IPC persistente (51.6s)
+  ok 2 e2e\electron\pos.spec.ts:103:1 › credenciales rechazadas mantienen sesión vacía y no entran al POS (4.9s)
+  ok 3 e2e\electron\pos.spec.ts:111:1 › S3-028: modo local (Kong) completa login, apertura de turno, venta y cobro en efectivo sin /api duplicado (9.4s)
+    Test timeout of 30000ms exceeded.
+  1 failed
+  2 passed (1.1m)
+
+== reintento 'IPC persistente' x2 ==
+  ok 1 e2e\electron\pos.spec.ts:57:1 › login → apertura de turno → POS con sesión IPC persistente (21.0s)
+  1 passed (21.4s)
+  ok 1 e2e\electron\pos.spec.ts:57:1 › login → apertura de turno → POS con sesión IPC persistente (3.7s)
+  1 passed (4.3s)
+
+== test:e2e:integrado (con simulador en :5050) ==
+  ok 1 e2e\electron\admin-venta.integrated.spec.ts:13:5 › @integrado ADMIN entra al panel y crea un producto en MS-3 (2.4s)
+  ok 2 e2e\electron\admin-venta.integrated.spec.ts:29:5 › @integrado CAJERO abre turno, vende en efectivo y cierra sin totales divergentes (5.2s)
+  ok 3 e2e\electron\cierre-turno.integrated.spec.ts:13:5 › @integrado CAJERO confirma el cierre en el modal y la app sigue respondiendo (3.8s)
+  ok 4 e2e\electron\tarjeta-pesaje.integrated.spec.ts:66:5 › @integrado tarjeta aprobada completa la venta con un solo pago (6.0s)
+  ok 5 e2e\electron\tarjeta-pesaje.integrated.spec.ts:81:5 › @integrado tarjeta rechazada no completa la venta y el reintento cobra una sola vez (5.1s)
+  ok 6 e2e\electron\tarjeta-pesaje.integrated.spec.ts:101:5 › @integrado timeout de pasarela deja la venta pendiente y no permite un segundo cargo (46.9s)
+  ok 7 e2e\electron\tarjeta-pesaje.integrated.spec.ts:129:5 › @integrado peso estable de la balanza simulada llega a MS-5 como una línea (2.8s)
+  ok 8 e2e\electron\tarjeta-pesaje.integrated.spec.ts:143:5 › @integrado balanza con falla permite entrada manual y conserva una sola línea (2.8s)
+  8 passed (1.3m)
