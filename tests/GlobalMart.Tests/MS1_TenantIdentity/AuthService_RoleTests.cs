@@ -1,4 +1,5 @@
 using FluentAssertions;
+using System.Security.Claims;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -111,6 +112,7 @@ public class AuthService_RoleTests
         var passwordPlano = "miPassword123";
         var passwordHash  = BCrypt.Net.BCrypt.HashPassword(passwordPlano);
 
+        var sucursalId = Guid.NewGuid();
         var usuario = new Usuario
         {
             Id           = UserId,
@@ -124,7 +126,10 @@ public class AuthService_RoleTests
                 new() { UsuarioId = UserId, RolId = rolCajero.Id,    Rol = rolCajero },
                 new() { UsuarioId = UserId, RolId = rolReponedor.Id, Rol = rolReponedor }
             },
-            UsuarioSucursales = new List<UsuarioSucursal>()
+            UsuarioSucursales = new List<UsuarioSucursal>
+            {
+                new() { UsuarioId = UserId, SucursalId = sucursalId }
+            }
         };
 
         var repoMock = new Mock<IUsuarioRepository>();
@@ -146,6 +151,11 @@ public class AuthService_RoleTests
         var nombresRoles = resultado.UsuarioRoles.Select(ur => ur.Rol.Nombre).ToList();
         nombresRoles.Should().Contain("CAJERO");
         nombresRoles.Should().Contain("REPONEDOR");
+        resultado.UsuarioSucursales.Should().ContainSingle()
+            .Which.SucursalId.Should().Be(sucursalId);
+        repoMock.Verify(
+            repository => repository.FindByEmailAsync("dual@globalmart.cl", TenantId),
+            Times.Once);
     }
 
     // ════════════════════════════════════════════════════════════════════════
@@ -174,6 +184,7 @@ public class AuthService_RoleTests
         var rolCajero = new Rol { Id = Guid.NewGuid(), Nombre = "CAJERO" };
         var rolAdmin  = new Rol { Id = Guid.NewGuid(), Nombre = "ADMIN" };
 
+        var sucursalId = Guid.NewGuid();
         var usuario = new Usuario
         {
             Id       = UserId,
@@ -186,10 +197,14 @@ public class AuthService_RoleTests
                 new() { UsuarioId = UserId, RolId = rolCajero.Id, Rol = rolCajero },
                 new() { UsuarioId = UserId, RolId = rolAdmin.Id,  Rol = rolAdmin }
             },
-            UsuarioSucursales = new List<UsuarioSucursal>()
+            UsuarioSucursales = new List<UsuarioSucursal>
+            {
+                new() { UsuarioId = UserId, SucursalId = sucursalId }
+            }
         };
 
         // Act
+        var antes = DateTime.UtcNow;
         var tokenString = jwtService.GenerateToken(usuario);
 
         // Assert — El token no está vacío y tiene formato JWT (3 partes)
@@ -202,6 +217,10 @@ public class AuthService_RoleTests
 
         // Assert — Contiene el claim "sub" con el user_id
         jwt.Claims.Should().Contain(c => c.Type == "sub" && c.Value == UserId.ToString());
+        jwt.Claims.Should().Contain(c => c.Type == "tenant_id" && c.Value == TenantId.ToString());
+        jwt.Claims.Should().Contain(c => c.Type == "email" && c.Value == usuario.Email);
+        jwt.Claims.Should().Contain(c => c.Type == "nombre" && c.Value == usuario.Nombre);
+        jwt.Claims.Should().Contain(c => c.Type == "sucursal_id" && c.Value == sucursalId.ToString());
 
         // Assert — Contiene el claim "roles" con ambos roles
         var rolesClaim = jwt.Claims.FirstOrDefault(c => c.Type == "roles");
@@ -213,6 +232,11 @@ public class AuthService_RoleTests
         var activeRoleClaim = jwt.Claims.FirstOrDefault(c => c.Type == "active_role");
         activeRoleClaim.Should().NotBeNull();
         activeRoleClaim!.Value.Should().Be("ADMIN");
+        jwt.Claims.Should().Contain(c => c.Type == ClaimTypes.Role && c.Value == "ADMIN");
+        jwt.Claims.Should().Contain(c => c.Type == ClaimTypes.Role && c.Value == "CAJERO");
+        jwt.Issuer.Should().Be("GlobalMartOS");
+        jwt.Audiences.Should().Contain("GlobalMartOS_Clients");
+        jwt.ValidTo.Should().BeCloseTo(antes.AddHours(8), TimeSpan.FromSeconds(2));
     }
 
     [Fact]
