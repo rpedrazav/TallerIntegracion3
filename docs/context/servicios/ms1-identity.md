@@ -5,7 +5,7 @@ titulo: MS-1 · Tenant & Identity Service
 estado: parcial
 fuentes: [src/TenantIdentityService/, globalmart-frontend/src/pages/Admin.tsx, globalmart-frontend/src/pages/AdminRoles.tsx, globalmart-frontend/src/components/admin/UsuariosList.tsx, Docker/config/kong.yaml]
 verificado_contra_codigo: true
-ultima_revision: 2026-11-15
+ultima_revision: 2026-11-19
 depende_de: []
 publica: []
 consume: []
@@ -83,7 +83,7 @@ src/TenantIdentityService/
 - La pantalla `/admin/*` queda disponible solo para claims `ADMIN` o `SUPER_ADMIN`. CAJERO no ve su acceso y es redirigido a `/pos`; la autorización del controlador conserva `403` como defensa independiente del frontend [IMPLEMENTADO].
 - La UI permite listar, crear, editar y desactivar usuarios. Activos e inactivos permanecen visibles con indicador textual; para inactivos, TI3-733 bloquea en frontend la edición de email y la modificación de roles, sin atribuir ese bloqueo a MS-1. La reactivación no se expone ni tiene endpoint.
 - Errores vigentes: `400` para datos inválidos o autodesactivación según la operación; `401` sin autenticación o claims requeridos; `403` sin rol autorizado; `404` para ID inexistente o perteneciente a otro tenant; `409` para email duplicado al editar.
-- `UserRepository.FindByEmailAsync` exige `Usuario.Activo=true`; DELETE marca inactivo ese mismo registro, de modo que el siguiente login falla con el mismo 401 genérico. No se implementó revocación de JWT emitidos.
+- `UsuarioRepository.FindByEmailAsync` exige el tenant indicado y `Usuario.Activo=true`, y carga roles y sucursales para autenticar. DELETE marca inactivo ese mismo registro, de modo que el siguiente login falla con el mismo 401 genérico. `IUsuarioRepository` es el único repositorio de usuarios desde S3-003; no se implementó revocación de JWT emitidos.
 
 ### PUT /tenants/{id}/config — TI3-458 / TI3-459
 

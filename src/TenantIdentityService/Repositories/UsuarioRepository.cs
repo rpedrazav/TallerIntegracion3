@@ -17,12 +17,16 @@ public class UsuarioRepository : IUsuarioRepository
         _db = db;
     }
 
-    public async Task<IEnumerable<Usuario>> GetAllAsync(Guid tenantId)
+    public async Task<Usuario?> FindByEmailAsync(string email, Guid tenantId)
     {
         return await _db.Usuarios
             .IgnoreQueryFilters()
-            .Where(usuario => usuario.TenantId == tenantId)
-            .ToListAsync();
+            .Include(usuario => usuario.UsuarioRoles)
+                .ThenInclude(usuarioRol => usuarioRol.Rol)
+            .Include(usuario => usuario.UsuarioSucursales)
+            .FirstOrDefaultAsync(usuario => usuario.TenantId == tenantId
+                && usuario.Email.ToLower() == email.ToLower()
+                && usuario.Activo);
     }
 
     public async Task<PagedResult<Usuario>> GetActivePagedAsync(
@@ -88,21 +92,6 @@ public class UsuarioRepository : IUsuarioRepository
 
     private static bool EsViolacionDeUnicidad(DbUpdateException ex)
         => ex.InnerException is PostgresException { SqlState: UniqueViolationSqlState };
-
-    public async Task<Usuario> UpdateAsync(Usuario usuario)
-    {
-        var usuarioExistente = await _db.Usuarios
-            .IgnoreQueryFilters()
-            .FirstOrDefaultAsync(existing => existing.Id == usuario.Id
-                                          && existing.TenantId == usuario.TenantId);
-
-        if (usuarioExistente is null)
-            throw new KeyNotFoundException("El usuario no existe en el tenant indicado.");
-
-        _db.Entry(usuarioExistente).CurrentValues.SetValues(usuario);
-        await _db.SaveChangesAsync();
-        return usuarioExistente;
-    }
 
     public async Task<UsuarioActualizadoDto?> UpdateBasicAsync(
         Guid id, Guid tenantId, ActualizarUsuarioDto request)
@@ -226,19 +215,5 @@ public class UsuarioRepository : IUsuarioRepository
         return normalizedRoleNames
             .Where(roleName => !existingRoles.Contains(roleName))
             .ToArray();
-    }
-
-    public async Task<bool> DeletePermanentlyAsync(Guid id, Guid tenantId)
-    {
-        var usuario = await _db.Usuarios
-            .IgnoreQueryFilters()
-            .FirstOrDefaultAsync(u => u.Id == id && u.TenantId == tenantId);
-
-        if (usuario is null)
-            return false;
-
-        _db.Usuarios.Remove(usuario);
-        await _db.SaveChangesAsync();
-        return true;
     }
 }

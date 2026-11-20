@@ -127,7 +127,7 @@ public class AuthService_RoleTests
             UsuarioSucursales = new List<UsuarioSucursal>()
         };
 
-        var repoMock = new Mock<IUserRepository>();
+        var repoMock = new Mock<IUsuarioRepository>();
         repoMock
             .Setup(r => r.FindByEmailAsync("dual@globalmart.cl", TenantId))
             .ReturnsAsync(usuario);
