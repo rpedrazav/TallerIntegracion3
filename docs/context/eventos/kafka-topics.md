@@ -3,7 +3,7 @@ id: kafka-topics
 tipo: evento
 titulo: Kafka Topics — Diseño vs Implementación Real
 estado: parcial
-fuentes: [src/POSCartService/Services/KafkaProducerService.cs, src/POSCartService/Services/OutboxPublisherWorker.cs, src/POSCartService/Messaging/SaleCompletedEvent.cs, src/WarehouseInventoryService/Messaging/KafkaConsumerService.cs, src/WarehouseInventoryService/Repositories/StockRepository.cs, tests/GlobalMart.IntegrationTests/OutboxBrokerRecoveryIntegrationTests.cs, tests/GlobalMart.Tests/MS4_Warehouse/SaleEventProcessor_MovimientoStockTests.cs, Docker/docker-compose.yml, Docker/scripts/init-kafka-topics.sh]
+fuentes: [src/POSCartService/Services/KafkaProducerService.cs, src/POSCartService/Services/OutboxPublisherWorker.cs, src/POSCartService/Messaging/SaleCompletedEvent.cs, src/WarehouseInventoryService/Messaging/KafkaConsumerService.cs, src/WarehouseInventoryService/Repositories/StockRepository.cs, tests/GlobalMart.IntegrationTests/OutboxBrokerRecoveryIntegrationTests.cs, tests/GlobalMart.IntegrationTests/StockConsumerIntegrationTests.cs, tests/GlobalMart.Tests/MS4_Warehouse/SaleEventProcessor_MovimientoStockTests.cs, docs/qa/fefo-consumer/reporte.md, Docker/docker-compose.yml, Docker/scripts/init-kafka-topics.sh]
 verificado_contra_codigo: true
 ultima_revision: 2026-11-20
 depende_de: [ms5-pos, ms4-inventory]
@@ -135,7 +135,7 @@ S2-099 restringe el commit a procesamiento válido, duplicado o poison message e
 
 S2-100 verificó con Kafka y PostgreSQL locales reales que dos mensajes con el mismo `EventId` producen un solo descuento y que un fallo en el segundo ítem no deja cambios parciales. Al recuperar stock, el evento pendiente se reprocesa completo. Resultado: 2/2 integraciones aprobadas; clúster remoto [NO VERIFICADO].
 
-El consumidor aplica FEFO dentro de esa misma unidad de trabajo: descuenta `Lote.Cantidad` por `FechaVencimiento ASC, Id ASC` antes de actualizar el stock agregado. Una prueba dirigida con dos lotes verifica el orden y la persistencia del evento; Kafka y PostgreSQL reales para FEFO [NO VERIFICADOS].
+El consumidor aplica FEFO dentro de esa misma unidad de trabajo: descuenta `Lote.Cantidad` por `FechaVencimiento ASC, Id ASC` antes de actualizar el stock agregado. Tres integraciones con Kafka 7.6.1 y PostgreSQL 16 reales verifican orden de lotes, falta recuperable y duplicado sin doble descuento. [Evidencia](../../qa/fefo-consumer/reporte.md).
 
 Cuando el stock agregado o los lotes no alcanzan, `SaleEventProcessor` devuelve `TransientFailure`: registra el `EventId` en el warning, no confirma el offset y no persiste descuentos, movimientos ni idempotencia. El mensaje permanece en el topic original para recuperarse tras una recepción; no se considera poison message ni se envía a `sale.completed.error`.
 
@@ -152,6 +152,8 @@ Cuando el stock agregado o los lotes no alcanzan, `SaleEventProcessor` devuelve 
 - `Docker/docker-compose.yml` (kafka-init-topics)
 - `Docker/scripts/init-kafka-topics.sh`
 - `tests/GlobalMart.Tests/MS4_Warehouse/SaleEventProcessor_MovimientoStockTests.cs`
+- `tests/GlobalMart.IntegrationTests/StockConsumerIntegrationTests.cs`
+- `docs/qa/fefo-consumer/reporte.md`
 - `tests/GlobalMart.IntegrationTests/KafkaPublishIntegrationTests.cs`
 - `tests/GlobalMart.IntegrationTests/OutboxBrokerRecoveryIntegrationTests.cs`
 

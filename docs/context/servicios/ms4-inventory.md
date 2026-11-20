@@ -3,7 +3,7 @@ id: ms4-inventory
 tipo: microservicio
 titulo: MS-4 · Warehouse & Inventory Service
 estado: parcial
-fuentes: [src/WarehouseInventoryService/, src/WarehouseInventoryService/Repositories/StockRepository.cs, tests/GlobalMart.Tests/MS4_Warehouse/, tests/GlobalMart.IntegrationTests/StockConsumerIntegrationTests.cs, Docker/docker-compose.yml]
+fuentes: [src/WarehouseInventoryService/, src/WarehouseInventoryService/Repositories/StockRepository.cs, tests/GlobalMart.Tests/MS4_Warehouse/, tests/GlobalMart.IntegrationTests/StockConsumerIntegrationTests.cs, docs/qa/fefo-consumer/reporte.md, Docker/docker-compose.yml]
 verificado_contra_codigo: true
 ultima_revision: 2026-11-20
 depende_de: [ms5-pos]
@@ -117,7 +117,7 @@ El mensaje de error conserva topic, partición, offset, tipo, causa, payload ori
 
 El flujo de integración publica un evento `sale.completed` real en Kafka, prepara stock y lote en `WarehouseDbContext`, y consulta `GET /stock/{productId}?sucursal_id=` con polling hasta verificar que `cantidad_actual` disminuye según la cantidad vendida.
 
-S2-096 verificó además con Kafka y PostgreSQL locales reales que un payload inválido llega a `sale.completed.error`. Durante una caída de PostgreSQL, el grupo conservó offset 1 con log-end 2 y lag 1; después de recuperar la base avanzó a offset 2 y lag 0. S2-097 prueba que un fallo en el segundo ítem no persiste el primero, movimientos ni idempotencia. S2-098 prueba que una solicitud superior a la disponibilidad no modifica el stock ni registra el evento. S2-099 agrega el estado desconocido como caso seguro de reintento. S2-100 aprobó 2/2 integraciones con broker y PostgreSQL reales para duplicado y recuperación de fallo en el segundo ítem. S3-014 aplicó la migración de `SucursalId` sobre PostgreSQL limpio y preexistente sin alterar stock ni lotes. S3-015 verificó con PostgreSQL que una recepción crea lote, stock y movimiento juntos, y que un fallo forzado revierte todo. S3-016 verificó que cuatro tipos de entrada inválida se rechazan antes de persistir. Recepciones aprobó 3/3 integraciones HTTP con PostgreSQL 16 y aislamiento entre tenants; MS-1/MS-3 fueron stubs tenant-aware. El descuento FEFO, el rechazo recuperable por lotes insuficientes y el filtro de `GET /lotes` fueron verificados con pruebas dirigidas; regresión MS-4: 44/44. Kafka y PostgreSQL reales para FEFO [NO VERIFICADOS]. [Evidencia de recepciones](../../qa/recepciones-postgresql/reporte.md). [Evidencia S2-100](../../qa/S2-100/reporte.md).
+S2-096 verificó además con Kafka y PostgreSQL locales reales que un payload inválido llega a `sale.completed.error`. Durante una caída de PostgreSQL, el grupo conservó offset 1 con log-end 2 y lag 1; después de recuperar la base avanzó a offset 2 y lag 0. S2-097 prueba que un fallo en el segundo ítem no persiste el primero, movimientos ni idempotencia. S2-098 prueba que una solicitud superior a la disponibilidad no modifica el stock ni registra el evento. S2-099 agrega el estado desconocido como caso seguro de reintento. S2-100 aprobó 2/2 integraciones con broker y PostgreSQL reales para duplicado y recuperación de fallo en el segundo ítem. S3-014 aplicó la migración de `SucursalId` sobre PostgreSQL limpio y preexistente sin alterar stock ni lotes. S3-015 verificó con PostgreSQL que una recepción crea lote, stock y movimiento juntos, y que un fallo forzado revierte todo. S3-016 verificó que cuatro tipos de entrada inválida se rechazan antes de persistir. Recepciones aprobó 3/3 integraciones HTTP con PostgreSQL 16 y aislamiento entre tenants; MS-1/MS-3 fueron stubs tenant-aware. El descuento FEFO aprobó 3/3 integraciones con Kafka 7.6.1 y PostgreSQL 16 reales: orden, lotes insuficientes y duplicado. El filtro de `GET /lotes` fue verificado con pruebas dirigidas; regresión MS-4: 44/44. [Evidencia FEFO](../../qa/fefo-consumer/reporte.md). [Evidencia de recepciones](../../qa/recepciones-postgresql/reporte.md). [Evidencia S2-100](../../qa/S2-100/reporte.md).
 
 ## Modelo de datos
 
@@ -207,6 +207,7 @@ EventoKafkaProcesado
 - `src/WarehouseInventoryService/Data/Migrations/20261118181528_AddSucursalToLote.cs`
 - `tests/GlobalMart.Tests/MS4_Warehouse/SaleEventProcessor_MovimientoStockTests.cs`
 - `tests/GlobalMart.IntegrationTests/StockConsumerIntegrationTests.cs`
+- `docs/qa/fefo-consumer/reporte.md`
 - `tests/GlobalMart.Tests/MS4_Warehouse/RecepcionService_Tests.cs`
 - `tests/GlobalMart.Tests/MS4_Warehouse/RecepcionValidator_Tests.cs`
 - `tests/GlobalMart.IntegrationTests/RecepcionesPostgresIntegrationTests.cs`

@@ -13,6 +13,10 @@ reglas: []
 ---
 # Estado Real de Implementación — GlobalMart OS
 
+## Integración del descuento FEFO (2026-11-20)
+
+[IMPLEMENTADO Y PROBADO LOCALMENTE] El consumidor de `sale.completed` aprobó 3/3 integraciones con Kafka 7.6.1 y PostgreSQL 16 reales: consume primero el lote de vencimiento más próximo, no persiste descuentos parciales cuando el segundo ítem no tiene lotes suficientes y procesa un `EventId` duplicado una sola vez. MS-4 corrió en proceso mediante `WebApplicationFactory`; el topic y grupo fueron únicos. Clúster remoto [NO VERIFICADO]. [Evidencia](../qa/fefo-consumer/reporte.md).
+
 ## Pruebas de recepciones con PostgreSQL (2026-11-18)
 
 [IMPLEMENTADO Y PROBADO LOCALMENTE] `POST /recepciones` aprobó 3/3 integraciones HTTP sobre PostgreSQL 16 y migraciones reales: recepción válida con lote, stock y movimiento; cantidad cero sin mutación; y segundo tenant sin visibilidad ni capacidad de modificar la recepción del dueño. MS-1/MS-3 fueron stubs tenant-aware que validaron el reenvío del JWT. Exit code 0; clúster remoto [NO VERIFICADO]. [Evidencia](../qa/recepciones-postgresql/reporte.md).

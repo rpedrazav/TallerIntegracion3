@@ -1,0 +1,768 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="dc4e4dc1-af05-4a43-9429-e17d58697645" name="@nicoos 2026-11-20 17:56:42" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2026-11-20T17:56:42.1550895-03:00" queuing="2026-11-20T17:56:42.1550896-03:00" start="2026-11-20T17:56:36.9202208-03:00" finish="2026-11-20T17:56:45.6641947-03:00" />
+  <TestSettings name="default" id="b0debbe6-6884-4637-be2e-8bd0c98b6611">
+    <Deployment runDeploymentRoot="_nicoos_2026-11-20_17_56_42" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="7cdf94a7-8b18-4bc8-b8a2-42302b2a2c23" testId="c5cea9c4-6312-47c5-e3bb-10f40c375305" testName="GlobalMart.IntegrationTests.StockConsumerIntegrationTests.FalloEnSegundoItem_NoDejaDescuentoParcialYSeRecupera" computerName="nicoos" duration="00:00:03.1647952" startTime="2026-11-20T17:56:45.3038885-03:00" endTime="2026-11-20T17:56:45.3038886-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="7cdf94a7-8b18-4bc8-b8a2-42302b2a2c23" />
+    <UnitTestResult executionId="f3155e51-38cf-4c62-8a28-723934614951" testId="6ba9df68-6f31-7a54-94f0-1f7f0818c554" testName="GlobalMart.IntegrationTests.StockConsumerIntegrationTests.EventoDuplicado_DescuentaStockUnaSolaVez" computerName="nicoos" duration="00:00:04.6855814" startTime="2026-11-20T17:56:42.1287434-03:00" endTime="2026-11-20T17:56:42.1287576-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="f3155e51-38cf-4c62-8a28-723934614951" />
+    <UnitTestResult executionId="4902aafa-57d4-42fb-bd61-5c08cf309e98" testId="46bd9053-1aee-01ea-1ea8-1ee82353048f" testName="GlobalMart.IntegrationTests.StockConsumerIntegrationTests.Fefo_DescuentaPrimeroElLoteQueVenceAntes" computerName="nicoos" duration="00:00:00.1355526" startTime="2026-11-20T17:56:45.4412407-03:00" endTime="2026-11-20T17:56:45.4412411-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="4902aafa-57d4-42fb-bd61-5c08cf309e98" />
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="GlobalMart.IntegrationTests.StockConsumerIntegrationTests.EventoDuplicado_DescuentaStockUnaSolaVez" storage="/home/nicotussi/documentos/universidad/semestre 6/integraiii/repo/tallerintegracion3/tests/globalmart.integrationtests/bin/debug/net8.0/globalmart.integrationtests.dll" id="6ba9df68-6f31-7a54-94f0-1f7f0818c554">
+      <Execution id="f3155e51-38cf-4c62-8a28-723934614951" />
+      <TestMethod codeBase="/home/nicotussi/Documentos/Universidad/SEMESTRE 6/INTEGRAIII/repo/TallerIntegracion3/tests/GlobalMart.IntegrationTests/bin/Debug/net8.0/GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.StockConsumerIntegrationTests" name="EventoDuplicado_DescuentaStockUnaSolaVez" />
+    </UnitTest>
+    <UnitTest name="GlobalMart.IntegrationTests.StockConsumerIntegrationTests.FalloEnSegundoItem_NoDejaDescuentoParcialYSeRecupera" storage="/home/nicotussi/documentos/universidad/semestre 6/integraiii/repo/tallerintegracion3/tests/globalmart.integrationtests/bin/debug/net8.0/globalmart.integrationtests.dll" id="c5cea9c4-6312-47c5-e3bb-10f40c375305">
+      <Execution id="7cdf94a7-8b18-4bc8-b8a2-42302b2a2c23" />
+      <TestMethod codeBase="/home/nicotussi/Documentos/Universidad/SEMESTRE 6/INTEGRAIII/repo/TallerIntegracion3/tests/GlobalMart.IntegrationTests/bin/Debug/net8.0/GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.StockConsumerIntegrationTests" name="FalloEnSegundoItem_NoDejaDescuentoParcialYSeRecupera" />
+    </UnitTest>
+    <UnitTest name="GlobalMart.IntegrationTests.StockConsumerIntegrationTests.Fefo_DescuentaPrimeroElLoteQueVenceAntes" storage="/home/nicotussi/documentos/universidad/semestre 6/integraiii/repo/tallerintegracion3/tests/globalmart.integrationtests/bin/debug/net8.0/globalmart.integrationtests.dll" id="46bd9053-1aee-01ea-1ea8-1ee82353048f">
+      <Execution id="4902aafa-57d4-42fb-bd61-5c08cf309e98" />
+      <TestMethod codeBase="/home/nicotussi/Documentos/Universidad/SEMESTRE 6/INTEGRAIII/repo/TallerIntegracion3/tests/GlobalMart.IntegrationTests/bin/Debug/net8.0/GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.StockConsumerIntegrationTests" name="Fefo_DescuentaPrimeroElLoteQueVenceAntes" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="c5cea9c4-6312-47c5-e3bb-10f40c375305" executionId="7cdf94a7-8b18-4bc8-b8a2-42302b2a2c23" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="6ba9df68-6f31-7a54-94f0-1f7f0818c554" executionId="f3155e51-38cf-4c62-8a28-723934614951" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="46bd9053-1aee-01ea-1ea8-1ee82353048f" executionId="4902aafa-57d4-42fb-bd61-5c08cf309e98" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="Results Not in a List" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="All Loaded Results" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Completed">
+    <Counters total="3" executed="3" passed="3" failed="0" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Output>
+      <StdOut>[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v2.8.2+699d445a1a (64-bit .NET 8.0.34)
+[xUnit.net 00:00:00.08]   Discovering: GlobalMart.IntegrationTests
+[xUnit.net 00:00:00.19]   Discovered:  GlobalMart.IntegrationTests
+[xUnit.net 00:00:00.20]   Starting:    GlobalMart.IntegrationTests
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (29ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT EXISTS (
+          SELECT 1 FROM pg_catalog.pg_class c
+          JOIN pg_catalog.pg_namespace n ON n.oid=c.relnamespace
+          WHERE n.nspname='public' AND
+                c.relname='__EFMigrationsHistory'
+      )
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT "MigrationId", "ProductVersion"
+      FROM "__EFMigrationsHistory"
+      ORDER BY "MigrationId";
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT EXISTS (
+          SELECT 1 FROM pg_catalog.pg_class c
+          JOIN pg_catalog.pg_namespace n ON n.oid=c.relnamespace
+          WHERE n.nspname='public' AND
+                c.relname='__EFMigrationsHistory'
+      )
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT EXISTS (
+          SELECT 1 FROM pg_catalog.pg_class c
+          JOIN pg_catalog.pg_namespace n ON n.oid=c.relnamespace
+          WHERE n.nspname='public' AND
+                c.relname='__EFMigrationsHistory'
+      )
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT "MigrationId", "ProductVersion"
+      FROM "__EFMigrationsHistory"
+      ORDER BY "MigrationId";
+info: Microsoft.EntityFrameworkCore.Migrations[20402]
+      Applying migration '20261118181528_AddSucursalToLote'.
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      ALTER TABLE lotes ADD sucursal_id uuid NOT NULL DEFAULT '00000000-0000-0000-0000-000000000000';
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+      VALUES ('20261118181528_AddSucursalToLote', '8.0.11');
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT EXISTS (
+          SELECT 1 FROM pg_catalog.pg_class c
+          JOIN pg_catalog.pg_namespace n ON n.oid=c.relnamespace
+          WHERE n.nspname='public' AND
+                c.relname='__EFMigrationsHistory'
+      )
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT "MigrationId", "ProductVersion"
+      FROM "__EFMigrationsHistory"
+      ORDER BY "MigrationId";
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT EXISTS (
+          SELECT 1 FROM pg_catalog.pg_class c
+          JOIN pg_catalog.pg_namespace n ON n.oid=c.relnamespace
+          WHERE n.nspname='public' AND
+                c.relname='__EFMigrationsHistory'
+      )
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT EXISTS (
+          SELECT 1 FROM pg_catalog.pg_class c
+          JOIN pg_catalog.pg_namespace n ON n.oid=c.relnamespace
+          WHERE n.nspname='public' AND
+                c.relname='__EFMigrationsHistory'
+      )
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT "MigrationId", "ProductVersion"
+      FROM "__EFMigrationsHistory"
+      ORDER BY "MigrationId";
+info: Microsoft.EntityFrameworkCore.Migrations[20405]
+      No migrations were applied. The database is already up to date.
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT EXISTS (
+          SELECT 1
+          FROM stock AS s
+          WHERE s.tenant_id = 'aaaaaaaa-0000-0000-0000-000000000001')
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (9ms) [Parameters=[@p0='?' (DbType = Guid), @p1='?' (DbType = Guid), @p2='?' (DbType = Decimal), @p3='?' (DbType = Decimal), @p4='?' (DbType = Guid), @p5='?' (DbType = Guid), @p6='?' (DbType = Guid), @p7='?' (DbType = Decimal), @p8='?' (DbType = Decimal), @p9='?' (DbType = Guid), @p10='?' (DbType = Guid), @p11='?' (DbType = Guid), @p12='?' (DbType = Decimal), @p13='?' (DbType = Decimal), @p14='?' (DbType = Guid), @p15='?' (DbType = Guid), @p16='?' (DbType = Guid), @p17='?' (DbType = Decimal), @p18='?' (DbType = Decimal), @p19='?' (DbType = Guid), @p20='?' (DbType = Guid), @p21='?' (DbType = Guid), @p22='?' (DbType = Decimal), @p23='?' (DbType = Decimal), @p24='?' (DbType = Guid), @p25='?' (DbType = Guid), @p26='?' (DbType = Guid), @p27='?' (DbType = Decimal), @p28='?' (DbType = Decimal), @p29='?' (DbType = Guid), @p30='?' (DbType = Guid), @p31='?' (DbType = Guid), @p32='?' (DbType = Decimal), @p33='?' (DbType = Decimal), @p34='?' (DbType = Guid), @p35='?' (DbType = Guid), @p36='?' (DbType = Guid), @p37='?' (DbType = Decimal), @p38='?' (DbType = Decimal), @p39='?' (DbType = Guid), @p40='?' (DbType = Guid), @p41='?' (DbType = Guid), @p42='?' (DbType = Decimal), @p43='?' (DbType = Decimal), @p44='?' (DbType = Guid), @p45='?' (DbType = Guid), @p46='?' (DbType = Guid), @p47='?' (DbType = Decimal), @p48='?' (DbType = Decimal), @p49='?' (DbType = Guid), @p50='?' (DbType = Guid), @p51='?' (DbType = Guid), @p52='?' (DbType = Decimal), @p53='?' (DbType = Decimal), @p54='?' (DbType = Guid), @p55='?' (DbType = Guid), @p56='?' (DbType = Guid), @p57='?' (DbType = Decimal), @p58='?' (DbType = Decimal), @p59='?' (DbType = Guid), @p60='?' (DbType = Guid), @p61='?' (DbType = Guid), @p62='?' (DbType = Decimal), @p63='?' (DbType = Decimal), @p64='?' (DbType = Guid), @p65='?' (DbType = Guid), @p66='?' (DbType = Guid), @p67='?' (DbType = Decimal), @p68='?' (DbType = Decimal), @p69='?' (DbType = Guid), @p70='?' (DbType = Guid), @p71='?' (DbType = Guid), @p72='?' (DbType = Decimal), @p73='?' (DbType = Decimal), @p74='?' (DbType = Guid), @p75='?' (DbType = Guid), @p76='?' (DbType = Guid), @p77='?' (DbType = Decimal), @p78='?' (DbType = Decimal), @p79='?' (DbType = Guid), @p80='?' (DbType = Guid), @p81='?' (DbType = Guid), @p82='?' (DbType = Decimal), @p83='?' (DbType = Decimal), @p84='?' (DbType = Guid), @p85='?' (DbType = Guid), @p86='?' (DbType = Guid), @p87='?' (DbType = Decimal), @p88='?' (DbType = Decimal), @p89='?' (DbType = Guid), @p90='?' (DbType = Guid), @p91='?' (DbType = Guid), @p92='?' (DbType = Decimal), @p93='?' (DbType = Decimal), @p94='?' (DbType = Guid), @p95='?' (DbType = Guid), @p96='?' (DbType = Guid), @p97='?' (DbType = Decimal), @p98='?' (DbType = Decimal), @p99='?' (DbType = Guid), @p100='?' (DbType = Guid), @p101='?' (DbType = Guid), @p102='?' (DbType = Decimal), @p103='?' (DbType = Decimal), @p104='?' (DbType = Guid), @p105='?' (DbType = Guid), @p106='?' (DbType = Guid), @p107='?' (DbType = Decimal), @p108='?' (DbType = Decimal), @p109='?' (DbType = Guid), @p110='?' (DbType = Guid), @p111='?' (DbType = Guid), @p112='?' (DbType = Decimal), @p113='?' (DbType = Decimal), @p114='?' (DbType = Guid), @p115='?' (DbType = Guid), @p116='?' (DbType = Guid), @p117='?' (DbType = Decimal), @p118='?' (DbType = Decimal), @p119='?' (DbType = Guid), @p120='?' (DbType = Guid), @p121='?' (DbType = Guid), @p122='?' (DbType = Decimal), @p123='?' (DbType = Decimal), @p124='?' (DbType = Guid), @p125='?' (DbType = Guid), @p126='?' (DbType = Guid), @p127='?' (DbType = Decimal), @p128='?' (DbType = Decimal), @p129='?' (DbType = Guid), @p130='?' (DbType = Guid), @p131='?' (DbType = Guid), @p132='?' (DbType = Decimal), @p133='?' (DbType = Decimal), @p134='?' (DbType = Guid), @p135='?' (DbType = Guid), @p136='?' (DbType = Guid), @p137='?' (DbType = Decimal), @p138='?' (DbType = Decimal), @p139='?' (DbType = Guid), @p140='?' (DbType = Guid), @p141='?' (DbType = Guid), @p142='?' (DbType = Decimal), @p143='?' (DbType = Decimal), @p144='?' (DbType = Guid), @p145='?' (DbType = Guid), @p146='?' (DbType = Guid), @p147='?' (DbType = Decimal), @p148='?' (DbType = Decimal), @p149='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
+      INSERT INTO stock (producto_id, sucursal_id, cantidad_actual, stock_minimo, tenant_id)
+      VALUES (@p0, @p1, @p2, @p3, @p4);
+      INSERT INTO stock (producto_id, sucursal_id, cantidad_actual, stock_minimo, tenant_id)
+      VALUES (@p5, @p6, @p7, @p8, @p9);
+      INSERT INTO stock (producto_id, sucursal_id, cantidad_actual, stock_minimo, tenant_id)
+      VALUES (@p10, @p11, @p12, @p13, @p14);
+      INSERT INTO stock (producto_id, sucursal_id, cantidad_actual, stock_minimo, tenant_id)
+      VALUES (@p15, @p16, @p17, @p18, @p19);
+      INSERT INTO stock (producto_id, sucursal_id, cantidad_actual, stock_minimo, tenant_id)
+      VALUES (@p20, @p21, @p22, @p23, @p24);
+      INSERT INTO stock (producto_id, sucursal_id, cantidad_actual, stock_minimo, tenant_id)
+      VALUES (@p25, @p26, @p27, @p28, @p29);
+      INSERT INTO stock (producto_id, sucursal_id, cantidad_actual, stock_minimo, tenant_id)
+      VALUES (@p30, @p31, @p32, @p33, @p34);
+      INSERT INTO stock (producto_id, sucursal_id, cantidad_actual, stock_minimo, tenant_id)
+      VALUES (@p35, @p36, @p37, @p38, @p39);
+      INSERT INTO stock (producto_id, sucursal_id, cantidad_actual, stock_minimo, tenant_id)
+      VALUES (@p40, @p41, @p42, @p43, @p44);
+      INSERT INTO stock (producto_id, sucursal_id, cantidad_actual, stock_minimo, tenant_id)
+      VALUES (@p45, @p46, @p47, @p48, @p49);
+      INSERT INTO stock (producto_id, sucursal_id, cantidad_actual, stock_minimo, tenant_id)
+      VALUES (@p50, @p51, @p52, @p53, @p54);
+      INSERT INTO stock (producto_id, sucursal_id, cantidad_actual, stock_minimo, tenant_id)
+      VALUES (@p55, @p56, @p57, @p58, @p59);
+      INSERT INTO stock (producto_id, sucursal_id, cantidad_actual, stock_minimo, tenant_id)
+      VALUES (@p60, @p61, @p62, @p63, @p64);
+      INSERT INTO stock (producto_id, sucursal_id, cantidad_actual, stock_minimo, tenant_id)
+      VALUES (@p65, @p66, @p67, @p68, @p69);
+      INSERT INTO stock (producto_id, sucursal_id, cantidad_actual, stock_minimo, tenant_id)
+      VALUES (@p70, @p71, @p72, @p73, @p74);
+      INSERT INTO stock (producto_id, sucursal_id, cantidad_actual, stock_minimo, tenant_id)
+      VALUES (@p75, @p76, @p77, @p78, @p79);
+      INSERT INTO stock (producto_id, sucursal_id, cantidad_actual, stock_minimo, tenant_id)
+      VALUES (@p80, @p81, @p82, @p83, @p84);
+      INSERT INTO stock (producto_id, sucursal_id, cantidad_actual, stock_minimo, tenant_id)
+      VALUES (@p85, @p86, @p87, @p88, @p89);
+      INSERT INTO stock (producto_id, sucursal_id, cantidad_actual, stock_minimo, tenant_id)
+      VALUES (@p90, @p91, @p92, @p93, @p94);
+      INSERT INTO stock (producto_id, sucursal_id, cantidad_actual, stock_minimo, tenant_id)
+      VALUES (@p95, @p96, @p97, @p98, @p99);
+      INSERT INTO stock (producto_id, sucursal_id, cantidad_actual, stock_minimo, tenant_id)
+      VALUES (@p100, @p101, @p102, @p103, @p104);
+      INSERT INTO stock (producto_id, sucursal_id, cantidad_actual, stock_minimo, tenant_id)
+      VALUES (@p105, @p106, @p107, @p108, @p109);
+      INSERT INTO stock (producto_id, sucursal_id, cantidad_actual, stock_minimo, tenant_id)
+      VALUES (@p110, @p111, @p112, @p113, @p114);
+      INSERT INTO stock (producto_id, sucursal_id, cantidad_actual, stock_minimo, tenant_id)
+      VALUES (@p115, @p116, @p117, @p118, @p119);
+      INSERT INTO stock (producto_id, sucursal_id, cantidad_actual, stock_minimo, tenant_id)
+      VALUES (@p120, @p121, @p122, @p123, @p124);
+      INSERT INTO stock (producto_id, sucursal_id, cantidad_actual, stock_minimo, tenant_id)
+      VALUES (@p125, @p126, @p127, @p128, @p129);
+      INSERT INTO stock (producto_id, sucursal_id, cantidad_actual, stock_minimo, tenant_id)
+      VALUES (@p130, @p131, @p132, @p133, @p134);
+      INSERT INTO stock (producto_id, sucursal_id, cantidad_actual, stock_minimo, tenant_id)
+      VALUES (@p135, @p136, @p137, @p138, @p139);
+      INSERT INTO stock (producto_id, sucursal_id, cantidad_actual, stock_minimo, tenant_id)
+      VALUES (@p140, @p141, @p142, @p143, @p144);
+      INSERT INTO stock (producto_id, sucursal_id, cantidad_actual, stock_minimo, tenant_id)
+      VALUES (@p145, @p146, @p147, @p148, @p149);
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (15ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      DROP DATABASE warehouse_db WITH (FORCE);
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (53ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      CREATE DATABASE warehouse_db;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      CREATE TABLE "__EFMigrationsHistory" (
+          "MigrationId" character varying(150) NOT NULL,
+          "ProductVersion" character varying(32) NOT NULL,
+          CONSTRAINT "PK___EFMigrationsHistory" PRIMARY KEY ("MigrationId")
+      );
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT EXISTS (
+          SELECT 1 FROM pg_catalog.pg_class c
+          JOIN pg_catalog.pg_namespace n ON n.oid=c.relnamespace
+          WHERE n.nspname='public' AND
+                c.relname='__EFMigrationsHistory'
+      )
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT "MigrationId", "ProductVersion"
+      FROM "__EFMigrationsHistory"
+      ORDER BY "MigrationId";
+info: Microsoft.EntityFrameworkCore.Migrations[20402]
+      Applying migration '20260913033948_InitialCreate_Warehouse'.
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      CREATE TABLE lotes (
+          id uuid NOT NULL,
+          producto_id uuid NOT NULL,
+          fecha_vencimiento date NOT NULL,
+          cantidad numeric(12,4) NOT NULL,
+          ubicacion character varying(100) NOT NULL,
+          tenant_id uuid NOT NULL,
+          CONSTRAINT "PK_lotes" PRIMARY KEY (id)
+      );
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      CREATE TABLE movimientos_stock (
+          id uuid NOT NULL,
+          producto_id uuid NOT NULL,
+          tipo character varying(20) NOT NULL,
+          cantidad numeric(12,4) NOT NULL,
+          motivo character varying(255) NOT NULL,
+          timestamp timestamp with time zone NOT NULL,
+          tenant_id uuid NOT NULL,
+          CONSTRAINT "PK_movimientos_stock" PRIMARY KEY (id)
+      );
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      CREATE TABLE stock (
+          producto_id uuid NOT NULL,
+          sucursal_id uuid NOT NULL,
+          cantidad_actual numeric(12,4) NOT NULL,
+          stock_minimo numeric(12,4) NOT NULL,
+          tenant_id uuid NOT NULL,
+          CONSTRAINT "PK_stock" PRIMARY KEY (producto_id, sucursal_id)
+      );
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      CREATE INDEX idx_lotes_tenant ON lotes (tenant_id);
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      CREATE INDEX idx_movimientos_tenant ON movimientos_stock (tenant_id);
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      CREATE INDEX idx_stock_tenant ON stock (tenant_id);
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+      VALUES ('20260913033948_InitialCreate_Warehouse', '8.0.11');
+info: Microsoft.EntityFrameworkCore.Migrations[20402]
+      Applying migration '20260927195722_AddEventosKafkaProcesados'.
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      CREATE TABLE eventos_kafka_procesados (
+          event_id uuid NOT NULL,
+          procesado_at timestamp with time zone NOT NULL,
+          CONSTRAINT "PK_eventos_kafka_procesados" PRIMARY KEY (event_id)
+      );
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+      VALUES ('20260927195722_AddEventosKafkaProcesados', '8.0.11');
+info: Microsoft.EntityFrameworkCore.Migrations[20402]
+      Applying migration '20261118181528_AddSucursalToLote'.
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      ALTER TABLE lotes ADD sucursal_id uuid NOT NULL DEFAULT '00000000-0000-0000-0000-000000000000';
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+      VALUES ('20261118181528_AddSucursalToLote', '8.0.11');
+info: WarehouseInventoryService.Messaging.KafkaConsumerService[0]
+      KafkaConsumerService suscrito al topic sale.completed.integration.562ffceef7ba4420b481718547b4fd04
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[@p0='?' (DbType = Guid), @p1='?' (DbType = Decimal), @p2='?' (DbType = Date), @p3='?' (DbType = Guid), @p4='?' (DbType = Guid), @p5='?' (DbType = Guid), @p6='?', @p7='?' (DbType = Guid), @p8='?' (DbType = Guid), @p9='?' (DbType = Decimal), @p10='?' (DbType = Decimal), @p11='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
+      INSERT INTO lotes (id, cantidad, fecha_vencimiento, producto_id, sucursal_id, tenant_id, ubicacion)
+      VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6);
+      INSERT INTO stock (producto_id, sucursal_id, cantidad_actual, stock_minimo, tenant_id)
+      VALUES (@p7, @p8, @p9, @p10, @p11);
+fail: WarehouseInventoryService.Messaging.KafkaConsumerService[0]
+      Error consumiendo mensaje del topic sale.completed.integration.562ffceef7ba4420b481718547b4fd04
+      Confluent.Kafka.ConsumeException: Subscribed topic not available: sale.completed.integration.562ffceef7ba4420b481718547b4fd04: Broker: Unknown topic or partition
+         at Confluent.Kafka.Consumer`2.Consume(Int32 millisecondsTimeout)
+         at Confluent.Kafka.Consumer`2.Consume(CancellationToken cancellationToken)
+         at WarehouseInventoryService.Messaging.KafkaConsumerService.ConsumeLoop(CancellationToken cancellationToken) in /home/nicotussi/Documentos/Universidad/SEMESTRE 6/INTEGRAIII/repo/TallerIntegracion3/src/WarehouseInventoryService/Messaging/KafkaConsumerService.cs:line 78
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@__eventId_0='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
+      SELECT EXISTS (
+          SELECT 1
+          FROM eventos_kafka_procesados AS e
+          WHERE e.event_id = @__eventId_0)
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@__eventId_0='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
+      SELECT EXISTS (
+          SELECT 1
+          FROM eventos_kafka_procesados AS e
+          WHERE e.event_id = @__eventId_0)
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@__eventId_0='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
+      SELECT EXISTS (
+          SELECT 1
+          FROM eventos_kafka_procesados AS e
+          WHERE e.event_id = @__eventId_0)
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@__eventId_0='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
+      SELECT EXISTS (
+          SELECT 1
+          FROM eventos_kafka_procesados AS e
+          WHERE e.event_id = @__eventId_0)
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@__eventId_0='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
+      SELECT EXISTS (
+          SELECT 1
+          FROM eventos_kafka_procesados AS e
+          WHERE e.event_id = @__eventId_0)
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@__eventId_0='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
+      SELECT EXISTS (
+          SELECT 1
+          FROM eventos_kafka_procesados AS e
+          WHERE e.event_id = @__eventId_0)
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@__eventId_0='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
+      SELECT EXISTS (
+          SELECT 1
+          FROM eventos_kafka_procesados AS e
+          WHERE e.event_id = @__eventId_0)
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@__eventId_0='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
+      SELECT EXISTS (
+          SELECT 1
+          FROM eventos_kafka_procesados AS e
+          WHERE e.event_id = @__eventId_0)
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@__ef_filter__CurrentTenantId_0='?' (DbType = Guid), @__productoId_0='?' (DbType = Guid), @__sucursalId_1='?' (DbType = Guid), @__tenantId_2='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
+      SELECT s.producto_id, s.sucursal_id, s.cantidad_actual, s.stock_minimo, s.tenant_id
+      FROM stock AS s
+      WHERE s.tenant_id = @__ef_filter__CurrentTenantId_0 AND s.producto_id = @__productoId_0 AND s.sucursal_id = @__sucursalId_1 AND s.tenant_id = @__tenantId_2
+      LIMIT 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@__eventId_0='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
+      SELECT EXISTS (
+          SELECT 1
+          FROM eventos_kafka_procesados AS e
+          WHERE e.event_id = @__eventId_0)
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@__ef_filter__CurrentTenantId_0='?' (DbType = Guid), @__productoId_0='?' (DbType = Guid), @__sucursalId_1='?' (DbType = Guid), @__tenantId_2='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
+      SELECT l.id, l.cantidad, l.fecha_vencimiento, l.producto_id, l.sucursal_id, l.tenant_id, l.ubicacion
+      FROM lotes AS l
+      WHERE l.tenant_id = @__ef_filter__CurrentTenantId_0 AND l.producto_id = @__productoId_0 AND l.sucursal_id = @__sucursalId_1 AND l.tenant_id = @__tenantId_2 AND l.cantidad &gt; 0.0
+      ORDER BY l.fecha_vencimiento, l.id
+info: WarehouseInventoryService.Messaging.SaleEventProcessor[0]
+      Movimiento de stock: { tipo = VENTA, producto_id = befd0e1a-feed-46f0-9b42-a11b0bae566f, sucursal_id = 79992a86-1311-475e-ab7b-0efd6728e5e5, tenant_id = e96e6b82-e68e-4830-a353-0b194eaa09b3, venta_id = 60640d95-8278-4108-96aa-0512503c9c4c, cantidad_descontada = 2, stock_anterior = 10.0000, stock_nuevo = 8.0000, timestamp = 11/20/2026 20:56:40 }
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (3ms) [Parameters=[@p0='?' (DbType = Guid), @p1='?' (DbType = DateTime), @p3='?' (DbType = Guid), @p2='?' (DbType = Decimal), @p4='?' (DbType = Guid), @p5='?' (DbType = Decimal), @p6='?', @p7='?' (DbType = Guid), @p8='?' (DbType = Guid), @p9='?' (DbType = DateTime), @p10='?', @p12='?' (DbType = Guid), @p13='?' (DbType = Guid), @p11='?' (DbType = Decimal)], CommandType='Text', CommandTimeout='30']
+      INSERT INTO eventos_kafka_procesados (event_id, procesado_at)
+      VALUES (@p0, @p1);
+      UPDATE lotes SET cantidad = @p2
+      WHERE id = @p3;
+      INSERT INTO movimientos_stock (id, cantidad, motivo, producto_id, tenant_id, timestamp, tipo)
+      VALUES (@p4, @p5, @p6, @p7, @p8, @p9, @p10);
+      UPDATE stock SET cantidad_actual = @p11
+      WHERE producto_id = @p12 AND sucursal_id = @p13;
+info: WarehouseInventoryService.Messaging.KafkaConsumerService[0]
+      Offset 0 confirmado tras resultado Processed
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@__eventId_0='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
+      SELECT EXISTS (
+          SELECT 1
+          FROM eventos_kafka_procesados AS e
+          WHERE e.event_id = @__eventId_0)
+info: WarehouseInventoryService.Messaging.SaleEventProcessor[0]
+      Evento 72e0d083-1978-4e82-9985-db15efc546a5 ya fue procesado anteriormente, se descarta (idempotencia)
+info: WarehouseInventoryService.Messaging.KafkaConsumerService[0]
+      Offset 1 confirmado tras resultado Duplicate
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[@__eventId_0='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
+      SELECT EXISTS (
+          SELECT 1
+          FROM eventos_kafka_procesados AS e
+          WHERE e.event_id = @__eventId_0)
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@__ef_filter__CurrentTenantId_0='?' (DbType = Guid), @__productId_0='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
+      SELECT s.cantidad_actual
+      FROM stock AS s
+      WHERE s.tenant_id = @__ef_filter__CurrentTenantId_0 AND s.producto_id = @__productId_0
+      LIMIT 2
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@__ef_filter__CurrentTenantId_0='?' (DbType = Guid), @__productId_0='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
+      SELECT l.cantidad
+      FROM lotes AS l
+      WHERE l.tenant_id = @__ef_filter__CurrentTenantId_0 AND l.producto_id = @__productId_0
+      LIMIT 2
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@__ef_filter__CurrentTenantId_0='?' (DbType = Guid), @__productId_0='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
+      SELECT count(*)::int
+      FROM movimientos_stock AS m
+      WHERE m.tenant_id = @__ef_filter__CurrentTenantId_0 AND m.producto_id = @__productId_0
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[@__eventId_0='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
+      SELECT count(*)::int
+      FROM eventos_kafka_procesados AS e
+      WHERE e.event_id = @__eventId_0
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@p0='?' (DbType = Guid), @p1='?' (DbType = Decimal), @p2='?' (DbType = Date), @p3='?' (DbType = Guid), @p4='?' (DbType = Guid), @p5='?' (DbType = Guid), @p6='?', @p7='?' (DbType = Guid), @p8='?' (DbType = Decimal), @p9='?' (DbType = Date), @p10='?' (DbType = Guid), @p11='?' (DbType = Guid), @p12='?' (DbType = Guid), @p13='?', @p14='?' (DbType = Guid), @p15='?' (DbType = Guid), @p16='?' (DbType = Decimal), @p17='?' (DbType = Decimal), @p18='?' (DbType = Guid), @p19='?' (DbType = Guid), @p20='?' (DbType = Guid), @p21='?' (DbType = Decimal), @p22='?' (DbType = Decimal), @p23='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
+      INSERT INTO lotes (id, cantidad, fecha_vencimiento, producto_id, sucursal_id, tenant_id, ubicacion)
+      VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6);
+      INSERT INTO lotes (id, cantidad, fecha_vencimiento, producto_id, sucursal_id, tenant_id, ubicacion)
+      VALUES (@p7, @p8, @p9, @p10, @p11, @p12, @p13);
+      INSERT INTO stock (producto_id, sucursal_id, cantidad_actual, stock_minimo, tenant_id)
+      VALUES (@p14, @p15, @p16, @p17, @p18);
+      INSERT INTO stock (producto_id, sucursal_id, cantidad_actual, stock_minimo, tenant_id)
+      VALUES (@p19, @p20, @p21, @p22, @p23);
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@__eventId_0='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
+      SELECT EXISTS (
+          SELECT 1
+          FROM eventos_kafka_procesados AS e
+          WHERE e.event_id = @__eventId_0)
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@__ef_filter__CurrentTenantId_0='?' (DbType = Guid), @__productoId_0='?' (DbType = Guid), @__sucursalId_1='?' (DbType = Guid), @__tenantId_2='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
+      SELECT s.producto_id, s.sucursal_id, s.cantidad_actual, s.stock_minimo, s.tenant_id
+      FROM stock AS s
+      WHERE s.tenant_id = @__ef_filter__CurrentTenantId_0 AND s.producto_id = @__productoId_0 AND s.sucursal_id = @__sucursalId_1 AND s.tenant_id = @__tenantId_2
+      LIMIT 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[@__ef_filter__CurrentTenantId_0='?' (DbType = Guid), @__productoId_0='?' (DbType = Guid), @__sucursalId_1='?' (DbType = Guid), @__tenantId_2='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
+      SELECT l.id, l.cantidad, l.fecha_vencimiento, l.producto_id, l.sucursal_id, l.tenant_id, l.ubicacion
+      FROM lotes AS l
+      WHERE l.tenant_id = @__ef_filter__CurrentTenantId_0 AND l.producto_id = @__productoId_0 AND l.sucursal_id = @__sucursalId_1 AND l.tenant_id = @__tenantId_2 AND l.cantidad &gt; 0.0
+      ORDER BY l.fecha_vencimiento, l.id
+info: WarehouseInventoryService.Messaging.SaleEventProcessor[0]
+      Movimiento de stock: { tipo = VENTA, producto_id = 28fc7caa-f32a-4962-9df8-e7f7a3d0d9b1, sucursal_id = 001d264c-84db-497f-9a6e-9cca6e87e721, tenant_id = a3b28071-0e43-401a-8e8a-3435a8b39ea4, venta_id = 2bd2a152-2518-4c8c-bca8-5141f2a0b9fe, cantidad_descontada = 2, stock_anterior = 10.0000, stock_nuevo = 8.0000, timestamp = 11/20/2026 20:56:42 }
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[@__ef_filter__CurrentTenantId_0='?' (DbType = Guid), @__productoId_0='?' (DbType = Guid), @__sucursalId_1='?' (DbType = Guid), @__tenantId_2='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
+      SELECT s.producto_id, s.sucursal_id, s.cantidad_actual, s.stock_minimo, s.tenant_id
+      FROM stock AS s
+      WHERE s.tenant_id = @__ef_filter__CurrentTenantId_0 AND s.producto_id = @__productoId_0 AND s.sucursal_id = @__sucursalId_1 AND s.tenant_id = @__tenantId_2
+      LIMIT 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[@__ef_filter__CurrentTenantId_0='?' (DbType = Guid), @__productoId_0='?' (DbType = Guid), @__sucursalId_1='?' (DbType = Guid), @__tenantId_2='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
+      SELECT l.id, l.cantidad, l.fecha_vencimiento, l.producto_id, l.sucursal_id, l.tenant_id, l.ubicacion
+      FROM lotes AS l
+      WHERE l.tenant_id = @__ef_filter__CurrentTenantId_0 AND l.producto_id = @__productoId_0 AND l.sucursal_id = @__sucursalId_1 AND l.tenant_id = @__tenantId_2 AND l.cantidad &gt; 0.0
+      ORDER BY l.fecha_vencimiento, l.id
+warn: WarehouseInventoryService.Messaging.SaleEventProcessor[0]
+      Stock o lotes insuficientes para producto c56d2fa3-69bb-4dbc-8b50-a8d03e189832 en sucursal 001d264c-84db-497f-9a6e-9cca6e87e721: solicitados 3; evento f65a48f1-55f7-43bb-aee7-63895121ab8a pendiente sin descuentos
+warn: WarehouseInventoryService.Messaging.KafkaConsumerService[0]
+      Fallo transitorio en sale.completed.integration.562ffceef7ba4420b481718547b4fd04 offset 2: Stock o lotes insuficientes para producto c56d2fa3-69bb-4dbc-8b50-a8d03e189832. Offset no confirmado; se reintenta
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@__eventId_0='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
+      SELECT EXISTS (
+          SELECT 1
+          FROM eventos_kafka_procesados AS e
+          WHERE e.event_id = @__eventId_0)
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@__ef_filter__CurrentTenantId_0='?' (DbType = Guid), @__productoId_0='?' (DbType = Guid), @__sucursalId_1='?' (DbType = Guid), @__tenantId_2='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
+      SELECT s.producto_id, s.sucursal_id, s.cantidad_actual, s.stock_minimo, s.tenant_id
+      FROM stock AS s
+      WHERE s.tenant_id = @__ef_filter__CurrentTenantId_0 AND s.producto_id = @__productoId_0 AND s.sucursal_id = @__sucursalId_1 AND s.tenant_id = @__tenantId_2
+      LIMIT 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@__ef_filter__CurrentTenantId_0='?' (DbType = Guid), @__productoId_0='?' (DbType = Guid), @__sucursalId_1='?' (DbType = Guid), @__tenantId_2='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
+      SELECT l.id, l.cantidad, l.fecha_vencimiento, l.producto_id, l.sucursal_id, l.tenant_id, l.ubicacion
+      FROM lotes AS l
+      WHERE l.tenant_id = @__ef_filter__CurrentTenantId_0 AND l.producto_id = @__productoId_0 AND l.sucursal_id = @__sucursalId_1 AND l.tenant_id = @__tenantId_2 AND l.cantidad &gt; 0.0
+      ORDER BY l.fecha_vencimiento, l.id
+info: WarehouseInventoryService.Messaging.SaleEventProcessor[0]
+      Movimiento de stock: { tipo = VENTA, producto_id = 28fc7caa-f32a-4962-9df8-e7f7a3d0d9b1, sucursal_id = 001d264c-84db-497f-9a6e-9cca6e87e721, tenant_id = a3b28071-0e43-401a-8e8a-3435a8b39ea4, venta_id = 2bd2a152-2518-4c8c-bca8-5141f2a0b9fe, cantidad_descontada = 2, stock_anterior = 10.0000, stock_nuevo = 8.0000, timestamp = 11/20/2026 20:56:43 }
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@__ef_filter__CurrentTenantId_0='?' (DbType = Guid), @__productoId_0='?' (DbType = Guid), @__sucursalId_1='?' (DbType = Guid), @__tenantId_2='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
+      SELECT s.producto_id, s.sucursal_id, s.cantidad_actual, s.stock_minimo, s.tenant_id
+      FROM stock AS s
+      WHERE s.tenant_id = @__ef_filter__CurrentTenantId_0 AND s.producto_id = @__productoId_0 AND s.sucursal_id = @__sucursalId_1 AND s.tenant_id = @__tenantId_2
+      LIMIT 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@__ef_filter__CurrentTenantId_0='?' (DbType = Guid), @__productoId_0='?' (DbType = Guid), @__sucursalId_1='?' (DbType = Guid), @__tenantId_2='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
+      SELECT l.id, l.cantidad, l.fecha_vencimiento, l.producto_id, l.sucursal_id, l.tenant_id, l.ubicacion
+      FROM lotes AS l
+      WHERE l.tenant_id = @__ef_filter__CurrentTenantId_0 AND l.producto_id = @__productoId_0 AND l.sucursal_id = @__sucursalId_1 AND l.tenant_id = @__tenantId_2 AND l.cantidad &gt; 0.0
+      ORDER BY l.fecha_vencimiento, l.id
+warn: WarehouseInventoryService.Messaging.SaleEventProcessor[0]
+      Stock o lotes insuficientes para producto c56d2fa3-69bb-4dbc-8b50-a8d03e189832 en sucursal 001d264c-84db-497f-9a6e-9cca6e87e721: solicitados 3; evento f65a48f1-55f7-43bb-aee7-63895121ab8a pendiente sin descuentos
+warn: WarehouseInventoryService.Messaging.KafkaConsumerService[0]
+      Fallo transitorio en sale.completed.integration.562ffceef7ba4420b481718547b4fd04 offset 2: Stock o lotes insuficientes para producto c56d2fa3-69bb-4dbc-8b50-a8d03e189832. Offset no confirmado; se reintenta
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@__eventId_0='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
+      SELECT EXISTS (
+          SELECT 1
+          FROM eventos_kafka_procesados AS e
+          WHERE e.event_id = @__eventId_0)
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@__ef_filter__CurrentTenantId_0='?' (DbType = Guid), @__productoId_0='?' (DbType = Guid), @__sucursalId_1='?' (DbType = Guid), @__tenantId_2='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
+      SELECT s.producto_id, s.sucursal_id, s.cantidad_actual, s.stock_minimo, s.tenant_id
+      FROM stock AS s
+      WHERE s.tenant_id = @__ef_filter__CurrentTenantId_0 AND s.producto_id = @__productoId_0 AND s.sucursal_id = @__sucursalId_1 AND s.tenant_id = @__tenantId_2
+      LIMIT 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[@__ef_filter__CurrentTenantId_0='?' (DbType = Guid), @__productoId_0='?' (DbType = Guid), @__sucursalId_1='?' (DbType = Guid), @__tenantId_2='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
+      SELECT l.id, l.cantidad, l.fecha_vencimiento, l.producto_id, l.sucursal_id, l.tenant_id, l.ubicacion
+      FROM lotes AS l
+      WHERE l.tenant_id = @__ef_filter__CurrentTenantId_0 AND l.producto_id = @__productoId_0 AND l.sucursal_id = @__sucursalId_1 AND l.tenant_id = @__tenantId_2 AND l.cantidad &gt; 0.0
+      ORDER BY l.fecha_vencimiento, l.id
+info: WarehouseInventoryService.Messaging.SaleEventProcessor[0]
+      Movimiento de stock: { tipo = VENTA, producto_id = 28fc7caa-f32a-4962-9df8-e7f7a3d0d9b1, sucursal_id = 001d264c-84db-497f-9a6e-9cca6e87e721, tenant_id = a3b28071-0e43-401a-8e8a-3435a8b39ea4, venta_id = 2bd2a152-2518-4c8c-bca8-5141f2a0b9fe, cantidad_descontada = 2, stock_anterior = 10.0000, stock_nuevo = 8.0000, timestamp = 11/20/2026 20:56:44 }
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[@__ef_filter__CurrentTenantId_0='?' (DbType = Guid), @__productoId_0='?' (DbType = Guid), @__sucursalId_1='?' (DbType = Guid), @__tenantId_2='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
+      SELECT s.producto_id, s.sucursal_id, s.cantidad_actual, s.stock_minimo, s.tenant_id
+      FROM stock AS s
+      WHERE s.tenant_id = @__ef_filter__CurrentTenantId_0 AND s.producto_id = @__productoId_0 AND s.sucursal_id = @__sucursalId_1 AND s.tenant_id = @__tenantId_2
+      LIMIT 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[@__ef_filter__CurrentTenantId_0='?' (DbType = Guid), @__productoId_0='?' (DbType = Guid), @__sucursalId_1='?' (DbType = Guid), @__tenantId_2='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
+      SELECT l.id, l.cantidad, l.fecha_vencimiento, l.producto_id, l.sucursal_id, l.tenant_id, l.ubicacion
+      FROM lotes AS l
+      WHERE l.tenant_id = @__ef_filter__CurrentTenantId_0 AND l.producto_id = @__productoId_0 AND l.sucursal_id = @__sucursalId_1 AND l.tenant_id = @__tenantId_2 AND l.cantidad &gt; 0.0
+      ORDER BY l.fecha_vencimiento, l.id
+warn: WarehouseInventoryService.Messaging.SaleEventProcessor[0]
+      Stock o lotes insuficientes para producto c56d2fa3-69bb-4dbc-8b50-a8d03e189832 en sucursal 001d264c-84db-497f-9a6e-9cca6e87e721: solicitados 3; evento f65a48f1-55f7-43bb-aee7-63895121ab8a pendiente sin descuentos
+warn: WarehouseInventoryService.Messaging.KafkaConsumerService[0]
+      Fallo transitorio en sale.completed.integration.562ffceef7ba4420b481718547b4fd04 offset 2: Stock o lotes insuficientes para producto c56d2fa3-69bb-4dbc-8b50-a8d03e189832. Offset no confirmado; se reintenta
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@__ef_filter__CurrentTenantId_0='?' (DbType = Guid), @__productId_0='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
+      SELECT s.cantidad_actual
+      FROM stock AS s
+      WHERE s.tenant_id = @__ef_filter__CurrentTenantId_0 AND s.producto_id = @__productId_0
+      LIMIT 2
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@__ef_filter__CurrentTenantId_0='?' (DbType = Guid), @__productId2_0='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
+      SELECT s.cantidad_actual
+      FROM stock AS s
+      WHERE s.tenant_id = @__ef_filter__CurrentTenantId_0 AND s.producto_id = @__productId2_0
+      LIMIT 2
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[@__ef_filter__CurrentTenantId_0='?' (DbType = Guid), @__productId_0='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
+      SELECT l.cantidad
+      FROM lotes AS l
+      WHERE l.tenant_id = @__ef_filter__CurrentTenantId_0 AND l.producto_id = @__productId_0
+      LIMIT 2
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@__ef_filter__CurrentTenantId_0='?' (DbType = Guid), @__productId2_0='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
+      SELECT l.cantidad
+      FROM lotes AS l
+      WHERE l.tenant_id = @__ef_filter__CurrentTenantId_0 AND l.producto_id = @__productId2_0
+      LIMIT 2
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@__ef_filter__CurrentTenantId_0='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
+      SELECT m.id, m.cantidad, m.motivo, m.producto_id, m.tenant_id, m.timestamp, m.tipo
+      FROM movimientos_stock AS m
+      WHERE m.tenant_id = @__ef_filter__CurrentTenantId_0
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@__eventId_0='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
+      SELECT EXISTS (
+          SELECT 1
+          FROM eventos_kafka_procesados AS e
+          WHERE e.event_id = @__eventId_0)
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@__ef_filter__CurrentTenantId_0='?' (DbType = Guid), @__productId2_0='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
+      SELECT l.id, l.cantidad, l.fecha_vencimiento, l.producto_id, l.sucursal_id, l.tenant_id, l.ubicacion
+      FROM lotes AS l
+      WHERE l.tenant_id = @__ef_filter__CurrentTenantId_0 AND l.producto_id = @__productId2_0
+      LIMIT 2
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[@p1='?' (DbType = Guid), @p0='?' (DbType = Decimal)], CommandType='Text', CommandTimeout='30']
+      UPDATE lotes SET cantidad = @p0
+      WHERE id = @p1;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[@__eventId_0='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
+      SELECT EXISTS (
+          SELECT 1
+          FROM eventos_kafka_procesados AS e
+          WHERE e.event_id = @__eventId_0)
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@__eventId_0='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
+      SELECT EXISTS (
+          SELECT 1
+          FROM eventos_kafka_procesados AS e
+          WHERE e.event_id = @__eventId_0)
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@__eventId_0='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
+      SELECT EXISTS (
+          SELECT 1
+          FROM eventos_kafka_procesados AS e
+          WHERE e.event_id = @__eventId_0)
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@__eventId_0='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
+      SELECT EXISTS (
+          SELECT 1
+          FROM eventos_kafka_procesados AS e
+          WHERE e.event_id = @__eventId_0)
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@__eventId_0='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
+      SELECT EXISTS (
+          SELECT 1
+          FROM eventos_kafka_procesados AS e
+          WHERE e.event_id = @__eventId_0)
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@__ef_filter__CurrentTenantId_0='?' (DbType = Guid), @__productoId_0='?' (DbType = Guid), @__sucursalId_1='?' (DbType = Guid), @__tenantId_2='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
+      SELECT s.producto_id, s.sucursal_id, s.cantidad_actual, s.stock_minimo, s.tenant_id
+      FROM stock AS s
+      WHERE s.tenant_id = @__ef_filter__CurrentTenantId_0 AND s.producto_id = @__productoId_0 AND s.sucursal_id = @__sucursalId_1 AND s.tenant_id = @__tenantId_2
+      LIMIT 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@__ef_filter__CurrentTenantId_0='?' (DbType = Guid), @__productoId_0='?' (DbType = Guid), @__sucursalId_1='?' (DbType = Guid), @__tenantId_2='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
+      SELECT l.id, l.cantidad, l.fecha_vencimiento, l.producto_id, l.sucursal_id, l.tenant_id, l.ubicacion
+      FROM lotes AS l
+      WHERE l.tenant_id = @__ef_filter__CurrentTenantId_0 AND l.producto_id = @__productoId_0 AND l.sucursal_id = @__sucursalId_1 AND l.tenant_id = @__tenantId_2 AND l.cantidad &gt; 0.0
+      ORDER BY l.fecha_vencimiento, l.id
+info: WarehouseInventoryService.Messaging.SaleEventProcessor[0]
+      Movimiento de stock: { tipo = VENTA, producto_id = 28fc7caa-f32a-4962-9df8-e7f7a3d0d9b1, sucursal_id = 001d264c-84db-497f-9a6e-9cca6e87e721, tenant_id = a3b28071-0e43-401a-8e8a-3435a8b39ea4, venta_id = 2bd2a152-2518-4c8c-bca8-5141f2a0b9fe, cantidad_descontada = 2, stock_anterior = 10.0000, stock_nuevo = 8.0000, timestamp = 11/20/2026 20:56:45 }
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[@__ef_filter__CurrentTenantId_0='?' (DbType = Guid), @__productoId_0='?' (DbType = Guid), @__sucursalId_1='?' (DbType = Guid), @__tenantId_2='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
+      SELECT s.producto_id, s.sucursal_id, s.cantidad_actual, s.stock_minimo, s.tenant_id
+      FROM stock AS s
+      WHERE s.tenant_id = @__ef_filter__CurrentTenantId_0 AND s.producto_id = @__productoId_0 AND s.sucursal_id = @__sucursalId_1 AND s.tenant_id = @__tenantId_2
+      LIMIT 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[@__ef_filter__CurrentTenantId_0='?' (DbType = Guid), @__productoId_0='?' (DbType = Guid), @__sucursalId_1='?' (DbType = Guid), @__tenantId_2='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
+      SELECT l.id, l.cantidad, l.fecha_vencimiento, l.producto_id, l.sucursal_id, l.tenant_id, l.ubicacion
+      FROM lotes AS l
+      WHERE l.tenant_id = @__ef_filter__CurrentTenantId_0 AND l.producto_id = @__productoId_0 AND l.sucursal_id = @__sucursalId_1 AND l.tenant_id = @__tenantId_2 AND l.cantidad &gt; 0.0
+      ORDER BY l.fecha_vencimiento, l.id
+info: WarehouseInventoryService.Messaging.SaleEventProcessor[0]
+      Movimiento de stock: { tipo = VENTA, producto_id = c56d2fa3-69bb-4dbc-8b50-a8d03e189832, sucursal_id = 001d264c-84db-497f-9a6e-9cca6e87e721, tenant_id = a3b28071-0e43-401a-8e8a-3435a8b39ea4, venta_id = 2bd2a152-2518-4c8c-bca8-5141f2a0b9fe, cantidad_descontada = 3, stock_anterior = 5.0000, stock_nuevo = 2.0000, timestamp = 11/20/2026 20:56:45 }
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@p0='?' (DbType = Guid), @p1='?' (DbType = DateTime), @p3='?' (DbType = Guid), @p2='?' (DbType = Decimal), @p5='?' (DbType = Guid), @p4='?' (DbType = Decimal), @p6='?' (DbType = Guid), @p7='?' (DbType = Decimal), @p8='?', @p9='?' (DbType = Guid), @p10='?' (DbType = Guid), @p11='?' (DbType = DateTime), @p12='?', @p13='?' (DbType = Guid), @p14='?' (DbType = Decimal), @p15='?', @p16='?' (DbType = Guid), @p17='?' (DbType = Guid), @p18='?' (DbType = DateTime), @p19='?', @p21='?' (DbType = Guid), @p22='?' (DbType = Guid), @p20='?' (DbType = Decimal), @p24='?' (DbType = Guid), @p25='?' (DbType = Guid), @p23='?' (DbType = Decimal)], CommandType='Text', CommandTimeout='30']
+      INSERT INTO eventos_kafka_procesados (event_id, procesado_at)
+      VALUES (@p0, @p1);
+      UPDATE lotes SET cantidad = @p2
+      WHERE id = @p3;
+      UPDATE lotes SET cantidad = @p4
+      WHERE id = @p5;
+      INSERT INTO movimientos_stock (id, cantidad, motivo, producto_id, tenant_id, timestamp, tipo)
+      VALUES (@p6, @p7, @p8, @p9, @p10, @p11, @p12);
+      INSERT INTO movimientos_stock (id, cantidad, motivo, producto_id, tenant_id, timestamp, tipo)
+      VALUES (@p13, @p14, @p15, @p16, @p17, @p18, @p19);
+      UPDATE stock SET cantidad_actual = @p20
+      WHERE producto_id = @p21 AND sucursal_id = @p22;
+      UPDATE stock SET cantidad_actual = @p23
+      WHERE producto_id = @p24 AND sucursal_id = @p25;
+info: WarehouseInventoryService.Messaging.KafkaConsumerService[0]
+      Offset 2 confirmado tras resultado Processed
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@__eventId_0='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
+      SELECT EXISTS (
+          SELECT 1
+          FROM eventos_kafka_procesados AS e
+          WHERE e.event_id = @__eventId_0)
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@__ef_filter__CurrentTenantId_0='?' (DbType = Guid), @__productId_0='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
+      SELECT s.cantidad_actual
+      FROM stock AS s
+      WHERE s.tenant_id = @__ef_filter__CurrentTenantId_0 AND s.producto_id = @__productId_0
+      LIMIT 2
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@__ef_filter__CurrentTenantId_0='?' (DbType = Guid), @__productId2_0='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
+      SELECT s.cantidad_actual
+      FROM stock AS s
+      WHERE s.tenant_id = @__ef_filter__CurrentTenantId_0 AND s.producto_id = @__productId2_0
+      LIMIT 2
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[@__ef_filter__CurrentTenantId_0='?' (DbType = Guid), @__productId_0='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
+      SELECT l.cantidad
+      FROM lotes AS l
+      WHERE l.tenant_id = @__ef_filter__CurrentTenantId_0 AND l.producto_id = @__productId_0
+      LIMIT 2
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[@__ef_filter__CurrentTenantId_0='?' (DbType = Guid), @__productId2_0='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
+      SELECT l.cantidad
+      FROM lotes AS l
+      WHERE l.tenant_id = @__ef_filter__CurrentTenantId_0 AND l.producto_id = @__productId2_0
+      LIMIT 2
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[@__ef_filter__CurrentTenantId_0='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
+      SELECT count(*)::int
+      FROM movimientos_stock AS m
+      WHERE m.tenant_id = @__ef_filter__CurrentTenantId_0
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[@__eventId_0='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
+      SELECT count(*)::int
+      FROM eventos_kafka_procesados AS e
+      WHERE e.event_id = @__eventId_0
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@p0='?' (DbType = Guid), @p1='?' (DbType = Decimal), @p2='?' (DbType = Date), @p3='?' (DbType = Guid), @p4='?' (DbType = Guid), @p5='?' (DbType = Guid), @p6='?', @p7='?' (DbType = Guid), @p8='?' (DbType = Decimal), @p9='?' (DbType = Date), @p10='?' (DbType = Guid), @p11='?' (DbType = Guid), @p12='?' (DbType = Guid), @p13='?', @p14='?' (DbType = Guid), @p15='?' (DbType = Guid), @p16='?' (DbType = Decimal), @p17='?' (DbType = Decimal), @p18='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
+      INSERT INTO lotes (id, cantidad, fecha_vencimiento, producto_id, sucursal_id, tenant_id, ubicacion)
+      VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6);
+      INSERT INTO lotes (id, cantidad, fecha_vencimiento, producto_id, sucursal_id, tenant_id, ubicacion)
+      VALUES (@p7, @p8, @p9, @p10, @p11, @p12, @p13);
+      INSERT INTO stock (producto_id, sucursal_id, cantidad_actual, stock_minimo, tenant_id)
+      VALUES (@p14, @p15, @p16, @p17, @p18);
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[@__eventId_0='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
+      SELECT EXISTS (
+          SELECT 1
+          FROM eventos_kafka_procesados AS e
+          WHERE e.event_id = @__eventId_0)
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@__ef_filter__CurrentTenantId_0='?' (DbType = Guid), @__productoId_0='?' (DbType = Guid), @__sucursalId_1='?' (DbType = Guid), @__tenantId_2='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
+      SELECT s.producto_id, s.sucursal_id, s.cantidad_actual, s.stock_minimo, s.tenant_id
+      FROM stock AS s
+      WHERE s.tenant_id = @__ef_filter__CurrentTenantId_0 AND s.producto_id = @__productoId_0 AND s.sucursal_id = @__sucursalId_1 AND s.tenant_id = @__tenantId_2
+      LIMIT 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[@__ef_filter__CurrentTenantId_0='?' (DbType = Guid), @__productoId_0='?' (DbType = Guid), @__sucursalId_1='?' (DbType = Guid), @__tenantId_2='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
+      SELECT l.id, l.cantidad, l.fecha_vencimiento, l.producto_id, l.sucursal_id, l.tenant_id, l.ubicacion
+      FROM lotes AS l
+      WHERE l.tenant_id = @__ef_filter__CurrentTenantId_0 AND l.producto_id = @__productoId_0 AND l.sucursal_id = @__sucursalId_1 AND l.tenant_id = @__tenantId_2 AND l.cantidad &gt; 0.0
+      ORDER BY l.fecha_vencimiento, l.id
+info: WarehouseInventoryService.Messaging.SaleEventProcessor[0]
+      Movimiento de stock: { tipo = VENTA, producto_id = 725f3245-46be-4b6d-95f9-7ef5a4262623, sucursal_id = 695c7b46-b822-44e6-8c89-2d4fffa77ebf, tenant_id = 557bcbe2-08bb-492b-b395-146cf07e1306, venta_id = 77f8ed88-2e8b-4539-a35e-ad8a9845904b, cantidad_descontada = 8, stock_anterior = 10.0000, stock_nuevo = 2.0000, timestamp = 11/20/2026 20:56:45 }
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@p0='?' (DbType = Guid), @p1='?' (DbType = DateTime), @p3='?' (DbType = Guid), @p2='?' (DbType = Decimal), @p5='?' (DbType = Guid), @p4='?' (DbType = Decimal), @p6='?' (DbType = Guid), @p7='?' (DbType = Decimal), @p8='?', @p9='?' (DbType = Guid), @p10='?' (DbType = Guid), @p11='?' (DbType = DateTime), @p12='?', @p14='?' (DbType = Guid), @p15='?' (DbType = Guid), @p13='?' (DbType = Decimal)], CommandType='Text', CommandTimeout='30']
+      INSERT INTO eventos_kafka_procesados (event_id, procesado_at)
+      VALUES (@p0, @p1);
+      UPDATE lotes SET cantidad = @p2
+      WHERE id = @p3;
+      UPDATE lotes SET cantidad = @p4
+      WHERE id = @p5;
+      INSERT INTO movimientos_stock (id, cantidad, motivo, producto_id, tenant_id, timestamp, tipo)
+      VALUES (@p6, @p7, @p8, @p9, @p10, @p11, @p12);
+      UPDATE stock SET cantidad_actual = @p13
+      WHERE producto_id = @p14 AND sucursal_id = @p15;
+info: WarehouseInventoryService.Messaging.KafkaConsumerService[0]
+      Offset 3 confirmado tras resultado Processed
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@__eventId_0='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
+      SELECT EXISTS (
+          SELECT 1
+          FROM eventos_kafka_procesados AS e
+          WHERE e.event_id = @__eventId_0)
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@__ef_filter__CurrentTenantId_0='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
+      SELECT s.cantidad_actual
+      FROM stock AS s
+      WHERE s.tenant_id = @__ef_filter__CurrentTenantId_0
+      LIMIT 2
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@__ef_filter__CurrentTenantId_0='?' (DbType = Guid), @__loteTempranoId_0='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
+      SELECT l.cantidad
+      FROM lotes AS l
+      WHERE l.tenant_id = @__ef_filter__CurrentTenantId_0 AND l.id = @__loteTempranoId_0
+      LIMIT 2
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@__ef_filter__CurrentTenantId_0='?' (DbType = Guid), @__loteTardioId_0='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
+      SELECT l.cantidad
+      FROM lotes AS l
+      WHERE l.tenant_id = @__ef_filter__CurrentTenantId_0 AND l.id = @__loteTardioId_0
+      LIMIT 2
+info: WarehouseInventoryService.Messaging.KafkaConsumerService[0]
+      KafkaConsumerService detenido
+[xUnit.net 00:00:08.40]   Finished:    GlobalMart.IntegrationTests
+</StdOut>
+    </Output>
+  </ResultSummary>
+</TestRun>
