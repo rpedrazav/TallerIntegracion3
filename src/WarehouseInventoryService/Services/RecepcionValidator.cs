@@ -46,20 +46,7 @@ public sealed class RecepcionValidator
             if (!productResponse.IsSuccessStatusCode)
                 return new(503, "No se pudo validar el producto.");
 
-            using var branchRequest = AuthorizedRequest(
-                $"{_configuration["Services:IdentityUrl"]?.TrimEnd('/') ?? "http://localhost:5124"}/sucursales",
-                bearer);
-            using var branchResponse = await client.SendAsync(branchRequest, cancellationToken);
-            if (!branchResponse.IsSuccessStatusCode)
-                return new(503, "No se pudo validar la sucursal.");
-
-            using var branches = JsonDocument.Parse(await branchResponse.Content.ReadAsStringAsync(cancellationToken));
-            if (branches.RootElement.ValueKind != JsonValueKind.Array)
-                return new(503, "Identidad devolvió una respuesta inválida.");
-            var validBranch = branches.RootElement.EnumerateArray().Any(branch =>
-                branch.TryGetProperty("id", out var id) && id.TryGetGuid(out var branchId) && branchId == sucursalId &&
-                branch.TryGetProperty("activa", out var active) && active.ValueKind == JsonValueKind.True);
-            return validBranch ? null : new(404, "Sucursal no encontrada o inactiva.");
+            return await ValidateSucursalAsync(client, sucursalId, bearer, cancellationToken);
         }
         catch (HttpRequestException)
         {
@@ -73,6 +60,56 @@ public sealed class RecepcionValidator
         {
             return new(503, "Identidad devolvió una respuesta inválida.");
         }
+    }
+
+    public async Task<RecepcionValidationFailure?> ValidateSucursalAsync(
+        Guid sucursalId,
+        string bearer,
+        CancellationToken cancellationToken)
+    {
+        if (sucursalId == Guid.Empty)
+            return new(400, "Sucursal inválida.");
+
+        try
+        {
+            var client = _httpClients.CreateClient();
+            client.Timeout = TimeSpan.FromSeconds(5);
+            return await ValidateSucursalAsync(client, sucursalId, bearer, cancellationToken);
+        }
+        catch (HttpRequestException)
+        {
+            return new(503, "No se pudo contactar identidad.");
+        }
+        catch (TaskCanceledException) when (!cancellationToken.IsCancellationRequested)
+        {
+            return new(503, "La validación de identidad agotó el tiempo.");
+        }
+        catch (JsonException)
+        {
+            return new(503, "Identidad devolvió una respuesta inválida.");
+        }
+    }
+
+    private async Task<RecepcionValidationFailure?> ValidateSucursalAsync(
+        HttpClient client,
+        Guid sucursalId,
+        string bearer,
+        CancellationToken cancellationToken)
+    {
+        using var request = AuthorizedRequest(
+            $"{_configuration["Services:IdentityUrl"]?.TrimEnd('/') ?? "http://localhost:5124"}/sucursales",
+            bearer);
+        using var response = await client.SendAsync(request, cancellationToken);
+        if (!response.IsSuccessStatusCode)
+            return new(503, "No se pudo validar la sucursal.");
+
+        using var branches = JsonDocument.Parse(await response.Content.ReadAsStringAsync(cancellationToken));
+        if (branches.RootElement.ValueKind != JsonValueKind.Array)
+            return new(503, "Identidad devolvió una respuesta inválida.");
+        var validBranch = branches.RootElement.EnumerateArray().Any(branch =>
+            branch.TryGetProperty("id", out var id) && id.TryGetGuid(out var branchId) && branchId == sucursalId &&
+            branch.TryGetProperty("activa", out var active) && active.ValueKind == JsonValueKind.True);
+        return validBranch ? null : new(404, "Sucursal no encontrada o inactiva.");
     }
 
     private static HttpRequestMessage AuthorizedRequest(string url, string bearer)

@@ -19,6 +19,7 @@ builder.Services.AddDbContext<WarehouseInventoryService.Data.WarehouseDbContext>
 builder.Services.AddScoped<IStockRepository, StockRepository>();
 builder.Services.AddScoped<WarehouseInventoryService.Services.RecepcionService>();
 builder.Services.AddScoped<WarehouseInventoryService.Services.RecepcionValidator>();
+builder.Services.AddScoped<WarehouseInventoryService.Services.LoteService>();
 builder.Services.AddScoped<WarehouseInventoryService.Messaging.ISaleEventProcessor, WarehouseInventoryService.Messaging.SaleEventProcessor>();
 builder.Services.AddHttpClient();
 if (builder.Configuration.GetValue("Kafka:Enabled", true))
