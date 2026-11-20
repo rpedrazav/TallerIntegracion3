@@ -19,4 +19,13 @@ public interface ISucursalRepository
     /// Si el tenant ya tiene una sucursal con ese nombre (comparación case-insensitive).
     /// </exception>
     Task<Sucursal> CreateAsync(Sucursal sucursal);
+
+    /// <summary>Actualiza nombre y zona horaria, restringiendo la escritura por id y tenant.</summary>
+    /// <returns>La sucursal actualizada o <c>null</c> si no pertenece al tenant.</returns>
+    Task<Sucursal?> UpdateAsync(
+        Guid id,
+        Guid tenantId,
+        string nombre,
+        string? zonaHoraria,
+        CancellationToken cancellationToken = default);
 }

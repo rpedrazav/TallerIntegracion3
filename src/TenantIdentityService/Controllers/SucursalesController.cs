@@ -11,7 +11,7 @@ namespace TenantIdentityService.Controllers;
 
 /// <summary>
 /// Expone las sucursales del tenant autenticado.
-/// GET /sucursales y POST /sucursales.
+/// GET /sucursales, POST /sucursales y PUT /sucursales/{id}.
 /// El tenant se obtiene del claim tenant_id del JWT, nunca de la ruta ni del body,
 /// de modo que no se puedan consultar ni crear sucursales de otro tenant.
 /// El aislamiento lo aplica el HasQueryFilter global de TenantDbContext vÃ­a TenantMiddleware.
@@ -24,15 +24,18 @@ public class SucursalesController : ControllerBase
 {
     private readonly ISucursalRepository _sucursalRepository;
     private readonly IValidator<CrearSucursalRequest> _crearSucursalValidator;
+    private readonly IValidator<ActualizarSucursalRequest> _actualizarSucursalValidator;
     private readonly ILogger<SucursalesController> _logger;
 
     public SucursalesController(
         ISucursalRepository sucursalRepository,
         IValidator<CrearSucursalRequest> crearSucursalValidator,
+        IValidator<ActualizarSucursalRequest> actualizarSucursalValidator,
         ILogger<SucursalesController> logger)
     {
         _sucursalRepository = sucursalRepository ?? throw new ArgumentNullException(nameof(sucursalRepository));
         _crearSucursalValidator = crearSucursalValidator ?? throw new ArgumentNullException(nameof(crearSucursalValidator));
+        _actualizarSucursalValidator = actualizarSucursalValidator ?? throw new ArgumentNullException(nameof(actualizarSucursalValidator));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
@@ -139,6 +142,60 @@ public class SucursalesController : ControllerBase
                 "Conflicto al crear sucursal \"{Nombre}\" en tenant {TenantId}: {Motivo}",
                 ex.NombreDuplicado, tenantId, ex.Message);
 
+            return Conflict(new { message = ex.Message });
+        }
+    }
+
+    /// <summary>Actualiza nombre y zona horaria de una sucursal del tenant autenticado.</summary>
+    /// <response code="200">Sucursal actualizada.</response>
+    /// <response code="400">Nombre o zona horaria inválidos.</response>
+    /// <response code="401">Sin JWT válido.</response>
+    /// <response code="403">El usuario no tiene rol ADMIN.</response>
+    /// <response code="404">La sucursal no existe o pertenece a otro tenant.</response>
+    /// <response code="409">El nombre ya pertenece a otra sucursal del tenant.</response>
+    [HttpPut("{id:guid}")]
+    [Authorize(Roles = "ADMIN")]
+    [ProducesResponseType(typeof(SucursalDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> Update(
+        Guid id,
+        [FromBody] ActualizarSucursalRequest request,
+        CancellationToken cancellationToken)
+    {
+        var validacion = await _actualizarSucursalValidator.ValidateAsync(request, cancellationToken);
+        if (!validacion.IsValid)
+        {
+            foreach (var error in validacion.Errors)
+                ModelState.AddModelError(error.PropertyName, error.ErrorMessage);
+
+            return ValidationProblem(ModelState);
+        }
+
+        var tenantClaim = User.FindFirst("tenant_id")?.Value;
+        if (!Guid.TryParse(tenantClaim, out var tenantId))
+            return Unauthorized(new { message = "El token no contiene un tenant_id válido." });
+
+        var zonaHoraria = string.IsNullOrWhiteSpace(request.ZonaHoraria)
+            ? null
+            : request.ZonaHoraria.Trim();
+
+        try
+        {
+            var actualizada = await _sucursalRepository.UpdateAsync(
+                id,
+                tenantId,
+                request.Nombre,
+                zonaHoraria,
+                cancellationToken);
+
+            return actualizada is null ? NotFound() : Ok(MapToDto(actualizada));
+        }
+        catch (DuplicateSucursalNameException ex)
+        {
             return Conflict(new { message = ex.Message });
         }
     }

@@ -41,26 +41,10 @@ public class SucursalRepository : ISucursalRepository
         var nombre = sucursal.Nombre.Trim();
         sucursal.Nombre = nombre;
 
-        // Chequeo previo para el caso común: devuelve un mensaje claro sin tocar el índice.
-        // No sustituye al índice único, solo evita el viaje de ida y vuelta de un fallo.
-        var yaExiste = await _db.Sucursales
-            .AnyAsync(s => s.Nombre.ToLower() == nombre.ToLower());
-
-        if (yaExiste)
-            throw new DuplicateSucursalNameException(nombre);
+        await EnsureNameAvailableAsync(nombre, sucursal.TenantId);
 
         _db.Sucursales.Add(sucursal);
-
-        try
-        {
-            await _db.SaveChangesAsync();
-        }
-        catch (DbUpdateException ex) when (EsViolacionDeUnicidad(ex))
-        {
-            // Carrera: otra petición insertó el mismo nombre entre el chequeo y el INSERT.
-            // El índice único es la garantía real; aquí solo se traduce a una excepción de dominio.
-            throw new DuplicateSucursalNameException(nombre);
-        }
+        await SaveChangesAsync(nombre);
 
         // Se relee con Include para devolver la navegación Tenant cargada y poder
         // resolver la zona horaria efectiva en el controller sin una consulta extra allí.
@@ -68,6 +52,65 @@ public class SucursalRepository : ISucursalRepository
             .AsNoTracking()
             .Include(s => s.Tenant)
             .FirstAsync(s => s.Id == sucursal.Id);
+    }
+
+    /// <inheritdoc/>
+    public async Task<Sucursal?> UpdateAsync(
+        Guid id,
+        Guid tenantId,
+        string nombre,
+        string? zonaHoraria,
+        CancellationToken cancellationToken = default)
+    {
+        var sucursal = await _db.Sucursales
+            .Include(s => s.Tenant)
+            .FirstOrDefaultAsync(
+                s => s.Id == id && s.TenantId == tenantId,
+                cancellationToken);
+
+        if (sucursal is null)
+            return null;
+
+        nombre = nombre.Trim();
+        await EnsureNameAvailableAsync(nombre, tenantId, id, cancellationToken);
+
+        sucursal.Nombre = nombre;
+        sucursal.ZonaHoraria = zonaHoraria;
+
+        await SaveChangesAsync(nombre, cancellationToken);
+
+        return sucursal;
+    }
+
+    private async Task EnsureNameAvailableAsync(
+        string nombre,
+        Guid tenantId,
+        Guid? excludedId = null,
+        CancellationToken cancellationToken = default)
+    {
+        var yaExiste = await _db.Sucursales.AnyAsync(
+            s => s.TenantId == tenantId &&
+                 (!excludedId.HasValue || s.Id != excludedId.Value) &&
+                 s.Nombre.ToLower() == nombre.ToLower(),
+            cancellationToken);
+
+        if (yaExiste)
+            throw new DuplicateSucursalNameException(nombre);
+    }
+
+    private async Task SaveChangesAsync(
+        string nombre,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            await _db.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException ex) when (EsViolacionDeUnicidad(ex))
+        {
+            // El índice único resuelve carreras entre el chequeo y la escritura.
+            throw new DuplicateSucursalNameException(nombre);
+        }
     }
 
     /// <summary>
