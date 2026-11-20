@@ -13,6 +13,10 @@ reglas: []
 ---
 # Estado Real de Implementación — GlobalMart OS
 
+## Descuento FEFO en ventas (2026-11-20)
+
+[IMPLEMENTADO Y PROBADO LOCALMENTE] Al procesar `sale.completed`, MS-4 carga los lotes disponibles del tenant, producto y sucursal, los ordena por `FechaVencimiento ASC` e `Id ASC`, y descuenta primero el de vencimiento más próximo. Los cambios de lotes, stock agregado, movimientos e idempotencia continúan bajo el único `SaveChanges` del evento; un fallo intermedio no persiste descuentos parciales. La prueba dirigida con dos lotes confirmó cantidades finales 0 y 2 al vender 8 de 10 unidades. Regresión MS-4: 39/39; proyecto de integración compila. Kafka y PostgreSQL reales para FEFO [NO VERIFICADOS].
+
 ## TI3-773 — Baja lógica de sucursales (2026-11-20)
 
 [IMPLEMENTADO Y PROBADO LOCALMENTE] MS-1 implementa `DELETE /sucursales/{id}` y su alias `/api/sucursales/{id}` para ADMIN. La escritura usa id y tenant del JWT, devuelve 404 para inexistente/ajena, conserva la fila y relaciones históricas, y `GET /sucursales` expone solo activas. MS-5 reutiliza ese listado autorizado, propagando el JWT, antes de abrir un turno y antes de crear una venta. Sucursal inexistente, ajena o inactiva devuelve 404 sin revelar la causa; MS-1 no disponible o una respuesta inválida devuelve 503 y bloquea la operación. La revalidación de la venta cubre la desactivación posterior a la apertura del turno. Integración MS-1: 13/13; validación MS-5: 9/9; regresión de turnos/venta: 6/6, todas sobre PostgreSQL aislado y con exit code 0. La integración entre procesos desplegados MS-1 → MS-5 queda [NO VERIFICADA]. [Evidencia](../qa/TI3-773/reporte.md).
@@ -255,7 +259,7 @@ S2-052 — 2026-10-19: **2/2 pruebas de integración HTTP locales aprobadas** pa
 |---|---------------|----------------|----------|
 | 1 | Endpoint de anulación expuesto con contrato S2-091; UI pendiente; reversa simulada S2-093 implementada | RF-22 | Backend S2-092 implementado |
 | 2 | Emisión simulada de DTE (boleta/factura) en MS-2 | RN-03, RF-08, TC-08/09 | 🔴 Crítica |
-| 4 | FEFO en recepción e inventario en MS-4 | RN-05, RF-10, WI-04/05 | 🟠 Alta |
+| 4 | Consulta de lotes por vencer y manejo explícito de lotes insuficientes en MS-4 | RN-05, RF-10, WI-05 | 🟠 Alta |
 | 5 | Integrar frontend `Pos.tsx` con backend real | RF-04, RF-05 | 🟠 Alta |
 | 6 | Endpoint POST /auth/refresh | RF-01 | 🟠 Alta |
 | 7 | Gestión de sucursales en backend | TI-11, RF-19 | 🟠 Alta |

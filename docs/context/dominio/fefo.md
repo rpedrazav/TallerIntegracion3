@@ -3,9 +3,9 @@ id: fefo
 tipo: dominio
 titulo: Contrato mínimo de recepciones y lotes FEFO
 estado: parcial
-fuentes: [src/WarehouseInventoryService/Controllers/RecepcionesController.cs, src/WarehouseInventoryService/Services/RecepcionService.cs, src/WarehouseInventoryService/Services/RecepcionValidator.cs, src/WarehouseInventoryService/Models/Lote.cs, src/WarehouseInventoryService/Data/Migrations/20261118181528_AddSucursalToLote.cs, tareas/plan_sprint3.xlsx]
+fuentes: [src/WarehouseInventoryService/Controllers/RecepcionesController.cs, src/WarehouseInventoryService/Services/RecepcionService.cs, src/WarehouseInventoryService/Services/RecepcionValidator.cs, src/WarehouseInventoryService/Repositories/StockRepository.cs, src/WarehouseInventoryService/Models/Lote.cs, src/WarehouseInventoryService/Data/Migrations/20261118181528_AddSucursalToLote.cs, tests/GlobalMart.Tests/MS4_Warehouse/SaleEventProcessor_MovimientoStockTests.cs, tareas/plan_sprint3.xlsx]
 verificado_contra_codigo: true
-ultima_revision: 2026-11-18
+ultima_revision: 2026-11-20
 depende_de: [ms4-inventory]
 publica: []
 consume: []
@@ -15,7 +15,7 @@ reglas: [RN-01, RN-05, RF-10, WI-04, WI-05]
 
 ## Estado y alcance
 
-**IMPLEMENTACIÓN PARCIAL.** S3-015 implementó `POST /recepciones` con escritura atómica, JWT, rol y tenant del token; S3-016 agregó las validaciones de referencias y dominio. `GET /lotes?porVencer=` y el descuento FEFO siguen sin implementar.
+**IMPLEMENTACIÓN PARCIAL.** S3-015 implementó `POST /recepciones` con escritura atómica, JWT, rol y tenant del token; S3-016 agregó las validaciones de referencias y dominio. El consumidor de `sale.completed` ya descuenta lotes por FEFO. `GET /lotes?porVencer=` sigue sin implementar.
 
 El alcance reutiliza `Lote.Id`, `ProductoId`, `SucursalId`, `FechaVencimiento`, `Cantidad`, `Ubicacion` y `TenantId`. S3-014 agregó `SucursalId` obligatorio y su migración porque el stock se administra por sucursal. No se agrega `FechaRecepcion`: el contrato no la requiere y el modelo actual no la tiene.
 
@@ -62,7 +62,13 @@ HTTP 201:
 }
 ```
 
-`id` lo genera el servidor. `tenantId` no se expone. La implementación futura debe guardar en una sola transacción el lote, el incremento de `Stock.CantidadActual` y un `MovimientoStock` positivo de tipo `RECEPCION`; ante cualquier fallo no queda mutación parcial.
+`id` lo genera el servidor. `tenantId` no se expone. La implementación guarda en una sola transacción el lote, el incremento de `Stock.CantidadActual` y un `MovimientoStock` positivo de tipo `RECEPCION`; ante cualquier fallo no queda mutación parcial.
+
+## Descuento FEFO al vender
+
+Al consumir `sale.completed`, `StockRepository` selecciona lotes con cantidad disponible del mismo tenant, producto y sucursal. El orden estable es `FechaVencimiento ASC`, luego `Id ASC`; una venta agota el lote más próximo antes de descontar el siguiente. `SaleEventProcessor` persiste los cambios de lotes y stock agregado junto con movimientos y `EventId` mediante un único `SaveChanges`, por lo que un fallo intermedio no deja el primer lote descontado.
+
+La prueba local con dos lotes de 5 unidades y una venta de 8 deja el lote temprano en 0, el tardío en 2 y el stock agregado en 2. La integración FEFO con Kafka y PostgreSQL reales queda [NO VERIFICADA].
 
 ### Errores
 
@@ -123,7 +129,6 @@ No se agregan capas ni repositorios alternativos. Controller valida identidad/fo
 - Implementar los endpoints, DTOs, validadores, migración o pantalla.
 - Mermas, transferencias, conteos y capacidad de neveras.
 - Publicar `stock.alert`, `expiry.alert`, `stock.updated` u otro evento Kafka.
-- Descontar lotes por FEFO al vender; se implementará y probará en tareas posteriores.
 - Idempotencia de recepciones o integración con proveedores/órdenes de compra.
 
 ## Conexiones
@@ -140,6 +145,8 @@ No se agregan capas ni repositorios alternativos. Controller valida identidad/fo
 - `src/WarehouseInventoryService/Models/Lote.cs`
 - `src/WarehouseInventoryService/Models/Stock.cs`
 - `src/WarehouseInventoryService/Models/MovimientoStock.cs`
+- `src/WarehouseInventoryService/Repositories/StockRepository.cs`
 - `src/WarehouseInventoryService/Data/Migrations/20260913033948_InitialCreate_Warehouse.cs`
 - `src/WarehouseInventoryService/Data/Migrations/20261118181528_AddSucursalToLote.cs`
+- `tests/GlobalMart.Tests/MS4_Warehouse/SaleEventProcessor_MovimientoStockTests.cs`
 - `tareas/plan_sprint3.xlsx` (S3-002)
