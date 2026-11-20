@@ -148,6 +148,60 @@ public class SaleEventProcessor_MovimientoStockTests : IDisposable
     }
 
     [Fact]
+    public void ProcesarEvento_LotesInsuficientes_RegistraIncidenciaSinDescuentos()
+    {
+        _context.CurrentTenantId = TenantId;
+        _context.Stocks.Add(new Stock
+        {
+            ProductoId = ProductoId,
+            SucursalId = SucursalId,
+            TenantId = TenantId,
+            CantidadActual = 10
+        });
+        _context.Lotes.AddRange(
+            new Lote
+            {
+                ProductoId = ProductoId,
+                SucursalId = SucursalId,
+                TenantId = TenantId,
+                FechaVencimiento = new DateOnly(2027, 1, 15),
+                Cantidad = 2
+            },
+            new Lote
+            {
+                ProductoId = ProductoId,
+                SucursalId = SucursalId,
+                TenantId = TenantId,
+                FechaVencimiento = new DateOnly(2027, 6, 15),
+                Cantidad = 3
+            });
+        _context.SaveChanges();
+        var processor = new SaleEventProcessor(
+            _context,
+            new StockRepository(_context),
+            _loggerMock.Object);
+
+        var resultado = processor.ProcesarEvento(CrearPayload(EventId, ProductoId, cantidad: 6));
+
+        resultado.Status.Should().Be(SaleEventProcessingStatus.TransientFailure);
+        resultado.Retry.Should().BeTrue();
+        resultado.Error.Should().Contain("lotes insuficientes");
+        _context.Stocks.Single().CantidadActual.Should().Be(10);
+        _context.Lotes.OrderBy(l => l.FechaVencimiento).Select(l => l.Cantidad).Should().Equal(2, 3);
+        _context.Movimientos.Should().BeEmpty();
+        _context.EventosKafkaProcesados.Should().BeEmpty();
+        _loggerMock.Verify(logger => logger.Log(
+                LogLevel.Warning,
+                It.IsAny<EventId>(),
+                It.Is<It.IsAnyType>((value, _) =>
+                    value.ToString()!.Contains("lotes insuficientes") &&
+                    value.ToString()!.Contains(EventId.ToString())),
+                It.IsAny<Exception?>(),
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+            Times.Once);
+    }
+
+    [Fact]
     public void ProcesarEvento_ConDosLotes_DescuentaPrimeroElQueVenceAntes()
     {
         var loteTemprano = new Lote
