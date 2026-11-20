@@ -125,13 +125,14 @@ public class SaleEventProcessor : ISaleEventProcessor
             else
             {
                 _logger.LogWarning(
-                    "Stock inexistente o insuficiente para producto {ProductoId} en sucursal {SucursalId}; evento {EventId} pendiente",
+                    "Stock o lotes insuficientes para producto {ProductoId} en sucursal {SucursalId}: solicitados {Cantidad}; evento {EventId} pendiente sin descuentos",
                     item.ProductoId,
                     evento.SucursalId,
+                    item.Cantidad,
                     eventId);
                 return new(
                     SaleEventProcessingStatus.TransientFailure,
-                    $"Stock inexistente o insuficiente para producto {item.ProductoId}");
+                    $"Stock o lotes insuficientes para producto {item.ProductoId}");
             }
         }
 

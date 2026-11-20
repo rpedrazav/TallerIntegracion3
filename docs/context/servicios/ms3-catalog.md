@@ -5,7 +5,7 @@ titulo: MS-3 · Catalog & Pricing Service
 estado: parcial
 fuentes: [src/CatalogPricingService/]
 verificado_contra_codigo: true
-ultima_revision: 2026-11-11
+ultima_revision: 2026-11-19
 depende_de: [ms1-identity]
 publica: []
 consume: []
@@ -24,8 +24,8 @@ reglas: [RN-01, RN-11, RF-04, RF-11, CP-01, CP-04, CP-05]
 | GET | `/products/search` (alias `/api/products/search`) | JWT | [IMPLEMENTADO] |
 | GET | `/products/lookup` (alias `/api/products/lookup`) | JWT | [IMPLEMENTADO] |
 | GET | `/products/{id}` (alias `/api/products/{id}`) | JWT | [IMPLEMENTADO] |
-| POST | `/products` (alias `/api/products`) | JWT | [IMPLEMENTADO] |
-| PUT | `/products/{id}` (alias `/api/products/{id}`) | JWT; ADMIN si cambia IsActive | [IMPLEMENTADO] |
+| POST | `/products` (alias `/api/products`) | JWT + ADMIN | [IMPLEMENTADO] |
+| PUT | `/products/{id}` (alias `/api/products/{id}`) | JWT + ADMIN | [IMPLEMENTADO] |
 | DELETE | `/products/{id}` (alias `/api/products/{id}`) | JWT + ADMIN | [IMPLEMENTADO — baja lógica] |
 | GET | `/categories` (alias `/api/categories`) | JWT | [IMPLEMENTADO] |
 | POST | `/categories` (alias `/api/categories`) | JWT | [IMPLEMENTADO] |
@@ -44,14 +44,14 @@ reglas: [RN-01, RN-11, RF-04, RF-11, CP-01, CP-04, CP-05]
 - Producto propio ya inactivo: 204 sin body y sin modificar nuevamente la fila.
 - Inexistente o perteneciente a otro tenant: idéntico 404 con `{ "message": "Producto no encontrado." }`.
 - Sin JWT: 401. Autenticado sin ADMIN: 403.
-- PUT compara el estado solicitado con el persistido y rechaza con 403 cambios de `IsActive` de usuarios no ADMIN. Conserva las ediciones de otros campos; un PUT no administrativo excluye `IsActive` de su escritura para no sobrescribir una baja concurrente.
+- Desde TI3-736, POST y PUT son operaciones administrativas y exigen ADMIN; un usuario autenticado con rol CAJERO recibe 403 incluso si el PUT conserva `IsActive`.
 - PUT devuelve el mismo 404 con `{ "message": "Producto no encontrado." }` ante producto inexistente o de otro tenant. El servicio distingue `KeyNotFoundException` de `UnauthorizedAccessException`, que conserva 403 para cambios de estado sin ADMIN.
 
 La baja conserva el producto y sus referencias lógicas. MS-5 conserva nombre y precio en `ItemVenta`, e impuestos/totales en `Venta`; consultar ventas históricas no requiere consultar catálogo. El listado administrativo sigue incluyendo inactivos. `GET /products/search` y `GET /products/lookup`, usados por el POS, devuelven solo productos activos del tenant. Search admite nombre sin distinguir mayúsculas y código de barras parcial; lookup exige código exacto.
 
 TI3-643 / S2-012: `GET /products/{id}`, utilizado por el POS para resolver productos, consulta `GetActiveByIdAsync` y solo devuelve productos del tenant con `IsActive=true`. Un producto desactivado o de otro tenant retorna 404. `GetByIdAsync` permanece sin filtro de estado para que PUT pueda localizar y reactivar productos inactivos mediante ADMIN. El test `GetById_ProductoDesactivado_Retorna404YConservaFila` fue aprobado el 2026-10-14 (1/1): verifica 200 activo, DELETE 204, GET posterior 404 y fila conservada con `IsActive=false`.
 
-Pruebas: [DesactivarProductoIntegrationTests.cs](../../../tests/GlobalMart.IntegrationTests/DesactivarProductoIntegrationTests.cs), 11/11 aprobadas el 2026-10-14 con PostgreSQL 16 y esquemas aislados. Cubren fila y datos conservados, segunda baja, 404 indistinguible, tenant ajeno intacto, 401/403, bloqueo de activación/desactivación por PUT sin ADMIN y regresión de ediciones permitidas. Build de MS-3 aprobado.
+Pruebas históricas: [DesactivarProductoIntegrationTests.cs](../../../tests/GlobalMart.IntegrationTests/DesactivarProductoIntegrationTests.cs), 11/11 aprobadas el 2026-10-14 con PostgreSQL 16 y esquemas aislados. TI3-736 actualiza la regresión de PUT para exigir ADMIN en toda edición y amplía [ProductoTenantIsolationIntegrationTests.cs](../../../tests/GlobalMart.IntegrationTests/ProductoTenantIsolationIntegrationTests.cs) con rechazo 403 de POST CAJERO, control positivo ADMIN y snapshots de ambos tenants. La ejecución funcional actual queda [NO VERIFICADA] en este entorno por falta de PostgreSQL; el proyecto de integración sí compiló.
 
 Cierre TI3-642: test adicional `Delete_ProductoVendido_ConservaVentaHistoricaConsultableYDatosIntactos`, ejecutado individualmente el 2026-10-14: 1/1 aprobado. Prepara una venta COMPLETADA con un ItemVenta referido al producto y consulta `GET /ventas/{id}` en MS-5 antes y después del DELETE ADMIN en MS-3 (204). Verifica que venta e ítem siguen consultables, conservando sus IDs, ProductoId, NombreProducto, PrecioUnitario, Cantidad, Subtotal e impuestos/total de venta. Confirma además la fila de catálogo con IsActive=false y sus demás datos intactos. Usa esquemas PostgreSQL aislados y no modifica código productivo.
 

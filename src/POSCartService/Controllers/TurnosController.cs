@@ -23,12 +23,30 @@ public sealed class TurnosController : ControllerBase
     [HttpPost("abrir")]
     [ProducesResponseType(typeof(Turno), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
-    public async Task<IActionResult> Abrir([FromBody] AbrirTurnoRequest request)
+    [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
+    public async Task<IActionResult> Abrir(
+        [FromBody] AbrirTurnoRequest request,
+        [FromServices] ISucursalClient sucursales,
+        CancellationToken cancellationToken)
     {
         if (!User.TryGetClaims(out var cajeroId, out var tenantId))
         {
             return Unauthorized(new { error = "Token inválido: faltan cajero_id/sub o tenant_id" });
+        }
+
+        try
+        {
+            if (!await sucursales.IsActiveAsync(
+                    request.SucursalId,
+                    Request.Headers.Authorization.ToString(),
+                    cancellationToken))
+                return NotFound(new { error = "Sucursal no encontrada o inactiva." });
+        }
+        catch (ExternalServiceException)
+        {
+            return StatusCode(503, new { error = "No se pudo validar la sucursal." });
         }
 
         try

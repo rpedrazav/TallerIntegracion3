@@ -3,9 +3,9 @@ id: ms1-identity
 tipo: microservicio
 titulo: MS-1 · Tenant & Identity Service
 estado: parcial
-fuentes: [src/TenantIdentityService/, globalmart-frontend/src/pages/Admin.tsx, globalmart-frontend/src/pages/AdminRoles.tsx, globalmart-frontend/src/components/admin/UsuariosList.tsx, Docker/config/kong.yaml]
+fuentes: [src/TenantIdentityService/, tests/GlobalMart.IntegrationTests/SucursalIntegrationTests.cs, globalmart-frontend/src/pages/Admin.tsx, globalmart-frontend/src/pages/AdminRoles.tsx, globalmart-frontend/src/components/admin/UsuariosList.tsx, Docker/config/kong.yaml]
 verificado_contra_codigo: true
-ultima_revision: 2026-11-15
+ultima_revision: 2026-11-20
 depende_de: []
 publica: []
 consume: []
@@ -31,13 +31,13 @@ src/TenantIdentityService/
 │   ├── AuthController.cs          POST /auth/login + /api/auth/login
 │   ├── UsuarioController.cs       CRUD /api/v1/users + /api/users + /users
 │   ├── TenantConfigController.cs  GET+PUT /tenants/{id}/config + /api/tenants + /api/v1/tenants
-│   └── SucursalesController.cs    GET+POST /sucursales + /api/sucursales
+│   └── SucursalesController.cs    GET+POST+PUT+DELETE /sucursales + /api/sucursales
 ├── Data/  TenantDbContext.cs + Migrations/
 ├── Models/  Tenant · Usuario · UsuarioRol · Rol
 ├── Repositories/  IUsuarioRepository · UsuarioRepository · ITenantRepository · TenantRepository
 ├── Services/  IAuthService · AuthService · IJwtService · JwtService
 ├── Middleware/  TenantMiddleware.cs
-└── Validators/  LoginRequestValidator.cs · CrearSucursalRequestValidator.cs · CrearUsuarioDtoValidator.cs · ActualizarTenantConfigDtoValidator.cs
+└── Validators/  LoginRequestValidator.cs · Crear/ActualizarSucursalRequestValidator.cs · CrearUsuarioDtoValidator.cs · ActualizarTenantConfigDtoValidator.cs
 ```
 
 ## Endpoints reales
@@ -56,6 +56,8 @@ src/TenantIdentityService/
 | PUT | `/tenants/{id}/config` (alias `/api/tenants`, `/api/v1/tenants`) | JWT + ADMIN | [IMPLEMENTADO] |
 | GET | `/sucursales` (alias `/api/sucursales`) | JWT | [IMPLEMENTADO] |
 | POST | `/sucursales` (alias `/api/sucursales`) | JWT + ADMIN | [IMPLEMENTADO] |
+| PUT | `/sucursales/{id}` (alias `/api/sucursales/{id}`) | JWT + ADMIN | [IMPLEMENTADO] |
+| DELETE | `/sucursales/{id}` (alias `/api/sucursales/{id}`) | JWT + ADMIN | [IMPLEMENTADO] |
 | GET | `/health` | Público | [IMPLEMENTADO] |
 
 ### PUT /api/v1/users/{id}
@@ -83,7 +85,7 @@ src/TenantIdentityService/
 - La pantalla `/admin/*` queda disponible solo para claims `ADMIN` o `SUPER_ADMIN`. CAJERO no ve su acceso y es redirigido a `/pos`; la autorización del controlador conserva `403` como defensa independiente del frontend [IMPLEMENTADO].
 - La UI permite listar, crear, editar y desactivar usuarios. Activos e inactivos permanecen visibles con indicador textual; para inactivos, TI3-733 bloquea en frontend la edición de email y la modificación de roles, sin atribuir ese bloqueo a MS-1. La reactivación no se expone ni tiene endpoint.
 - Errores vigentes: `400` para datos inválidos o autodesactivación según la operación; `401` sin autenticación o claims requeridos; `403` sin rol autorizado; `404` para ID inexistente o perteneciente a otro tenant; `409` para email duplicado al editar.
-- `UserRepository.FindByEmailAsync` exige `Usuario.Activo=true`; DELETE marca inactivo ese mismo registro, de modo que el siguiente login falla con el mismo 401 genérico. No se implementó revocación de JWT emitidos.
+- `UsuarioRepository.FindByEmailAsync` exige el tenant indicado y `Usuario.Activo=true`, y carga roles y sucursales para autenticar. DELETE marca inactivo ese mismo registro, de modo que el siguiente login falla con el mismo 401 genérico. `IUsuarioRepository` es el único repositorio de usuarios desde S3-003; no se implementó revocación de JWT emitidos.
 
 ### PUT /tenants/{id}/config — TI3-458 / TI3-459
 
@@ -109,9 +111,9 @@ Auth: Bearer <JWT con tenant_id>
 
 El tenant se obtiene **solo** del claim `tenant_id` del JWT: no se recibe como parámetro de ruta ni
 de query, para que no se puedan pedir sucursales de otro tenant. El aislamiento lo aplica el
-`HasQueryFilter` global de `TenantDbContext` alimentado por `TenantMiddleware` (`SucursalRepository`
-no filtra manualmente). Devuelve las sucursales **inactivas también**, ordenadas por nombre, sin
-paginación; la lista puede estar vacía.
+`HasQueryFilter` global de `TenantDbContext` alimentado por `TenantMiddleware`. `SucursalRepository`
+agrega `Activa=true` para que el selector operativo no ofrezca sucursales desactivadas. Las ordena
+por nombre, sin paginación; la lista puede estar vacía.
 
 `zonaHoraria` en la respuesta es la **efectiva**: `Sucursal.ZonaHoraria ?? Tenant.ZonaHoraria`.
 Para resolverla el repository hace `Include(s => s.Tenant)`. Así queda ejecutada la regla de negocio
@@ -175,12 +177,56 @@ viaje de ida y vuelta) y además captura la violación de índice único (SQLSTA
 traducir la carrera de dos POST simultáneos. Verificado: 8 POST concurrentes con el mismo nombre
 → 1 `201`, 7 `409`, 1 fila en la base.
 
+### PUT /sucursales/{id} — TI3-772
+
+```
+PUT /sucursales/{id}
+Auth: Bearer <JWT con tenant_id y rol ADMIN>
+Body: { "nombre": "...", "zonaHoraria": "America/Santiago" | "" | null }
+
+200 → { id, tenantId, nombre, direccion, activa, zonaHoraria }
+400 → nombre inválido o zona horaria que no es un id IANA real
+401 → sin JWT, JWT inválido o sin claim tenant_id
+403 → el usuario no tiene el rol ADMIN
+404 → id inexistente o perteneciente a otro tenant
+409 → otra sucursal del tenant ya usa ese nombre, sin distinguir mayúsculas
+```
+
+El tenant procede exclusivamente del JWT y el repositorio restringe la escritura por `id + tenantId`.
+El request no contiene tenant ni modifica dirección o estado. POST y PUT comparten las mismas reglas
+de nombre y zona IANA. El control de duplicados excluye el propio id, permite el mismo nombre en otro
+tenant y conserva el índice único como defensa ante concurrencia. `SucursalIntegrationTests` verificó
+8/8 casos contra PostgreSQL aislado: ADMIN, CAJERO 403, sucursal ajena 404, duplicado 409, nombre propio,
+coincidencia en otro tenant, zona inválida y regresión de creación/listado.
+
+### DELETE /sucursales/{id} — TI3-773
+
+```
+DELETE /sucursales/{id}
+Auth: Bearer <JWT con tenant_id y rol ADMIN>
+
+204 → Activa=false; la fila y sus relaciones se conservan
+401 → sin JWT válido o sin tenant_id
+403 → el usuario no tiene rol ADMIN
+404 → id inexistente o perteneciente a otro tenant
+```
+
+`SucursalRepository.DeactivateAsync` busca por `id + tenantId`, actualiza solo `Activa=false` y no
+elimina filas. Una segunda baja conserva 204. `GET /sucursales` lista solo activas; la fila inactiva
+y su relación `UsuarioSucursal` permanecen para referencias históricas. `SucursalIntegrationTests`
+aprobó 13/13 casos sobre PostgreSQL aislado, incluidos ADMIN, CAJERO, inexistente, otro tenant,
+listado activo y relación histórica conservada.
+
+**Dependencia completada en MS-5:** antes de abrir un turno y antes de crear una venta, MS-5 consulta
+el listado autorizado `GET /sucursales` con el JWT original y exige que la sucursal esté presente y
+activa para ese tenant. Ausente, ajena o inactiva se tratan igual; una indisponibilidad de MS-1
+bloquea la operación. La integración entre procesos desplegados queda [NO VERIFICADA].
+
 ### Endpoints diseñados pero NO implementados
 - `POST /auth/refresh` — renovar JWT [PLANIFICADO]
 - `GET /tenants/{id}/sucursales` — ruta con `{id}`; superseded por `GET /sucursales` [PLANIFICADO]
 - `GET /fx/rates` — tipos de cambio actuales [PLANIFICADO]
 - `POST /fx/convert` — conversión entre monedas [PLANIFICADO]
-- `PUT`/`DELETE /sucursales/{id}` — desactivar y eliminar sucursales [PLANIFICADO]
 
 ## Modelo de datos
 
@@ -229,10 +275,10 @@ la del tenant, lo que evita hardcodear una zona por sucursal y permite que un te
 en zonas horarias distintas. La columna es nullable a propósito y no tiene valor por defecto.
 
 **Alcance actual:** la columna nullable y la resolución de la zona horaria efectiva están
-implementadas, y ambas rutas de creación están cerradas: `GET /sucursales` ejecuta el fallback en
-lectura y `POST /sucursales` decide si una sucursal nueva nace con zona propia o heredada, validando
-que el id sea IANA real. Lo que sigue pendiente es la parte destructiva del CRUD: no hay `PUT` ni
-`DELETE /sucursales/{id}`, así que no se puede **editar ni desactivar** una sucursal creada.
+implementadas: `GET /sucursales` lista solo activas y ejecuta el fallback en lectura, `POST` crea,
+`PUT /sucursales/{id}` cambia nombre/zona y `DELETE /sucursales/{id}` aplica baja lógica. Las
+escrituras validan que el id sea IANA real. La integración operativa sigue parcial porque MS-5 no
+valida el estado de la sucursal al abrir un turno.
 
 Consumidores actuales de `SucursalId` (como `Guid`, sin FK por ser otro microservicio):
 - MS-4 `WarehouseDbContext` lo usa como parte de la clave primaria de `Stock`
@@ -285,7 +331,7 @@ GET/POST/PUT/DELETE /api/tenants
 
 - **Seed de desarrollo:** crea el tenant, `cajero@demo.cl` (CAJERO) y `admin@demo.cl` (ADMIN) si faltan, también en BD ya sembradas (S2-112) [IMPLEMENTADO]
 - **Tests unitarios:** `CrearUsuarioDtoValidatorTests` (16 casos cubriendo nombre, email y contraseña fuerte) [IMPLEMENTADO]
-- **Tests de integración:** `AuthIntegrationTests` (login y emisión de JWT), `UserIntegrationTests` (POST /users, hasheo BCrypt, asignación tenant_id, validación y control de duplicados) [IMPLEMENTADO]
+- **Tests de integración:** `AuthIntegrationTests` (login y emisión de JWT), `UserIntegrationTests` (POST /users, hasheo BCrypt, asignación tenant_id, validación y control de duplicados) y `SucursalIntegrationTests` (PUT/DELETE, autorización, aislamiento, baja lógica, historial y regresión POST/GET) [IMPLEMENTADO]
 - **Tests manuales:** vía Swagger UI en `/swagger`
 
 ## Brechas respecto al diseño
@@ -293,7 +339,6 @@ GET/POST/PUT/DELETE /api/tenants
 | Brecha | Impacto |
 |--------|---------|
 | Sin endpoint `/auth/refresh` | Sesiones no renovables |
-| No hay `PUT`/`DELETE /sucursales/{id}` | No se puede editar ni desactivar una sucursal ya creada. `Activa` solo se puede leer |
 | Asignación de usuarios a sucursales parcial | POST y PUT de usuarios admiten una sucursal inicial/seleccionada del mismo tenant; no hay pantalla de reasignación ni endpoint dedicado multi-sucursal |
 | `sucursal_id` en JWT es campo libre | No lo emite el token (D-04). Un cajero no puede indicar su sucursal al autenticar |
 | Sin integración FX (Fixer.io) | TI-15..19 no implementados |
@@ -314,7 +359,7 @@ GET/POST/PUT/DELETE /api/tenants
 | TI-08 | Definir Idioma del Sistema | [IMPLEMENTADO via TenantConfig] |
 | TI-09 | Configurar Moneda Base | [IMPLEMENTADO via TenantConfig] |
 | TI-10 | Configurar País y Zona Horaria | [IMPLEMENTADO via TenantConfig] |
-| TI-11 | Gestionar Sucursales | [PARCIAL — GET y POST /sucursales; sin PUT/DELETE] |
+| TI-11 | Gestionar Sucursales | [IMPLEMENTADO — CRUD MS-1 con baja lógica y validación operativa en MS-5] |
 | TI-14 | Auditar Log de Accesos | [PLANIFICADO] |
 | TI-15 | Obtener Tipo de Cambio en Tiempo Real | [PLANIFICADO] |
 | TI-16 | Actualizar Tabla de Tipos de Cambio | [PLANIFICADO] |

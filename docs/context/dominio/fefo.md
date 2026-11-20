@@ -2,10 +2,10 @@
 id: fefo
 tipo: dominio
 titulo: Contrato mínimo de recepciones y lotes FEFO
-estado: parcial
-fuentes: [src/WarehouseInventoryService/Controllers/RecepcionesController.cs, src/WarehouseInventoryService/Services/RecepcionService.cs, src/WarehouseInventoryService/Services/RecepcionValidator.cs, tests/GlobalMart.IntegrationTests/RecepcionesPostgresIntegrationTests.cs, docs/qa/recepciones-postgresql/reporte.md, tareas/plan_sprint3.xlsx]
+estado: implementado
+fuentes: [src/WarehouseInventoryService/Controllers/RecepcionesController.cs, src/WarehouseInventoryService/Controllers/LotesController.cs, src/WarehouseInventoryService/Services/RecepcionService.cs, src/WarehouseInventoryService/Services/RecepcionValidator.cs, src/WarehouseInventoryService/Services/LoteService.cs, src/WarehouseInventoryService/Repositories/StockRepository.cs, src/WarehouseInventoryService/Models/Lote.cs, src/WarehouseInventoryService/Data/Migrations/20261118181528_AddSucursalToLote.cs, tests/GlobalMart.IntegrationTests/RecepcionesPostgresIntegrationTests.cs, tests/GlobalMart.Tests/MS4_Warehouse/SaleEventProcessor_MovimientoStockTests.cs, tests/GlobalMart.Tests/MS4_Warehouse/LotesController_Tests.cs, docs/qa/recepciones-postgresql/reporte.md, tareas/plan_sprint3.xlsx]
 verificado_contra_codigo: true
-ultima_revision: 2026-11-18
+ultima_revision: 2026-11-20
 depende_de: [ms4-inventory]
 publica: []
 consume: []
@@ -15,7 +15,7 @@ reglas: [RN-01, RN-05, RF-10, WI-04, WI-05]
 
 ## Estado y alcance
 
-**IMPLEMENTACIÓN PARCIAL.** `POST /recepciones` está implementado y aprobó 3/3 integraciones HTTP con PostgreSQL real, incluida la separación entre tenants. `GET /lotes?porVencer=` y el descuento FEFO siguen sin implementar.
+**IMPLEMENTADO EN CÓDIGO.** `POST /recepciones` registra la recepción atómica con validaciones y aprobó 3/3 integraciones HTTP con PostgreSQL real, incluido aislamiento entre tenants. `GET /lotes?porVencer=&sucursal_id=` consulta lotes disponibles del tenant y el consumidor de `sale.completed` descuenta por FEFO. Consulta y descuento FEFO con PostgreSQL/Kafka reales quedan [NO VERIFICADOS].
 
 El alcance reutiliza `Lote.Id`, `ProductoId`, `SucursalId`, `FechaVencimiento`, `Cantidad`, `Ubicacion` y `TenantId`. S3-014 agregó `SucursalId` obligatorio y su migración porque el stock se administra por sucursal. No se agrega `FechaRecepcion`: el contrato no la requiere y el modelo actual no la tiene.
 
@@ -62,7 +62,19 @@ HTTP 201:
 }
 ```
 
-`id` lo genera el servidor. `tenantId` no se expone. La implementación futura debe guardar en una sola transacción el lote, el incremento de `Stock.CantidadActual` y un `MovimientoStock` positivo de tipo `RECEPCION`; ante cualquier fallo no queda mutación parcial.
+`id` lo genera el servidor. `tenantId` no se expone. La implementación guarda en una sola transacción el lote, el incremento de `Stock.CantidadActual` y un `MovimientoStock` positivo de tipo `RECEPCION`; ante cualquier fallo no queda mutación parcial.
+
+## Descuento FEFO al vender
+
+Al consumir `sale.completed`, `StockRepository` selecciona lotes con cantidad disponible del mismo tenant, producto y sucursal. El orden estable es `FechaVencimiento ASC`, luego `Id ASC`; una venta agota el lote más próximo antes de descontar el siguiente. `SaleEventProcessor` persiste los cambios de lotes y stock agregado junto con movimientos y `EventId` mediante un único `SaveChanges`, por lo que un fallo intermedio no deja el primer lote descontado.
+
+La prueba local con dos lotes de 5 unidades y una venta de 8 deja el lote temprano en 0, el tardío en 2 y el stock agregado en 2. La integración FEFO con Kafka y PostgreSQL reales queda [NO VERIFICADA].
+
+### Lotes insuficientes
+
+Si el stock agregado no alcanza o la suma de `Lote.Cantidad` disponible es menor que la cantidad vendida, el evento se clasifica como `TransientFailure`. El consumidor no confirma el offset para permitir recuperación después de una recepción y registra un warning con producto, sucursal, cantidad solicitada y `EventId`. No se persisten descuentos parciales, movimientos ni el registro de idempotencia.
+
+La prueba dirigida con stock agregado 10, lotes por 5 y solicitud de 6 conserva el stock y ambos lotes sin cambios. El evento no se envía a `sale.completed.error`, porque la falta de lotes es recuperable.
 
 ### Errores
 
@@ -108,22 +120,22 @@ HTTP 200; una consulta sin resultados devuelve `[]`:
 ]
 ```
 
-Parámetros inválidos o sucursal inexistente/inactiva/ajena devuelven 400; autenticación y roles usan 401/403. La respuesta nunca incluye lotes agotados, vencidos, de otro tenant o de otra sucursal.
+Parámetros inválidos devuelven 400; sucursal inexistente, inactiva o ajena devuelve 404; autenticación y roles usan 401/403. La respuesta nunca incluye lotes agotados, vencidos, de otro tenant o de otra sucursal.
 
-## Flujo directo previsto
+## Flujos directos
 
 ```text
-AdminInventario → api/client → RecepcionesController → servicio de inventario → WarehouseDbContext
+POST /recepciones → RecepcionesController → RecepcionValidator → RecepcionService → WarehouseDbContext
+GET /lotes → LotesController → RecepcionValidator/LoteService → WarehouseDbContext
 ```
 
 No se agregan capas ni repositorios alternativos. Controller valida identidad/forma; servicio aplica reglas y transacción; `WarehouseDbContext` persiste `Lote`, `Stock` y `MovimientoStock`.
 
 ## Fuera de alcance de S3-002
 
-- Implementar los endpoints, DTOs, validadores, migración o pantalla.
+- Pantalla frontend de recepciones y lotes.
 - Mermas, transferencias, conteos y capacidad de neveras.
 - Publicar `stock.alert`, `expiry.alert`, `stock.updated` u otro evento Kafka.
-- Descontar lotes por FEFO al vender; se implementará y probará en tareas posteriores.
 - Idempotencia de recepciones o integración con proveedores/órdenes de compra.
 
 ## Conexiones
@@ -135,13 +147,18 @@ No se agregan capas ni repositorios alternativos. Controller valida identidad/fo
 ## Fuentes
 
 - `src/WarehouseInventoryService/Controllers/RecepcionesController.cs`
+- `src/WarehouseInventoryService/Controllers/LotesController.cs`
 - `src/WarehouseInventoryService/Services/RecepcionService.cs`
 - `src/WarehouseInventoryService/Services/RecepcionValidator.cs`
 - `tests/GlobalMart.IntegrationTests/RecepcionesPostgresIntegrationTests.cs`
 - `docs/qa/recepciones-postgresql/reporte.md`
+- `src/WarehouseInventoryService/Services/LoteService.cs`
 - `src/WarehouseInventoryService/Models/Lote.cs`
 - `src/WarehouseInventoryService/Models/Stock.cs`
 - `src/WarehouseInventoryService/Models/MovimientoStock.cs`
+- `src/WarehouseInventoryService/Repositories/StockRepository.cs`
 - `src/WarehouseInventoryService/Data/Migrations/20260913033948_InitialCreate_Warehouse.cs`
 - `src/WarehouseInventoryService/Data/Migrations/20261118181528_AddSucursalToLote.cs`
+- `tests/GlobalMart.Tests/MS4_Warehouse/SaleEventProcessor_MovimientoStockTests.cs`
+- `tests/GlobalMart.Tests/MS4_Warehouse/LotesController_Tests.cs`
 - `tareas/plan_sprint3.xlsx` (S3-002)

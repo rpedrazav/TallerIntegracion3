@@ -30,8 +30,34 @@ public class StockRepository : IStockRepository
             return null;
         }
 
+        var lotes = await _context.Lotes
+            .Where(l => l.ProductoId == productoId
+                     && l.SucursalId == sucursalId
+                     && l.TenantId == tenantId
+                     && l.Cantidad > 0)
+            .OrderBy(l => l.FechaVencimiento)
+            .ThenBy(l => l.Id)
+            .ToListAsync();
+
+        if (lotes.Sum(l => l.Cantidad) < cantidad)
+        {
+            return null;
+        }
+
+        var restante = cantidad;
+        foreach (var lote in lotes)
+        {
+            var descuento = Math.Min(lote.Cantidad, restante);
+            lote.Cantidad -= descuento;
+            restante -= descuento;
+
+            if (restante == 0)
+            {
+                break;
+            }
+        }
+
         stock.CantidadActual -= cantidad;
         return stock;
     }
-
 }

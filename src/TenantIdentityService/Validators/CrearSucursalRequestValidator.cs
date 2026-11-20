@@ -9,19 +9,16 @@ namespace TenantIdentityService.Validators;
 /// MS-1 no usa AddFluentValidationAutoValidation(), por eso el controller
 /// invoca explícitamente ValidateAsync, igual que en AuthController.
 /// </summary>
-public class CrearSucursalRequestValidator : AbstractValidator<CrearSucursalRequest>
+public abstract class SucursalNombreZonaRequestValidator<T> : AbstractValidator<T>
+    where T : SucursalNombreZonaRequest
 {
-    public CrearSucursalRequestValidator()
+    protected SucursalNombreZonaRequestValidator()
     {
         RuleFor(x => x.Nombre)
             .NotEmpty()
                 .WithMessage("El nombre de la sucursal es obligatorio.")
             .MaximumLength(200)
                 .WithMessage("El nombre no puede superar los 200 caracteres.");
-
-        RuleFor(x => x.Direccion)
-            .NotEmpty()
-                .WithMessage("La dirección de la sucursal es obligatoria.");
 
         // Zona horaria opcional, pero si viene informada debe ser una zona IANA real.
         // Vacío o null significa "heredar la del tenant".
@@ -78,5 +75,15 @@ public class CrearSucursalRequestValidator : AbstractValidator<CrearSucursalRequ
         {
             return false;
         }
+    }
+}
+
+public class CrearSucursalRequestValidator : SucursalNombreZonaRequestValidator<CrearSucursalRequest>
+{
+    public CrearSucursalRequestValidator()
+    {
+        RuleFor(x => x.Direccion)
+            .NotEmpty()
+                .WithMessage("La dirección de la sucursal es obligatoria.");
     }
 }

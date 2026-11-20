@@ -177,11 +177,11 @@ public class DesactivarProductoIntegrationTests : IAsyncLifetime
     [Theory]
     [InlineData(true, false, "CAJERO", HttpStatusCode.Forbidden)]
     [InlineData(false, true, "CAJERO", HttpStatusCode.Forbidden)]
-    [InlineData(true, true, "CAJERO", HttpStatusCode.OK)]
-    [InlineData(false, false, "CAJERO", HttpStatusCode.OK)]
+    [InlineData(true, true, "CAJERO", HttpStatusCode.Forbidden)]
+    [InlineData(false, false, "CAJERO", HttpStatusCode.Forbidden)]
     [InlineData(true, false, "ADMIN", HttpStatusCode.OK)]
     [InlineData(false, true, "ADMIN", HttpStatusCode.OK)]
-    public async Task Put_CambioEstado_SoloAdmin(bool initial, bool requested, string role, HttpStatusCode expected)
+    public async Task Put_SoloAdmin(bool initial, bool requested, string role, HttpStatusCode expected)
     {
         await using var db = Context(_tenantA);
         var product = await db.Productos.SingleAsync(p => p.Id == _productA);

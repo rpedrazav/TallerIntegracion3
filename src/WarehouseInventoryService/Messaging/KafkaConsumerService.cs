@@ -72,7 +72,7 @@ public sealed class KafkaConsumerService : IHostedService, IDisposable
         {
             while (!cancellationToken.IsCancellationRequested)
             {
-                ConsumeResult<string, string>? result;
+                ConsumeResult<string, string> result;
                 try
                 {
                     result = _consumer.Consume(cancellationToken);
@@ -100,14 +100,11 @@ public sealed class KafkaConsumerService : IHostedService, IDisposable
                         SendToErrorTopic(result, processingResult);
                     }
 
-                    if (processingResult.CommitOffset)
-                    {
-                        _consumer.Commit(result);
-                        _logger.LogInformation(
-                            "Offset {Offset} confirmado tras resultado {Status}",
-                            result.Offset,
-                            processingResult.Status);
-                    }
+                    _consumer.Commit(result);
+                    _logger.LogInformation(
+                        "Offset {Offset} confirmado tras resultado {Status}",
+                        result.Offset,
+                        processingResult.Status);
                 }
                 catch (Exception ex)
                 {

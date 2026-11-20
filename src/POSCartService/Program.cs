@@ -120,8 +120,17 @@ builder.Services.AddHttpClient(TaxClient.HttpClientName, client =>
     client.DefaultRequestHeaders.Add("Accept", "application/json");
 });
 
+builder.Services.AddHttpClient(SucursalClient.HttpClientName, client =>
+{
+    var baseUrl = builder.Configuration["Services:IdentityUrl"] ?? "http://localhost:5124";
+    client.BaseAddress = new Uri(baseUrl.TrimEnd('/') + "/");
+    client.Timeout = TimeSpan.FromSeconds(5);
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+});
+
 builder.Services.AddScoped<ICatalogClient, CatalogClient>();
 builder.Services.AddScoped<ITaxClient, TaxClient>();
+builder.Services.AddScoped<ISucursalClient, SucursalClient>();
 
 
 // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ 4. Controllers + Swagger Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬

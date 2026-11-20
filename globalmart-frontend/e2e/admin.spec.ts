@@ -48,6 +48,10 @@ test('CAJERO activo con ADMIN asignado no ve ni abre rutas administrativas', asy
   await expect(page.getByRole('alert')).toContainText('Acceso denegado');
   await expect(page.getByRole('heading', { name: 'GlobalMart Admin' })).toHaveCount(0);
 
+  await page.goto('/?component=app#/admin/productos');
+  await expect(page.getByRole('alert')).toContainText('Acceso denegado');
+  await expect(page.getByRole('heading', { name: 'CatÃ¡logo de Productos' })).toHaveCount(0);
+
   await context.close();
 });
 

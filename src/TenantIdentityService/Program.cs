@@ -95,7 +95,6 @@ builder.Services.AddHealthChecks();
 
 // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ 6. Servicios de AutenticaciÃƒÂ³n (Tarea Rodrigo W2) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 // Scoped: una instancia por request HTTP (correcto para servicios con DbContext)
-builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
 builder.Services.AddScoped<ITenantRepository, TenantRepository>();
 builder.Services.AddScoped<ISucursalRepository, SucursalRepository>();

@@ -148,6 +148,103 @@ public class SaleEventProcessor_MovimientoStockTests : IDisposable
     }
 
     [Fact]
+    public void ProcesarEvento_LotesInsuficientes_RegistraIncidenciaSinDescuentos()
+    {
+        _context.CurrentTenantId = TenantId;
+        _context.Stocks.Add(new Stock
+        {
+            ProductoId = ProductoId,
+            SucursalId = SucursalId,
+            TenantId = TenantId,
+            CantidadActual = 10
+        });
+        _context.Lotes.AddRange(
+            new Lote
+            {
+                ProductoId = ProductoId,
+                SucursalId = SucursalId,
+                TenantId = TenantId,
+                FechaVencimiento = new DateOnly(2027, 1, 15),
+                Cantidad = 2
+            },
+            new Lote
+            {
+                ProductoId = ProductoId,
+                SucursalId = SucursalId,
+                TenantId = TenantId,
+                FechaVencimiento = new DateOnly(2027, 6, 15),
+                Cantidad = 3
+            });
+        _context.SaveChanges();
+        var processor = new SaleEventProcessor(
+            _context,
+            new StockRepository(_context),
+            _loggerMock.Object);
+
+        var resultado = processor.ProcesarEvento(CrearPayload(EventId, ProductoId, cantidad: 6));
+
+        resultado.Status.Should().Be(SaleEventProcessingStatus.TransientFailure);
+        resultado.Retry.Should().BeTrue();
+        resultado.Error.Should().Contain("lotes insuficientes");
+        _context.Stocks.Single().CantidadActual.Should().Be(10);
+        _context.Lotes.OrderBy(l => l.FechaVencimiento).Select(l => l.Cantidad).Should().Equal(2, 3);
+        _context.Movimientos.Should().BeEmpty();
+        _context.EventosKafkaProcesados.Should().BeEmpty();
+        _loggerMock.Verify(logger => logger.Log(
+                LogLevel.Warning,
+                It.IsAny<EventId>(),
+                It.Is<It.IsAnyType>((value, _) =>
+                    value.ToString()!.Contains("lotes insuficientes") &&
+                    value.ToString()!.Contains(EventId.ToString())),
+                It.IsAny<Exception?>(),
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public void ProcesarEvento_ConDosLotes_DescuentaPrimeroElQueVenceAntes()
+    {
+        var loteTemprano = new Lote
+        {
+            ProductoId = ProductoId,
+            SucursalId = SucursalId,
+            TenantId = TenantId,
+            FechaVencimiento = new DateOnly(2027, 1, 15),
+            Cantidad = 5
+        };
+        var loteTardio = new Lote
+        {
+            ProductoId = ProductoId,
+            SucursalId = SucursalId,
+            TenantId = TenantId,
+            FechaVencimiento = new DateOnly(2027, 6, 15),
+            Cantidad = 5
+        };
+        _context.CurrentTenantId = TenantId;
+        _context.Stocks.Add(new Stock
+        {
+            ProductoId = ProductoId,
+            SucursalId = SucursalId,
+            TenantId = TenantId,
+            CantidadActual = 10
+        });
+        _context.Lotes.AddRange(loteTardio, loteTemprano);
+        _context.SaveChanges();
+        var processor = new SaleEventProcessor(
+            _context,
+            new StockRepository(_context),
+            Mock.Of<ILogger<SaleEventProcessor>>());
+
+        var resultado = processor.ProcesarEvento(CrearPayload(EventId, ProductoId, cantidad: 8));
+
+        resultado.Status.Should().Be(SaleEventProcessingStatus.Processed);
+        _context.Lotes.Single(l => l.Id == loteTemprano.Id).Cantidad.Should().Be(0);
+        _context.Lotes.Single(l => l.Id == loteTardio.Id).Cantidad.Should().Be(2);
+        _context.Stocks.Single().CantidadActual.Should().Be(2);
+        _context.EventosKafkaProcesados.Should().ContainSingle(e => e.EventId == EventId);
+    }
+
+    [Fact]
     public void ProcesarEvento_MultiplesItems_RegistraTodosLosMovimientos()
     {
         // Arrange
@@ -194,6 +291,23 @@ public class SaleEventProcessor_MovimientoStockTests : IDisposable
             seed.Stocks.AddRange(
                 new Stock { ProductoId = ProductoId, SucursalId = SucursalId, TenantId = TenantId, CantidadActual = 10 },
                 new Stock { ProductoId = producto2, SucursalId = SucursalId, TenantId = TenantId, CantidadActual = 10 });
+            seed.Lotes.AddRange(
+                new Lote
+                {
+                    ProductoId = ProductoId,
+                    SucursalId = SucursalId,
+                    TenantId = TenantId,
+                    FechaVencimiento = new DateOnly(2027, 1, 15),
+                    Cantidad = 10
+                },
+                new Lote
+                {
+                    ProductoId = producto2,
+                    SucursalId = SucursalId,
+                    TenantId = TenantId,
+                    FechaVencimiento = new DateOnly(2027, 1, 15),
+                    Cantidad = 10
+                });
             seed.SaveChanges();
         }
 
@@ -235,6 +349,7 @@ public class SaleEventProcessor_MovimientoStockTests : IDisposable
         act.Should().Throw<InvalidOperationException>();
         using var verificationContext = new WarehouseDbContext(options) { CurrentTenantId = TenantId };
         verificationContext.Stocks.Single(s => s.ProductoId == ProductoId).CantidadActual.Should().Be(10);
+        verificationContext.Lotes.Single(l => l.ProductoId == ProductoId).Cantidad.Should().Be(10);
         verificationContext.Movimientos.Should().BeEmpty();
         verificationContext.EventosKafkaProcesados.Should().BeEmpty();
     }

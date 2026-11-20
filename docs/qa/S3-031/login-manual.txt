@@ -1,0 +1,23 @@
+1. Login admin@demo.cl -> 200
+   claims: {'tenant_id': 'aaaaaaaa-0000-0000-0000-000000000001', 'active_role': 'ADMIN', 'sucursal_id': '', 'iss': 'GlobalMartOS', 'aud': 'GlobalMartOS_Clients'} | expiresAt: 2026-11-21T01:20:59.9152979Z | campos: ['expiresAt', 'token', 'usuario']
+2. Login cajero@demo.cl -> 200
+   claims: {'tenant_id': 'aaaaaaaa-0000-0000-0000-000000000001', 'active_role': 'CAJERO', 'sucursal_id': '', 'iss': 'GlobalMartOS', 'aud': 'GlobalMartOS_Clients'} | expiresAt: 2026-11-21T01:21:00.302726Z | campos: ['expiresAt', 'token', 'usuario']
+3. Login password incorrecta -> 401 | cuerpo: {"message":"Credenciales incorrectas."}
+4. Login email inexistente -> 401 | cuerpo: {"message":"Credenciales incorrectas."}
+5. Login body inválido (email vacío) -> 400
+6. GET /users (admin) -> 200
+   usuarios: 3
+7. GET /users/roles (admin) -> 200
+   roles: ['ADMIN', 'CAJERO', 'REPONEDOR']
+8. GET /sucursales (admin) -> 200
+   sucursales: 0
+9. GET /users (cajero) -> 403
+10. GET /users sin token -> 401
+11. POST /users (s3031.1795195261@demo.cl, rol CAJERO) -> 201
+   roles: ['CAJERO'] | tenantId propio: True
+12. Login usuario nuevo -> 200
+   claims: {'tenant_id': 'aaaaaaaa-0000-0000-0000-000000000001', 'active_role': 'CAJERO', 'sucursal_id': '', 'iss': 'GlobalMartOS', 'aud': 'GlobalMartOS_Clients'} | expiresAt: 2026-11-21T01:21:02.1042354Z | campos: ['expiresAt', 'token', 'usuario']
+13. POST /users email duplicado -> 409
+14. PUT /users/{id} nombre -> 200 | {"id":"d43ef82b-03fa-41ec-abda-8612517df478","tenantId":"aaaaaaaa-0000-0000-0000-000000000001","email":"s3031.1795195261@demo.cl","sucursalId":null}
+15. DELETE /users/{id} (desactivar) -> 204
+16. Login usuario desactivado -> 401 | cuerpo: {"message":"Credenciales incorrectas."}

@@ -4,6 +4,7 @@ using FluentValidation.Results;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Moq;
 using TenantIdentityService.Controllers;
@@ -98,6 +99,32 @@ public class AuthController_LoginTests
             .ReturnsAsync(new ValidationResult());
     }
 
+    [Fact]
+    public async Task Login_SolicitudInvalida_Retorna400YNoConsultaCredenciales()
+    {
+        using var services = new ServiceCollection().AddControllers().Services.BuildServiceProvider();
+        _controller.HttpContext.RequestServices = services;
+        var request = new LoginRequest { Email = "invalido", Password = "", TenantId = Guid.Empty };
+        _validatorMock
+            .Setup(v => v.ValidateAsync(request, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ValidationResult([
+                new ValidationFailure(nameof(LoginRequest.Email), "El email no tiene un formato válido.")
+            ]));
+
+        var result = await _controller.Login(request, CancellationToken.None);
+
+        var badRequest = result.Should().BeOfType<BadRequestObjectResult>().Subject;
+        badRequest.StatusCode.Should().Be(StatusCodes.Status400BadRequest);
+        var problem = badRequest.Value.Should().BeOfType<ValidationProblemDetails>().Subject;
+        problem.Status.Should().Be(StatusCodes.Status400BadRequest);
+        problem.Errors.Should().ContainKey(nameof(LoginRequest.Email));
+        problem.Errors[nameof(LoginRequest.Email)].Should().Contain("El email no tiene un formato válido.");
+        _authServiceMock.Verify(
+            service => service.ValidateCredentialsAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Guid>()),
+            Times.Never);
+        _jwtServiceMock.Verify(service => service.GenerateToken(It.IsAny<Usuario>()), Times.Never);
+    }
+
     // ════════════════════════════════════════════════════════════════════════
     //  TI3-206: Login exitoso → 200 + JWT con user_id
     // ════════════════════════════════════════════════════════════════════════
@@ -127,7 +154,9 @@ public class AuthController_LoginTests
             .Returns(fakeJwt);
 
         // Act
+        var antes = DateTime.UtcNow;
         var result = await _controller.Login(request, CancellationToken.None);
+        var despues = DateTime.UtcNow;
 
         // Assert — HTTP 200
         var okResult = result.Should().BeOfType<OkObjectResult>().Subject;
@@ -142,10 +171,14 @@ public class AuthController_LoginTests
         // Assert — El body contiene el user_id correcto
         response.Usuario.Should().NotBeNull();
         response.Usuario.Id.Should().Be(UserId);
+        response.Usuario.Nombre.Should().Be("Cajero Test");
+        response.Usuario.Email.Should().Be(request.Email);
+        response.ExpiresAt.Should().BeOnOrAfter(antes.AddHours(8));
+        response.ExpiresAt.Should().BeOnOrBefore(despues.AddHours(8));
 
         // Assert — El active_role es coherente
         response.Usuario.ActiveRole.Should().Be("CAJERO");
-        response.Usuario.Roles.Should().Contain("CAJERO");
+        response.Usuario.Roles.Should().ContainSingle().Which.Should().Be("CAJERO");
     }
 
     [Fact]
@@ -274,6 +307,30 @@ public class AuthController_LoginTests
 
         messageJson.Should().Contain("Credenciales incorrectas");
         messageJson.Should().NotContainEquivalentOf("no existe");
+    }
+
+    [Fact]
+    public async Task Login_UsuarioInactivo_Retorna401SinFiltrarEstado()
+    {
+        var request = new LoginRequest
+        {
+            Email = "inactivo@globalmart.cl",
+            Password = "password123",
+            TenantId = TenantA
+        };
+        SetupValidacionExitosa();
+        _authServiceMock
+            .Setup(service => service.ValidateCredentialsAsync(request.Email, request.Password, request.TenantId))
+            .ReturnsAsync((Usuario?)null);
+
+        var result = await _controller.Login(request, CancellationToken.None);
+
+        var unauthorized = result.Should().BeOfType<UnauthorizedObjectResult>().Subject;
+        var body = System.Text.Json.JsonSerializer.Serialize(unauthorized.Value);
+        body.Should().Contain("Credenciales incorrectas");
+        body.Should().NotContainEquivalentOf("inactivo");
+        body.Should().NotContainEquivalentOf("desactivado");
+        _jwtServiceMock.Verify(service => service.GenerateToken(It.IsAny<Usuario>()), Times.Never);
     }
 
     // ════════════════════════════════════════════════════════════════════════
