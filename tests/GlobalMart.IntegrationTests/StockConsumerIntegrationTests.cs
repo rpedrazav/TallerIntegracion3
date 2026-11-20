@@ -28,6 +28,70 @@ public class StockConsumerIntegrationTests : IClassFixture<Ms4WebApplicationFact
     }
 
     [Fact]
+    [Trait("Feature", "FEFO")]
+    public async Task Fefo_DescuentaPrimeroElLoteQueVenceAntes()
+    {
+        var tenantId = Guid.NewGuid();
+        var sucursalId = Guid.NewGuid();
+        var productId = Guid.NewGuid();
+        var eventId = Guid.NewGuid();
+        var loteTempranoId = Guid.NewGuid();
+        var loteTardioId = Guid.NewGuid();
+
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<WarehouseDbContext>();
+            db.CurrentTenantId = tenantId;
+            db.Stocks.Add(new Stock
+            {
+                ProductoId = productId,
+                SucursalId = sucursalId,
+                TenantId = tenantId,
+                CantidadActual = 10
+            });
+            db.Lotes.AddRange(
+                new Lote
+                {
+                    Id = loteTardioId,
+                    ProductoId = productId,
+                    SucursalId = sucursalId,
+                    TenantId = tenantId,
+                    FechaVencimiento = DateOnly.FromDateTime(DateTime.UtcNow.AddMonths(6)),
+                    Cantidad = 5
+                },
+                new Lote
+                {
+                    Id = loteTempranoId,
+                    ProductoId = productId,
+                    SucursalId = sucursalId,
+                    TenantId = tenantId,
+                    FechaVencimiento = DateOnly.FromDateTime(DateTime.UtcNow.AddMonths(1)),
+                    Cantidad = 5
+                });
+            await db.SaveChangesAsync();
+        }
+
+        var payload = JsonSerializer.Serialize(new
+        {
+            event_id = eventId,
+            venta_id = Guid.NewGuid(),
+            tenant_id = tenantId,
+            sucursal_id = sucursalId,
+            items = new[] { new { producto_id = productId, cantidad = 8m } }
+        });
+
+        await PublishAsync(tenantId, payload);
+        await WaitUntilAsync(() => EventWasProcessed(eventId));
+
+        using var verificationScope = _factory.Services.CreateScope();
+        var verification = verificationScope.ServiceProvider.GetRequiredService<WarehouseDbContext>();
+        verification.CurrentTenantId = tenantId;
+        Assert.Equal(2m, await verification.Stocks.Select(s => s.CantidadActual).SingleAsync());
+        Assert.Equal(0m, await verification.Lotes.Where(l => l.Id == loteTempranoId).Select(l => l.Cantidad).SingleAsync());
+        Assert.Equal(2m, await verification.Lotes.Where(l => l.Id == loteTardioId).Select(l => l.Cantidad).SingleAsync());
+    }
+
+    [Fact]
     public async Task ProcesarSaleCompleted_DescuentaStock_VerificablePorApi()
     {
         var tenantId = Guid.NewGuid();
@@ -140,6 +204,7 @@ public class StockConsumerIntegrationTests : IClassFixture<Ms4WebApplicationFact
 
     [Fact]
     [Trait("Plan", "S2-100")]
+    [Trait("Feature", "FEFO")]
     public async Task EventoDuplicado_DescuentaStockUnaSolaVez()
     {
         var tenantId = Guid.NewGuid();
@@ -187,12 +252,14 @@ public class StockConsumerIntegrationTests : IClassFixture<Ms4WebApplicationFact
         var verification = verificationScope.ServiceProvider.GetRequiredService<WarehouseDbContext>();
         verification.CurrentTenantId = tenantId;
         Assert.Equal(8m, await verification.Stocks.Where(s => s.ProductoId == productId).Select(s => s.CantidadActual).SingleAsync());
+        Assert.Equal(8m, await verification.Lotes.Where(l => l.ProductoId == productId).Select(l => l.Cantidad).SingleAsync());
         Assert.Equal(1, await verification.Movimientos.CountAsync(m => m.ProductoId == productId));
         Assert.Equal(1, await verification.EventosKafkaProcesados.CountAsync(e => e.EventId == eventId));
     }
 
     [Fact]
     [Trait("Plan", "S2-100")]
+    [Trait("Feature", "FEFO")]
     public async Task FalloEnSegundoItem_NoDejaDescuentoParcialYSeRecupera()
     {
         var tenantId = Guid.NewGuid();
@@ -207,7 +274,7 @@ public class StockConsumerIntegrationTests : IClassFixture<Ms4WebApplicationFact
             db.CurrentTenantId = tenantId;
             db.Stocks.AddRange(
                 new Stock { ProductoId = productId, SucursalId = sucursalId, TenantId = tenantId, CantidadActual = 10 },
-                new Stock { ProductoId = productId2, SucursalId = sucursalId, TenantId = tenantId, CantidadActual = 1 });
+                new Stock { ProductoId = productId2, SucursalId = sucursalId, TenantId = tenantId, CantidadActual = 5 });
             db.Lotes.AddRange(
                 new Lote
                 {
@@ -249,12 +316,12 @@ public class StockConsumerIntegrationTests : IClassFixture<Ms4WebApplicationFact
             var db = failedScope.ServiceProvider.GetRequiredService<WarehouseDbContext>();
             db.CurrentTenantId = tenantId;
             Assert.Equal(10m, await db.Stocks.Where(s => s.ProductoId == productId).Select(s => s.CantidadActual).SingleAsync());
-            Assert.Equal(1m, await db.Stocks.Where(s => s.ProductoId == productId2).Select(s => s.CantidadActual).SingleAsync());
+            Assert.Equal(5m, await db.Stocks.Where(s => s.ProductoId == productId2).Select(s => s.CantidadActual).SingleAsync());
+            Assert.Equal(10m, await db.Lotes.Where(l => l.ProductoId == productId).Select(l => l.Cantidad).SingleAsync());
+            Assert.Equal(1m, await db.Lotes.Where(l => l.ProductoId == productId2).Select(l => l.Cantidad).SingleAsync());
             Assert.Empty(await db.Movimientos.ToListAsync());
             Assert.False(await db.EventosKafkaProcesados.AnyAsync(e => e.EventId == eventId));
 
-            var secondStock = await db.Stocks.SingleAsync(s => s.ProductoId == productId2);
-            secondStock.CantidadActual = 5;
             var secondLot = await db.Lotes.SingleAsync(l => l.ProductoId == productId2);
             secondLot.Cantidad = 5;
             await db.SaveChangesAsync();
@@ -267,6 +334,8 @@ public class StockConsumerIntegrationTests : IClassFixture<Ms4WebApplicationFact
         recovered.CurrentTenantId = tenantId;
         Assert.Equal(8m, await recovered.Stocks.Where(s => s.ProductoId == productId).Select(s => s.CantidadActual).SingleAsync());
         Assert.Equal(2m, await recovered.Stocks.Where(s => s.ProductoId == productId2).Select(s => s.CantidadActual).SingleAsync());
+        Assert.Equal(8m, await recovered.Lotes.Where(l => l.ProductoId == productId).Select(l => l.Cantidad).SingleAsync());
+        Assert.Equal(2m, await recovered.Lotes.Where(l => l.ProductoId == productId2).Select(l => l.Cantidad).SingleAsync());
         Assert.Equal(2, await recovered.Movimientos.CountAsync());
         Assert.Equal(1, await recovered.EventosKafkaProcesados.CountAsync(e => e.EventId == eventId));
     }
