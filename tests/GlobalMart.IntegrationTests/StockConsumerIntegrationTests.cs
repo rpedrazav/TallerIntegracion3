@@ -158,6 +158,14 @@ public class StockConsumerIntegrationTests : IClassFixture<Ms4WebApplicationFact
                 TenantId = tenantId,
                 CantidadActual = 10
             });
+            db.Lotes.Add(new Lote
+            {
+                ProductoId = productId,
+                SucursalId = sucursalId,
+                TenantId = tenantId,
+                FechaVencimiento = DateOnly.FromDateTime(DateTime.UtcNow.AddYears(1)),
+                Cantidad = 10
+            });
             await db.SaveChangesAsync();
         }
 
@@ -200,6 +208,23 @@ public class StockConsumerIntegrationTests : IClassFixture<Ms4WebApplicationFact
             db.Stocks.AddRange(
                 new Stock { ProductoId = productId, SucursalId = sucursalId, TenantId = tenantId, CantidadActual = 10 },
                 new Stock { ProductoId = productId2, SucursalId = sucursalId, TenantId = tenantId, CantidadActual = 1 });
+            db.Lotes.AddRange(
+                new Lote
+                {
+                    ProductoId = productId,
+                    SucursalId = sucursalId,
+                    TenantId = tenantId,
+                    FechaVencimiento = DateOnly.FromDateTime(DateTime.UtcNow.AddYears(1)),
+                    Cantidad = 10
+                },
+                new Lote
+                {
+                    ProductoId = productId2,
+                    SucursalId = sucursalId,
+                    TenantId = tenantId,
+                    FechaVencimiento = DateOnly.FromDateTime(DateTime.UtcNow.AddYears(1)),
+                    Cantidad = 1
+                });
             await db.SaveChangesAsync();
         }
 
@@ -230,6 +255,8 @@ public class StockConsumerIntegrationTests : IClassFixture<Ms4WebApplicationFact
 
             var secondStock = await db.Stocks.SingleAsync(s => s.ProductoId == productId2);
             secondStock.CantidadActual = 5;
+            var secondLot = await db.Lotes.SingleAsync(l => l.ProductoId == productId2);
+            secondLot.Cantidad = 5;
             await db.SaveChangesAsync();
         }
 

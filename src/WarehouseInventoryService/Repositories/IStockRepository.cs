@@ -13,9 +13,8 @@ public interface IStockRepository
     Task<Stock?> GetByProducto(Guid productoId, Guid sucursalId, Guid tenantId);
 
     /// <summary>
-    /// Prepara el descuento de stock para que el consumidor persista el evento completo.
-    /// Retorna null si no existe stock o la cantidad disponible es insuficiente.
+    /// Prepara el descuento FEFO de lotes y stock agregado para que el consumidor persista el evento completo.
+    /// Retorna null si el stock o los lotes disponibles son insuficientes.
     /// </summary>
     Task<Stock?> Descontar(Guid productoId, decimal cantidad, Guid tenantId, Guid sucursalId);
-
 }
