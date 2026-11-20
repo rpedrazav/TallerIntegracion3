@@ -5,7 +5,7 @@ titulo: Autenticación y Roles en el Frontend
 estado: parcial
 fuentes: [globalmart-frontend/src/hooks/useAuth.ts, globalmart-frontend/src/pages/Login.tsx, globalmart-frontend/src/api/client.ts, globalmart-frontend/src/App.tsx, globalmart-frontend/src/components/AppLayout.tsx, globalmart-frontend/src/store/useTenantStore.ts, globalmart-frontend/src/pages/AdminRoles.tsx, globalmart-frontend/src/components/admin/CrearUsuarioModal.tsx, globalmart-frontend/tests/admin-access.test.cjs, globalmart-frontend/e2e/admin.spec.ts]
 verificado_contra_codigo: true
-ultima_revision: 2026-11-11
+ultima_revision: 2026-11-19
 depende_de: [estructura, rbac-multirol, ms1-identity]
 publica: []
 consume: []
@@ -42,7 +42,7 @@ El JWT se guarda mediante `window.api.setToken` en electron-store. Login tambié
 
 ## Protección de rutas
 
-`App.tsx` declara `AdminRoute` como guard común de `/admin` y todas sus rutas hijas (usuarios, roles, inventario, sucursales, productos y configuración). Sin sesión redirige a `/login`; con sesión cuyo `active_role` no sea `ADMIN` o `SUPER_ADMIN`, muestra `Acceso denegado` sin montar `AdminLayout`. `AppLayout` usa el mismo `esAdmin` para ocultar el enlace de Administración. Las pruebas de TI3-732 cubren ADMIN activo, el caso multirol con CAJERO activo, acceso directo a `/admin` y `/admin/usuarios`, y ausencia de sesión.
+`App.tsx` declara `AdminRoute` como guard común de `/admin` y todas sus rutas hijas (usuarios, roles, inventario, sucursales, productos y configuración). Sin sesión redirige a `/login`; con sesión cuyo `active_role` no sea `ADMIN` o `SUPER_ADMIN`, muestra `Acceso denegado` sin montar `AdminLayout`. `AppLayout` usa el mismo `esAdmin` para ocultar el enlace de Administración. TI3-736 amplía la prueba de rol activo con acceso directo a `/admin/productos`: el caso CAJERO multirol informa `Acceso denegado` y no monta `ProductosPage`. La regresión administrativa combinada aprobó 34/34 casos con resumen final y exit code 0; ocho corresponden a acceso Admin.
 
 Este control mantiene coherente la interfaz, pero no sustituye la autorización del backend: los endpoints administrativos conservan sus atributos y políticas de autorización independientes.
 

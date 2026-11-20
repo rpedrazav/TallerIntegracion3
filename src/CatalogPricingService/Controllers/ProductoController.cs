@@ -204,6 +204,7 @@ namespace CatalogPricingService.Controllers
         /// <response code="409">Si ya existe un producto con el mismo código de barras (SKU duplicado).</response>
 
         [HttpPost]
+        [Authorize(Roles = "ADMIN")]
         public async Task<IActionResult> Create([FromBody] JsonElement rawDto)
         {
             var tenantId = GetTenantIdFromToken();
@@ -256,6 +257,7 @@ namespace CatalogPricingService.Controllers
         /// <response code="404">Producto no encontrado.</response>
 
         [HttpPut("{id}")]
+        [Authorize(Roles = "ADMIN")]
         public async Task<IActionResult> Update(Guid id, [FromBody] JsonElement rawDto)
         {
             var tenantId = GetTenantIdFromToken();

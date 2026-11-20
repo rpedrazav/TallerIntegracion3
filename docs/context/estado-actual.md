@@ -5,13 +5,17 @@ titulo: Estado Real de Implementación — GlobalMart OS
 estado: vigente
 fuentes: [docs/context/_reports/inventario.md, src/, globalmart-frontend/src/api/client.ts, globalmart-frontend/src/store/useTenantStore.ts, globalmart-frontend/src/pages/Admin.tsx, globalmart-frontend/src/pages/AdminRoles.tsx, globalmart-frontend/src/components/admin/UsuariosList.tsx, globalmart-frontend/src/components/admin/EditarUsuarioModal.tsx, globalmart-frontend/src/hardware/simulated-scale-adapter.ts, globalmart-frontend/src/hardware/serial-scale-adapter.ts, globalmart-frontend/src/hardware/scale-adapter-factory.ts, globalmart-frontend/src/hardware/scale-ipc.ts, globalmart-frontend/src/payments/terminal-ipc.ts, globalmart-frontend/src/payments/synchronizeCardPayment.ts, globalmart-frontend/src/preload.ts, globalmart-frontend/e2e/admin-flows.spec.ts, globalmart-frontend/e2e/admin.spec.ts, globalmart-frontend/e2e/weight-cart.spec.ts, globalmart-frontend/tests/admin-access.test.cjs, globalmart-frontend/tests/user-edit.test.cjs, globalmart-frontend/tests/user-deactivation.test.cjs, globalmart-frontend/tests/simulated-scale-adapter.test.cjs, globalmart-frontend/tests/serial-scale-adapter.test.cjs, globalmart-frontend/tests/scale-ipc.test.cjs, globalmart-frontend/tests/terminal-ipc.test.cjs, globalmart-frontend/tests/synchronized-card-payment.test.cjs, git log, docs/context/_reports/preguntas-abiertas.md, tests/GlobalMart.IntegrationTests/CobroSeguroIntegrationTests.cs, docs/qa/S2-035/reporte.md, new-ingresses.yaml]
 verificado_contra_codigo: true
-ultima_revision: 2026-11-18
+ultima_revision: 2026-11-19
 depende_de: []
 publica: []
 consume: []
 reglas: []
 ---
 # Estado Real de Implementación — GlobalMart OS
+
+## TI3-736 / S2-105 — Regresión administrativa (2026-11-19)
+
+[IMPLEMENTADO; INTEGRACIÓN POSTGRESQL NO VERIFICADA] `POST /products` y `PUT /products/{id}` ahora exigen JWT con rol ADMIN en MS-3; CAJERO recibe 403 antes de ejecutar la operación, incluida una edición ordinaria que no cambia `IsActive`. Rutas, DTO, lecturas y aislamiento por tenant permanecen sin cambios. Las pruebas dirigidas comprueban rechazo CAJERO, control positivo ADMIN y conservación del otro tenant, pero no pudieron ejecutarse en este entorno porque no existe PostgreSQL de pruebas disponible ni está configurada `GLOBALMART_TEST_POSTGRES`. Build de MS-3, TypeScript y 20 pruebas Node aprobaron con exit code 0. La regresión Playwright administrativa aprobó 34/34 casos en 2.7 minutos con resumen final y exit code 0: 8 de acceso Admin (incluido `/admin/productos`), 17 de usuarios/configuración y 9 de productos. [Evidencia](../qa/TI3-736/reporte.md).
 
 ## S3-016 — Validar recepciones en MS-4 (2026-11-18)
 
@@ -150,9 +154,9 @@ S2-052 — 2026-10-19: **2/2 pruebas de integración HTTP locales aprobadas** pa
 ### MS-3 · Catalog & Pricing Service [PARCIAL]
 **Implementado:**
 - TI3-643 / S2-012: `GET /products/{id}`, consumido por el POS, solo expone productos propios activos mediante `GetActiveByIdAsync`; productos desactivados o de otro tenant retornan 404. PUT conserva `GetByIdAsync` sin filtro de estado para permitir reactivación ADMIN. Test específico aprobado 1/1 y build de MS-3 aprobado el 2026-10-14 [IMPLEMENTADO].
-- TI3-642 / S2-011: `DELETE /products/{id}` exige ADMIN y tenant del JWT; actualiza únicamente `IsActive=false` con filtro explícito por ID y tenant, preservando físicamente el producto. Retorna 204 sin body, también si ya estaba inactivo (sin nueva escritura), y el mismo 404 para inexistente/otro tenant; sin JWT 401 y sin ADMIN 403. PUT exige ADMIN solo si cambia `IsActive`, manteniendo permitidas las demás ediciones autenticadas. `DesactivarProductoIntegrationTests`: 11/11 casos aprobados con PostgreSQL 16 aislado el 2026-10-14; build de MS-3 aprobado [IMPLEMENTADO].
+- TI3-642 / S2-011: `DELETE /products/{id}` exige ADMIN y tenant del JWT; actualiza únicamente `IsActive=false` con filtro explícito por ID y tenant, preservando físicamente el producto. Retorna 204 sin body, también si ya estaba inactivo (sin nueva escritura), y el mismo 404 para inexistente/otro tenant; sin JWT 401 y sin ADMIN 403. TI3-736 amplía la autorización: todo PUT y POST de productos exige ADMIN. `DesactivarProductoIntegrationTests`: evidencia histórica 11/11 con PostgreSQL 16 aislado el 2026-10-14; regresión TI3-736 pendiente de PostgreSQL local [IMPLEMENTADO; PRUEBA ACTUAL NO VERIFICADA].
 - `ProductosPage` confirma DESACTIVACIÓN, mantiene `axios.delete` y recarga con `fetchDatos()` tras 204; el producto permanece como Inactivo salvo que el filtro solo activos lo oculte. Typecheck aprobado el 2026-10-14 [IMPLEMENTADO].
-- `GET/POST/PUT /products` — CRUD productos [IMPLEMENTADO]
+- `GET /products` exige JWT; `POST /products` y `PUT /products/{id}` exigen JWT + ADMIN — CRUD productos [IMPLEMENTADO]
 - `GET /products/search?q=` — búsqueda full-text con índice trigram `pg_trgm` [IMPLEMENTADO]
 - `GET /products/lookup?barcode=` — lookup por código de barras [IMPLEMENTADO]
 - `GET/POST /categories` — CRUD categorías con jerarquía (parentId) [IMPLEMENTADO]
