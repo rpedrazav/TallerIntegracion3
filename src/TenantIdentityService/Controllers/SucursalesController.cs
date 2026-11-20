@@ -11,7 +11,7 @@ namespace TenantIdentityService.Controllers;
 
 /// <summary>
 /// Expone las sucursales del tenant autenticado.
-/// GET /sucursales, POST /sucursales y PUT /sucursales/{id}.
+/// GET /sucursales, POST /sucursales, PUT y DELETE /sucursales/{id}.
 /// El tenant se obtiene del claim tenant_id del JWT, nunca de la ruta ni del body,
 /// de modo que no se puedan consultar ni crear sucursales de otro tenant.
 /// El aislamiento lo aplica el HasQueryFilter global de TenantDbContext vÃ­a TenantMiddleware.
@@ -40,7 +40,7 @@ public class SucursalesController : ControllerBase
     }
 
     /// <summary>
-    /// Retorna todas las sucursales del tenant del JWT, incluyendo las inactivas.
+    /// Retorna las sucursales activas del tenant del JWT.
     /// La zona horaria de cada respuesta es la efectiva: la propia de la sucursal si tiene,
     /// o la del tenant si hereda.
     /// </summary>
@@ -101,8 +101,7 @@ public class SucursalesController : ControllerBase
         }
 
         // â”€â”€ 2. Resolver el tenant desde el JWT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-        var tenantClaim = User.FindFirst("tenant_id")?.Value;
-        if (!Guid.TryParse(tenantClaim, out var tenantId))
+        if (!TryGetTenantId(out var tenantId))
             return Unauthorized(new { message = "El token no contiene un tenant_id vÃ¡lido." });
 
         // â”€â”€ 3. Construir la entidad â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -175,8 +174,7 @@ public class SucursalesController : ControllerBase
             return ValidationProblem(ModelState);
         }
 
-        var tenantClaim = User.FindFirst("tenant_id")?.Value;
-        if (!Guid.TryParse(tenantClaim, out var tenantId))
+        if (!TryGetTenantId(out var tenantId))
             return Unauthorized(new { message = "El token no contiene un tenant_id válido." });
 
         var zonaHoraria = string.IsNullOrWhiteSpace(request.ZonaHoraria)
@@ -199,6 +197,30 @@ public class SucursalesController : ControllerBase
             return Conflict(new { message = ex.Message });
         }
     }
+
+    /// <summary>Desactiva una sucursal conservando su fila y relaciones.</summary>
+    /// <response code="204">Sucursal desactivada o previamente inactiva.</response>
+    /// <response code="401">Sin JWT válido.</response>
+    /// <response code="403">El usuario no tiene rol ADMIN.</response>
+    /// <response code="404">La sucursal no existe o pertenece a otro tenant.</response>
+    [HttpDelete("{id:guid}")]
+    [Authorize(Roles = "ADMIN")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Deactivate(Guid id, CancellationToken cancellationToken)
+    {
+        if (!TryGetTenantId(out var tenantId))
+            return Unauthorized(new { message = "El token no contiene un tenant_id válido." });
+
+        return await _sucursalRepository.DeactivateAsync(id, tenantId, cancellationToken)
+            ? NoContent()
+            : NotFound();
+    }
+
+    private bool TryGetTenantId(out Guid tenantId)
+        => Guid.TryParse(User.FindFirst("tenant_id")?.Value, out tenantId);
 
     /// <summary>
     /// Proyecta la entidad al DTO de respuesta, resolviendo la zona horaria efectiva.

@@ -3,7 +3,7 @@ id: estado-actual
 tipo: indice
 titulo: Estado Real de Implementación — GlobalMart OS
 estado: vigente
-fuentes: [docs/context/_reports/inventario.md, src/, tests/GlobalMart.IntegrationTests/SucursalIntegrationTests.cs, globalmart-frontend/src/api/client.ts, globalmart-frontend/src/store/useTenantStore.ts, globalmart-frontend/src/pages/Admin.tsx, globalmart-frontend/src/pages/AdminRoles.tsx, globalmart-frontend/src/components/admin/UsuariosList.tsx, globalmart-frontend/src/components/admin/EditarUsuarioModal.tsx, globalmart-frontend/src/hardware/simulated-scale-adapter.ts, globalmart-frontend/src/hardware/serial-scale-adapter.ts, globalmart-frontend/src/hardware/scale-adapter-factory.ts, globalmart-frontend/src/hardware/scale-ipc.ts, globalmart-frontend/src/payments/terminal-ipc.ts, globalmart-frontend/src/payments/synchronizeCardPayment.ts, globalmart-frontend/src/preload.ts, globalmart-frontend/e2e/admin-flows.spec.ts, globalmart-frontend/e2e/admin.spec.ts, globalmart-frontend/e2e/weight-cart.spec.ts, globalmart-frontend/tests/admin-access.test.cjs, globalmart-frontend/tests/user-edit.test.cjs, globalmart-frontend/tests/user-deactivation.test.cjs, globalmart-frontend/tests/simulated-scale-adapter.test.cjs, globalmart-frontend/tests/serial-scale-adapter.test.cjs, globalmart-frontend/tests/scale-ipc.test.cjs, globalmart-frontend/tests/terminal-ipc.test.cjs, globalmart-frontend/tests/synchronized-card-payment.test.cjs, git log, docs/context/_reports/preguntas-abiertas.md, tests/GlobalMart.IntegrationTests/CobroSeguroIntegrationTests.cs, docs/qa/S2-035/reporte.md, new-ingresses.yaml]
+fuentes: [docs/context/_reports/inventario.md, src/, tests/GlobalMart.IntegrationTests/SucursalIntegrationTests.cs, tests/GlobalMart.IntegrationTests/SucursalOperativaIntegrationTests.cs, globalmart-frontend/src/api/client.ts, globalmart-frontend/src/store/useTenantStore.ts, globalmart-frontend/src/pages/Admin.tsx, globalmart-frontend/src/pages/AdminRoles.tsx, globalmart-frontend/src/components/admin/UsuariosList.tsx, globalmart-frontend/src/components/admin/EditarUsuarioModal.tsx, globalmart-frontend/src/hardware/simulated-scale-adapter.ts, globalmart-frontend/src/hardware/serial-scale-adapter.ts, globalmart-frontend/src/hardware/scale-adapter-factory.ts, globalmart-frontend/src/hardware/scale-ipc.ts, globalmart-frontend/src/payments/terminal-ipc.ts, globalmart-frontend/src/payments/synchronizeCardPayment.ts, globalmart-frontend/src/preload.ts, globalmart-frontend/e2e/admin-flows.spec.ts, globalmart-frontend/e2e/admin.spec.ts, globalmart-frontend/e2e/weight-cart.spec.ts, globalmart-frontend/tests/admin-access.test.cjs, globalmart-frontend/tests/user-edit.test.cjs, globalmart-frontend/tests/user-deactivation.test.cjs, globalmart-frontend/tests/simulated-scale-adapter.test.cjs, globalmart-frontend/tests/serial-scale-adapter.test.cjs, globalmart-frontend/tests/scale-ipc.test.cjs, globalmart-frontend/tests/terminal-ipc.test.cjs, globalmart-frontend/tests/synchronized-card-payment.test.cjs, git log, docs/context/_reports/preguntas-abiertas.md, tests/GlobalMart.IntegrationTests/CobroSeguroIntegrationTests.cs, docs/qa/S2-035/reporte.md, docs/qa/TI3-773/reporte.md, new-ingresses.yaml]
 verificado_contra_codigo: true
 ultima_revision: 2026-11-20
 depende_de: []
@@ -13,9 +13,13 @@ reglas: []
 ---
 # Estado Real de Implementación — GlobalMart OS
 
+## TI3-773 — Baja lógica de sucursales (2026-11-20)
+
+[IMPLEMENTADO Y PROBADO LOCALMENTE] MS-1 implementa `DELETE /sucursales/{id}` y su alias `/api/sucursales/{id}` para ADMIN. La escritura usa id y tenant del JWT, devuelve 404 para inexistente/ajena, conserva la fila y relaciones históricas, y `GET /sucursales` expone solo activas. MS-5 reutiliza ese listado autorizado, propagando el JWT, antes de abrir un turno y antes de crear una venta. Sucursal inexistente, ajena o inactiva devuelve 404 sin revelar la causa; MS-1 no disponible o una respuesta inválida devuelve 503 y bloquea la operación. La revalidación de la venta cubre la desactivación posterior a la apertura del turno. Integración MS-1: 13/13; validación MS-5: 9/9; regresión de turnos/venta: 6/6, todas sobre PostgreSQL aislado y con exit code 0. La integración entre procesos desplegados MS-1 → MS-5 queda [NO VERIFICADA]. [Evidencia](../qa/TI3-773/reporte.md).
+
 ## TI3-772 — Edición de sucursales en MS-1 (2026-11-20)
 
-[IMPLEMENTADO Y PROBADO LOCALMENTE] `PUT /sucursales/{id}` y su alias `/api/sucursales/{id}` permiten a ADMIN actualizar nombre y zona horaria IANA. El tenant proviene solo del JWT y la escritura se limita por id y tenant; una sucursal inexistente o ajena devuelve 404. El nombre es único por tenant sin distinguir mayúsculas, permite conservar el propio y repetirse en otro tenant; el conflicto devuelve 409. CAJERO recibe 403 y una zona inválida devuelve 400. Integración PostgreSQL aislada: 8/8 pruebas aprobadas; build MS-1 aprobado. La baja lógica de sucursales sigue pendiente.
+[IMPLEMENTADO Y PROBADO LOCALMENTE] `PUT /sucursales/{id}` y su alias `/api/sucursales/{id}` permiten a ADMIN actualizar nombre y zona horaria IANA. El tenant proviene solo del JWT y la escritura se limita por id y tenant; una sucursal inexistente o ajena devuelve 404. El nombre es único por tenant sin distinguir mayúsculas, permite conservar el propio y repetirse en otro tenant; el conflicto devuelve 409. CAJERO recibe 403 y una zona inválida devuelve 400. Integración PostgreSQL aislada: 8/8 pruebas aprobadas; build MS-1 aprobado. La baja lógica fue implementada posteriormente por TI3-773.
 
 ## TI3-736 / S2-105 — Regresión administrativa (2026-11-19)
 
@@ -117,15 +121,15 @@ S2-052 — 2026-10-19: **2/2 pruebas de integración HTTP locales aprobadas** pa
 - `POST /users/{id}/roles` (alias `/api/v1/users/{id}/roles`) — asignar roles (sin SUPER_ADMIN). Actualización atómica de tabla intermedia mediante EF Core Change Tracker y 3 tests de integración validados (TI3-456) [IMPLEMENTADO]
 - `GET/POST /users/roles` y `DELETE /users/roles/{id}` — listar roles base y propios, crear un rol propio con permisos base y eliminarlo si no está asignado; tres pruebas de integración de roles propios y verificación remota [IMPLEMENTADO]
 - `GET/PUT /tenants/{id}/config` — config de tenant (país, moneda, IVA), validación con FluentValidation (TI3-459), tracking EF Core y rol ADMIN del mismo tenant (TI3-458) [IMPLEMENTADO]
-- `GET /sucursales` — lista sucursales del tenant del JWT, con zona horaria efectiva [IMPLEMENTADO]
+- `GET /sucursales` — lista solo sucursales activas del tenant del JWT, con zona horaria efectiva [IMPLEMENTADO]
 - `POST /sucursales` — crea sucursal (solo ADMIN), zona horaria IANA opcional y validada, nombre único por tenant sin distinguir mayúsculas (409) [IMPLEMENTADO]
 - `PUT /sucursales/{id}` — actualiza nombre y zona horaria (solo ADMIN), con aislamiento por tenant, 404 para inexistente/ajena y 409 para nombre duplicado [IMPLEMENTADO]
+- `DELETE /sucursales/{id}` — baja lógica ADMIN, con aislamiento por tenant; conserva fila/relaciones y devuelve 404 para inexistente/ajena [IMPLEMENTADO]
 - TenantMiddleware — extrae tenant_id del JWT e inyecta en DbContext [IMPLEMENTADO]
 - Seed de desarrollo: cajero@demo.cl y admin@demo.cl, idempotente por usuario (ver contraseña en [[como-ejecutar]]) [IMPLEMENTADO]
 
 **No implementado (PLANIFICADO):**
 - `POST /auth/refresh` — renovar token
-- `DELETE /sucursales/{id}` — desactivar sucursales
 - Asignación de usuarios a sucursales (`UsuarioSucursales` sin endpoint)
 - `GET /tenants/{id}/sucursales` — superseded por `GET /sucursales`
 - `GET /fx/rates` — tipos de cambio

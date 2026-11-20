@@ -5,7 +5,7 @@ namespace TenantIdentityService.Repositories;
 public interface ISucursalRepository
 {
     /// <summary>
-    /// Retorna todas las sucursales del tenant del request actual.
+    /// Retorna las sucursales activas del tenant del request actual.
     /// El aislamiento lo aplica el filtro global de <c>TenantDbContext</c>
     /// (alimentado por <c>TenantMiddleware</c>), no un filtro manual.
     /// </summary>
@@ -27,5 +27,12 @@ public interface ISucursalRepository
         Guid tenantId,
         string nombre,
         string? zonaHoraria,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>Desactiva una sucursal sin eliminarla, restringiendo por id y tenant.</summary>
+    /// <returns><c>true</c> si la sucursal existe en el tenant; en otro caso, <c>false</c>.</returns>
+    Task<bool> DeactivateAsync(
+        Guid id,
+        Guid tenantId,
         CancellationToken cancellationToken = default);
 }

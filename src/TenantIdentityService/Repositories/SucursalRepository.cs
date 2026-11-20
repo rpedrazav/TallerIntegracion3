@@ -30,6 +30,7 @@ public class SucursalRepository : ISucursalRepository
         return await _db.Sucursales
             .AsNoTracking()
             .Include(s => s.Tenant)
+            .Where(s => s.Activa)
             .OrderBy(s => s.Nombre)
             .ToListAsync();
     }
@@ -80,6 +81,28 @@ public class SucursalRepository : ISucursalRepository
         await SaveChangesAsync(nombre, cancellationToken);
 
         return sucursal;
+    }
+
+    /// <inheritdoc/>
+    public async Task<bool> DeactivateAsync(
+        Guid id,
+        Guid tenantId,
+        CancellationToken cancellationToken = default)
+    {
+        var sucursal = await _db.Sucursales.FirstOrDefaultAsync(
+            s => s.Id == id && s.TenantId == tenantId,
+            cancellationToken);
+
+        if (sucursal is null)
+            return false;
+
+        if (sucursal.Activa)
+        {
+            sucursal.Activa = false;
+            await _db.SaveChangesAsync(cancellationToken);
+        }
+
+        return true;
     }
 
     private async Task EnsureNameAvailableAsync(

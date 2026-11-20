@@ -150,6 +150,7 @@ public sealed class VentasController : ControllerBase
     [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
     public async Task<IActionResult> Crear(
         [FromBody] CrearVentaRequest request,
+        [FromServices] ISucursalClient sucursales,
         CancellationToken cancellationToken)
     {
         // 1. Extraer claims del JWT
@@ -167,6 +168,19 @@ public sealed class VentasController : ControllerBase
             });
         }
 
+
+        var authHeader = Request.Headers.Authorization.ToString();
+        try
+        {
+            if (!await sucursales.IsActiveAsync(turno.SucursalId, authHeader, cancellationToken))
+                return NotFound(new { error = "Sucursal no encontrada o inactiva." });
+        }
+        catch (ExternalServiceException)
+        {
+            return StatusCode(StatusCodes.Status503ServiceUnavailable,
+                new { error = "No se pudo validar la sucursal." });
+        }
+
         // 3. Parsear método de pago
         if (!Enum.TryParse<MetodoPagoVenta>(request.MetodoPago, ignoreCase: true, out var metodoPago))
         {
@@ -174,8 +188,6 @@ public sealed class VentasController : ControllerBase
         }
 
         // 4. Token Bearer para propagación a microservicios MS-3 y MS-2
-        var authHeader = Request.Headers.Authorization.ToString();
-
         // 5. Validar y resolver cada producto consultando MS-3 (CatalogPricingService)
         // NOTA CONTRATO S2-001 / S2-002: Ningún precio o impuesto aportado por el renderer es autoridad.
         // Se resuelven autoritativamente desde MS-3 y MS-2.

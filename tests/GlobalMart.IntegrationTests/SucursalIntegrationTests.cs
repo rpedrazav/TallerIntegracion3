@@ -73,30 +73,8 @@ public class SucursalIntegrationTests : IClassFixture<Ms1WebApplicationFactory>
     [Fact]
     public async Task UpdateSucursal_DeOtroTenant_Retorna404YNoRevelaExistencia()
     {
-        var otroTenantId = Guid.NewGuid();
-        var sucursalId = Guid.NewGuid();
         var nombre = NombreUnico("Ajena");
-
-        await using (var scope = _factory.Services.CreateAsyncScope())
-        {
-            var db = scope.ServiceProvider.GetRequiredService<Identity.Data.TenantDbContext>();
-            db.CurrentTenantId = otroTenantId;
-            db.Tenants.Add(new Identity.Models.Tenant
-            {
-                Id = otroTenantId,
-                Nombre = NombreUnico("Tenant"),
-                Pais = "CL",
-                Moneda = "CLP"
-            });
-            db.Sucursales.Add(new Identity.Models.Sucursal
-            {
-                Id = sucursalId,
-                TenantId = otroTenantId,
-                Nombre = nombre,
-                Direccion = "Dirección de prueba"
-            });
-            await db.SaveChangesAsync();
-        }
+        var (_, sucursalId) = await CrearSucursalEnOtroTenantAsync(nombre);
 
         var response = await PutAsync(sucursalId, "ADMIN", new
         {
@@ -147,26 +125,7 @@ public class SucursalIntegrationTests : IClassFixture<Ms1WebApplicationFactory>
     public async Task UpdateSucursal_NombreExistenteEnOtroTenant_Retorna200()
     {
         var nombreCompartido = NombreUnico("Compartida");
-        var otroTenantId = Guid.NewGuid();
-        await using (var scope = _factory.Services.CreateAsyncScope())
-        {
-            var db = scope.ServiceProvider.GetRequiredService<Identity.Data.TenantDbContext>();
-            db.CurrentTenantId = otroTenantId;
-            db.Tenants.Add(new Identity.Models.Tenant
-            {
-                Id = otroTenantId,
-                Nombre = NombreUnico("Tenant"),
-                Pais = "CL",
-                Moneda = "CLP"
-            });
-            db.Sucursales.Add(new Identity.Models.Sucursal
-            {
-                TenantId = otroTenantId,
-                Nombre = nombreCompartido,
-                Direccion = "Dirección de prueba"
-            });
-            await db.SaveChangesAsync();
-        }
+        await CrearSucursalEnOtroTenantAsync(nombreCompartido);
 
         var id = await CrearSucursalAsync(NombreUnico("Local"));
         var response = await PutAsync(id, "ADMIN", new
@@ -205,6 +164,81 @@ public class SucursalIntegrationTests : IClassFixture<Ms1WebApplicationFactory>
         Assert.Equal("America/Santiago", creada.GetProperty("zonaHoraria").GetString());
     }
 
+    [Fact]
+    public async Task DeactivateSucursal_AdminConservaFilaYRelacionHistorica_Retorna204()
+    {
+        var nombre = NombreUnico("Histórica");
+        var id = await CrearSucursalAsync(nombre);
+        Guid usuarioId;
+        await using (var scope = _factory.Services.CreateAsyncScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<Identity.Data.TenantDbContext>();
+            db.CurrentTenantId = TenantDemoId;
+            usuarioId = await db.Usuarios.Select(u => u.Id).FirstAsync();
+            db.UsuarioSucursales.Add(new Identity.Models.UsuarioSucursal
+            {
+                UsuarioId = usuarioId,
+                SucursalId = id
+            });
+            await db.SaveChangesAsync();
+        }
+
+        var response = await DeleteAsync(id, "ADMIN");
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        await using var verificationScope = _factory.Services.CreateAsyncScope();
+        var verificationDb = verificationScope.ServiceProvider.GetRequiredService<Identity.Data.TenantDbContext>();
+        var persistida = await verificationDb.Sucursales.IgnoreQueryFilters().SingleAsync(s => s.Id == id);
+        Assert.False(persistida.Activa);
+        Assert.Equal(nombre, persistida.Nombre);
+        Assert.True(await verificationDb.UsuarioSucursales
+            .AnyAsync(us => us.UsuarioId == usuarioId && us.SucursalId == id));
+    }
+
+    [Fact]
+    public async Task DeactivateSucursal_Cajero_Retorna403YConservaActiva()
+    {
+        var id = await CrearSucursalAsync(NombreUnico("Protegida baja"));
+
+        var response = await DeleteAsync(id, "CAJERO");
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        Assert.True(await SucursalActivaAsync(id));
+    }
+
+    [Fact]
+    public async Task DeactivateSucursal_Inexistente_Retorna404()
+    {
+        var response = await DeleteAsync(Guid.NewGuid(), "ADMIN");
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task DeactivateSucursal_DeOtroTenant_Retorna404YConservaActiva()
+    {
+        var (_, id) = await CrearSucursalEnOtroTenantAsync(NombreUnico("Ajena baja"));
+
+        var response = await DeleteAsync(id, "ADMIN");
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.True(await SucursalActivaAsync(id));
+    }
+
+    [Fact]
+    public async Task DeactivateSucursal_DesapareceDelListadoActivoSinEliminarFila()
+    {
+        var id = await CrearSucursalAsync(NombreUnico("Listado"));
+
+        Assert.Equal(HttpStatusCode.NoContent, (await DeleteAsync(id, "ADMIN")).StatusCode);
+
+        var listado = await GetSucursalesAsync();
+        Assert.DoesNotContain(listado.EnumerateArray(), x => x.GetProperty("id").GetGuid() == id);
+        await using var scope = _factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<Identity.Data.TenantDbContext>();
+        Assert.True(await db.Sucursales.IgnoreQueryFilters().AnyAsync(s => s.Id == id && !s.Activa));
+    }
+
     private async Task<Guid> CrearSucursalAsync(string nombre)
     {
         var request = new HttpRequestMessage(HttpMethod.Post, "/sucursales")
@@ -232,6 +266,48 @@ public class SucursalIntegrationTests : IClassFixture<Ms1WebApplicationFactory>
         };
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", CreateToken(TenantDemoId, role));
         return await _client.SendAsync(request);
+    }
+
+    private async Task<HttpResponseMessage> DeleteAsync(Guid id, string role)
+    {
+        var request = new HttpRequestMessage(HttpMethod.Delete, $"/sucursales/{id}");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", CreateToken(TenantDemoId, role));
+        return await _client.SendAsync(request);
+    }
+
+    private async Task<(Guid TenantId, Guid SucursalId)> CrearSucursalEnOtroTenantAsync(string nombre)
+    {
+        var tenantId = Guid.NewGuid();
+        var sucursalId = Guid.NewGuid();
+        await using var scope = _factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<Identity.Data.TenantDbContext>();
+        db.CurrentTenantId = tenantId;
+        db.Tenants.Add(new Identity.Models.Tenant
+        {
+            Id = tenantId,
+            Nombre = NombreUnico("Tenant"),
+            Pais = "CL",
+            Moneda = "CLP"
+        });
+        db.Sucursales.Add(new Identity.Models.Sucursal
+        {
+            Id = sucursalId,
+            TenantId = tenantId,
+            Nombre = nombre,
+            Direccion = "Dirección de prueba"
+        });
+        await db.SaveChangesAsync();
+        return (tenantId, sucursalId);
+    }
+
+    private async Task<bool> SucursalActivaAsync(Guid id)
+    {
+        await using var scope = _factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<Identity.Data.TenantDbContext>();
+        return await db.Sucursales.IgnoreQueryFilters()
+            .Where(s => s.Id == id)
+            .Select(s => s.Activa)
+            .SingleAsync();
     }
 
     private async Task<JsonElement> GetSucursalesAsync()
