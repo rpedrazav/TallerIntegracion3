@@ -13,6 +13,10 @@ reglas: []
 ---
 # Estado Real de Implementación — GlobalMart OS
 
+## Comportamiento con lotes insuficientes (2026-11-20)
+
+[IMPLEMENTADO Y PROBADO LOCALMENTE] Si el stock agregado o la suma de lotes disponibles no alcanza para un ítem de `sale.completed`, MS-4 devuelve `TransientFailure`, no confirma el offset y deja el evento pendiente para una recepción posterior. El warning registra producto, sucursal, cantidad solicitada y `EventId`. No guarda descuentos, movimientos ni idempotencia. Una prueba con stock agregado 10, lotes por 5 y venta de 6 conservó todas las cantidades y verificó el log. Regresión MS-4: 40/40. Kafka y PostgreSQL reales para este caso [NO VERIFICADOS].
+
 ## Descuento FEFO en ventas (2026-11-20)
 
 [IMPLEMENTADO Y PROBADO LOCALMENTE] Al procesar `sale.completed`, MS-4 carga los lotes disponibles del tenant, producto y sucursal, los ordena por `FechaVencimiento ASC` e `Id ASC`, y descuenta primero el de vencimiento más próximo. Los cambios de lotes, stock agregado, movimientos e idempotencia continúan bajo el único `SaveChanges` del evento; un fallo intermedio no persiste descuentos parciales. La prueba dirigida con dos lotes confirmó cantidades finales 0 y 2 al vender 8 de 10 unidades. Regresión MS-4: 39/39; proyecto de integración compila. Kafka y PostgreSQL reales para FEFO [NO VERIFICADOS].
@@ -259,7 +263,7 @@ S2-052 — 2026-10-19: **2/2 pruebas de integración HTTP locales aprobadas** pa
 |---|---------------|----------------|----------|
 | 1 | Endpoint de anulación expuesto con contrato S2-091; UI pendiente; reversa simulada S2-093 implementada | RF-22 | Backend S2-092 implementado |
 | 2 | Emisión simulada de DTE (boleta/factura) en MS-2 | RN-03, RF-08, TC-08/09 | 🔴 Crítica |
-| 4 | Consulta de lotes por vencer y manejo explícito de lotes insuficientes en MS-4 | RN-05, RF-10, WI-05 | 🟠 Alta |
+| 4 | Consulta de lotes por vencer en MS-4 | RN-05, RF-10, WI-05 | 🟠 Alta |
 | 5 | Integrar frontend `Pos.tsx` con backend real | RF-04, RF-05 | 🟠 Alta |
 | 6 | Endpoint POST /auth/refresh | RF-01 | 🟠 Alta |
 | 7 | Gestión de sucursales en backend | TI-11, RF-19 | 🟠 Alta |

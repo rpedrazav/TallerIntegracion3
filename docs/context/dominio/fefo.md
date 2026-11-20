@@ -70,6 +70,12 @@ Al consumir `sale.completed`, `StockRepository` selecciona lotes con cantidad di
 
 La prueba local con dos lotes de 5 unidades y una venta de 8 deja el lote temprano en 0, el tardío en 2 y el stock agregado en 2. La integración FEFO con Kafka y PostgreSQL reales queda [NO VERIFICADA].
 
+### Lotes insuficientes
+
+Si el stock agregado no alcanza o la suma de `Lote.Cantidad` disponible es menor que la cantidad vendida, el evento se clasifica como `TransientFailure`. El consumidor no confirma el offset para permitir recuperación después de una recepción y registra un warning con producto, sucursal, cantidad solicitada y `EventId`. No se persisten descuentos parciales, movimientos ni el registro de idempotencia.
+
+La prueba dirigida con stock agregado 10, lotes por 5 y solicitud de 6 conserva el stock y ambos lotes sin cambios. El evento no se envía a `sale.completed.error`, porque la falta de lotes es recuperable.
+
 ### Errores
 
 | Estado | Condición | Mutación |

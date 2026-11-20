@@ -137,6 +137,8 @@ S2-100 verificó con Kafka y PostgreSQL locales reales que dos mensajes con el m
 
 El consumidor aplica FEFO dentro de esa misma unidad de trabajo: descuenta `Lote.Cantidad` por `FechaVencimiento ASC, Id ASC` antes de actualizar el stock agregado. Una prueba dirigida con dos lotes verifica el orden y la persistencia del evento; Kafka y PostgreSQL reales para FEFO [NO VERIFICADOS].
 
+Cuando el stock agregado o los lotes no alcanzan, `SaleEventProcessor` devuelve `TransientFailure`: registra el `EventId` en el warning, no confirma el offset y no persiste descuentos, movimientos ni idempotencia. El mensaje permanece en el topic original para recuperarse tras una recepción; no se considera poison message ni se envía a `sale.completed.error`.
+
 ## Conexiones
 - Produce → [[ms5-pos]] [IMPLEMENTADO]
 - Consume → [[ms4-inventory]] [IMPLEMENTADO]
