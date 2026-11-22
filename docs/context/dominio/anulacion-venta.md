@@ -3,13 +3,13 @@ id: anulacion-venta
 tipo: dominio
 titulo: Contrato de anulación total — S2-091
 estado: implementado-backend
-ultima_revision: 2026-11-15
-fuentes: [src/POSCartService/Services/VentaService.cs, src/POSCartService/Models/Anulacion.cs, src/POSCartService/Services/IPaymentGatewayClient.cs, Docker/simulator/server.js]
+ultima_revision: 2026-11-22
+fuentes: [src/POSCartService/Services/VentaService.cs, src/POSCartService/Models/Anulacion.cs, src/POSCartService/Services/IPaymentGatewayClient.cs, Docker/simulator/server.js, globalmart-frontend/src/api/client.ts]
 ---
 
 # Contrato de anulación total — S2-091 / TI3-722
 
-**S2-091 definió el contrato; S2-092 implementó efectivo y S2-093 añade reversa de tarjeta confirmada por simulador.** Ver [reporte S2-092](../../qa/S2-092/reporte.md) para evidencia y límites. No incluye UI de anulación ni despliegue remoto.
+**S2-091 definió el contrato; S2-092 implementó efectivo y S2-093 añade reversa de tarjeta confirmada por simulador.** Ver [reporte S2-092](../../qa/S2-092/reporte.md) para evidencia y límites. `posApi.anularVenta` en `api/client.ts` expone el endpoint al frontend; UI de anulación y despliegue remoto siguen pendientes.
 
 ## Objetivo y alcance
 

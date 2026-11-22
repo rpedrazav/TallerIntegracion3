@@ -144,6 +144,20 @@ export interface EstadoIntentoTarjeta {
   request_id?: string;
 }
 
+export interface AnulacionInfo {
+  motivo: string;
+  autorizado_por: string;
+  created_at: string;
+}
+
+export interface AnularVentaResponse {
+  venta_id: string;
+  estado: string;
+  anulacion: AnulacionInfo;
+  reembolso_tarjeta: string;
+  devolucion_efectivo: string;
+}
+
 export const posApi = {
   activeShift: async (): Promise<TurnoActivo> => {
     const response = await pos.get<TurnoActivo>('/turnos/activo');
@@ -224,6 +238,10 @@ export const posApi = {
   },
   changeSaleMethod: async (saleId: string, method: 'EFECTIVO' | 'TARJETA'): Promise<VentaPendiente> => {
     const response = await pos.patch<VentaPendiente>(`/ventas/${saleId}/metodo-pago`, { metodo_pago: method });
+    return response.data;
+  },
+  anularVenta: async (saleId: string, motivo: string): Promise<AnularVentaResponse> => {
+    const response = await pos.post<AnularVentaResponse>(`/ventas/${saleId}/anular`, { motivo });
     return response.data;
   },
 };

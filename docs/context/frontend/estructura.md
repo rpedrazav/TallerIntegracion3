@@ -5,7 +5,7 @@ titulo: Frontend — Estructura del Proyecto Electron + React
 estado: parcial
 fuentes: [globalmart-frontend/src/, globalmart-frontend/package.json, globalmart-frontend/forge.config.ts]
 verificado_contra_codigo: true
-ultima_revision: 2026-11-01
+ultima_revision: 2026-11-22
 depende_de: [stack, ms1-identity, guia-estilo]
 publica: []
 consume: []
