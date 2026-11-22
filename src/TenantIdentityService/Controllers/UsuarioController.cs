@@ -317,6 +317,32 @@ public class UsuarioController : ControllerBase
         return NoContent();
     }
 
+    /// <summary>Reactiva un usuario del tenant sin modificar sus datos ni relaciones.</summary>
+    [HttpPost("{id:guid}/reactivate")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> ReactivateUser(Guid id)
+    {
+        if (!Guid.TryParse(User.FindFirst("tenant_id")?.Value, out var tenantId))
+            return Unauthorized(new { message = "El token no contiene un tenant_id válido." });
+
+        var actorClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                      ?? User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
+        if (!Guid.TryParse(actorClaim, out var actorId))
+            return Unauthorized(new { message = "El token no contiene un identificador de usuario válido." });
+
+        var actor = await _usuarioRepository.GetByIdAsync(actorId, tenantId);
+        if (actor is null || !actor.Activo)
+            return StatusCode(StatusCodes.Status403Forbidden,
+                new { message = "El administrador no está activo." });
+
+        return await _usuarioRepository.ReactivateAsync(id, tenantId)
+            ? NoContent()
+            : NotFound(new { message = "Usuario no encontrado." });
+    }
+
     /// <summary>
     /// Asigna roles a un usuario.
     /// </summary>
