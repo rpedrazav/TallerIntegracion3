@@ -57,20 +57,20 @@ desplegados MS-1 → MS-5 queda [NO VERIFICADA]. La URL se toma de `Services:Ide
 
 | Método | Ruta | Auth | Estado |
 |--------|------|------|--------|
-| POST | `/turnos/abrir` (alias `/api/turnos/abrir`) | JWT | [IMPLEMENTADO] |
-| GET | `/turnos/activo` (alias `/api/turnos/activo`) | JWT | [IMPLEMENTADO] |
-| POST | `/turnos/cerrar` (alias `/api/turnos/cerrar`) | JWT | [IMPLEMENTADO] |
-| POST | `/turnos/cuadre` (alias `/api/turnos/cuadre`) | JWT | [IMPLEMENTADO — suma efectivo neto (Monto − Vuelto) de pagos EFECTIVO de ventas COMPLETADAS, sin fondo inicial (S2-112); retorna efectivo_esperado, monto_declarado, diferencia] |
-| POST | `/ventas` (alias `/api/ventas`) | JWT | [IMPLEMENTADO — Contrato fijado S2-001] |
-| POST | `/ventas/{id}/items` (alias `/api/ventas/{id}/items`) | JWT | [IMPLEMENTADO] |
-| PUT | `/ventas/{id}/items/{itemId}` (alias `/api/ventas/{id}/items/{itemId}`) | JWT | [IMPLEMENTADO] |
-| DELETE | `/ventas/{id}/items/{itemId}` (alias `/api/ventas/{id}/items/{itemId}`) | JWT | [IMPLEMENTADO] |
-| GET | `/ventas/{id}` (alias `/api/ventas/{id}`) | JWT | [IMPLEMENTADO] |
-| GET | `/ventas/turno/{turnoId}` (alias `/api/ventas/turno/{turnoId}`) | JWT | [IMPLEMENTADO] |
-| POST | `/ventas/{id}/cobrar` (alias `/api/ventas/{id}/cobrar`) | JWT | [IMPLEMENTADO — valida monto_recibido ≥ total, calcula vuelto y persiste venta, pago y sale.completed pendiente en una transacción] |
-| POST | `/ventas/{id}/cobrar-tarjeta` (alias `/api/ventas/{id}/cobrar-tarjeta`) | JWT | [IMPLEMENTADO — reserva previa, aprobación/rechazo/timeout y bloqueo de repetición; S2-035] |
-| POST | `/ventas/{id}/anular` (alias `/api/ventas/{id}/anular`) | JWT + ADMIN | [IMPLEMENTADO S2-092/S2-093; efectivo o reversa tarjeta confirmada] |
-| GET | `/ventas/{id}/reversa-tarjeta` (alias `/api`) | JWT + ADMIN | [IMPLEMENTADO S2-093; consulta y reconciliación de reversa] |
+| POST | `/api/turnos/abrir` | JWT | [IMPLEMENTADO] |
+| GET | `/api/turnos/activo` | JWT | [IMPLEMENTADO] |
+| POST | `/api/turnos/cerrar` | JWT | [IMPLEMENTADO] |
+| POST | `/api/turnos/cuadre` | JWT | [IMPLEMENTADO — suma efectivo neto (Monto − Vuelto) de pagos EFECTIVO de ventas COMPLETADAS, sin fondo inicial (S2-112); retorna efectivo_esperado, monto_declarado, diferencia] |
+| POST | `/api/ventas` | JWT | [IMPLEMENTADO — Contrato fijado S2-001] |
+| POST | `/api/ventas/{id}/items` | JWT | [IMPLEMENTADO] |
+| PUT | `/api/ventas/{id}/items/{itemId}` | JWT | [IMPLEMENTADO] |
+| DELETE | `/api/ventas/{id}/items/{itemId}` | JWT | [IMPLEMENTADO] |
+| GET | `/api/ventas/{id}` | JWT | [IMPLEMENTADO] |
+| GET | `/api/ventas/turno/{turnoId}` | JWT | [IMPLEMENTADO] |
+| POST | `/api/ventas/{id}/cobrar` | JWT | [IMPLEMENTADO — valida monto_recibido ≥ total, calcula vuelto y persiste venta, pago y sale.completed pendiente en una transacción] |
+| POST | `/api/ventas/{id}/cobrar-tarjeta` | JWT | [IMPLEMENTADO — reserva previa, aprobación/rechazo/timeout y bloqueo de repetición; S2-035] |
+| POST | `/api/ventas/{id}/anular` | JWT + ADMIN | [IMPLEMENTADO S2-092/S2-093; efectivo o reversa tarjeta confirmada] |
+| GET | `/api/ventas/{id}/reversa-tarjeta` | JWT + ADMIN | [IMPLEMENTADO S2-093; consulta y reconciliación de reversa] |
 | GET | `/health` | Público | [IMPLEMENTADO] |
 
 > Ver [[matriz-rutas]] para la comparativa exhaustiva de rutas Kong, controladores y puertos de host.

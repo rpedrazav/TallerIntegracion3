@@ -8,7 +8,6 @@ using POSCartService.Services;
 namespace POSCartService.Controllers;
 
 [ApiController]
-[Route("turnos")]
 [Route("api/turnos")]
 [Authorize]
 public sealed class TurnosController : ControllerBase

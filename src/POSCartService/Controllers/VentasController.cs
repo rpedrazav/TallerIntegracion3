@@ -12,7 +12,6 @@ namespace POSCartService.Controllers;
 /// Requiere JWT válido con claims cajero_id (o sub) y tenant_id.
 /// </summary>
 [ApiController]
-[Route("ventas")]
 [Route("api/ventas")]
 [Authorize]
 public sealed class VentasController : ControllerBase
