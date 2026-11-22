@@ -16,6 +16,7 @@ using Npgsql;
 using TenantDbContext = TenantIdentityServiceAlias::TenantIdentityService.Data.TenantDbContext;
 using Tenant = TenantIdentityServiceAlias::TenantIdentityService.Models.Tenant;
 using Usuario = TenantIdentityServiceAlias::TenantIdentityService.Models.Usuario;
+using UsuarioRol = TenantIdentityServiceAlias::TenantIdentityService.Models.UsuarioRol;
 using Sucursal = TenantIdentityServiceAlias::TenantIdentityService.Models.Sucursal;
 using UsuarioSucursal = TenantIdentityServiceAlias::TenantIdentityService.Models.UsuarioSucursal;
 
@@ -114,6 +115,36 @@ internal sealed class AdminUsersTestData : IAsyncDisposable
         return new UserSnapshot(user.Id, user.TenantId, user.Email, user.PasswordHash,
             user.Activo, user.CreadoEn, user.UltimoLogin,
             user.UsuarioSucursales.Select(s => (Guid?)s.SucursalId).FirstOrDefault());
+    }
+
+    public async Task SetActiveAsync(Guid id, bool active)
+    {
+        await using var db = OpenDb();
+        await db.Usuarios.IgnoreQueryFilters().Where(user => user.Id == id)
+            .ExecuteUpdateAsync(setters => setters.SetProperty(user => user.Activo, active));
+    }
+
+    public async Task ConfigureLoginAsync(Guid id, string password)
+    {
+        await using var db = OpenDb();
+        var user = await db.Usuarios.IgnoreQueryFilters().SingleAsync(existing => existing.Id == id);
+        user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(password);
+        var roleId = await db.Roles.IgnoreQueryFilters()
+            .Where(role => role.Nombre == "CAJERO" && role.TenantId == null)
+            .Select(role => role.Id)
+            .SingleAsync();
+        if (!await db.UsuarioRoles.AnyAsync(role => role.UsuarioId == id && role.RolId == roleId))
+            db.UsuarioRoles.Add(new UsuarioRol { UsuarioId = id, RolId = roleId });
+        await db.SaveChangesAsync();
+    }
+
+    public async Task<Guid[]> RoleIdsAsync(Guid id)
+    {
+        await using var db = OpenDb();
+        return await db.UsuarioRoles.Where(role => role.UsuarioId == id)
+            .OrderBy(role => role.RolId)
+            .Select(role => role.RolId)
+            .ToArrayAsync();
     }
 
     public async ValueTask DisposeAsync()

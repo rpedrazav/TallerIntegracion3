@@ -3,9 +3,9 @@ id: ms1-identity
 tipo: microservicio
 titulo: MS-1 · Tenant & Identity Service
 estado: parcial
-fuentes: [src/TenantIdentityService/, tests/GlobalMart.IntegrationTests/SucursalIntegrationTests.cs, globalmart-frontend/src/pages/Admin.tsx, globalmart-frontend/src/pages/AdminRoles.tsx, globalmart-frontend/src/components/admin/UsuariosList.tsx, Docker/config/kong.yaml]
+fuentes: [src/TenantIdentityService/, tests/GlobalMart.IntegrationTests/SucursalIntegrationTests.cs, tests/GlobalMart.IntegrationTests/ReactivarUsuarioIntegrationTests.cs, docs/qa/TI3-799/reporte.md, globalmart-frontend/src/pages/Admin.tsx, globalmart-frontend/src/pages/AdminRoles.tsx, globalmart-frontend/src/components/admin/UsuariosList.tsx, Docker/config/kong.yaml]
 verificado_contra_codigo: true
-ultima_revision: 2026-11-20
+ultima_revision: 2026-11-22
 depende_de: []
 publica: []
 consume: []
@@ -49,6 +49,7 @@ src/TenantIdentityService/
 | POST | `/users` (alias `/api/v1/users`, `/api/users`) | JWT + ADMIN | [IMPLEMENTADO] (soporta `roles?: string[]` en el body) |
 | PUT | `/users/{id}` (alias `/api/v1/users/{id}`, `/api/users/{id}`) | JWT + ADMIN | [IMPLEMENTADO] |
 | DELETE | `/users/{id}` (alias `/api/v1/users/{id}`, `/api/users/{id}`) | JWT + ADMIN | [IMPLEMENTADO] |
+| POST | `/users/{id}/reactivate` (alias `/api/v1/users/{id}/reactivate`, `/api/users/{id}/reactivate`) | JWT + ADMIN activo | [IMPLEMENTADO] |
 | POST | `/users/{id}/roles` (alias `/api/v1/users/{id}/roles`) | JWT + ADMIN | [IMPLEMENTADO] |
 | GET/POST | `/users/roles` (mismos alias) | JWT + ADMIN | [IMPLEMENTADO] |
 | DELETE | `/users/roles/{id}` (mismos alias) | JWT + ADMIN | [IMPLEMENTADO] |
@@ -78,12 +79,20 @@ src/TenantIdentityService/
 - `UsuarioRepository.DeactivateAsync` ejecuta un UPDATE de `Usuarios.Activo = false` filtrado por tenant e ID. No elimina filas ni altera otros campos.
 - `204` para usuario existente, incluso ya inactivo; `404` para ID inexistente o de otro tenant; `401` sin JWT y `403` sin rol ADMIN.
 - [DesactivarUsuarioIntegrationTests](../../../tests/GlobalMart.IntegrationTests/DesactivarUsuarioIntegrationTests.cs): seis métodos, siete casos (la teoría 404 distingue otro tenant e ID inexistente). Verifican fila conservada, otros campos intactos, autodesactivación rechazada, idempotencia y autorización. Conexión estándar de la factoría y esquema PostgreSQL aislado por caso.
-- Las pruebas del 2026-10-06 cubrían el esquema antiguo `users`; el flujo unificado del 2026-10-27 compila, pero su integración PostgreSQL está [NO VERIFICADA].
+- La regresión TI3-799 ejecutó el flujo unificado sobre PostgreSQL 16 real: 33/33 pruebas de desactivación, usuarios y autenticación aprobadas.
+
+### POST /api/v1/users/{id}/reactivate — TI3-799
+
+- Alias existentes por controlador: `/users/{id}/reactivate` y `/api/users/{id}/reactivate`. Requiere JWT con rol `ADMIN`.
+- Antes de escribir, obtiene `tenant_id` y `sub`/`NameIdentifier` del JWT y consulta `Usuarios` para confirmar que el ADMIN solicitante continúa activo. Un ADMIN desactivado con JWT todavía vigente recibe 403.
+- `UsuarioRepository.ReactivateAsync` actualiza únicamente `Usuarios.Activo=true` con filtro simultáneo por ID y tenant. No modifica contraseña, roles, sucursales, fechas ni historial.
+- `204` para usuario reactivado o ya activo; `404` para inexistente o ajeno; `401` sin autenticación/claims válidos y `403` para rol no autorizado o ADMIN inactivo.
+- `ReactivarUsuarioIntegrationTests` aprobó 8/8 casos con PostgreSQL 16 aislado, incluido el ciclo login 200 → baja → login 401 → reactivación → login 200 y preservación de relaciones.
 
 ### Contrato de Administración TI3-672 / TI3-733
 
 - La pantalla `/admin/*` queda disponible solo para claims `ADMIN` o `SUPER_ADMIN`. CAJERO no ve su acceso y es redirigido a `/pos`; la autorización del controlador conserva `403` como defensa independiente del frontend [IMPLEMENTADO].
-- La UI permite listar, crear, editar y desactivar usuarios. Activos e inactivos permanecen visibles con indicador textual; para inactivos, TI3-733 bloquea en frontend la edición de email y la modificación de roles, sin atribuir ese bloqueo a MS-1. La reactivación no se expone ni tiene endpoint.
+- La UI permite listar, crear, editar y desactivar usuarios. Activos e inactivos permanecen visibles con indicador textual; para inactivos, TI3-733 bloquea en frontend la edición de email y la modificación de roles, sin atribuir ese bloqueo a MS-1. MS-1 expone reactivación desde TI3-799; la acción frontend sigue fuera de alcance.
 - Errores vigentes: `400` para datos inválidos o autodesactivación según la operación; `401` sin autenticación o claims requeridos; `403` sin rol autorizado; `404` para ID inexistente o perteneciente a otro tenant; `409` para email duplicado al editar.
 - `UsuarioRepository.FindByEmailAsync` exige el tenant indicado y `Usuario.Activo=true`, y carga roles y sucursales para autenticar. DELETE marca inactivo ese mismo registro, de modo que el siguiente login falla con el mismo 401 genérico. `IUsuarioRepository` es el único repositorio de usuarios desde S3-003; no se implementó revocación de JWT emitidos.
 

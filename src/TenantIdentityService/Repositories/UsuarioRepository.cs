@@ -136,6 +136,15 @@ public class UsuarioRepository : IUsuarioRepository
         return updated > 0;
     }
 
+    public async Task<bool> ReactivateAsync(Guid id, Guid tenantId)
+    {
+        var updated = await _db.Usuarios.IgnoreQueryFilters()
+            .Where(usuario => usuario.Id == id && usuario.TenantId == tenantId)
+            .ExecuteUpdateAsync(setters => setters.SetProperty(usuario => usuario.Activo, true));
+
+        return updated > 0;
+    }
+
     public async Task<AssignRolesResult> AssignRolesAsync(Guid userId, Guid tenantId, IEnumerable<Guid> roleIds)
     {
         var usuario = await _db.Usuarios
