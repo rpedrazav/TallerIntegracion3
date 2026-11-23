@@ -2,28 +2,19 @@ import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import axios, { AxiosError } from 'axios';
 import { useAuth } from '../hooks/useAuth';
 import { buildServiceUrl } from '../config/api';
+import ProductoModal, {
+  FORM_VACÍO,
+  type FormState,
+} from '../components/admin/productos/ProductoModal';
+import ProductosFiltros, {
+  type Categoria,
+} from '../components/admin/productos/ProductosFiltros';
+import ProductosTabla, {
+  type Producto,
+} from '../components/admin/productos/ProductosTabla';
 
 // UomBaseId requerido por el DTO (uuid genérico para "unidad")
 const DEFAULT_UOM_ID = '00000000-0000-0000-0000-000000000001';
-
-// ── Tipos ────────────────────────────────────────────────────────────────────
-
-interface Producto {
-  id: string;
-  nombre: string;
-  descripcion?: string;
-  codigoBarras: string;
-  categoriaId?: string;
-  precioBase: number;
-  esPesoVariable: boolean;
-  isActive: boolean;
-  createdAt: string;
-}
-
-interface Categoria {
-  id: string;
-  nombre: string;
-}
 
 interface ValidationFailurePayload {
   errorMessage?: string;
@@ -95,392 +86,6 @@ export function getProductErrorMessage(error: unknown, action: ProductAction): s
     : 'Error al guardar el producto.');
 }
 
-interface FormState {
-  nombre: string;
-  descripcion: string;
-  codigoBarras: string;
-  categoriaId: string;
-  precioBase: string;
-  esPesoVariable: boolean;
-  isActive: boolean;
-}
-
-const FORM_VACÍO: FormState = {
-  nombre: '',
-  descripcion: '',
-  codigoBarras: '',
-  categoriaId: '',
-  precioBase: '',
-  esPesoVariable: false,
-  isActive: true,
-};
-
-// ── Estilos reutilizables ─────────────────────────────────────────────────────
-
-const inputStyle: React.CSSProperties = {
-  width: '100%',
-  padding: '0.6rem 0.85rem',
-  border: '1px solid var(--color-line)',
-  borderRadius: '8px',
-  fontSize: '0.95rem',
-  boxSizing: 'border-box',
-  color: 'var(--color-ink)',
-  backgroundColor: 'var(--color-bg)',
-};
-
-const labelStyle: React.CSSProperties = {
-  display: 'block',
-  fontSize: '0.82rem',
-  fontWeight: 600,
-  color: 'var(--color-ink-soft)',
-  marginBottom: '0.35rem',
-  textTransform: 'uppercase',
-  letterSpacing: '0.04em',
-};
-
-const PRODUCT_FOCUSABLE_SELECTOR = [
-  'button:not([disabled])',
-  'input:not([disabled])',
-  'select:not([disabled])',
-  'textarea:not([disabled])',
-  '[href]',
-  '[tabindex]:not([tabindex="-1"])',
-].join(',');
-
-// ── Componente Modal ──────────────────────────────────────────────────────────
-
-interface ModalProps {
-  modo: 'crear' | 'editar';
-  form: FormState;
-  categorias: Categoria[];
-  guardando: boolean;
-  errorModal: string;
-  errorField: keyof FormState | null;
-  onChange: (field: keyof FormState, value: string | boolean) => void;
-  onGuardar: () => void;
-  onCerrar: () => void;
-}
-
-function ProductoModal({
-  modo, form, categorias, guardando, errorModal, errorField, onChange, onGuardar, onCerrar,
-}: ModalProps) {
-  const dialogRef = useRef<HTMLFormElement>(null);
-  const previousFocusRef = useRef<HTMLElement | null>(null);
-  const titleId = 'producto-modal-titulo';
-  const errorId = 'producto-modal-error';
-  useEffect(() => {
-    previousFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-    const frame = window.requestAnimationFrame(() => {
-      const dialog = dialogRef.current;
-      const first = dialog?.querySelector<HTMLElement>('#modal-nombre')
-        ?? dialog?.querySelector<HTMLElement>(PRODUCT_FOCUSABLE_SELECTOR);
-      (first ?? dialog)?.focus();
-    });
-    return () => {
-      window.cancelAnimationFrame(frame);
-      previousFocusRef.current?.focus();
-    };
-  }, []);
-
-  const handleDialogKeyDown = (event: React.KeyboardEvent<HTMLFormElement>) => {
-    if (event.key === 'Escape') {
-      event.preventDefault();
-      if (!guardando) onCerrar();
-      return;
-    }
-    if (event.key !== 'Tab') return;
-    const dialog = dialogRef.current;
-    if (!dialog) return;
-    const focusable = Array.from(dialog.querySelectorAll<HTMLElement>(PRODUCT_FOCUSABLE_SELECTOR));
-    if (focusable.length === 0) {
-      event.preventDefault();
-      dialog.focus();
-      return;
-    }
-    const first = focusable[0];
-    const last = focusable[focusable.length - 1];
-    if (event.shiftKey && (document.activeElement === first || !dialog.contains(document.activeElement))) {
-      event.preventDefault();
-      last.focus();
-    } else if (!event.shiftKey && (document.activeElement === last || !dialog.contains(document.activeElement))) {
-      event.preventDefault();
-      first.focus();
-    }
-  };
-
-  return (
-    <div
-      style={{
-        position: 'fixed', inset: 0, zIndex: 1000,
-        background: 'color-mix(in srgb, var(--color-ink) 55%, transparent)',
-        backdropFilter: 'blur(4px)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        padding: '1rem',
-      }}
-      onClick={(e) => { if (e.target === e.currentTarget) onCerrar(); }}
-    >
-      <form
-        ref={dialogRef}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby={titleId}
-        tabIndex={-1}
-        onKeyDown={handleDialogKeyDown}
-        onSubmit={(event) => {
-          event.preventDefault();
-          if (!guardando) onGuardar();
-        }}
-        style={{
-          background: 'var(--color-surface)',
-          borderRadius: '18px',
-          width: '100%',
-          maxWidth: '520px',
-          boxShadow: '0 25px 60px -10px rgba(0,0,0,0.35)',
-          overflow: 'hidden',
-          animation: 'modalIn 0.18s ease-out',
-        }}
-      >
-        {/* Cabecera del modal */}
-        <div
-          style={{
-            background: 'linear-gradient(135deg, var(--color-ink) 0%, var(--color-sidebar) 60%, var(--color-primary) 100%)',
-            padding: '1.5rem 1.75rem',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <span style={{ fontSize: '1.6rem' }}>{modo === 'crear' ? '➕' : '✏️'}</span>
-            <div>
-              <h2 id={titleId} style={{ margin: 0, color: 'var(--color-surface)', fontSize: '1.2rem', fontWeight: 800 }}>
-                {modo === 'crear' ? 'Nuevo Producto' : 'Editar Producto'}
-              </h2>
-              <p style={{ margin: 0, color: 'rgba(255,255,255,0.7)', fontSize: '0.8rem' }}>
-                MS-3 Catalog &amp; Pricing
-              </p>
-            </div>
-          </div>
-          <button
-            id="btn-cerrar-modal-producto"
-            type="button"
-            onClick={onCerrar}
-            style={{
-              background: 'rgba(255,255,255,0.15)',
-              border: 'none',
-              borderRadius: '8px',
-              color: 'var(--color-surface)',
-              fontSize: '1.1rem',
-              width: '32px', height: '32px',
-              cursor: 'pointer',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}
-            title="Cerrar"
-          >
-            ✕
-          </button>
-        </div>
-
-        {/* Cuerpo del formulario */}
-        <div style={{ padding: '1.75rem', display: 'flex', flexDirection: 'column', gap: '1.1rem' }}>
-
-          {errorModal && (
-            <div id={errorId} role="alert" style={{
-              background: 'var(--color-danger-bg)', border: '1px solid var(--color-danger)',
-              borderRadius: '8px', padding: '0.75rem 1rem',
-              color: 'var(--color-danger)', fontSize: '0.875rem',
-              display: 'flex', gap: '0.5rem', alignItems: 'flex-start',
-            }}>
-              <span>⚠️</span><span>{errorModal}</span>
-            </div>
-          )}
-
-          {/* Nombre */}
-          <div>
-            <label style={labelStyle} htmlFor="modal-nombre">Nombre *</label>
-            <input
-              id="modal-nombre"
-              type="text"
-              placeholder="Ej: Leche entera 1L"
-              value={form.nombre}
-              aria-invalid={errorField === 'nombre'}
-              aria-describedby={errorField === 'nombre' ? errorId : undefined}
-              onChange={(e) => onChange('nombre', e.target.value)}
-              style={inputStyle}
-              disabled={guardando}
-            />
-          </div>
-
-          {/* Descripción */}
-          <div>
-            <label style={labelStyle} htmlFor="modal-descripcion">Descripción</label>
-            <input
-              id="modal-descripcion"
-              type="text"
-              placeholder="Descripción opcional"
-              value={form.descripcion}
-              onChange={(e) => onChange('descripcion', e.target.value)}
-              style={inputStyle}
-              disabled={guardando}
-            />
-          </div>
-
-          {/* Precio Base + Código Barras */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-            <div>
-              <label style={labelStyle} htmlFor="modal-precio">Precio Base (CLP) *</label>
-              <input
-                id="modal-precio"
-                type="number"
-                min="0"
-                step="1"
-                placeholder="Ej: 1200"
-                value={form.precioBase}
-                aria-invalid={errorField === 'precioBase'}
-                aria-describedby={errorField === 'precioBase' ? errorId : undefined}
-                onChange={(e) => onChange('precioBase', e.target.value)}
-                style={inputStyle}
-                disabled={guardando}
-              />
-            </div>
-            <div>
-              <label style={labelStyle} htmlFor="modal-barras">Código de Barras</label>
-              <input
-                id="modal-barras"
-                type="text"
-                placeholder="Ej: 7801234567890"
-                value={form.codigoBarras}
-                onChange={(e) => onChange('codigoBarras', e.target.value)}
-                style={inputStyle}
-                disabled={guardando}
-              />
-            </div>
-          </div>
-
-          {/* Categoría */}
-          <div>
-            <label style={labelStyle} htmlFor="modal-categoria">Categoría</label>
-            <select
-              id="modal-categoria"
-              value={form.categoriaId}
-              onChange={(e) => onChange('categoriaId', e.target.value)}
-              style={{ ...inputStyle, cursor: 'pointer' }}
-              disabled={guardando}
-            >
-              <option value="">Sin categoría</option>
-              {categorias.map((c) => (
-                <option key={c.id} value={c.id}>{c.nombre}</option>
-              ))}
-            </select>
-          </div>
-
-          {/* Toggles */}
-          <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap' }}>
-            <label
-              htmlFor="modal-peso-variable"
-              style={{
-                display: 'flex', alignItems: 'center', gap: '0.5rem',
-                cursor: 'pointer', userSelect: 'none',
-                fontSize: '0.9rem', color: 'var(--color-ink)', fontWeight: 500,
-              }}
-            >
-              <input
-                id="modal-peso-variable"
-                type="checkbox"
-                checked={form.esPesoVariable}
-                onChange={(e) => onChange('esPesoVariable', e.target.checked)}
-                disabled={guardando}
-                style={{ width: '16px', height: '16px', accentColor: 'var(--color-primary)' }}
-              />
-              ⚖️ Peso variable
-            </label>
-
-            <label
-              htmlFor="modal-activo"
-              style={{
-                display: 'flex', alignItems: 'center', gap: '0.5rem',
-                cursor: 'pointer', userSelect: 'none',
-                fontSize: '0.9rem', color: 'var(--color-ink)', fontWeight: 500,
-              }}
-            >
-              <input
-                id="modal-activo"
-                type="checkbox"
-                checked={form.isActive}
-                onChange={(e) => onChange('isActive', e.target.checked)}
-                disabled={guardando}
-                style={{ width: '16px', height: '16px', accentColor: 'var(--color-success)' }}
-              />
-              ✅ Activo
-            </label>
-          </div>
-        </div>
-
-        {/* Pie del modal */}
-        <div
-          style={{
-            padding: '1rem 1.75rem',
-            borderTop: '1px solid var(--color-line)',
-            background: 'var(--color-bg)',
-            display: 'flex',
-            justifyContent: 'flex-end',
-            gap: '0.75rem',
-          }}
-        >
-          <button
-            id="btn-cancelar-modal-producto"
-            type="button"
-            onClick={onCerrar}
-            disabled={guardando}
-            style={{
-              padding: '0.6rem 1.25rem',
-              background: 'transparent',
-              border: '1px solid var(--color-line)',
-              borderRadius: '8px',
-              fontWeight: 600,
-              fontSize: '0.9rem',
-              cursor: 'pointer',
-              color: 'var(--color-ink-soft)',
-            }}
-          >
-            Cancelar
-          </button>
-          <button
-            id="btn-guardar-modal-producto"
-            type="submit"
-            disabled={guardando}
-            style={{
-              padding: '0.6rem 1.5rem',
-              background: guardando ? 'var(--color-muted)' : 'var(--color-primary)',
-              color: 'var(--color-surface)',
-              border: 'none',
-              borderRadius: '8px',
-              fontWeight: 700,
-              fontSize: '0.9rem',
-              cursor: guardando ? 'not-allowed' : 'pointer',
-              transition: 'background 0.15s',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-            }}
-          >
-            {guardando ? '⏳ Guardando…' : modo === 'crear' ? '➕ Crear Producto' : '💾 Guardar Cambios'}
-          </button>
-        </div>
-      </form>
-
-      <style>{`
-        @keyframes modalIn {
-          from { opacity: 0; transform: scale(0.95) translateY(-8px); }
-          to   { opacity: 1; transform: scale(1)   translateY(0); }
-        }
-      `}</style>
-    </div>
-  );
-}
-
-// ── Componente Principal ──────────────────────────────────────────────────────
-
 export default function ProductosPage() {
   const { token, loading: authLoading } = useAuth();
 
@@ -489,13 +94,11 @@ export default function ProductosPage() {
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState('');
 
-  // Filtros
   const [query, setQuery] = useState('');
   const [categoriaFiltro, setCategoriaFiltro] = useState('');
   const [soloActivos, setSoloActivos] = useState(false);
   const [reloadTick, setReloadTick] = useState(0);
 
-  // Modal
   const [modalAbierto, setModalAbierto] = useState(false);
   const [modalModo, setModalModo] = useState<'crear' | 'editar'>('crear');
   const [editandoId, setEditandoId] = useState<string | null>(null);
@@ -504,8 +107,6 @@ export default function ProductosPage() {
   const [errorModal, setErrorModal] = useState('');
   const [errorField, setErrorField] = useState<keyof FormState | null>(null);
   const guardandoRef = useRef(false);
-
-  // ── Fetch unificado ──────────────────────────────────────────────────────
 
   useEffect(() => {
     if (authLoading) return;
@@ -542,15 +143,11 @@ export default function ProductosPage() {
 
   const fetchDatos = useCallback(() => setReloadTick(t => t + 1), []);
 
-  // ── Mapa categoría id → nombre ───────────────────────────────────────────
-
   const catMap = useMemo(() => {
     const m: Record<string, string> = {};
     categorias.forEach((c) => { m[c.id] = c.nombre; });
     return m;
   }, [categorias]);
-
-  // ── Filtrado instantáneo ─────────────────────────────────────────────────
 
   const productosFiltrados = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -566,8 +163,6 @@ export default function ProductosPage() {
       );
     });
   }, [productos, query, categoriaFiltro, soloActivos, catMap]);
-
-  // ── Handlers del Modal ───────────────────────────────────────────────────
 
   const abrirCrear = () => {
     setForm(FORM_VACÍO);
@@ -657,7 +252,7 @@ export default function ProductosPage() {
         await axios.put(buildServiceUrl('catalog', `/products/${editandoId}`), payload, { headers });
       }
       setModalAbierto(false);
-      fetchDatos(); // recargar lista
+      fetchDatos();
     } catch (err) {
       setErrorField(null);
       setErrorModal(getProductErrorMessage(err, 'guardar'));
@@ -667,12 +262,10 @@ export default function ProductosPage() {
     }
   };
 
-  // ── Render ───────────────────────────────────────────────────────────────
+  const filtrosActivos = Boolean(query || categoriaFiltro || soloActivos);
 
   return (
     <div style={{ maxWidth: '1150px', margin: '0 auto' }}>
-
-      {/* ── Cabecera ── */}
       <div
         style={{
           background: 'linear-gradient(135deg, var(--color-ink) 0%, var(--color-sidebar) 60%, var(--color-primary) 100%)',
@@ -701,7 +294,6 @@ export default function ProductosPage() {
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
-          {/* Botón Nuevo Producto */}
           <button
             id="btn-nuevo-producto"
             type="button"
@@ -728,7 +320,6 @@ export default function ProductosPage() {
             ➕ Nuevo Producto
           </button>
 
-          {/* Contador */}
           <div
             style={{
               background: 'rgba(255,255,255,0.12)',
@@ -743,135 +334,24 @@ export default function ProductosPage() {
               {loading ? '…' : productosFiltrados.length}
             </div>
             <div style={{ fontSize: '0.8rem', opacity: 0.85, marginTop: '0.15rem' }}>
-              {query || categoriaFiltro || soloActivos ? 'filtrados' : 'productos totales'}
+              {filtrosActivos ? 'filtrados' : 'productos totales'}
             </div>
           </div>
         </div>
       </div>
 
-      {/* ── Panel de filtros ── */}
-      <div
-        style={{
-          background: 'var(--color-surface)',
-          border: '1px solid var(--color-line)',
-          borderRadius: '14px',
-          padding: '1.25rem 1.5rem',
-          marginBottom: '1.5rem',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
-          display: 'flex',
-          gap: '1rem',
-          flexWrap: 'wrap',
-          alignItems: 'center',
-        }}
-      >
-        {/* Búsqueda de texto */}
-        <div style={{ flex: '1 1 280px', position: 'relative' }}>
-          <span
-            style={{
-              position: 'absolute', left: '0.85rem', top: '50%',
-              transform: 'translateY(-50%)', fontSize: '1.1rem', pointerEvents: 'none',
-            }}
-          >
-            🔍
-          </span>
-          <input
-            id="input-busqueda-productos"
-            type="text"
-            placeholder="Buscar por nombre, código de barras, descripción o categoría…"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            style={{
-              width: '100%',
-              padding: '0.65rem 0.9rem 0.65rem 2.4rem',
-              border: `1px solid ${query ? 'var(--color-primary)' : 'var(--color-line)'}`,
-              borderRadius: '10px',
-              fontSize: '0.95rem',
-              outline: 'none',
-              boxSizing: 'border-box',
-              color: 'var(--color-ink)',
-              backgroundColor: query ? 'var(--color-primary-bg)' : 'var(--color-bg)',
-            }}
-          />
-          {query && (
-            <button
-              type="button"
-              onClick={() => setQuery('')}
-              style={{
-                position: 'absolute', right: '0.6rem', top: '50%',
-                transform: 'translateY(-50%)', background: 'none',
-                border: 'none', cursor: 'pointer', fontSize: '1rem',
-                color: 'var(--color-muted)', padding: '0.2rem',
-              }}
-              title="Limpiar búsqueda"
-            >
-              ✕
-            </button>
-          )}
-        </div>
+      <ProductosFiltros
+        query={query}
+        categoriaFiltro={categoriaFiltro}
+        soloActivos={soloActivos}
+        categorias={categorias}
+        loading={loading}
+        onQueryChange={setQuery}
+        onCategoriaChange={setCategoriaFiltro}
+        onSoloActivosChange={setSoloActivos}
+        onRecargar={fetchDatos}
+      />
 
-        {/* Filtro por categoría */}
-        <select
-          id="select-categoria-filtro"
-          value={categoriaFiltro}
-          onChange={(e) => setCategoriaFiltro(e.target.value)}
-          style={{
-            flex: '0 1 200px',
-            padding: '0.65rem 0.9rem',
-            border: `1px solid ${categoriaFiltro ? 'var(--color-primary)' : 'var(--color-line)'}`,
-            borderRadius: '10px',
-            fontSize: '0.9rem',
-            backgroundColor: categoriaFiltro ? 'var(--color-primary-bg)' : 'var(--color-bg)',
-            color: 'var(--color-ink)',
-            cursor: 'pointer',
-            outline: 'none',
-          }}
-        >
-          <option value="">Todas las categorías</option>
-          {categorias.map((c) => (
-            <option key={c.id} value={c.id}>{c.nombre}</option>
-          ))}
-        </select>
-
-        {/* Toggle solo activos */}
-        <label
-          htmlFor="toggle-solo-activos"
-          style={{
-            display: 'flex', alignItems: 'center', gap: '0.5rem',
-            cursor: 'pointer', userSelect: 'none',
-            fontSize: '0.9rem', color: 'var(--color-ink-soft)', fontWeight: 500, whiteSpace: 'nowrap',
-          }}
-        >
-          <input
-            id="toggle-solo-activos"
-            type="checkbox"
-            checked={soloActivos}
-            onChange={(e) => setSoloActivos(e.target.checked)}
-            style={{ width: '16px', height: '16px', accentColor: 'var(--color-primary)', cursor: 'pointer' }}
-          />
-          Solo activos
-        </label>
-
-        {/* Botón recargar */}
-        <button
-          type="button"
-          onClick={fetchDatos}
-          disabled={loading}
-          style={{
-            padding: '0.65rem 1.2rem',
-            background: loading ? 'var(--color-line)' : 'var(--color-primary)',
-            color: loading ? 'var(--color-muted)' : 'var(--color-surface)',
-            border: 'none', borderRadius: '10px',
-            fontWeight: 600, fontSize: '0.9rem',
-            cursor: loading ? 'not-allowed' : 'pointer',
-            transition: 'background 0.15s', whiteSpace: 'nowrap',
-          }}
-          title="Recargar desde el servidor"
-        >
-          {loading ? '⏳ Cargando…' : '🔄 Recargar'}
-        </button>
-      </div>
-
-      {/* ── Error ── */}
       {errorMsg && (
         <div
           role="alert"
@@ -887,311 +367,22 @@ export default function ProductosPage() {
         </div>
       )}
 
-      {/* ── Tabla de productos ── */}
-      <div
-        style={{
-          background: 'var(--color-surface)',
-          border: '1px solid var(--color-line)',
-          borderRadius: '14px',
-          overflow: 'hidden',
-          boxShadow: '0 4px 12px rgba(0,0,0,0.06)',
+      <ProductosTabla
+        productos={productos}
+        productosFiltrados={productosFiltrados}
+        catMap={catMap}
+        loading={loading}
+        filtrosActivos={filtrosActivos}
+        onLimpiarFiltros={() => {
+          setQuery('');
+          setCategoriaFiltro('');
+          setSoloActivos(false);
         }}
-      >
-        {loading ? (
-          <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--color-muted)' }}>
-            <div style={{ fontSize: '2.5rem', marginBottom: '0.75rem' }}>⏳</div>
-            <div style={{ fontWeight: 600, fontSize: '1rem' }}>Cargando catálogo de productos…</div>
-            <div style={{ fontSize: '0.85rem', marginTop: '0.35rem' }}>
-              Conectando con MS-3 en el puerto 5203
-            </div>
-          </div>
-        ) : productosFiltrados.length === 0 ? (
-          <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--color-muted)' }}>
-            <div style={{ fontSize: '2.5rem', marginBottom: '0.75rem' }}>🔍</div>
-            <div style={{ fontWeight: 600, fontSize: '1rem', color: 'var(--color-ink-soft)' }}>
-              {query || categoriaFiltro || soloActivos
-                ? 'Ningún producto coincide con los filtros aplicados'
-                : 'No hay productos registrados para este tenant'}
-            </div>
-            {(query || categoriaFiltro || soloActivos) && (
-              <button
-                type="button"
-                onClick={() => { setQuery(''); setCategoriaFiltro(''); setSoloActivos(false); }}
-                style={{
-                  marginTop: '1rem', padding: '0.5rem 1.2rem',
-                  background: 'var(--color-primary)', color: 'var(--color-surface)',
-                  border: 'none', borderRadius: '8px',
-                  fontWeight: 600, cursor: 'pointer', fontSize: '0.9rem',
-                }}
-              >
-                Limpiar filtros
-              </button>
-            )}
-            <div style={{ marginTop: '1.5rem' }}>
-              <button
-                id="btn-nuevo-producto-empty"
-                type="button"
-                onClick={abrirCrear}
-                style={{
-                  padding: '0.65rem 1.35rem',
-                  background: 'linear-gradient(135deg, var(--color-success), var(--color-success))',
-                  color: 'var(--color-surface)', border: 'none', borderRadius: '10px',
-                  fontWeight: 700, fontSize: '0.9rem', cursor: 'pointer',
-                }}
-              >
-                ➕ Crear primer producto
-              </button>
-            </div>
-          </div>
-        ) : (
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-              <thead>
-                <tr
-                  style={{
-                    background: 'linear-gradient(90deg, var(--color-ink) 0%, var(--color-sidebar) 100%)',
-                    color: 'var(--color-surface)',
-                  }}
-                >
-                  {['Nombre', 'Código de Barras', 'Categoría', 'Precio Base', 'Tipo', 'Estado', 'Acciones'].map(
-                    (header) => (
-                      <th
-                        key={header}
-                        style={{
-                          padding: '0.9rem 1.25rem',
-                          fontSize: '0.78rem',
-                          fontWeight: 700,
-                          textTransform: 'uppercase',
-                          letterSpacing: '0.05em',
-                          whiteSpace: 'nowrap',
-                        }}
-                      >
-                        {header}
-                      </th>
-                    )
-                  )}
-                </tr>
-              </thead>
-              <tbody>
-                {productosFiltrados.map((prod, index) => {
-                  const isEven = index % 2 === 0;
-                  const categoriaNombre = prod.categoriaId ? catMap[prod.categoriaId] ?? '-' : '-';
+        onCrear={abrirCrear}
+        onEditar={abrirEditar}
+        onDesactivar={handleEliminar}
+      />
 
-                  return (
-                    <tr
-                      key={prod.id}
-                      style={{
-                        backgroundColor: isEven ? 'var(--color-surface)' : 'var(--color-bg)',
-                        borderBottom: '1px solid var(--color-bg)',
-                        transition: 'background-color 0.12s',
-                      }}
-                      onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'var(--color-primary-bg)')}
-                      onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = isEven ? 'var(--color-surface)' : 'var(--color-bg)')}
-                    >
-                      {/* Nombre */}
-                      <td style={{ padding: '0.85rem 1.25rem', maxWidth: '260px' }}>
-                        <div
-                          style={{
-                            fontWeight: 700, color: 'var(--color-ink)', fontSize: '0.95rem',
-                            whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-                          }}
-                          title={prod.nombre}
-                        >
-                          {prod.nombre}
-                        </div>
-                        {prod.descripcion && (
-                          <div
-                            style={{
-                              fontSize: '0.78rem', color: 'var(--color-ink-soft)', marginTop: '0.15rem',
-                              whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '240px',
-                            }}
-                            title={prod.descripcion}
-                          >
-                            {prod.descripcion}
-                          </div>
-                        )}
-                      </td>
-
-                      {/* Código de barras */}
-                      <td style={{ padding: '0.85rem 1.25rem' }}>
-                        {prod.codigoBarras ? (
-                          <span
-                            style={{
-                              fontFamily: 'monospace',
-                              background: 'var(--color-bg)',
-                              padding: '0.2rem 0.5rem',
-                              borderRadius: '4px',
-                              border: '1px solid var(--color-muted)',
-                              fontSize: '0.85rem',
-                            }}
-                          >
-                            {prod.codigoBarras}
-                          </span>
-                        ) : (
-                          <span style={{ color: 'var(--color-muted)', fontSize: '0.85rem' }}>-</span>
-                        )}
-                      </td>
-
-                      {/* Categoría */}
-                      <td style={{ padding: '0.85rem 1.25rem' }}>
-                        {prod.categoriaId ? (
-                          <span
-                            style={{
-                              background: 'var(--color-primary-bg)', color: 'var(--color-primary)',
-                              padding: '0.22rem 0.65rem', borderRadius: '9999px',
-                              fontSize: '0.78rem', fontWeight: 600, whiteSpace: 'nowrap',
-                            }}
-                          >
-                            {categoriaNombre}
-                          </span>
-                        ) : (
-                          <span style={{ color: 'var(--color-muted)', fontSize: '0.85rem' }}>Sin categoría</span>
-                        )}
-                      </td>
-
-                      {/* Precio base */}
-                      <td style={{ padding: '0.85rem 1.25rem', whiteSpace: 'nowrap' }}>
-                        <span style={{ fontWeight: 800, fontSize: '1rem', color: 'var(--color-primary)' }}>
-                          ${Number(prod.precioBase).toLocaleString('es-CL', {
-                            minimumFractionDigits: 0,
-                            maximumFractionDigits: 0,
-                          })}
-                        </span>
-                      </td>
-
-                      {/* Tipo */}
-                      <td style={{ padding: '0.85rem 1.25rem' }}>
-                        <span
-                          style={{
-                            background: prod.esPesoVariable ? 'var(--color-warning-bg)' : 'var(--color-success-bg)',
-                            color: prod.esPesoVariable ? 'var(--color-warning-text)' : 'var(--color-success)',
-                            padding: '0.22rem 0.65rem', borderRadius: '9999px',
-                            fontSize: '0.78rem', fontWeight: 600, whiteSpace: 'nowrap',
-                          }}
-                        >
-                          {prod.esPesoVariable ? '⚖️ Peso variable' : '📦 Unidad'}
-                        </span>
-                      </td>
-
-                      {/* Estado */}
-                      <td style={{ padding: '0.85rem 1.25rem' }}>
-                        <span
-                          style={{
-                            display: 'inline-flex', alignItems: 'center', gap: '0.3rem',
-                            background: prod.isActive ? 'var(--color-success-bg)' : 'var(--color-danger-bg)',
-                            color: prod.isActive ? 'var(--color-success)' : 'var(--color-danger)',
-                            padding: '0.22rem 0.65rem', borderRadius: '9999px',
-                            fontSize: '0.78rem', fontWeight: 700,
-                          }}
-                        >
-                          <span
-                            style={{
-                              width: '7px', height: '7px', borderRadius: '50%',
-                              background: prod.isActive ? 'var(--color-success)' : 'var(--color-danger)',
-                              display: 'inline-block',
-                            }}
-                          />
-                          {prod.isActive ? 'Activo' : 'Inactivo'}
-                        </span>
-                      </td>
-
-                      {/* Acciones */}
-                      <td style={{ padding: '0.85rem 1.25rem' }}>
-                          <div style={{ display: 'flex', gap: '0.5rem' }}>
-                            <button
-                              id={`btn-editar-producto-${prod.id}`}
-                              type="button"
-                              onClick={() => abrirEditar(prod)}
-                              style={{
-                                padding: '0.35rem 0.85rem',
-                                background: 'var(--color-primary-bg)',
-                                color: 'var(--color-primary)',
-                                border: '1px solid var(--color-muted)',
-                                borderRadius: '4px',
-                                cursor: 'pointer',
-                                fontSize: '0.85rem',
-                                fontWeight: 600,
-                                transition: 'all 0.2s',
-                              }}
-                              onMouseOver={(e) => {
-                                e.currentTarget.style.background = 'var(--color-primary)';
-                                e.currentTarget.style.color = 'var(--color-surface)';
-                              }}
-                              onMouseOut={(e) => {
-                                e.currentTarget.style.background = 'var(--color-primary-bg)';
-                                e.currentTarget.style.color = 'var(--color-primary)';
-                              }}
-                              title={`Editar ${prod.nombre}`}
-                            >
-                              ✏️ Editar
-                            </button>
-                            <button
-                              id={`btn-eliminar-producto-${prod.id}`}
-                              type="button"
-                              onClick={() => handleEliminar(prod.id, prod.nombre)}
-                              style={{
-                                padding: '0.35rem 0.85rem',
-                                background: 'var(--color-danger-bg)',
-                                color: 'var(--color-danger)',
-                                border: '1px solid var(--color-danger)',
-                                borderRadius: '4px',
-                                cursor: 'pointer',
-                                fontSize: '0.85rem',
-                                fontWeight: 600,
-                                transition: 'all 0.2s',
-                              }}
-                              onMouseOver={(e) => {
-                                e.currentTarget.style.background = 'var(--color-danger)';
-                                e.currentTarget.style.color = 'white';
-                              }}
-                              onMouseOut={(e) => {
-                                e.currentTarget.style.background = 'var(--color-danger-bg)';
-                                e.currentTarget.style.color = 'var(--color-danger)';
-                              }}
-                              title={`Desactivar ${prod.nombre}`}
-                            >
-                              🗑️ Desactivar
-                            </button>
-                          </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-
-            </table>
-          </div>
-        )}
-
-        {/* Footer */}
-        {!loading && productosFiltrados.length > 0 && (
-          <div
-            style={{
-              padding: '0.85rem 1.5rem',
-              borderTop: '1px solid var(--color-line)',
-              background: 'var(--color-bg)',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              flexWrap: 'wrap',
-              gap: '0.5rem',
-              fontSize: '0.85rem',
-              color: 'var(--color-ink-soft)',
-            }}
-          >
-            <span>
-              Mostrando <strong style={{ color: 'var(--color-ink)' }}>{productosFiltrados.length}</strong> de{' '}
-              <strong style={{ color: 'var(--color-ink)' }}>{productos.length}</strong> productos
-              {(query || categoriaFiltro || soloActivos) && (
-                <span style={{ color: 'var(--color-primary)', marginLeft: '0.5rem' }}>(filtrado)</span>
-              )}
-            </span>
-            <span style={{ fontSize: '0.78rem' }}>MS-3 Catalog &amp; Pricing · Puerto 5203</span>
-          </div>
-        )}
-      </div>
-
-      {/* ── Modal ── */}
       {modalAbierto && (
         <ProductoModal
           modo={modalModo}
@@ -1208,5 +399,3 @@ export default function ProductosPage() {
     </div>
   );
 }
-
-
