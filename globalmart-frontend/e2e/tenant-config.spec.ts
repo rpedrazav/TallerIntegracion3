@@ -10,7 +10,7 @@ test('TenantConfig convierte porcentajeIva a number antes de actualizar', async 
     zonaHoraria: 'America/Santiago',
   };
 
-  await page.route('**/tenants/tenant-a/config', async route => {
+  await page.route('**/api/tenants/tenant-a/config', async route => {
     if (route.request().method() === 'PUT') {
       updateBody = route.request().postDataJSON();
       await route.fulfill({ json: updateBody });

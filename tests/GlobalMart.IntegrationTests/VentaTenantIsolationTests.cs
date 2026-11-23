@@ -3,6 +3,7 @@ extern alias TaxComplianceServiceAlias;
 
 using System.Net;
 using System.Net.Http.Json;
+using System.IdentityModel.Tokens.Jwt;
 using System.Text.Json;
 using GlobalMart.IntegrationTests.Fixtures;
 using Microsoft.AspNetCore.Hosting;
@@ -195,7 +196,21 @@ public sealed partial class VentaTenantIsolationTests : IAsyncLifetime
                     .ConfigurePrimaryHttpMessageHandler(() => catalog.Server.CreateHandler());
                 services.AddHttpClient(Pos.Services.TaxClient.HttpClientName)
                     .ConfigurePrimaryHttpMessageHandler(() => new TaxHandler());
+                services.RemoveAll<Pos.Services.ISucursalClient>();
+                services.AddSingleton<Pos.Services.ISucursalClient>(
+                    new TenantAwareSucursalClient(fixture.TenantA, fixture.TenantB));
             });
+        }
+    }
+
+    private sealed class TenantAwareSucursalClient(params TenantData[] tenants)
+        : Pos.Services.ISucursalClient
+    {
+        public Task<bool> IsActiveAsync(Guid sucursalId, string bearerToken, CancellationToken cancellationToken = default)
+        {
+            var token = new JwtSecurityTokenHandler().ReadJwtToken(bearerToken["Bearer ".Length..]);
+            var tenantId = Guid.Parse(token.Claims.Single(c => c.Type == "tenant_id").Value);
+            return Task.FromResult(tenants.Any(t => t.TenantId == tenantId && t.SucursalId == sucursalId));
         }
     }
 
