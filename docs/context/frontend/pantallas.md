@@ -5,7 +5,7 @@ titulo: Pantallas del Frontend — GlobalMart OS
 estado: parcial
 fuentes: [globalmart-frontend/src/pages/, globalmart-frontend/src/components/, globalmart-frontend/src/api/client.ts, globalmart-frontend/src/hardware/scale-cart.ts, globalmart-frontend/src/payments/SimulatedTerminalAdapter.ts, globalmart-frontend/src/payments/terminal-ipc.ts, globalmart-frontend/src/payments/synchronizeCardPayment.ts, globalmart-frontend/src/preload.ts, globalmart-frontend/tests/scale-main-preload.integration.test.cjs, globalmart-frontend/tests/user-edit.test.cjs, globalmart-frontend/tests/user-deactivation.test.cjs, globalmart-frontend/e2e/admin-flows.spec.ts, globalmart-frontend/e2e/productos-admin.spec.ts, globalmart-frontend/e2e/weight-cart.spec.ts, globalmart-frontend/tests/terminal-port.test.cjs, globalmart-frontend/tests/terminal-ipc.test.cjs, globalmart-frontend/tests/synchronized-card-payment.test.cjs]
 verificado_contra_codigo: true
-ultima_revision: 2026-11-18
+ultima_revision: 2026-11-22
 depende_de: [estructura, ms1-identity, ms5-pos, guia-estilo]
 publica: []
 consume: []
@@ -156,11 +156,13 @@ Ruta `/admin`. Panel de administración con pestañas ("Usuarios" y "Configuraci
 
 **Contrato de acceso TI3-672 / TI3-675 [IMPLEMENTADO]:** `AppLayout` y `AdminRoute` consumen `esAdmin` desde `useTenantStore`, que reconoce los claims `active_role`/`roles` con valor `ADMIN` o `SUPER_ADMIN`. La misma guarda protege `/admin/*` y `/admin/productos`. ADMIN/SUPER_ADMIN acceden a las funciones administrativas; CAJERO no recibe su contenido y ve el mensaje **Acceso denegado** después de resolver la sesión, sin falso rechazo durante la carga. MS-1 mantiene `403` como defensa. La prueba Node `ADMIN y SUPER_ADMIN acceden a Administración y CAJERO no` cubre la regla compartida, sin navegador.
 
-La UI expone edición de email y baja lógica; todavía no expone reactivación. MS-1 dispone de PUT y DELETE lógico. Su contrato actual contempla `400` por datos inválidos o autodesactivación según la operación, `401` sin autenticación, `403` para rol no autorizado, `404` para usuario inexistente o de otro tenant y `409` por email duplicado en edición.
+La UI expone edición de email, baja lógica y reactivación. MS-1 dispone de PUT, DELETE lógico y `POST /users/{id}/reactivate`. Su contrato actual contempla `400` por datos inválidos o autodesactivación según la operación, `401` sin autenticación, `403` para rol no autorizado, `404` para usuario inexistente o de otro tenant y `409` por email duplicado en edición.
 
 **Edición de usuario:** `GET /users` aún no entrega `sucursalId` y el modal de edición muestra solo email. El backend conserva la asignación existente cuando se omite `sucursalId`; la creación sí admite sucursal inicial. Para usuarios inactivos, la tabla anuncia la edición como deshabilitada, `Admin.tsx` impide abrir/enviar el flujo y el modal no presenta controles editables. `/admin/roles` mantiene visibles esas cuentas, muestra su estado y bloquea controles y handler de guardado. Este bloqueo es solo frontend: MS-1 continúa aceptando PUT y asignación de roles sobre registros inactivos.
 
 **Baja lógica:** tras un DELETE 204, la pantalla conserva la fila con `activo=false`, bloquea inmediatamente edición y roles, y `GET /users` vuelve a incluir el usuario inactivo al recargar. No existe vista/API de auditoría consultable.
+
+**TI3-800 — Reactivación:** los usuarios inactivos muestran **Reactivar**. La pantalla envía `POST /users/{id}/reactivate` con el JWT existente y, solo ante 204, cambia esa misma fila a `activo=true` sin recargar ni alterar las demás. Durante la solicitud muestra **Reactivando…**, bloquea envíos duplicados y, al terminar, vuelve a habilitar Editar y Desactivar. Los errores 401, 403, 404 y de red conservan la fila inactiva. Pruebas Node: 13/13 con exit code 0; Playwright administrativo: 22 escenarios mostraron `ok`, pero el runner fue interrumpido porque su servidor local no terminó, por lo que se clasifica como PASS REPORTADO. [Evidencia](../../qa/TI3-800/reporte.md).
 
 ### TI3-735 / S2-104 — accesibilidad de formularios administrativos [IMPLEMENTADO]
 
