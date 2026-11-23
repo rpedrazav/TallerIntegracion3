@@ -274,7 +274,7 @@ public class DesactivarProductoIntegrationTests : IAsyncLifetime
                 await db.SaveChangesAsync();
             }
 
-            using var beforeResponse = await client.GetAsync($"/ventas/{venta.Id}");
+            using var beforeResponse = await client.GetAsync($"/api/ventas/{venta.Id}");
             Assert.Equal(HttpStatusCode.OK, beforeResponse.StatusCode);
             var before = await beforeResponse.Content.ReadFromJsonAsync<Pos.DTOs.VentaResponse>();
             Assert.NotNull(before);
@@ -292,7 +292,7 @@ public class DesactivarProductoIntegrationTests : IAsyncLifetime
             using var deletion = await _client.DeleteAsync($"/products/{_productA}");
             Assert.Equal(HttpStatusCode.NoContent, deletion.StatusCode);
 
-            using var afterResponse = await client.GetAsync($"/ventas/{venta.Id}");
+            using var afterResponse = await client.GetAsync($"/api/ventas/{venta.Id}");
             Assert.Equal(HttpStatusCode.OK, afterResponse.StatusCode);
             var after = await afterResponse.Content.ReadFromJsonAsync<Pos.DTOs.VentaResponse>();
             Assert.NotNull(after);

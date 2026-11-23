@@ -86,6 +86,22 @@ public sealed class TurnosController : ControllerBase
             : Ok(turno);
     }
 
+    /// <summary>Turnos ABIERTOS del tenant del JWT; el ADMIN los usa para consultar y anular ventas (TI3-763).</summary>
+    [HttpGet("abiertos")]
+    [Authorize(Roles = "ADMIN")]
+    [ProducesResponseType(typeof(IReadOnlyList<Turno>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> Abiertos()
+    {
+        if (!User.TryGetClaims(out _, out var tenantId))
+        {
+            return Unauthorized(new { error = "Token inválido: faltan cajero_id/sub o tenant_id" });
+        }
+
+        return Ok(await _turnoService.GetAbiertos(tenantId));
+    }
+
     [HttpPost("cerrar")]
     [ProducesResponseType(typeof(Turno), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]

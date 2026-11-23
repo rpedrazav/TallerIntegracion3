@@ -217,6 +217,7 @@ S2-052 — 2026-10-19: **2/2 pruebas de integración HTTP locales aprobadas** pa
 **Implementado:**
 - `POST /turnos/abrir` — abre turno [IMPLEMENTADO]
 - `GET /turnos/activo` — turno activo del cajero [IMPLEMENTADO]
+- `GET /turnos/abiertos` — turnos ABIERTOS del tenant del JWT, solo ADMIN (TI3-763); prueba en `AnulacionVentaIntegrationTests` [IMPLEMENTADO]
 - `POST /turnos/cerrar` — cierra turno [IMPLEMENTADO]
 - `POST /ventas` — crear venta en estado PENDIENTE. Contratos fijados (S2-001, S2-002 y S2-003): el cliente aporta `producto_id`, `cantidad` y `peso_kg`; MS-5 valida y resuelve cada producto en MS-3 (rechaza 404 inexistentes y 400 inactivos sin persistir datos), usa precio y nombre autoritativos de catálogo, y calcula subtotal, impuestos (IVA real del tenant vía MS-2 en la creación inicial sin requerir edición posterior) y total [IMPLEMENTADO]
 - `POST /ventas/{id}/items` — agregar ítem (con tax via MS-2) [IMPLEMENTADO]
@@ -239,7 +240,7 @@ S2-052 — 2026-10-19: **2/2 pruebas de integración HTTP locales aprobadas** pa
 - tests de integración S2-005 en `VentaIntegrationTests` cubren los 4 escenarios de creación segura: precio falsificado ignorado (precio persistido viene de MS-3, no del request), IVA por tenant desde MS-2, producto inactivo (400 sin persistir) y ausencia de turno abierto (409 sin persistir venta) [IMPLEMENTADO]
 
 **No implementado / CRÍTICO:**
-- `POST /ventas/{id}/anular` y alias `/api` implementados en S2-092; UI y reversión de efectos externos pendientes; reversa simulada de tarjeta implementada en S2-093.
+- `POST /ventas/{id}/anular` (ruta única `/api`) implementado en S2-092; UI para ADMIN en `VentasTurnoPage` (TI3-763, E2E con mocks `e2e/ventas-turno.spec.ts`); reversión de efectos externos pendiente; reversa simulada de tarjeta implementada en S2-093.
 - Integración con hardware (balanza, impresora, cajón de dinero)
 
 ---

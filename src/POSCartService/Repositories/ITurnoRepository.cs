@@ -13,6 +13,11 @@ public interface ITurnoRepository
     Task<Turno?> GetActivo(Guid cajeroId, Guid tenantId);
 
     /// <summary>
+    /// Lista los turnos ABIERTOS del tenant (todos los cajeros), para que un ADMIN consulte sus ventas.
+    /// </summary>
+    Task<IReadOnlyList<Turno>> GetAbiertos(Guid tenantId);
+
+    /// <summary>
     /// Registra la apertura de un nuevo turno de caja.
     /// </summary>
     Task<Turno> Abrir(Turno turno);

@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { Outlet, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useTenantStore } from '../store/useTenantStore';
@@ -40,6 +40,7 @@ export default function AppLayout() {
             <Link to="/pos" style={{ color: 'var(--color-on-primary)', textDecoration: 'none', fontWeight: 500, opacity: 0.9, transition: 'opacity 0.2s' }} onMouseOver={(e) => e.currentTarget.style.opacity = '1'} onMouseOut={(e) => e.currentTarget.style.opacity = '0.9'}>Punto de Venta</Link>
             <Link to="/abrir-turno" style={{ color: 'var(--color-on-primary)', textDecoration: 'none', fontWeight: 500, opacity: 0.9, transition: 'opacity 0.2s' }} onMouseOver={(e) => e.currentTarget.style.opacity = '1'} onMouseOut={(e) => e.currentTarget.style.opacity = '0.9'}>Abrir Turno</Link>
             <Link to="/cerrar-turno" style={{ color: 'var(--color-on-primary)', textDecoration: 'none', fontWeight: 500, opacity: 0.9, transition: 'opacity 0.2s' }} onMouseOver={(e) => e.currentTarget.style.opacity = '1'} onMouseOut={(e) => e.currentTarget.style.opacity = '0.9'}>Cerrar Turno</Link>
+            <Link to="/ventas-turno" style={{ color: 'var(--color-on-primary)', textDecoration: 'none', fontWeight: 500, opacity: 0.9, transition: 'opacity 0.2s' }} onMouseOver={(e) => e.currentTarget.style.opacity = '1'} onMouseOut={(e) => e.currentTarget.style.opacity = '0.9'}>Ventas del turno</Link>
             {canAccessAdmin(esAdmin) && (
               <Link to="/admin" style={{ color: 'var(--color-on-primary)', textDecoration: 'none', fontWeight: 500, opacity: 0.9, transition: 'opacity 0.2s' }}>Volver a administración</Link>
             )}

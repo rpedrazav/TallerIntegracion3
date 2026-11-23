@@ -126,7 +126,7 @@ public sealed class ReversaTarjetaIntegrationTests : IAsyncLifetime
         await AssertState(venta, state, status == 200);
         var snapshot = await Snapshot(_factory.Services, venta.TenantId);
         using var repeated = await Send(client, venta.Id, "{\"motivo\":\"Otro motivo no reemplaza al original\"}"); Assert.Equal(status, (int)repeated.StatusCode);
-        using var query = await client.GetAsync($"/ventas/{venta.Id}/reversa-tarjeta"); query.EnsureSuccessStatusCode();
+        using var query = await client.GetAsync($"/api/ventas/{venta.Id}/reversa-tarjeta"); query.EnsureSuccessStatusCode();
         var json = JsonDocument.Parse(await query.Content.ReadAsStringAsync()).RootElement;
         Assert.Equal(state.ToString(), json.GetProperty("estado").GetString());
         Assert.Equal(status == 200, json.GetProperty("reembolso_confirmado").GetBoolean());
@@ -161,7 +161,7 @@ public sealed class ReversaTarjetaIntegrationTests : IAsyncLifetime
         using var response = await Send(client, venta.Id); Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
         await AssertState(venta, Pos.Models.EstadoReversa.PENDIENTE, false);
         _traffic.Corrupt = null;
-        using var query = await client.GetAsync($"/ventas/{venta.Id}/reversa-tarjeta"); query.EnsureSuccessStatusCode();
+        using var query = await client.GetAsync($"/api/ventas/{venta.Id}/reversa-tarjeta"); query.EnsureSuccessStatusCode();
         await AssertState(venta, Pos.Models.EstadoReversa.APROBADA, true); Assert.Equal(1, _traffic.Posts);
     }
 
@@ -194,7 +194,7 @@ public sealed class ReversaTarjetaIntegrationTests : IAsyncLifetime
         var venta = await Seed();
         var before = await Snapshot(_factory.Services, venta.TenantId);
         using var client = Client(_factory, foreign ? Guid.NewGuid() : venta.TenantId, Guid.NewGuid(), role, expired, identity);
-        using var post = await Send(client, venta.Id); using var get = await client.GetAsync($"/ventas/{venta.Id}/reversa-tarjeta");
+        using var post = await Send(client, venta.Id); using var get = await client.GetAsync($"/api/ventas/{venta.Id}/reversa-tarjeta");
         Assert.Equal(status, (int)post.StatusCode); Assert.Equal(status, (int)get.StatusCode);
         Assert.Equal(0, _traffic.Posts); Assert.Equal(0, _traffic.Gets);
         Assert.Equal(before, await Snapshot(_factory.Services, venta.TenantId));
@@ -213,8 +213,8 @@ public sealed class ReversaTarjetaIntegrationTests : IAsyncLifetime
         var otherBefore = await Snapshot(_factory.Services, other.TenantId);
         using var foreign = Client(_factory, other.TenantId, Guid.NewGuid());
         foreign.DefaultRequestHeaders.Add("X-Tenant-ID", venta.TenantId.ToString());
-        using var query = await foreign.GetAsync($"/ventas/{venta.Id}/reversa-tarjeta");
-        using var missing = await foreign.GetAsync($"/ventas/{Guid.NewGuid()}/reversa-tarjeta");
+        using var query = await foreign.GetAsync($"/api/ventas/{venta.Id}/reversa-tarjeta");
+        using var missing = await foreign.GetAsync($"/api/ventas/{Guid.NewGuid()}/reversa-tarjeta");
         using var post = await Send(foreign, venta.Id);
         Assert.Equal(HttpStatusCode.NotFound, query.StatusCode); Assert.Equal(HttpStatusCode.NotFound, post.StatusCode);
         Assert.Equal(await missing.Content.ReadAsStringAsync(), await query.Content.ReadAsStringAsync());
@@ -229,7 +229,7 @@ public sealed class ReversaTarjetaIntegrationTests : IAsyncLifetime
         var venta = await Seed(); _node.Kill(true); await _node.WaitForExitAsync();
         using var client = Client(_factory, venta.TenantId, Guid.NewGuid());
         using var response = await Send(client, venta.Id); Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
-        using var query = await client.GetAsync($"/ventas/{venta.Id}/reversa-tarjeta"); query.EnsureSuccessStatusCode();
+        using var query = await client.GetAsync($"/api/ventas/{venta.Id}/reversa-tarjeta"); query.EnsureSuccessStatusCode();
         using var repeated = await Send(client, venta.Id); Assert.Equal(HttpStatusCode.Conflict, repeated.StatusCode);
         await AssertState(venta, Pos.Models.EstadoReversa.PENDIENTE, false); Assert.Equal(1, _traffic.Posts);
     }
@@ -262,7 +262,7 @@ public sealed class ReversaTarjetaIntegrationTests : IAsyncLifetime
         }
         await AssertState(venta, Pos.Models.EstadoReversa.PENDIENTE, false);
         using var client = Client(_factory, venta.TenantId, Guid.NewGuid());
-        using var query = await client.GetAsync($"/ventas/{venta.Id}/reversa-tarjeta"); query.EnsureSuccessStatusCode();
+        using var query = await client.GetAsync($"/api/ventas/{venta.Id}/reversa-tarjeta"); query.EnsureSuccessStatusCode();
         await AssertState(venta, Pos.Models.EstadoReversa.APROBADA, true);
         Assert.Equal(0, _traffic.Posts); // La recuperación solo consulta el intento reservado por el otro host.
     }

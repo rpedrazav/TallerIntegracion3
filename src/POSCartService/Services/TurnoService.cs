@@ -56,6 +56,11 @@ public class TurnoService : ITurnoService
         return _turnoRepository.GetActivo(cajeroId, tenantId);
     }
 
+    public Task<IReadOnlyList<Turno>> GetAbiertos(Guid tenantId)
+    {
+        return _turnoRepository.GetAbiertos(tenantId);
+    }
+
     /// <inheritdoc/>
     public async Task<(Turno Turno, decimal EfectivoEsperado)> CalcularCuadreAsync(Guid cajeroId, Guid tenantId)
     {

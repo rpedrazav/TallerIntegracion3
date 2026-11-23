@@ -163,6 +163,10 @@ export const posApi = {
     const response = await pos.get<TurnoActivo>('/turnos/activo');
     return response.data;
   },
+  openShifts: async (): Promise<TurnoActivo[]> => {
+    const response = await pos.get<TurnoActivo[]>('/turnos/abiertos');
+    return response.data;
+  },
   openShift: async (sucursalId: string, montoInicial: number): Promise<TurnoActivo> => {
     const response = await pos.post<TurnoActivo>('/turnos/abrir', {
       sucursal_id: sucursalId, monto_fondo_inicial: montoInicial,

@@ -47,25 +47,25 @@ public sealed partial class VentaTenantIsolationTests : IAsyncLifetime
     {
         var a = _fixture.TenantA;
         var b = _fixture.TenantB;
-        using var own = await _a.GetAsync($"/ventas/{a.VentaPendienteId}");
+        using var own = await _a.GetAsync($"/api/ventas/{a.VentaPendienteId}");
         Assert.Equal(HttpStatusCode.OK, own.StatusCode);
         using var ownJson = await JsonAsync(own);
         Assert.Equal(a.TenantId, ownJson.RootElement.GetProperty("tenant_id").GetGuid());
-        using var owner = await _b.GetAsync($"/ventas/{b.VentaPendienteId}");
+        using var owner = await _b.GetAsync($"/api/ventas/{b.VentaPendienteId}");
         Assert.Equal(HttpStatusCode.OK, owner.StatusCode);
         foreach (var id in new[] { b.VentaPendienteId, b.VentaCompletadaId })
         {
-            using var denied = await _a.GetAsync($"/ventas/{id}");
+            using var denied = await _a.GetAsync($"/api/ventas/{id}");
             Assert.Equal(HttpStatusCode.NotFound, denied.StatusCode);
             Assert.DoesNotContain("Producto fixture", await denied.Content.ReadAsStringAsync());
         }
         foreach (var turn in new[] { b.TurnoAbiertoId, b.TurnoCerradoId })
         {
-            using var denied = await _a.GetAsync($"/ventas/turno/{turn}");
+            using var denied = await _a.GetAsync($"/api/ventas/turno/{turn}");
             Assert.Equal(HttpStatusCode.OK, denied.StatusCode);
             using var json = await JsonAsync(denied);
             Assert.Empty(json.RootElement.EnumerateArray());
-            using var allowed = await _b.GetAsync($"/ventas/turno/{turn}");
+            using var allowed = await _b.GetAsync($"/api/ventas/turno/{turn}");
             Assert.Equal(HttpStatusCode.OK, allowed.StatusCode);
             using var ownedJson = await JsonAsync(allowed);
             Assert.Single(ownedJson.RootElement.EnumerateArray());
@@ -88,10 +88,10 @@ public sealed partial class VentaTenantIsolationTests : IAsyncLifetime
         var sale = operation.StartsWith("own-sale") ? _fixture.TenantA.VentaPendienteId : b.VentaPendienteId;
         using var response = operation switch
         {
-            "add" => await _a.PostAsJsonAsync($"/ventas/{sale}/items", new { producto_id = _fixture.TenantA.ProductoId, cantidad = 2m }),
-            "update" or "own-sale-foreign-item-update" => await _a.PutAsJsonAsync($"/ventas/{sale}/items/{item.Id}", new { cantidad = 3m }),
-            "delete" or "own-sale-foreign-item-delete" => await _a.DeleteAsync($"/ventas/{sale}/items/{item.Id}"),
-            "charge" => await _a.PostAsJsonAsync($"/ventas/{sale}/cobrar", new { monto_recibido = 1000m }),
+            "add" => await _a.PostAsJsonAsync($"/api/ventas/{sale}/items", new { producto_id = _fixture.TenantA.ProductoId, cantidad = 2m }),
+            "update" or "own-sale-foreign-item-update" => await _a.PutAsJsonAsync($"/api/ventas/{sale}/items/{item.Id}", new { cantidad = 3m }),
+            "delete" or "own-sale-foreign-item-delete" => await _a.DeleteAsync($"/api/ventas/{sale}/items/{item.Id}"),
+            "charge" => await _a.PostAsJsonAsync($"/api/ventas/{sale}/cobrar", new { monto_recibido = 1000m }),
             _ => throw new ArgumentOutOfRangeException(nameof(operation))
         };
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -111,8 +111,8 @@ public sealed partial class VentaTenantIsolationTests : IAsyncLifetime
         Assert.Equal(HttpStatusCode.OK, own.StatusCode);
         var before = await SnapshotAsync();
         using var response = add
-            ? await _a.PostAsJsonAsync($"/ventas/{_fixture.TenantA.VentaPendienteId}/items", new { producto_id = _fixture.TenantB.ProductoId, cantidad = 1m })
-            : await _a.PostAsJsonAsync("/ventas", new { items = new[] { new { producto_id = _fixture.TenantB.ProductoId, cantidad = 1m } }, metodo_pago = "EFECTIVO" });
+            ? await _a.PostAsJsonAsync($"/api/ventas/{_fixture.TenantA.VentaPendienteId}/items", new { producto_id = _fixture.TenantB.ProductoId, cantidad = 1m })
+            : await _a.PostAsJsonAsync("/api/ventas", new { items = new[] { new { producto_id = _fixture.TenantB.ProductoId, cantidad = 1m } }, metodo_pago = "EFECTIVO" });
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
         Assert.Equal(before, await SnapshotAsync());
         Assert.Empty(_pos.Kafka.Events);
@@ -122,20 +122,20 @@ public sealed partial class VentaTenantIsolationTests : IAsyncLifetime
     public async Task OperacionesPropias_CrearAgregarModificarEliminarYCobrar_FuncionanYConservanTenantB()
     {
         var beforeB = await SnapshotAsync(_fixture.TenantB.TenantId);
-        using var created = await _a.PostAsJsonAsync("/ventas", new { items = new[] { new { producto_id = _fixture.TenantA.ProductoId, cantidad = 1m } }, metodo_pago = "EFECTIVO" });
+        using var created = await _a.PostAsJsonAsync("/api/ventas", new { items = new[] { new { producto_id = _fixture.TenantA.ProductoId, cantidad = 1m } }, metodo_pago = "EFECTIVO" });
         Assert.Equal(HttpStatusCode.Created, created.StatusCode);
         using var saleJson = await JsonAsync(created);
         var id = saleJson.RootElement.GetProperty("id").GetGuid();
         Assert.Equal(_fixture.TenantA.TenantId, saleJson.RootElement.GetProperty("tenant_id").GetGuid());
-        using var added = await _a.PostAsJsonAsync($"/ventas/{id}/items", new { producto_id = _fixture.TenantA.ProductoId, cantidad = 1m });
+        using var added = await _a.PostAsJsonAsync($"/api/ventas/{id}/items", new { producto_id = _fixture.TenantA.ProductoId, cantidad = 1m });
         Assert.Equal(HttpStatusCode.Created, added.StatusCode);
         using var itemJson = await JsonAsync(added);
         var item = itemJson.RootElement.GetProperty("id").GetGuid();
-        using var updated = await _a.PutAsJsonAsync($"/ventas/{id}/items/{item}", new { cantidad = 2m });
+        using var updated = await _a.PutAsJsonAsync($"/api/ventas/{id}/items/{item}", new { cantidad = 2m });
         Assert.Equal(HttpStatusCode.OK, updated.StatusCode);
-        using var deleted = await _a.DeleteAsync($"/ventas/{id}/items/{item}");
+        using var deleted = await _a.DeleteAsync($"/api/ventas/{id}/items/{item}");
         Assert.Equal(HttpStatusCode.OK, deleted.StatusCode);
-        using var charged = await _a.PostAsJsonAsync($"/ventas/{id}/cobrar", new { monto_recibido = 119m });
+        using var charged = await _a.PostAsJsonAsync($"/api/ventas/{id}/cobrar", new { monto_recibido = 119m });
         Assert.Equal(HttpStatusCode.OK, charged.StatusCode);
         await using var db = _fixture.PosDb(_fixture.TenantA);
         var sale = await db.Ventas.Include(v => v.Items).Include(v => v.Pagos).SingleAsync(v => v.Id == id);

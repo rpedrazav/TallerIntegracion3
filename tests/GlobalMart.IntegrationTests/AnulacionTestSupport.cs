@@ -29,8 +29,8 @@ internal static class AnulacionTestSupport
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", new JwtSecurityTokenHandler().WriteToken(token));
         return client;
     }
-    public static Task<HttpResponseMessage> Send(HttpClient client, Guid id, string body = "{\"motivo\":\"  Error total  \"}", string prefix = "")
-        => client.PostAsync($"{prefix}/ventas/{id}/anular", new StringContent(body, Encoding.UTF8, "application/json"));
+    public static Task<HttpResponseMessage> Send(HttpClient client, Guid id, string body = "{\"motivo\":\"  Error total  \"}")
+        => client.PostAsync($"/api/ventas/{id}/anular", new StringContent(body, Encoding.UTF8, "application/json"));
 
     public static async Task<string> Snapshot(IServiceProvider services, Guid tenant)
     {

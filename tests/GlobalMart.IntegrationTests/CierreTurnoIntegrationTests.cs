@@ -52,7 +52,7 @@ public class CierreTurnoIntegrationTests : IClassFixture<Ms5WebApplicationFactor
         using var client = configuredFactory.CreateClient();
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-        var abrirTurnoResponse = await client.PostAsJsonAsync("/turnos/abrir", new
+        var abrirTurnoResponse = await client.PostAsJsonAsync("/api/turnos/abrir", new
         {
             sucursal_id = sucursalId,
             monto_fondo_inicial = 1000m
@@ -104,7 +104,7 @@ public class CierreTurnoIntegrationTests : IClassFixture<Ms5WebApplicationFactor
             await db.SaveChangesAsync();
         }
 
-        var cuadreResponse = await client.PostAsJsonAsync("/turnos/cuadre", new
+        var cuadreResponse = await client.PostAsJsonAsync("/api/turnos/cuadre", new
         {
             monto_declarado = 100m
         });

@@ -27,6 +27,11 @@ public interface ITurnoService
     Task<Turno?> GetActivo(Guid cajeroId, Guid tenantId);
 
     /// <summary>
+    /// Lista los turnos ABIERTOS del tenant (todos los cajeros).
+    /// </summary>
+    Task<IReadOnlyList<Turno>> GetAbiertos(Guid tenantId);
+
+    /// <summary>
     /// Calcula el efectivo esperado del turno activo de un cajero,
     /// sumando los pagos EFECTIVO de todas sus ventas COMPLETADAS.
     /// </summary>
