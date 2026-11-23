@@ -157,6 +157,7 @@ La búsqueda del POS consulta `GET /products/search` por nombre o código parcia
 //   - Refresca el estado desde MS-5 tras cada intento; si falla la lectura, oculta filas desactualizadas y avisa. No infiere anulación ni reembolso.
 //   - 401 conserva la salida al login del interceptor compartido; se bloquean doble envío y cierre durante la solicitud.
 //   - E2E con mocks: e2e/ventas-turno.spec.ts. Evidencia: docs/qa/TI3-763/reporte.md
+//   - S3-038 refuerza ADMIN, CAJERO (incluido 403 con sesión cambiada) y TARJETA rechazada; estado e importe tras recargar. 25/25 con API simulada: docs/qa/S3-038/reporte.md
 ```
 
 ## Admin.tsx [PARCIAL]

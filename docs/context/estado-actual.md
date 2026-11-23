@@ -13,6 +13,10 @@ reglas: []
 ---
 # Estado Real de Implementación — GlobalMart OS
 
+## S3-038 — Anulación desde la UI (2026-11-23)
+
+[PROBADO CON API SIMULADA] `e2e/ventas-turno.spec.ts` cubre ADMIN con anulación exitosa, CAJERO sin botón y rechazo 403 con una pantalla ADMIN desactualizada, y TARJETA con reversa rechazada. Comprueba estado e importe después de recargar. Los tres escenarios aprobaron dentro de una corrida de 25/25 pruebas, exit code 0; TypeScript aprobado. No certifica persistencia ni permisos reales del backend: HTTP y sesión están simulados. [Evidencia y límites](../qa/S3-038/reporte.md). Electron empaquetado y clúster [NO VERIFICADOS].
+
 ## S3-013 — Mensajes de anulación (2026-11-23)
 
 [IMPLEMENTADO] `VentasTurnoPage` traduce los códigos S2-091/S2-093 a mensajes diferenciados; conserva motivo y error en el diálogo y consulta nuevamente las ventas sin mutación optimista. Rechazo e incertidumbre no se presentan como devolución confirmada. Una lectura fallida oculta las filas desactualizadas y avisa. El 404 no distingue venta ajena de inexistente y el 401 mantiene la redirección global al login. [Pruebas y límites](../qa/S3-013/reporte.md). Clúster [NO VERIFICADO].

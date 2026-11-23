@@ -25,13 +25,37 @@ async function openSales(page: Page, role: string) {
   await page.goto('/?component=app#/ventas-turno');
 }
 
-test('CAJERO ve las ventas del turno sin la acción Anular', async ({ page }) => {
+test('S3-038 CAJERO no puede anular, incluso con una pantalla ADMIN desactualizada', async ({ page }) => {
+  const solicitudes: string[] = [];
+  page.on('request', r => { if (r.url().endsWith('/anular')) solicitudes.push(r.method()); });
   await openSales(page, 'CAJERO');
   await expect(page.getByRole('cell', { name: 'COMPLETADA' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Anular' })).toHaveCount(0);
+  expect(solicitudes).toEqual([]);
+
+  // Simula una pantalla abierta como ADMIN cuya sesión de API ahora es CAJERO.
+  await page.close();
+  page = await page.context().newPage();
+  page.on('request', r => { if (r.url().endsWith('/anular')) solicitudes.push(r.method()); });
+  await openSales(page, 'ADMIN');
+  await page.getByRole('button', { name: 'Anular', exact: true }).click();
+  await page.evaluate(token => { window.api.getToken = async () => token; }, jwt('CAJERO'));
+  await page.route(`**/ventas/${ventaId}/anular`, route => {
+    expect(route.request().headers().authorization).toBe(`Bearer ${jwt('CAJERO')}`);
+    return route.fulfill({ status: 403, body: '' });
+  });
+  await page.getByLabel('Motivo (obligatorio)').fill('Intento sin permisos');
+  await page.getByRole('button', { name: 'Confirmar anulación' }).click();
+  await expect(page.getByRole('dialog').getByRole('alert')).toHaveText('Solo un administrador autorizado puede anular ventas.');
+  await page.getByRole('button', { name: 'Cerrar', exact: true }).click();
+  expect(solicitudes).toEqual(['POST']);
+  await page.reload();
+  await expect(page.getByRole('cell', { name: 'COMPLETADA' })).toBeVisible();
+  await expect(page.getByRole('cell', { name: '$ 119', exact: true })).toBeVisible();
+  await expect(page.getByRole('cell', { name: 'ANULADA', exact: true })).toHaveCount(0);
 });
 
-test('ADMIN anula con motivo obligatorio y la lista muestra ANULADA', async ({ page }) => {
+test('S3-038 ADMIN anula con motivo obligatorio y conserva ANULADA al recargar', async ({ page }) => {
   await openSales(page, 'ADMIN');
   let body: unknown;
   page.on('request', r => { if (r.url().endsWith('/anular')) body = r.postDataJSON(); });
@@ -43,6 +67,36 @@ test('ADMIN anula con motivo obligatorio y la lista muestra ANULADA', async ({ p
   await expect(page.getByRole('cell', { name: 'ANULADA' })).toBeVisible();
   expect(body).toEqual({ motivo: 'Venta por error' });
   await expect(page.getByRole('button', { name: 'Anular', exact: true })).toHaveCount(0);
+  await page.reload();
+  await expect(page.getByRole('cell', { name: 'ANULADA', exact: true })).toBeVisible();
+  await expect(page.getByRole('cell', { name: '$ 119', exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Anular', exact: true })).toHaveCount(0);
+});
+
+test('S3-038 TARJETA con reversa rechazada conserva estado e importe al recargar', async ({ page }) => {
+  await openSales(page, 'ADMIN');
+  await page.route('**/ventas/turno/**', route => route.fulfill({ json: [{ ...venta, metodo_pago: 'TARJETA' }] }));
+  let solicitudes = 0;
+  await page.route(`**/ventas/${ventaId}/anular`, route => {
+    solicitudes++;
+    expect(route.request().method()).toBe('POST');
+    expect(route.request().postDataJSON()).toEqual({ motivo: 'Devolución solicitada' });
+    return route.fulfill({ status: 409, json: { codigo: 'REVERSA_RECHAZADA' } });
+  });
+  await page.reload();
+  await expect(page.getByRole('cell', { name: 'TARJETA', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Anular', exact: true }).click();
+  await page.getByLabel('Motivo (obligatorio)').fill('Devolución solicitada');
+  await page.getByRole('button', { name: 'Confirmar anulación' }).click();
+  await expect(page.getByRole('dialog').getByRole('alert')).toHaveText('La pasarela rechazó la devolución. La venta sigue completada y la tarjeta no fue reembolsada.');
+  await page.getByRole('button', { name: 'Cerrar', exact: true }).click();
+  await expect(page.getByRole('cell', { name: 'COMPLETADA' })).toBeVisible();
+  await page.reload();
+  await expect(page.getByRole('cell', { name: 'COMPLETADA' })).toBeVisible();
+  await expect(page.getByRole('cell', { name: 'TARJETA', exact: true })).toBeVisible();
+  await expect(page.getByRole('cell', { name: '$ 119', exact: true })).toBeVisible();
+  await expect(page.getByRole('cell', { name: 'ANULADA', exact: true })).toHaveCount(0);
+  expect(solicitudes).toBe(1);
 });
 
 const erroresAnulacion = [
