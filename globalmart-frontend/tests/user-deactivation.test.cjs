@@ -48,3 +48,36 @@ test('desactivación confirma, usa DELETE y conserva al usuario como Inactivo', 
     false,
   );
 });
+
+test('reactivación usa POST y activa solo la fila seleccionada', () => {
+  const helperPath = path.resolve(__dirname, '../src/components/admin/desactivarUsuario.ts');
+  const source = readFileSync(helperPath, 'utf8');
+  const javascript = ts.transpileModule(source, {
+    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
+  }).outputText;
+  const moduleUnderTest = { exports: {} };
+
+  Function('module', 'exports', javascript)(moduleUnderTest, moduleUnderTest.exports);
+  const { crearSolicitudReactivacionUsuario, marcarUsuarioActivo } = moduleUnderTest.exports;
+  const usuarioSeleccionado = {
+    id: '11111111-1111-1111-1111-111111111111',
+    nombre: 'Usuario Inactivo',
+    activo: false,
+  };
+  const otroUsuario = {
+    id: '22222222-2222-2222-2222-222222222222',
+    nombre: 'Otro Usuario',
+    activo: false,
+  };
+
+  const solicitud = crearSolicitudReactivacionUsuario(usuarioSeleccionado);
+  const actualizados = marcarUsuarioActivo([usuarioSeleccionado, otroUsuario], usuarioSeleccionado.id);
+
+  assert.deepEqual(solicitud, {
+    method: 'post',
+    path: `/users/${usuarioSeleccionado.id}/reactivate`,
+  });
+  assert.equal(actualizados.length, 2);
+  assert.equal(actualizados[0].activo, true);
+  assert.equal(actualizados[1], otroUsuario);
+});

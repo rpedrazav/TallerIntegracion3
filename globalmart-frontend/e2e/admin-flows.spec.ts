@@ -366,6 +366,108 @@ test('baja confirma, muestra progreso y conserva la fila como Inactivo tras 204'
   await expect(fila.getByText('Inactivo', { exact: true })).toBeVisible();
 });
 
+test('reactivación usa el mismo ID y JWT, evita duplicados y rehabilita la fila sin recargar', async ({ page }) => {
+  const usuarioInactivo: TestUser = {
+    ...usuarioInicial,
+    id: '22222222-2222-2222-2222-222222222222',
+    nombre: 'Beatriz Inactiva',
+    email: 'beatriz@globalmart.cl',
+    activo: false,
+  };
+  let getCount = 0;
+  let postCount = 0;
+  let releasePost: (() => void) | undefined;
+  const continuePost = new Promise<void>(resolve => { releasePost = resolve; });
+
+  await page.route('**/users**', async route => {
+    const request = route.request();
+    if (request.method() === 'GET') {
+      getCount += 1;
+      await route.fulfill({ json: { items: [usuarioInicial, usuarioInactivo], totalPages: 1 } });
+      return;
+    }
+    if (request.method() === 'POST' && new URL(request.url()).pathname.endsWith(`/users/${usuarioInactivo.id}/reactivate`)) {
+      postCount += 1;
+      expect(request.headers().authorization).toBe(`Bearer ${adminToken}`);
+      await continuePost;
+      await route.fulfill({ status: 204 });
+      return;
+    }
+    await route.abort();
+  });
+
+  await abrirAdmin(page);
+  const filaInactiva = page.locator('tbody tr').filter({ hasText: usuarioInactivo.email });
+  const filaActiva = page.locator('tbody tr').filter({ hasText: usuarioInicial.email });
+  await expect(page.locator('tbody tr')).toHaveCount(2);
+  const getCountAntesDeReactivar = getCount;
+  await expect(filaActiva.getByRole('button', { name: /Reactivar/ })).toHaveCount(0);
+  const reactivar = filaInactiva.getByRole('button', { name: `Reactivar usuario ${usuarioInactivo.nombre}` });
+  await expect(reactivar).toBeVisible();
+
+  await reactivar.click();
+  await expect.poll(() => postCount).toBe(1);
+  await expect(reactivar).toBeDisabled();
+  await expect(reactivar).toContainText('Reactivando');
+  await reactivar.dispatchEvent('click');
+  expect(postCount).toBe(1);
+  releasePost?.();
+
+  await expect(filaInactiva.getByText('Activo', { exact: true })).toBeVisible();
+  await expect(filaInactiva.getByRole('button', { name: `Reactivar usuario ${usuarioInactivo.nombre}` })).toHaveCount(0);
+  await expect(filaInactiva.getByRole('button', { name: `Editar usuario ${usuarioInactivo.nombre}` })).not.toHaveAttribute('aria-disabled', 'true');
+  await expect(filaInactiva.getByRole('button', { name: `Desactivar usuario ${usuarioInactivo.nombre}` })).toBeVisible();
+  await expect(filaActiva.getByText('Activo', { exact: true })).toBeVisible();
+  await expect(page.locator('tbody tr')).toHaveCount(2);
+  expect(getCount).toBe(getCountAntesDeReactivar);
+  expect(postCount).toBe(1);
+});
+
+for (const caso of [
+  { status: 401, mensaje: 'La sesión no es válida. Vuelve a iniciar sesión.' },
+  { status: 403, mensaje: 'No tienes permisos para reactivar usuarios.' },
+  { status: 404, mensaje: 'El usuario no existe o pertenece a otro tenant.' },
+]) {
+  test(`reactivación fallida ${caso.status} conserva la fila Inactiva`, async ({ page }) => {
+    const usuarioInactivo = { ...usuarioInicial, activo: false };
+    await page.route('**/users**', async route => {
+      if (route.request().method() === 'GET') {
+        await route.fulfill({ json: { items: [usuarioInactivo], totalPages: 1 } });
+        return;
+      }
+      await route.fulfill({ status: caso.status });
+    });
+
+    await abrirAdmin(page);
+    const fila = page.locator('tbody tr').filter({ hasText: usuarioInactivo.email });
+    await fila.getByRole('button', { name: `Reactivar usuario ${usuarioInactivo.nombre}` }).click();
+
+    await expect(page.getByRole('alert')).toContainText(caso.mensaje);
+    await expect(fila.getByText('Inactivo', { exact: true })).toBeVisible();
+    await expect(fila.getByRole('button', { name: `Reactivar usuario ${usuarioInactivo.nombre}` })).toBeEnabled();
+    await expect(fila.getByRole('button', { name: `Desactivar usuario ${usuarioInactivo.nombre}` })).toHaveCount(0);
+  });
+}
+
+test('error de red al reactivar conserva la fila Inactiva', async ({ page }) => {
+  const usuarioInactivo = { ...usuarioInicial, activo: false };
+  await page.route('**/users**', async route => {
+    if (route.request().method() === 'GET') {
+      await route.fulfill({ json: { items: [usuarioInactivo], totalPages: 1 } });
+      return;
+    }
+    await route.abort('connectionfailed');
+  });
+
+  await abrirAdmin(page);
+  const fila = page.locator('tbody tr').filter({ hasText: usuarioInactivo.email });
+  await fila.getByRole('button', { name: `Reactivar usuario ${usuarioInactivo.nombre}` }).click();
+
+  await expect(page.getByRole('alert')).toContainText('No se pudo conectar con el servicio de usuarios.');
+  await expect(fila.getByText('Inactivo', { exact: true })).toBeVisible();
+  await expect(fila.getByRole('button', { name: `Reactivar usuario ${usuarioInactivo.nombre}` })).toBeEnabled();
+});
+
 test('roles conserva usuarios activos e inactivos y bloquea solicitudes para el inactivo', async ({ page }) => {
   const usuarioInactivo: TestUser = {
     ...usuarioInicial,

@@ -6,6 +6,8 @@ import EditarUsuarioModal from '../components/admin/EditarUsuarioModal';
 import { SolicitudEdicionUsuario } from '../components/admin/editarUsuario';
 import {
   crearSolicitudDesactivacionUsuario,
+  crearSolicitudReactivacionUsuario,
+  marcarUsuarioActivo,
   marcarUsuarioInactivo,
 } from '../components/admin/desactivarUsuario';
 import UsuariosList, { Usuario } from '../components/admin/UsuariosList';
@@ -30,6 +32,7 @@ export default function Admin() {
   const [modalAbierto, setModalAbierto] = useState(false);
   const [usuarioEditando, setUsuarioEditando] = useState<Usuario | null>(null);
   const [deactivatingUserId, setDeactivatingUserId] = useState<string | null>(null);
+  const [reactivatingUserId, setReactivatingUserId] = useState<string | null>(null);
   const [success, setSuccess] = useState('');
   const [credenciales, setCredenciales] = useState<CrearUsuarioValues | null>(null);
   const [copyError, setCopyError] = useState('');
@@ -221,6 +224,56 @@ export default function Admin() {
     }
   };
 
+  const reactivarUsuario = async (usuario: Usuario) => {
+    if (reactivatingUserId !== null) return;
+
+    const solicitud = crearSolicitudReactivacionUsuario(usuario);
+    setReactivatingUserId(usuario.id);
+    setError('');
+    setSuccess('');
+
+    try {
+      const response = await axios.request({
+        method: solicitud.method,
+        url: buildServiceUrl('identity', solicitud.path),
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (response.status !== 204) throw new Error('Respuesta inesperada al reactivar el usuario.');
+
+      setUsuarios(actuales => marcarUsuarioActivo(actuales, usuario.id));
+      setSuccess(`${usuario.nombre} fue reactivado exitosamente.`);
+    } catch (err) {
+      if (!isAxiosError(err)) {
+        setError(err instanceof Error ? err.message : 'No se pudo reactivar el usuario.');
+        return;
+      }
+
+      const data = err.response?.data;
+      const serverMessage = typeof data?.message === 'string' ? data.message : undefined;
+      if (!err.response) {
+        setError('No se pudo conectar con el servicio de usuarios.');
+        return;
+      }
+
+      switch (err.response.status) {
+        case 401:
+          setError(serverMessage ?? 'La sesión no es válida. Vuelve a iniciar sesión.');
+          break;
+        case 403:
+          setError(serverMessage ?? 'No tienes permisos para reactivar usuarios.');
+          break;
+        case 404:
+          setError(serverMessage ?? 'El usuario no existe o pertenece a otro tenant.');
+          break;
+        default:
+          setError(serverMessage ?? 'No se pudo reactivar el usuario.');
+      }
+    } finally {
+      setReactivatingUserId(null);
+    }
+  };
+
   const tabButtonStyle = (activa: boolean): React.CSSProperties => ({
     padding: '0.6rem 1.25rem',
     borderRadius: '8px',
@@ -357,7 +410,9 @@ export default function Admin() {
               setUsuarioEditando(usuario);
             }}
             onDeactivate={desactivarUsuario}
+            onReactivate={reactivarUsuario}
             deactivatingUserId={deactivatingUserId}
+            reactivatingUserId={reactivatingUserId}
           />
           <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', marginTop: '1rem' }}>
             <button type="button" disabled={page <= 1 || loading} onClick={() => setPage(p => p - 1)}>Anterior</button>
