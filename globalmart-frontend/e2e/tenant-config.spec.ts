@@ -21,12 +21,17 @@ test('TenantConfig convierte porcentajeIva a number antes de actualizar', async 
   });
 
   await page.goto('/?component=tenant-config');
+  await expect(page.getByLabel('País (código ISO)')).toHaveValue('CL');
   const ivaInput = page.getByLabel('Porcentaje IVA (%)');
+  await expect(ivaInput).toBeEnabled();
   await expect(ivaInput).toHaveValue('19');
   await ivaInput.fill('18.5');
-  await page.getByRole('button', { name: 'Guardar Cambios' }).click();
+  const guardar = page.getByRole('button', { name: 'Guardar Cambios' });
+  await expect(guardar).toBeEnabled();
+  await guardar.click();
 
   await expect.poll(() => updateBody?.porcentajeIva).toBe(18.5);
   expect(typeof updateBody?.porcentajeIva).toBe('number');
   expect(updateBody?.porcentajeIva).not.toBe('18.5');
+  await expect(page.getByText('Configuración del tenant actualizada exitosamente.')).toBeVisible();
 });

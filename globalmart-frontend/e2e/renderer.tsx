@@ -10,7 +10,7 @@ import '../src/index.css';
 // Renderer real; el puente de sesión se inyecta desde Playwright.
 const tenantConfigToken = [
   btoa(JSON.stringify({ alg: 'none', typ: 'JWT' })),
-  btoa(JSON.stringify({ tenant_id: 'tenant-a', roles: ['ADMIN'] })),
+  btoa(JSON.stringify({ tenant_id: 'tenant-a', active_role: 'ADMIN', roles: ['ADMIN'] })),
   '',
 ].join('.');
 
