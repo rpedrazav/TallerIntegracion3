@@ -5,7 +5,7 @@ titulo: Pantallas del Frontend — GlobalMart OS
 estado: parcial
 fuentes: [globalmart-frontend/src/pages/, globalmart-frontend/src/components/, globalmart-frontend/src/api/client.ts, globalmart-frontend/src/hardware/scale-cart.ts, globalmart-frontend/src/payments/SimulatedTerminalAdapter.ts, globalmart-frontend/src/payments/terminal-ipc.ts, globalmart-frontend/src/payments/synchronizeCardPayment.ts, globalmart-frontend/src/preload.ts, globalmart-frontend/tests/scale-main-preload.integration.test.cjs, globalmart-frontend/tests/user-edit.test.cjs, globalmart-frontend/tests/user-deactivation.test.cjs, globalmart-frontend/e2e/admin-flows.spec.ts, globalmart-frontend/e2e/productos-admin.spec.ts, globalmart-frontend/e2e/weight-cart.spec.ts, globalmart-frontend/tests/terminal-port.test.cjs, globalmart-frontend/tests/terminal-ipc.test.cjs, globalmart-frontend/tests/synchronized-card-payment.test.cjs]
 verificado_contra_codigo: true
-ultima_revision: 2026-11-22
+ultima_revision: 2026-11-23
 depende_de: [estructura, ms1-identity, ms5-pos, guia-estilo]
 publica: []
 consume: []
@@ -153,7 +153,9 @@ La búsqueda del POS consulta `GET /products/search` por nombre o código parcia
 //   - CAJERO: posApi.activeShift → posApi.salesByShift; no ve botón Anular
 //   - ADMIN (active_role === 'ADMIN'): posApi.openShifts (GET /api/turnos/abiertos) elige turno → salesByShift
 //   - Botón Anular solo en ventas COMPLETADA → <dialog> con motivo obligatorio → posApi.anularVenta (POST /api/ventas/{id}/anular) → recarga la lista (venta ANULADA)
-//   - Errores del backend (400/403/404/409) se muestran con el campo `error` de la respuesta
+//   - S3-013: errores por `codigo`, con mensajes distintos de rechazo, incertidumbre, turno cerrado y venta no encontrada/sin acceso. Se conservan en el diálogo y al cerrarlo.
+//   - Refresca el estado desde MS-5 tras cada intento; si falla la lectura, oculta filas desactualizadas y avisa. No infiere anulación ni reembolso.
+//   - 401 conserva la salida al login del interceptor compartido; se bloquean doble envío y cierre durante la solicitud.
 //   - E2E con mocks: e2e/ventas-turno.spec.ts. Evidencia: docs/qa/TI3-763/reporte.md
 ```
 

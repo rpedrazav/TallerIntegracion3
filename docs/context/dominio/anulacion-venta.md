@@ -3,7 +3,7 @@ id: anulacion-venta
 tipo: dominio
 titulo: Contrato de anulación total — S2-091
 estado: implementado-backend
-ultima_revision: 2026-11-22
+ultima_revision: 2026-11-23
 fuentes: [src/POSCartService/Services/VentaService.cs, src/POSCartService/Models/Anulacion.cs, src/POSCartService/Services/IPaymentGatewayClient.cs, Docker/simulator/server.js, globalmart-frontend/src/api/client.ts]
 ---
 
@@ -148,3 +148,7 @@ Venta ANULADA, auditoría y snapshot de `sale.reversed` se guardan atómicamente
 ## Evidencia S2-095 (2026-11-15)
 
 62/62 pruebas de anulación, permisos y outbox aprobadas con PostgreSQL. Snapshot sin mutación al repetir tarjeta aprobada/rechazada (incluso cambiando motivo), ante JWT/roles inválidos y al acceder a reversas de otro tenant, incluida PENDIENTE sin consultar la pasarela. Un evento de anulación solo aparece tras confirmación válida; rollback no deja evento parcial. [Reporte y artefacto](../../qa/S2-095/reporte.md). No cambia el contrato ni acredita despliegue remoto.
+
+## S3-013 — Errores en la vista de anulación
+
+`VentasTurnoPage` interpreta `codigo` con `erroresAnulacion.ts`, con fallback por HTTP y para fallos de red. Conserva el motivo y muestra errores en el diálogo y la página. Consulta de nuevo la lista después del intento; solo muestra el estado retornado por MS-5. No confirma reembolsos ante incertidumbre. El 404 conserva la indistinguibilidad entre venta ajena e inexistente; el 401 vuelve al login mediante el interceptor existente. La consulta/reconciliación de reversa sigue fuera de esta pantalla. [Evidencia S3-013](../../qa/S3-013/reporte.md).
