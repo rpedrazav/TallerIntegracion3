@@ -59,17 +59,17 @@ public partial class VentaIntegrationTests
         using var client = factory.CreateClient();
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer",
             CreateCajeroToken(factory.Services.GetRequiredService<IConfiguration>(), tenant, cajero));
-        Assert.Equal(HttpStatusCode.OK, (await client.PostAsJsonAsync("/turnos/abrir", new
+        Assert.Equal(HttpStatusCode.OK, (await client.PostAsJsonAsync("/api/turnos/abrir", new
         {
             sucursal_id = Guid.NewGuid(), monto_fondo_inicial = 0m
         })).StatusCode);
-        var crear = await client.PostAsJsonAsync("/ventas", new
+        var crear = await client.PostAsJsonAsync("/api/ventas", new
         {
             items = new[] { new { producto_id = ProductOneId, cantidad = 1m } }, metodo_pago = "EFECTIVO"
         });
         Assert.Equal(HttpStatusCode.Created, crear.StatusCode);
         var ventaId = await ReadGuidPropertyAsync(crear, "id");
-        var agregar = await client.PostAsJsonAsync($"/ventas/{ventaId}/items",
+        var agregar = await client.PostAsJsonAsync($"/api/ventas/{ventaId}/items",
             new { producto_id = ProductTwoId, peso_kg = .750m });
         Assert.Equal(HttpStatusCode.Created, agregar.StatusCode);
 
@@ -126,7 +126,7 @@ public partial class VentaIntegrationTests
         Assert.Equal(updated.Id, body.RootElement.GetProperty("id").GetGuid());
         Assert.Equal(updated.Subtotal, body.RootElement.GetProperty("subtotal").GetDecimal());
         // Repetir el mismo PUT conserva ítem e importes, no agrega otra línea.
-        Assert.Equal(HttpStatusCode.OK, (await client.PutAsJsonAsync($"/ventas/{ventaId}/items/{target.Id}", payload)).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await client.PutAsJsonAsync($"/api/ventas/{ventaId}/items/{target.Id}", payload)).StatusCode);
         Assert.Equal(Snapshot(despues), Snapshot(await Leer()));
     }
 

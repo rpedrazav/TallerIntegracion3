@@ -22,6 +22,14 @@ public class TurnoRepository : ITurnoRepository
             .FirstOrDefaultAsync();
     }
 
+    public async Task<IReadOnlyList<Turno>> GetAbiertos(Guid tenantId)
+    {
+        return await _context.Turnos
+            .Where(t => t.TenantId == tenantId && t.Estado == EstadoTurno.ABIERTO)
+            .OrderBy(t => t.AbiertoAt)
+            .ToListAsync();
+    }
+
     public async Task<Turno> Abrir(Turno turno)
     {
         _context.Turnos.Add(turno);

@@ -182,14 +182,14 @@ public class SucursalOperativaIntegrationTests : IClassFixture<Ms5WebApplication
     }
 
     private static Task<HttpResponseMessage> AbrirTurnoAsync(HttpClient client, Guid sucursalId) =>
-        client.PostAsJsonAsync("/turnos/abrir", new
+        client.PostAsJsonAsync("/api/turnos/abrir", new
         {
             sucursal_id = sucursalId,
             monto_fondo_inicial = 10_000m
         });
 
     private static Task<HttpResponseMessage> CrearVentaAsync(HttpClient client) =>
-        client.PostAsJsonAsync("/ventas", new
+        client.PostAsJsonAsync("/api/ventas", new
         {
             items = new[] { new { producto_id = ProductId, cantidad = 1m } },
             metodo_pago = "EFECTIVO"

@@ -5,7 +5,7 @@ titulo: MS-5 · POS & Cart Service
 estado: parcial
 fuentes: [src/POSCartService/, Docker/simulator/server.js, tests/GlobalMart.IntegrationTests/TurnoIntegrationTests.cs, tests/GlobalMart.IntegrationTests/SucursalOperativaIntegrationTests.cs, tests/GlobalMart.IntegrationTests/PaymentSimulatorIntegrationTests.cs, tests/GlobalMart.IntegrationTests/PaymentRetrySafetyTests.cs, tests/GlobalMart.IntegrationTests/CobroSeguroIntegrationTests.cs, docs/qa/S2-035/reporte.md, docs/qa/TI3-773/reporte.md, tests/GlobalMart.IntegrationTests/CobrarTarjetaIntegrationTests.cs, tests/GlobalMart.IntegrationTests/PaymentEventSequenceContractTests.cs]
 verificado_contra_codigo: true
-ultima_revision: 2026-11-20
+ultima_revision: 2026-11-22
 depende_de: [ms1-identity, ms2-tax, ms3-catalog]
 publica: [sale.completed, sale.reversed]
 consume: []
@@ -59,6 +59,7 @@ desplegados MS-1 → MS-5 queda [NO VERIFICADA]. La URL se toma de `Services:Ide
 |--------|------|------|--------|
 | POST | `/api/turnos/abrir` | JWT | [IMPLEMENTADO] |
 | GET | `/api/turnos/activo` | JWT | [IMPLEMENTADO] |
+| GET | `/api/turnos/abiertos` | JWT ADMIN | [IMPLEMENTADO — turnos ABIERTOS del tenant del JWT; el ADMIN los usa para ver y anular ventas (TI3-763)] |
 | POST | `/api/turnos/cerrar` | JWT | [IMPLEMENTADO] |
 | POST | `/api/turnos/cuadre` | JWT | [IMPLEMENTADO — suma efectivo neto (Monto − Vuelto) de pagos EFECTIVO de ventas COMPLETADAS, sin fondo inicial (S2-112); retorna efectivo_esperado, monto_declarado, diferencia] |
 | POST | `/api/ventas` | JWT | [IMPLEMENTADO — Contrato fijado S2-001] |

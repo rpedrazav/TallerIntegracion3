@@ -64,15 +64,13 @@ public sealed class AnulacionVentaIntegrationTests : IClassFixture<Ms5WebApplica
         return venta;
     }
 
-    [Theory]
-    [InlineData("", "valida")]
-    [InlineData("/api", "rechazado")]
-    public async Task Admin_AnulaTotal_ConservaHistoricoYSoloUnaAuditoria(string prefix, string escenario)
+    [Fact]
+    public async Task Admin_AnulaTotal_ConservaHistoricoYSoloUnaAuditoria()
     {
-        var venta = await Seed(escenario);
+        var venta = await Seed("valida");
         var admin = Guid.NewGuid(); // ADMIN no es el cajero y no tiene turno propio.
         using var client = Client(_factory, venta.TenantId, admin);
-        using var response = await Send(client, venta.Id, prefix: prefix);
+        using var response = await Send(client, venta.Id);
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var json = JsonDocument.Parse(await response.Content.ReadAsStringAsync()).RootElement;
         Assert.Equal("ANULADA", json.GetProperty("estado").GetString());
@@ -240,4 +238,21 @@ public sealed class AnulacionVentaIntegrationTests : IClassFixture<Ms5WebApplica
         }
     }
 
+    [Fact]
+    public async Task Admin_TurnosAbiertos_SoloVeSuTenantYCajeroRecibe403()
+    {
+        var propia = await Seed();
+        await Seed(); // otro tenant con turno ABIERTO: no debe aparecer
+        using var admin = Client(_factory, propia.TenantId, Guid.NewGuid());
+        using var ok = await admin.GetAsync("/api/turnos/abiertos");
+        Assert.Equal(HttpStatusCode.OK, ok.StatusCode);
+        var turnos = JsonDocument.Parse(await ok.Content.ReadAsStringAsync()).RootElement;
+        Assert.Equal(propia.TurnoId, Assert.Single(turnos.EnumerateArray()).GetProperty("id").GetGuid());
+
+        using var cajero = Client(_factory, propia.TenantId, Guid.NewGuid(), role: "CAJERO");
+        using var denied = await cajero.GetAsync("/api/turnos/abiertos");
+        Assert.Equal(HttpStatusCode.Forbidden, denied.StatusCode);
+    }
+
 }
+

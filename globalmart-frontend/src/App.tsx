@@ -7,6 +7,7 @@ import Pos from './pages/Pos';
 import Admin from './pages/Admin';
 import AbrirTurnoPage from './pages/AbrirTurnoPage';
 import CerrarTurnoPage from './pages/CerrarTurnoPage';
+import VentasTurnoPage from './pages/VentasTurnoPage';
 import ProductosPage from './pages/ProductosPage';
 import { useAuth } from './hooks/useAuth';
 import { useTenantStore } from './store/useTenantStore';
@@ -79,6 +80,7 @@ export default function App() {
           <Route path="/pos" element={<Pos />} />
           <Route path="/abrir-turno" element={<AbrirTurnoPage />} />
           <Route path="/cerrar-turno" element={<CerrarTurnoPage />} />
+          <Route path="/ventas-turno" element={<VentasTurnoPage />} />
         </Route>
         <Route element={<AdminRoute><AdminLayout /></AdminRoute>}>
           <Route path="/admin" element={<AdminDashboard />} />

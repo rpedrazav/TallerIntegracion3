@@ -190,12 +190,12 @@ public sealed class CobroSeguroIntegrationTests : IAsyncLifetime
             // tardía no complete la venta. El primer chequeo es inmediato.
             if (observation == 1 && expectedStatus == "UNCERTAIN")
                 await Task.Delay(TimeSpan.FromSeconds(36));
-            using var read = await _client.GetAsync($"/ventas/{_sale}");
+            using var read = await _client.GetAsync($"/api/ventas/{_sale}");
             Assert.Equal(HttpStatusCode.OK, read.StatusCode);
             var sale = await read.Content.ReadFromJsonAsync<System.Text.Json.JsonElement>();
             Assert.Equal("PENDIENTE", sale.GetProperty("estado").GetString());
             Assert.Equal(119m, sale.GetProperty("total").GetDecimal());
-            using var status = await _client.GetAsync($"/ventas/{_sale}/intento-tarjeta");
+            using var status = await _client.GetAsync($"/api/ventas/{_sale}/intento-tarjeta");
             Assert.Equal(HttpStatusCode.OK, status.StatusCode);
             var attemptBody = await status.Content.ReadFromJsonAsync<System.Text.Json.JsonElement>();
             Assert.Equal(expectedStatus, attemptBody.GetProperty("status").GetString());
@@ -330,7 +330,7 @@ public sealed class CobroSeguroIntegrationTests : IAsyncLifetime
     [InlineData("00000000-0000-0000-0000-000000000000")]
     public async Task ClaveInvalida_NoGeneraUnaNuevaAutorizacion(string key)
     {
-        using var response = await _client.PostAsJsonAsync($"/ventas/{_sale}/cobrar-tarjeta",
+        using var response = await _client.PostAsJsonAsync($"/api/ventas/{_sale}/cobrar-tarjeta",
             new { idempotency_key = key, scenario_id = "sim-approved-v1" });
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         Assert.Equal(0, _traffic.Posts);
@@ -385,12 +385,12 @@ public sealed class CobroSeguroIntegrationTests : IAsyncLifetime
         Assert.Equal(1, _traffic.Posts);
         await using (var db = Db(_tenant))
             await db.Database.ExecuteSqlRawAsync("DROP TRIGGER fail_outbox ON \"OutboxMessages\";");
-        using var recovered = await _client.GetAsync($"/ventas/{_sale}/intento-tarjeta");
+        using var recovered = await _client.GetAsync($"/api/ventas/{_sale}/intento-tarjeta");
         Assert.Equal(HttpStatusCode.OK, recovered.StatusCode);
         var body = await recovered.Content.ReadFromJsonAsync<System.Text.Json.JsonElement>();
         Assert.Equal("APPROVED", body.GetProperty("status").GetString());
         await Verify(_tenant, _sale, true, 1);
-        using var repeatedQuery = await _client.GetAsync($"/ventas/{_sale}/intento-tarjeta");
+        using var repeatedQuery = await _client.GetAsync($"/api/ventas/{_sale}/intento-tarjeta");
         Assert.Equal(HttpStatusCode.OK, repeatedQuery.StatusCode);
         await Verify(_tenant, _sale, true, 1);
         Assert.Equal(1, _traffic.Posts);
@@ -404,7 +404,7 @@ public sealed class CobroSeguroIntegrationTests : IAsyncLifetime
         using var conflict = await Charge(_sale, Guid.NewGuid(), "sim-approved-v1");
         Assert.Equal(HttpStatusCode.BadRequest, conflict.StatusCode);
         Assert.Equal(0, _traffic.Posts);
-        using var response = await _client.PostAsJsonAsync($"/ventas/{_sale}/cobrar-tarjeta",
+        using var response = await _client.PostAsJsonAsync($"/api/ventas/{_sale}/cobrar-tarjeta",
             new { scenario_id = "sim-approved-v1" });
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         await using var db = Db(_tenant);
@@ -482,7 +482,7 @@ public sealed class CobroSeguroIntegrationTests : IAsyncLifetime
     }
 
     private Task<HttpResponseMessage> Charge(Guid sale, Guid key, string scenario) =>
-        _client.PostAsJsonAsync($"/ventas/{sale}/cobrar-tarjeta",
+        _client.PostAsJsonAsync($"/api/ventas/{sale}/cobrar-tarjeta",
             new { idempotency_key = key, scenario_id = scenario });
 
     private async Task<Pos.DTOs.PaymentGatewayResponse?> GatewayStatus(Guid tenant, Guid key)

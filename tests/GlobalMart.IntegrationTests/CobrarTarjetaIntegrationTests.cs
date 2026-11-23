@@ -88,7 +88,7 @@ public sealed class CobrarTarjetaIntegrationTests : IClassFixture<Ms5WebApplicat
         using var client = configuredFactory.CreateClient();
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-        var response = await client.PostAsJsonAsync($"/ventas/{ventaId}/cobrar-tarjeta", new
+        var response = await client.PostAsJsonAsync($"/api/ventas/{ventaId}/cobrar-tarjeta", new
         {
             scenario_id = "sim-approved-v1"
         });
@@ -173,7 +173,7 @@ public sealed class CobrarTarjetaIntegrationTests : IClassFixture<Ms5WebApplicat
         using var client = configuredFactory.CreateClient();
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", tokenB);
 
-        var response = await client.PostAsJsonAsync($"/ventas/{ventaIdA}/cobrar-tarjeta", new
+        var response = await client.PostAsJsonAsync($"/api/ventas/{ventaIdA}/cobrar-tarjeta", new
         {
             scenario_id = "sim-approved-v1"
         });
@@ -212,7 +212,7 @@ public sealed class CobrarTarjetaIntegrationTests : IClassFixture<Ms5WebApplicat
         using var client = configuredFactory.CreateClient();
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-        var response = await client.PostAsJsonAsync($"/ventas/{ventaId}/cobrar-tarjeta", new
+        var response = await client.PostAsJsonAsync($"/api/ventas/{ventaId}/cobrar-tarjeta", new
         {
             scenario_id = "sim-approved-v1"
         });
@@ -237,7 +237,7 @@ public sealed class CobrarTarjetaIntegrationTests : IClassFixture<Ms5WebApplicat
 
         using var client = configuredFactory.CreateClient();
         // Sin header de autorización
-        var response = await client.PostAsJsonAsync($"/ventas/{Guid.NewGuid()}/cobrar-tarjeta", new
+        var response = await client.PostAsJsonAsync($"/api/ventas/{Guid.NewGuid()}/cobrar-tarjeta", new
         {
             scenario_id = "sim-approved-v1"
         });
@@ -304,7 +304,7 @@ public sealed class CobrarTarjetaIntegrationTests : IClassFixture<Ms5WebApplicat
         using var client = configuredFactory.CreateClient();
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-        var response = await client.PostAsJsonAsync($"/ventas/{ventaId}/cobrar-tarjeta", new
+        var response = await client.PostAsJsonAsync($"/api/ventas/{ventaId}/cobrar-tarjeta", new
         {
             scenario_id = "sim-approved-v1"
         });
@@ -383,7 +383,7 @@ public sealed class CobrarTarjetaIntegrationTests : IClassFixture<Ms5WebApplicat
         using var client = configuredFactory.CreateClient();
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-        var response = await client.PostAsJsonAsync($"/ventas/{ventaId}/cobrar-tarjeta", new
+        var response = await client.PostAsJsonAsync($"/api/ventas/{ventaId}/cobrar-tarjeta", new
         {
             idempotency_key = customKey,
             scenario_id = "sim-approved-v1"
@@ -465,7 +465,7 @@ public sealed class CobrarTarjetaIntegrationTests : IClassFixture<Ms5WebApplicat
         using var client = configuredFactory.CreateClient();
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-        var response = await client.PostAsJsonAsync($"/ventas/{ventaId}/cobrar-tarjeta",
+        var response = await client.PostAsJsonAsync($"/api/ventas/{ventaId}/cobrar-tarjeta",
             new { scenario_id = "sim-approved-v1" });
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -560,7 +560,7 @@ public sealed class CobrarTarjetaIntegrationTests : IClassFixture<Ms5WebApplicat
         using var client = configuredFactory.CreateClient();
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-        var response = await client.PostAsJsonAsync($"/ventas/{ventaId}/cobrar-tarjeta",
+        var response = await client.PostAsJsonAsync($"/api/ventas/{ventaId}/cobrar-tarjeta",
             new { scenario_id = "sim-declined-v1" });
 
         // Criterio: rechazo no genera sale.completed ni Pago aprobado
@@ -632,17 +632,17 @@ public sealed class CobrarTarjetaIntegrationTests : IClassFixture<Ms5WebApplicat
         using var client = configuredFactory.CreateClient();
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-        var response = await client.PostAsJsonAsync($"/ventas/{ventaId}/cobrar-tarjeta",
+        var response = await client.PostAsJsonAsync($"/api/ventas/{ventaId}/cobrar-tarjeta",
             new { scenario_id = "sim-timeout-v1" });
 
         Assert.Equal(HttpStatusCode.GatewayTimeout, response.StatusCode);
 
-        var consulta = await client.GetAsync($"/ventas/{ventaId}/intento-tarjeta");
+        var consulta = await client.GetAsync($"/api/ventas/{ventaId}/intento-tarjeta");
         Assert.Equal(HttpStatusCode.OK, consulta.StatusCode);
         using (var estado = JsonDocument.Parse(await consulta.Content.ReadAsStringAsync()))
             Assert.Equal("UNCERTAIN", estado.RootElement.GetProperty("status").GetString());
 
-        var segundo = await client.PostAsJsonAsync($"/ventas/{ventaId}/cobrar-tarjeta",
+        var segundo = await client.PostAsJsonAsync($"/api/ventas/{ventaId}/cobrar-tarjeta",
             new { idempotency_key = Guid.NewGuid().ToString(), scenario_id = "sim-approved-v1" });
         Assert.Equal(HttpStatusCode.Conflict, segundo.StatusCode);
         Assert.Equal(1, gatewayMock.CallCount);
@@ -669,7 +669,7 @@ public sealed class CobrarTarjetaIntegrationTests : IClassFixture<Ms5WebApplicat
             GatewayReference = "REF-RECOVERED",
             ProcessedAt = DateTimeOffset.UtcNow
         };
-        var reconciliada = await client.GetAsync($"/ventas/{ventaId}/intento-tarjeta");
+        var reconciliada = await client.GetAsync($"/api/ventas/{ventaId}/intento-tarjeta");
         Assert.Equal(HttpStatusCode.OK, reconciliada.StatusCode);
         using (var estado = JsonDocument.Parse(await reconciliada.Content.ReadAsStringAsync()))
             Assert.Equal("APPROVED", estado.RootElement.GetProperty("status").GetString());
@@ -731,7 +731,7 @@ public sealed class CobrarTarjetaIntegrationTests : IClassFixture<Ms5WebApplicat
         using var client = configuredFactory.CreateClient();
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-        var response = await client.PostAsJsonAsync($"/ventas/{ventaId}/cobrar-tarjeta",
+        var response = await client.PostAsJsonAsync($"/api/ventas/{ventaId}/cobrar-tarjeta",
             new { scenario_id = "sim-error-v1" });
 
         Assert.Equal(HttpStatusCode.BadGateway, response.StatusCode);

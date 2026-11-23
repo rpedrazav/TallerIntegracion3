@@ -146,6 +146,17 @@ La búsqueda del POS consulta `GET /products/search` por nombre o código parcia
 //   - E2E: e2e/electron/cierre-turno.integrated.spec.ts (S3-029, caso docs/qa/S3-006). S3-036 extiende este mismo <dialog>, no crea otro.
 ```
 
+## VentasTurnoPage.tsx — TI3-763 [IMPLEMENTADO]
+
+```typescript
+// Ventas del turno con acción Anular solo para ADMIN. Ruta: /ventas-turno (AuthRoute, enlace en AppLayout y AdminDashboard)
+//   - CAJERO: posApi.activeShift → posApi.salesByShift; no ve botón Anular
+//   - ADMIN (active_role === 'ADMIN'): posApi.openShifts (GET /api/turnos/abiertos) elige turno → salesByShift
+//   - Botón Anular solo en ventas COMPLETADA → <dialog> con motivo obligatorio → posApi.anularVenta (POST /api/ventas/{id}/anular) → recarga la lista (venta ANULADA)
+//   - Errores del backend (400/403/404/409) se muestran con el campo `error` de la respuesta
+//   - E2E con mocks: e2e/ventas-turno.spec.ts. Evidencia: docs/qa/TI3-763/reporte.md
+```
+
 ## Admin.tsx [PARCIAL]
 
 Ruta `/admin`. Panel de administración con pestañas ("Usuarios" y "Configuración del Tenant"):

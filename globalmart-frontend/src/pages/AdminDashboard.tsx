@@ -9,6 +9,7 @@ export default function AdminDashboard() {
     ['/admin/sucursales', 'Sucursales', 'Crear y consultar sucursales del tenant.'],
     ['/admin/productos', 'Productos', 'Mantener el catálogo y precios.'],
     ['/admin/configuracion', 'Configuración del tenant', 'Gestionar datos regionales y fiscales.'],
+    ['/ventas-turno', 'Ventas del turno', 'Consultar y anular ventas de turnos abiertos.'],
   ];
   return <section>
     <h2>Administración del tenant</h2>

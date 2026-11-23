@@ -9,7 +9,7 @@ fuentes: [src/POSCartService/Services/VentaService.cs, src/POSCartService/Models
 
 # Contrato de anulación total — S2-091 / TI3-722
 
-**S2-091 definió el contrato; S2-092 implementó efectivo y S2-093 añade reversa de tarjeta confirmada por simulador.** Ver [reporte S2-092](../../qa/S2-092/reporte.md) para evidencia y límites. `posApi.anularVenta` en `api/client.ts` expone el endpoint al frontend; UI de anulación y despliegue remoto siguen pendientes.
+**S2-091 definió el contrato; S2-092 implementó efectivo y S2-093 añade reversa de tarjeta confirmada por simulador.** Ver [reporte S2-092](../../qa/S2-092/reporte.md) para evidencia y límites. `posApi.anularVenta` expone el endpoint y la vista `VentasTurnoPage` (TI3-763) ofrece el botón Anular solo a ADMIN, con motivo obligatorio; despliegue remoto pendiente.
 
 ## Objetivo y alcance
 
@@ -30,7 +30,7 @@ Una venta con tarjeta aprobada **solo se anula cuando la reversa específica est
 
 ## Contrato HTTP
 
-`POST /ventas/{id:guid}/anular`, con alias `POST /api/ventas/{id:guid}/anular`.
+`POST /api/ventas/{id:guid}/anular` (ruta única; el alias sin `/api` se retiró en S3-027).
 
 Encabezados: `Authorization: Bearer <JWT>` y `Content-Type: application/json`.
 

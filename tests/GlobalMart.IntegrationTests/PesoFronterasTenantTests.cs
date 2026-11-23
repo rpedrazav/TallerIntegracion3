@@ -24,9 +24,9 @@ public sealed partial class VentaTenantIsolationTests
         var sale = _fixture.TenantA.VentaPendienteId;
         return operation switch
         {
-            "create" => await _a.PostAsJsonAsync("/ventas", new { items = new[] { payload }, metodo_pago = "EFECTIVO" }),
-            "add" => await _a.PostAsJsonAsync($"/ventas/{sale}/items", payload),
-            "edit" => await _a.PutAsJsonAsync($"/ventas/{sale}/items/{item}", payload),
+            "create" => await _a.PostAsJsonAsync("/api/ventas", new { items = new[] { payload }, metodo_pago = "EFECTIVO" }),
+            "add" => await _a.PostAsJsonAsync($"/api/ventas/{sale}/items", payload),
+            "edit" => await _a.PutAsJsonAsync($"/api/ventas/{sale}/items/{item}", payload),
             _ => throw new ArgumentOutOfRangeException(nameof(operation))
         };
     }
@@ -37,7 +37,7 @@ public sealed partial class VentaTenantIsolationTests
     {
         await ConfigurarPesable(_fixture.TenantA);
         var before = await SnapshotAsync();
-        using var response = await _a.PostAsJsonAsync("/ventas", new
+        using var response = await _a.PostAsJsonAsync("/api/ventas", new
         {
             items = new[]
             {
@@ -103,7 +103,7 @@ public sealed partial class VentaTenantIsolationTests
     {
         await ConfigurarPesable(_fixture.TenantA);
         // Preparar un ítem pesable válido vía POST, incluso para probar la posterior edición.
-        using var added = await _a.PostAsJsonAsync($"/ventas/{_fixture.TenantA.VentaPendienteId}/items",
+        using var added = await _a.PostAsJsonAsync($"/api/ventas/{_fixture.TenantA.VentaPendienteId}/items",
             new { producto_id = _fixture.TenantA.ProductoId, peso_kg = .750m });
         Assert.Equal(HttpStatusCode.Created, added.StatusCode);
         using var addedJson = await JsonAsync(added);
@@ -159,7 +159,7 @@ public sealed partial class VentaTenantIsolationTests
         await ConfigurarPesable(actor);
         await ConfigurarPesable(other);
         // Control positivo del dueño sobre el producto exacto que el atacante utilizará.
-        using var valid = await owner.PostAsJsonAsync($"/ventas/{other.VentaPendienteId}/items",
+        using var valid = await owner.PostAsJsonAsync($"/api/ventas/{other.VentaPendienteId}/items",
             new { producto_id = other.ProductoId, peso_kg = .750m });
         Assert.Equal(HttpStatusCode.Created, valid.StatusCode);
         using var validJson = await JsonAsync(valid);
@@ -167,10 +167,10 @@ public sealed partial class VentaTenantIsolationTests
         client.DefaultRequestHeaders.Add("X-Tenant-ID", other.TenantId.ToString());
         var before = await SnapshotAsync();
         var payload = new { producto_id = other.ProductoId, peso_kg = .750m, tenant_id = other.TenantId };
-        using var create = await client.PostAsJsonAsync("/ventas", new { items = new[] { payload }, metodo_pago = "EFECTIVO", tenant_id = other.TenantId });
-        using var add = await client.PostAsJsonAsync($"/ventas/{actor.VentaPendienteId}/items", payload);
-        using var edit = await client.PutAsJsonAsync($"/ventas/{other.VentaPendienteId}/items/{foreignItem}", payload);
-        using var mixed = await client.PutAsJsonAsync($"/ventas/{actor.VentaPendienteId}/items/{foreignItem}", payload);
+        using var create = await client.PostAsJsonAsync("/api/ventas", new { items = new[] { payload }, metodo_pago = "EFECTIVO", tenant_id = other.TenantId });
+        using var add = await client.PostAsJsonAsync($"/api/ventas/{actor.VentaPendienteId}/items", payload);
+        using var edit = await client.PutAsJsonAsync($"/api/ventas/{other.VentaPendienteId}/items/{foreignItem}", payload);
+        using var mixed = await client.PutAsJsonAsync($"/api/ventas/{actor.VentaPendienteId}/items/{foreignItem}", payload);
         foreach (var response in new[] { create, add, edit, mixed })
         {
             Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -179,7 +179,7 @@ public sealed partial class VentaTenantIsolationTests
         Assert.Equal(before, await SnapshotAsync());
         Assert.Empty(_pos.Kafka.Events);
         client.DefaultRequestHeaders.Remove("X-Tenant-ID");
-        using var own = await client.PostAsJsonAsync($"/ventas/{actor.VentaPendienteId}/items",
+        using var own = await client.PostAsJsonAsync($"/api/ventas/{actor.VentaPendienteId}/items",
             new { producto_id = actor.ProductoId, peso_kg = .750m });
         Assert.Equal(HttpStatusCode.Created, own.StatusCode);
     }
