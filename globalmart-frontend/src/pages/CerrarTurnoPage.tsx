@@ -1,17 +1,9 @@
-﻿import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios, { AxiosError } from 'axios';
+import { AxiosError } from 'axios';
 import { useAuth } from '../hooks/useAuth';
 import { posApi, TurnoActivo, CuadreResult } from '../api/client';
-
-interface JwtPayload {
-  sub?: string;
-  tenant_id?: string;
-  nombre?: string;
-  email?: string;
-  active_role?: string;
-  sucursal_id?: string;
-}
+import { parseJwt } from '../utils/jwt';
 
 interface DenominacionConfig {
   id: string;
@@ -31,24 +23,6 @@ const DENOMINACIONES: DenominacionConfig[] = [
   { id: 'm_50',    valor: 50,    label: '$50',     tipo: 'moneda' },
   { id: 'm_10',    valor: 10,    label: '$10',     tipo: 'moneda' },
 ];
-
-function parseJwt(token: string | null): JwtPayload | null {
-  if (!token) return null;
-  try {
-    const base64Url = token.split('.')[1];
-    if (!base64Url) return null;
-    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-    const jsonPayload = decodeURIComponent(
-      atob(base64)
-        .split('')
-        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-        .join('')
-    );
-    return JSON.parse(jsonPayload);
-  } catch {
-    return null;
-  }
-}
 
 export default function CerrarTurnoPage() {
   const { token } = useAuth();
@@ -879,12 +853,6 @@ export default function CerrarTurnoPage() {
                     cursor: isClosingTurno || noTurnoOpen ? 'not-allowed' : 'pointer',
                     boxShadow: '0 4px 6px -1px color-mix(in srgb, var(--color-danger) 25%, transparent)',
                     transition: 'all 0.15s ease',
-                  }}
-                  onMouseOver={(e) => {
-                    if (!isClosingTurno && !noTurnoOpen) e.currentTarget.style.backgroundColor = 'var(--color-danger)';
-                  }}
-                  onMouseOut={(e) => {
-                    if (!isClosingTurno && !noTurnoOpen) e.currentTarget.style.backgroundColor = 'var(--color-danger)';
                   }}
                 >
                   {isClosingTurno ? 'Cerrando Turno...' : '🔒 Confirmar y Cerrar Turno'}

@@ -49,6 +49,14 @@ function saleErrorMessage(error: unknown): string {
   return 'No se pudo sincronizar el ítem con MS-5.';
 }
 
+async function fetchLatestPendingSale(shiftId: string): Promise<VentaPendiente | null> {
+  const ventas = await posApi.salesByShift(shiftId);
+  const pendingId = ventas.filter((item) => item.estado === 'PENDIENTE').pop()?.id;
+  if (!pendingId) return null;
+  const recovered = await posApi.getSale(pendingId);
+  return recovered?.estado === 'PENDIENTE' ? recovered : null;
+}
+
 export default function Pos() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -463,16 +471,12 @@ export default function Pos() {
     setIsStartingSale(true);
     setSearchResults([]);
     try {
-      const ventas = await posApi.salesByShift(turnoId);
-      const pendingId = ventas.filter((item) => item.estado === 'PENDIENTE').pop()?.id;
-      if (pendingId) {
-        const pendiente = await posApi.getSale(pendingId);
-        if (pendiente.estado === 'PENDIENTE') {
-          saleRef.current = pendiente;
-          setVenta(pendiente);
-          setDraftItems([]);
-          return;
-        }
+      const pendienteExistente = await fetchLatestPendingSale(turnoId);
+      if (pendienteExistente) {
+        saleRef.current = pendienteExistente;
+        setVenta(pendienteExistente);
+        setDraftItems([]);
+        return;
       }
 
       const creada = await posApi.createSale(draftItems.map((item) => ({
@@ -486,16 +490,12 @@ export default function Pos() {
     } catch (error: unknown) {
       if (axios.isAxiosError(error) && !error.response) {
         try {
-          const ventas = await posApi.salesByShift(turnoId);
-          const pendingId = ventas.filter((item) => item.estado === 'PENDIENTE').pop()?.id;
-          if (pendingId) {
-            const pendiente = await posApi.getSale(pendingId);
-            if (pendiente.estado === 'PENDIENTE') {
-              saleRef.current = pendiente;
-              setVenta(pendiente);
-              setDraftItems([]);
-              return;
-            }
+          const pendienteRecuperada = await fetchLatestPendingSale(turnoId);
+          if (pendienteRecuperada) {
+            saleRef.current = pendienteRecuperada;
+            setVenta(pendienteRecuperada);
+            setDraftItems([]);
+            return;
           }
         } catch {
           // La consulta de recuperación también falló: conservar el borrador y mostrar el error.
