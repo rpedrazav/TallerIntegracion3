@@ -39,7 +39,7 @@ reglas: []
 
 ## Descuento FEFO en ventas (2026-11-20)
 
-[IMPLEMENTADO Y PROBADO LOCALMENTE] Al procesar `sale.completed`, MS-4 carga los lotes disponibles del tenant, producto y sucursal, los ordena por `FechaVencimiento ASC` e `Id ASC`, y descuenta primero el de vencimiento más próximo. Los cambios de lotes, stock agregado, movimientos e idempotencia continúan bajo el único `SaveChanges` del evento; un fallo intermedio no persiste descuentos parciales. La prueba dirigida con dos lotes confirmó cantidades finales 0 y 2 al vender 8 de 10 unidades. Regresión MS-4: 39/39; proyecto de integración compila. Kafka y PostgreSQL reales para FEFO [NO VERIFICADOS].
+[IMPLEMENTADO Y PROBADO LOCALMENTE] Al procesar `sale.completed`, MS-4 carga los lotes disponibles del tenant, producto y sucursal, los ordena por `FechaVencimiento ASC` e `Id ASC`, y descuenta primero el de vencimiento más próximo. Los cambios de lotes, stock agregado, movimientos e idempotencia continúan bajo el único `SaveChanges` del evento; un fallo intermedio no persiste descuentos parciales. La prueba dirigida con dos lotes confirmó cantidades finales 0 y 2 al vender 8 de 10 unidades. Regresión MS-4: 39/39; proyecto de integración compila. S3-056 (2026-11-24) lo verificó de punta a punta con Kafka y PostgreSQL reales en `docker compose` (`scripts/e2e-fefo.mjs`; [reporte](../qa/S3-056/reporte.md)). Un evento `sale.completed` de un producto sin lotes bloquea la partición hasta que haya una recepción (reintento sin avance).
 
 ## TI3-773 — Baja lógica de sucursales (2026-11-20)
 

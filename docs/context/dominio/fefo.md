@@ -5,7 +5,7 @@ titulo: Contrato mínimo de recepciones y lotes FEFO
 estado: implementado
 fuentes: [src/WarehouseInventoryService/Controllers/RecepcionesController.cs, src/WarehouseInventoryService/Controllers/LotesController.cs, src/WarehouseInventoryService/Services/RecepcionService.cs, src/WarehouseInventoryService/Services/RecepcionValidator.cs, src/WarehouseInventoryService/Services/LoteService.cs, src/WarehouseInventoryService/Repositories/StockRepository.cs, src/WarehouseInventoryService/Models/Lote.cs, src/WarehouseInventoryService/Data/Migrations/20261118181528_AddSucursalToLote.cs, tests/GlobalMart.Tests/MS4_Warehouse/SaleEventProcessor_MovimientoStockTests.cs, tests/GlobalMart.Tests/MS4_Warehouse/LotesController_Tests.cs, tareas/plan_sprint3.xlsx]
 verificado_contra_codigo: true
-ultima_revision: 2026-11-20
+ultima_revision: 2026-11-24
 depende_de: [ms4-inventory]
 publica: []
 consume: []
@@ -15,7 +15,7 @@ reglas: [RN-01, RN-05, RF-10, WI-04, WI-05]
 
 ## Estado y alcance
 
-**IMPLEMENTADO EN CÓDIGO.** `POST /recepciones` registra la recepción atómica con validaciones; `GET /lotes?porVencer=&sucursal_id=` consulta lotes disponibles del tenant; y el consumidor de `sale.completed` descuenta por FEFO. Las integraciones de recepción están verificadas en `local`; consulta y descuento FEFO con PostgreSQL/Kafka reales quedan [NO VERIFICADOS].
+**IMPLEMENTADO EN CÓDIGO.** `POST /recepciones` registra la recepción atómica con validaciones; `GET /lotes?porVencer=&sucursal_id=` consulta lotes disponibles del tenant; y el consumidor de `sale.completed` descuenta por FEFO. Las integraciones de recepción están verificadas en `local`; el descuento FEFO de punta a punta (recepción → venta → Kafka → MS-4) se verificó con PostgreSQL y Kafka reales en `docker compose` ([S3-056](../../qa/S3-056/reporte.md), 2026-11-24).
 
 El alcance reutiliza `Lote.Id`, `ProductoId`, `SucursalId`, `FechaVencimiento`, `Cantidad`, `Ubicacion` y `TenantId`. S3-014 agregó `SucursalId` obligatorio y su migración porque el stock se administra por sucursal. No se agrega `FechaRecepcion`: el contrato no la requiere y el modelo actual no la tiene.
 
@@ -68,7 +68,7 @@ HTTP 201:
 
 Al consumir `sale.completed`, `StockRepository` selecciona lotes con cantidad disponible del mismo tenant, producto y sucursal. El orden estable es `FechaVencimiento ASC`, luego `Id ASC`; una venta agota el lote más próximo antes de descontar el siguiente. `SaleEventProcessor` persiste los cambios de lotes y stock agregado junto con movimientos y `EventId` mediante un único `SaveChanges`, por lo que un fallo intermedio no deja el primer lote descontado.
 
-La prueba local con dos lotes de 5 unidades y una venta de 8 deja el lote temprano en 0, el tardío en 2 y el stock agregado en 2. La integración FEFO con Kafka y PostgreSQL reales queda [NO VERIFICADA].
+La prueba local con dos lotes de 5 unidades y una venta de 8 deja el lote temprano en 0, el tardío en 2 y el stock agregado en 2. Con Kafka y PostgreSQL reales (`scripts/e2e-fefo.mjs`): dos lotes de 5, venta de 3 → lote temprano 2, tardío 5, stock 7.
 
 ### Lotes insuficientes
 
