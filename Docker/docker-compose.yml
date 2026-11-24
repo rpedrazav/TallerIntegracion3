@@ -3,15 +3,20 @@
 # Proyecto: Taller de Integración 3 (INTEGRA3)
 #
 # Servicios (Docker):
-#   - 8x PostgreSQL 16 (una instancia por microservicio)
+#   - 8x PostgreSQL 16 (una instancia por microservicio, puertos 5433–5440)
 #   - Apache Zookeeper + Apache Kafka + Kafka Init Topics
 #   - Kafdrop (UI web de Kafka)
-#   - Kong 3.6 DB-less (API Gateway)
+#   - Payment Gateway Simulator (Mock RN-02 en puerto 5050)
+#   - Kong 3.6 DB-less (API Gateway en puerto 8000 -> host.docker.internal)
 #   - Prometheus + Grafana (Monitoreo)
 #   - Frontend Electron (build helper)
 #
-# Servicios (host local, fuera de Docker):
-#   - TenantIdentityService  →  dotnet run  (puerto 5124)
+# Servicios (host local, fuera de Docker — iniciar con ./run-apis.sh o run-apis.bat):
+#   - MS-1 TenantIdentityService      →  puerto 5124
+#   - MS-2 TaxComplianceService       →  puerto 5239
+#   - MS-3 CatalogPricingService      →  puerto 5203
+#   - MS-4 WarehouseInventoryService  →  puerto 5205
+#   - MS-5 POSCartService             →  puerto 5000
 #
 # Uso:
 #   docker compose up -d          # Levantar todo
@@ -29,7 +34,7 @@ x-postgres-common: &postgres-common
   networks:
     - minimarket-net
   healthcheck:
-    test: [ "CMD-SHELL", "pg_isready -U ${DB_USER} -d $$POSTGRES_DB" ]
+    test: [ "CMD-SHELL", "pg_isready -U ${DB_USER:-admin} -d $$POSTGRES_DB" ]
     interval: 10s
     timeout: 5s
     retries: 5
@@ -64,8 +69,8 @@ services:
     <<: *postgres-common
     container_name: postgres-tenant
     environment:
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_USER: ${DB_USER:-admin}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-admin_password}
       POSTGRES_DB: tenant_db
     ports:
       - "5433:5432"
@@ -78,8 +83,8 @@ services:
     <<: *postgres-common
     container_name: postgres-supply
     environment:
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_USER: ${DB_USER:-admin}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-admin_password}
       POSTGRES_DB: supply_db
     ports:
       - "5434:5432"
@@ -92,8 +97,8 @@ services:
     <<: *postgres-common
     container_name: postgres-catalog
     environment:
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_USER: ${DB_USER:-admin}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-admin_password}
       POSTGRES_DB: catalog_db
     ports:
       - "5435:5432"
@@ -106,8 +111,8 @@ services:
     <<: *postgres-common
     container_name: postgres-pos
     environment:
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_USER: ${DB_USER:-admin}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-admin_password}
       POSTGRES_DB: pos_db
     ports:
       - "5436:5432"
@@ -120,8 +125,8 @@ services:
     <<: *postgres-common
     container_name: postgres-tax
     environment:
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_USER: ${DB_USER:-admin}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-admin_password}
       POSTGRES_DB: tax_db
     ports:
       - "5437:5432"
@@ -134,8 +139,8 @@ services:
     <<: *postgres-common
     container_name: postgres-warehouse
     environment:
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_USER: ${DB_USER:-admin}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-admin_password}
       POSTGRES_DB: warehouse_db
     ports:
       - "5438:5432"
@@ -148,8 +153,8 @@ services:
     <<: *postgres-common
     container_name: postgres-analytics
     environment:
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_USER: ${DB_USER:-admin}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-admin_password}
       POSTGRES_DB: analytics_db
     ports:
       - "5439:5432"
@@ -162,8 +167,8 @@ services:
     <<: *postgres-common
     container_name: postgres-loyalty
     environment:
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_USER: ${DB_USER:-admin}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-admin_password}
       POSTGRES_DB: loyalty_db
     ports:
       - "5440:5432"

@@ -30,8 +30,8 @@ const SENSITIVE_CARD_PATTERNS = [
 
 // Almacén en memoria de idempotencia: key = `${tenant_id}:${request_id}`
 const idempotencyStore = new Map();
-// Cualquier GUID hexadecimal, como los que acepta MS-5 (el tenant demo no es RFC v1-v5).
-const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+// Acepta cualquier GUID/UUID válido no vacío (incluyendo el tenant seed aaaaaaaa-0000-0000-0000-000000000001) y rechaza Guid.Empty
+const UUID_PATTERN = /^(?!0{8}-0{4}-0{4}-0{4}-0{12}$)[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const SCENARIO_PATTERN = /^[a-z0-9-]{1,64}$/;
 
 function safeUuid(value) {

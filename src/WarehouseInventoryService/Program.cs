@@ -37,10 +37,14 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateIssuerSigningKey = true,
             ValidIssuer = builder.Configuration["Jwt:Issuer"] ?? "GlobalMartOS",
             ValidAudience = builder.Configuration["Jwt:Audience"] ?? "GlobalMartOS_Clients",
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"] ?? throw new InvalidOperationException("Jwt:Key requerido")))
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(
+                builder.Configuration["Jwt:Key"]
+                ?? builder.Configuration["Jwt:SecretKey"]
+                ?? "GlobalMartOS_SuperSecretKey_ChangeInProduction_Min32Chars!!"))
         };
     });
 builder.Services.AddAuthorization();
+builder.Services.AddHealthChecks();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -72,7 +76,7 @@ app.UseMiddleware<WarehouseInventoryService.Middleware.TenantMiddleware>();
 
 // TI3-258: Mapear controllers normales siempre
 app.MapControllers();
-app.MapGet("/health", () => Results.Ok(new { status = "ok" }));
+app.MapHealthChecks("/health");
 
 app.Run();
 

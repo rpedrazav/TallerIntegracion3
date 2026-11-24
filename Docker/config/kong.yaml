@@ -1,31 +1,27 @@
-# ==============================================================================
-# Configuración Declarativa de Kong API Gateway (DB-less Mode)
-# Proyecto: GlobalMart OS (INTEGRA3)
-# Tarea: TI3-113
-#
-# Este archivo define todas las rutas, servicios y plugins de Kong.
-# Kong lo carga al arrancar via KONG_DECLARATIVE_CONFIG.
-#
-# Documentación: https://docs.konghq.com/gateway/3.6.x/production/deployment-topologies/db-less-and-declarative-config/
-# ==============================================================================
-
 _format_version: "3.0"
 _transform: true
 
 # ==============================================================================
-# Servicios y Rutas — Sprint 1
+# Consumidor Emisor JWT (RN-07)
+# Sincronizado con Jwt:Issuer="GlobalMartOS" y Jwt:Key de desarrollo en MS-1..MS-5
 # ==============================================================================
-# NOTA (S3-029): los microservicios corren en el host con `run-apis.bat` /
-# `run-apis.sh` (dotnet run), no en docker compose. Kong los alcanza vía
-# `host.docker.internal` (extra_hosts en docker-compose.yml) en los puertos de
-# launchSettings.json. Este archivo solo lo usa docker compose; el clúster usa
-# sus propios manifiestos (k8s/manifests) e Ingress, sin Kong.
-# ==============================================================================
+consumers:
+  - username: globalmart-jwt-issuer
+    jwt_secrets:
+      - key: "GlobalMartOS"
+        algorithm: HS256
+        secret: "GlobalMartOS_SuperSecretKey_ChangeInProduction_Min32Chars!!"
 
+# ==============================================================================
+# Servicios y Rutas — Sprint 2 (Flujo Crítico Verificado)
+# NOTA (S3-029): los microservicios corren en el host con run-apis (dotnet run),
+# no en docker compose. Kong los alcanza vía host.docker.internal en los puertos
+# de launchSettings.json.
+# ==============================================================================
 services:
 
   # --------------------------------------------------------------------------
-  # MS-1: Tenant & Identity Service (host :5124)
+  # MS-1: Tenant & Identity Service (Host :5124)
   # --------------------------------------------------------------------------
   - name: tenant-identity-service
     url: http://host.docker.internal:5124
@@ -39,13 +35,27 @@ services:
           - POST
           - OPTIONS
 
-      # Rutas protegidas de auth (GET, PUT, DELETE — requieren JWT)
-      - name: auth-route
+      # Rutas protegidas: requieren JWT válido con claim de tenant
+      - name: auth-protected-route
         paths:
-          - /api/auth
+          - /api/auth/me
+          - /api/auth/refresh
+          - /api/auth/logout
         strip_path: false
         methods:
           - GET
+          - POST
+          - OPTIONS
+        plugins:
+          - name: jwt
+
+      - name: tenants-route
+        paths:
+          - /api/tenants
+        strip_path: false
+        methods:
+          - GET
+          - POST
           - PUT
           - DELETE
           - OPTIONS
@@ -65,19 +75,6 @@ services:
         plugins:
           - name: jwt
 
-      - name: tenants-route
-        paths:
-          - /api/tenants
-        strip_path: false
-        methods:
-          - GET
-          - POST
-          - PUT
-          - DELETE
-          - OPTIONS
-        plugins:
-          - name: jwt
-
       - name: sucursales-route
         paths:
           - /api/sucursales
@@ -85,19 +82,62 @@ services:
         methods:
           - GET
           - POST
+          - PUT
+          - DELETE
+          - OPTIONS
+        plugins:
+          - name: jwt
+
+      - name: roles-route
+        paths:
+          - /api/roles
+        strip_path: false
+        methods:
+          - GET
+          - POST
+          - PUT
+          - DELETE
           - OPTIONS
         plugins:
           - name: jwt
 
   # --------------------------------------------------------------------------
-  # MS-3: Catalog & Pricing Service (host :5203)
+  # MS-2: Tax & Compliance Service (Host :5239)
+  # --------------------------------------------------------------------------
+  - name: tax-compliance-service
+    url: http://host.docker.internal:5239
+    routes:
+      - name: tax-route
+        paths:
+          - /api/tax
+        strip_path: false
+        methods:
+          - POST
+          - OPTIONS
+        plugins:
+          - name: jwt
+
+      - name: comprobantes-route
+        paths:
+          - /api/comprobantes
+        strip_path: false
+        methods:
+          - GET
+          - POST
+          - OPTIONS
+        plugins:
+          - name: jwt
+
+  # --------------------------------------------------------------------------
+  # MS-3: Catalog & Pricing Service (Host :5203)
   # --------------------------------------------------------------------------
   - name: catalog-pricing-service
     url: http://host.docker.internal:5203
     routes:
-      - name: products-route
+      - name: catalog-route
         paths:
           - /api/products
+          - /api/catalog
         strip_path: false
         methods:
           - GET
@@ -108,9 +148,9 @@ services:
         plugins:
           - name: jwt
 
-      - name: categories-route
+      - name: precios-route
         paths:
-          - /api/categories
+          - /api/precios
         strip_path: false
         methods:
           - GET
@@ -121,9 +161,9 @@ services:
         plugins:
           - name: jwt
 
-      - name: prices-route
+      - name: categorias-route
         paths:
-          - /api/prices
+          - /api/categorias
         strip_path: false
         methods:
           - GET
@@ -134,21 +174,18 @@ services:
         plugins:
           - name: jwt
 
-      - name: promotions-route
+      - name: catalog-seed-route
         paths:
-          - /api/promotions
+          - /seed
         strip_path: false
         methods:
-          - GET
           - POST
-          - PUT
-          - DELETE
           - OPTIONS
         plugins:
           - name: jwt
 
   # --------------------------------------------------------------------------
-  # MS-4: Warehouse & Inventory Service (host :5205)
+  # MS-4: Warehouse & Inventory Service (Host :5205)
   # --------------------------------------------------------------------------
   - name: warehouse-inventory-service
     url: http://host.docker.internal:5205
@@ -167,7 +204,7 @@ services:
           - name: jwt
 
   # --------------------------------------------------------------------------
-  # MS-5: POS & Cart Service (host :5000, default de dotnet run)
+  # MS-5: POS & Cart Service (Host :5000)
   # --------------------------------------------------------------------------
   - name: pos-cart-service
     url: http://host.docker.internal:5000
@@ -193,6 +230,7 @@ services:
           - GET
           - POST
           - PUT
+          - PATCH
           - DELETE
           - OPTIONS
         plugins:
@@ -226,22 +264,6 @@ services:
           - OPTIONS
 
 # ==============================================================================
-# Consumer JWT de desarrollo (S3-029)
-# ==============================================================================
-# El plugin `jwt` busca el consumer cuyo `key` coincide con el claim `iss`.
-# MS-1 firma HS256 con `iss: GlobalMartOS` y la clave Jwt:Key de
-# src/TenantIdentityService/appsettings.json. Si cambia esa clave, actualizar aquí.
-# Solo para desarrollo local: no es un secreto de producción.
-# ==============================================================================
-
-consumers:
-  - username: globalmart-dev
-    jwt_secrets:
-      - key: GlobalMartOS
-        algorithm: HS256
-        secret: "GlobalMartOS_SuperSecretKey_ChangeInProduction_Min32Chars!!"
-
-# ==============================================================================
 # Plugins Globales
 # ==============================================================================
 
@@ -270,6 +292,7 @@ plugins:
         - Accept
         - Authorization
         - Content-Type
+        - Idempotency-Key
         - Origin
         - X-Requested-With
         - X-Tenant-Id
