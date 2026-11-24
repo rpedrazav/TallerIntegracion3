@@ -281,6 +281,7 @@ export function useVenta({
     cartItems,
     isCartEmpty,
     totalItems,
+    draftSubtotal,
     subtotal,
     iva,
     total,

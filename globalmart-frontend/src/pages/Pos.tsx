@@ -68,9 +68,7 @@ export default function Pos() {
     cartItems,
     isCartEmpty,
     totalItems,
-    subtotal,
-    iva,
-    total,
+    draftSubtotal,
     isStartingSale,
     pendingMutations,
     saleNeedsRefresh,
@@ -90,6 +88,10 @@ export default function Pos() {
     paymentState: 'available', // el guard dinámico usa paymentState
     onOpenPayment: () => cobroManager.openPaymentModal(),
   });
+
+  const subtotal = venta ? venta.subtotal : draftSubtotal;
+  const iva = venta?.impuestos;
+  const total = venta?.total;
 
   // Hook de cobro
   const cobroManager = useCobro({
