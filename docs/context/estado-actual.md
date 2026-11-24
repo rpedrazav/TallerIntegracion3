@@ -5,7 +5,7 @@ titulo: Estado Real de Implementación — GlobalMart OS
 estado: vigente
 fuentes: [docs/context/_reports/inventario.md, src/, tests/GlobalMart.IntegrationTests/SucursalIntegrationTests.cs, tests/GlobalMart.IntegrationTests/SucursalOperativaIntegrationTests.cs, tests/GlobalMart.IntegrationTests/ReactivarUsuarioIntegrationTests.cs, globalmart-frontend/src/api/client.ts, globalmart-frontend/src/store/useTenantStore.ts, globalmart-frontend/src/pages/Admin.tsx, globalmart-frontend/src/pages/AdminRoles.tsx, globalmart-frontend/src/components/admin/UsuariosList.tsx, globalmart-frontend/src/components/admin/EditarUsuarioModal.tsx, globalmart-frontend/src/hardware/simulated-scale-adapter.ts, globalmart-frontend/src/hardware/serial-scale-adapter.ts, globalmart-frontend/src/hardware/scale-adapter-factory.ts, globalmart-frontend/src/hardware/scale-ipc.ts, globalmart-frontend/src/payments/terminal-ipc.ts, globalmart-frontend/src/payments/synchronizeCardPayment.ts, globalmart-frontend/src/preload.ts, globalmart-frontend/e2e/admin-flows.spec.ts, globalmart-frontend/e2e/admin.spec.ts, globalmart-frontend/e2e/weight-cart.spec.ts, globalmart-frontend/tests/admin-access.test.cjs, globalmart-frontend/tests/user-edit.test.cjs, globalmart-frontend/tests/user-deactivation.test.cjs, globalmart-frontend/tests/simulated-scale-adapter.test.cjs, globalmart-frontend/tests/serial-scale-adapter.test.cjs, globalmart-frontend/tests/scale-ipc.test.cjs, globalmart-frontend/tests/terminal-ipc.test.cjs, globalmart-frontend/tests/synchronized-card-payment.test.cjs, git log, docs/context/_reports/preguntas-abiertas.md, tests/GlobalMart.IntegrationTests/CobroSeguroIntegrationTests.cs, docs/qa/S2-035/reporte.md, docs/qa/TI3-773/reporte.md, docs/qa/TI3-799/reporte.md, docs/qa/TI3-800/reporte.md, new-ingresses.yaml]
 verificado_contra_codigo: true
-ultima_revision: 2026-11-23
+ultima_revision: 2026-11-24
 depende_de: []
 publica: []
 consume: []
@@ -113,12 +113,13 @@ reglas: []
 
 [IMPLEMENTADO Y PROBADO] MS-1 permite aprovisionar un tenant y su administrador mediante `--bootstrap-admin` y variables de entorno explícitas; la creación de usuarios valida el tenant del JWT, acepta sucursal inicial del mismo tenant y entrega correo, contraseña inicial y tenant ID para copiar en la UI. Edición y baja lógica actúan sobre `Usuarios`, la tabla que consulta el login; las desactivaciones impiden nuevos inicios de sesión. La vista ADMIN tiene navegación propia para usuarios, gestión de roles base y propios, sucursales, inventario, catálogo y configuración. MS-4 agrega listado y ajuste de stock por sucursal con validación remota de producto y sucursal y registro de movimiento. La suite .NET aprobó 334/334 pruebas con PostgreSQL local; el flujo ADMIN aprobó 5/5 pruebas E2E en Edge, `npm run typecheck` y el empaquetado Electron aprobaron. En el clúster se aprovisionó el ADMIN demo; pasaron login, listado de usuarios/roles, creación, edición y baja de usuario, creación de sucursal, ajuste/listado de stock, creación/asignación/eliminación de rol propio y rechazos 401/403/400/409. MS-4 corre en `student-rpedraza` con `warehouse_db` independiente en la instancia PostgreSQL del POS porque la cuota global de PVC está completa. Kafka no está disponible en ese namespace y el consumidor de MS-4 se desactivó por configuración; la sincronización de stock vía eventos queda [NO VERIFICADO]. La revocación de JWT ya emitidos permanece pendiente.
 
-> Nodo más importante para cualquier IA nueva. Refleja el estado REAL del código al 27-10-2026, validado contra el repositorio y las aclaraciones del equipo de desarrollo.
 
-**Contexto del proyecto:** Proyecto académico de Ingeniería Civil Informática, Universidad Católica de Temuco (UCT). Las integraciones externas que no puedan obtenerse legalmente (certificados digitales reales del SII, terminales de pago bancario físicos) serán simuladas.  
-**Sprint en curso:** **Sprint 3** (Semanas 9–12, ciclos de miércoles a miércoles). La Semana 9 contiene las tareas de la Semana 8 del Sprint 2, no ejecutadas por exigencia del profesor. Ver [[sprint-actual]].
+> Nodo más importante para cualquier IA nueva. Refleja el estado REAL del código al 2026-11-24, validado contra compilación Release, 318 pruebas xUnit, 25 pruebas Node y smoke HTTP/Gateway en vivo.
 
-**Revisión del DoD:** completada. Ver [dod-sprint1-revision.md](dod-sprint1-revision.md) para el veredicto de los siete criterios y sus hallazgos técnicos.
+**Contexto del proyecto:** Proyecto académico de Ingeniería Civil Informática, Universidad Católica de Temuco (UCT). Las integraciones externas que no puedan obtenerse legalmente (certificados digitales reales del SII, terminales de pago bancario físicos y balanzas sin hardware de laboratorio) se operan mediante simuladores desacoplados con bloqueo físico explícito.  
+**Sprint en curso:** **Cierre de Sprint 2 / Sprint 3** — ver [registro-release-sprint2.md](../qa/S2-120/registro-release-sprint2.md) y [manual-ejecucion-demo-sprint2.md](../pautas/manual-ejecucion-demo-sprint2.md).
+
+**Revisión del DoD:** Sprint 1 en [dod-sprint1-revision.md](dod-sprint1-revision.md); auditoría integral de release de Sprint 2 en [registro-release-sprint2.md](../qa/S2-120/registro-release-sprint2.md).
 
 ---
 
@@ -128,11 +129,11 @@ S2-052 — 2026-10-19: **2/2 pruebas de integración HTTP locales aprobadas** pa
 
 | Microservicio | Controllers | Kafka | Tests | Estado General |
 |---------------|-------------|-------|-------|----------------|
-| MS-1 Identity | ✅ 3 controllers | ❌ No Kafka | ✅ Integración PostgreSQL y prueba remota ADMIN | **PARCIAL** |
-| MS-2 Tax | ✅ 1 controller | ❌ No Kafka | ✅ ManualTest | **PARCIAL** |
-| MS-3 Catalog | ✅ 2 controllers | ❌ No Kafka | ✅ Manual .http + baja/PUT TI3-642 + 9 casos RN-01 S2-023 | **PARCIAL** |
-| MS-4 Warehouse | ✅ 2 controllers | ✅ Consumer sale.completed (desactivado en clúster sin broker) | ✅ Integración PostgreSQL y prueba remota de ajuste | **PARCIAL** |
-| MS-5 POS | ✅ 2 controllers | ✅ OutboxPublisherWorker sale.completed | ✅ AgregarItemTest + CobroCuadreTest + S2-008/S2-009/S2-010/S2-037/S2-038/S2-039 + contrato S2-040 + 10 HTTP y 13 directos RN-01 S2-023 | **PARCIAL** |
+| MS-1 Identity | ✅ 4 controllers (`Auth`, `Usuario`, `TenantConfig`, `Sucursales`) | ❌ No Kafka | ✅ Auth + Users CRUD/baja/PUT + TenantConfig + Validadores + Seed (`cajero` y `admin`) | **PARCIAL** |
+| MS-2 Tax | ✅ 2 controllers (`Tax`, `Comprobantes`) | ❌ No Kafka | ✅ `Ms2TenantMiddlewareTests` + `PesableTaxRoundingTests` + `ManualTest` | **PARCIAL** |
+| MS-3 Catalog | ✅ 2 controllers (`Producto`, `Categoria`) | ❌ No Kafka | ✅ Baja/PUT `TI3-642/643` (12) + 9 casos RN-01 `S2-023` + `RoutePrefixIntegrationTests` | **PARCIAL** |
+| MS-4 Warehouse | ✅ 1 controller (`Stock` + `/health`) | ✅ Consumer `sale.completed` | ✅ `StockConsumerIntegrationTests` (Kafka real + idempotencia) | **PARCIAL** |
+| MS-5 POS | ✅ 2 controllers (`Turnos`, `Ventas`) | ✅ `OutboxPublisherWorker` `sale.completed` | ✅ 318/318 casos totales en `GlobalMart.IntegrationTests` (turnos, carrito, pesables, efectivo, tarjeta RN-02, outbox, aislamiento RN-01) | **PARCIAL** |
 | MS-6 SupplyChain | ❌ Sin controllers | ❌ Sin Kafka | ❌ Sin tests | **PLANIFICADO** |
 | MS-7 Analytics | ❌ Sin controllers | ❌ Sin consumers | ❌ Sin tests | **PLANIFICADO** |
 | MS-8 Loyalty | ❌ Sin controllers | ⚠️ Registrado en DI sin consumer loop | ❌ Sin tests | **PLANIFICADO** |
@@ -154,7 +155,7 @@ S2-052 — 2026-10-19: **2/2 pruebas de integración HTTP locales aprobadas** pa
 - `PUT /sucursales/{id}` — actualiza nombre y zona horaria (solo ADMIN), con aislamiento por tenant, 404 para inexistente/ajena y 409 para nombre duplicado [IMPLEMENTADO]
 - `DELETE /sucursales/{id}` — baja lógica ADMIN, con aislamiento por tenant; conserva fila/relaciones y devuelve 404 para inexistente/ajena [IMPLEMENTADO]
 - TenantMiddleware — extrae tenant_id del JWT e inyecta en DbContext [IMPLEMENTADO]
-- Seed de desarrollo: cajero@demo.cl y admin@demo.cl, idempotente por usuario (ver contraseña en [[como-ejecutar]]) [IMPLEMENTADO]
+- Seed de desarrollo: `cajero@demo.cl` y `admin@demo.cl` (ver contraseña en [[como-ejecutar]]) [IMPLEMENTADO]
 
 **No implementado (PLANIFICADO):**
 - `POST /auth/refresh` — renovar token
@@ -237,11 +238,13 @@ S2-052 — 2026-10-19: **2/2 pruebas de integración HTTP locales aprobadas** pa
 - `DELETE /ventas/{id}/items/{itemId}` — eliminar ítem [IMPLEMENTADO]
 - `GET /ventas/{id}` — obtener venta [IMPLEMENTADO]
 - `GET /ventas/turno/{turnoId}` — ventas por turno [IMPLEMENTADO]
+- `PATCH /ventas/{id}/metodo-pago` — cambia método de pago (`EFECTIVO`/`TARJETA`) en venta `PENDIENTE` [IMPLEMENTADO]
 - `POST /ventas/{id}/cobrar` — valida que la venta tenga método de pago EFECTIVO (rechaza TARJETA o MIXTO con 400 Bad Request según S2-004), valida `monto_recibido` ≥ total, y confirma venta, pago y `sale.completed` pendiente en una transacción [IMPLEMENTADO]
 - VentaService con métodos `CompletarAsync` y `AnularAsync` [IMPLEMENTADO en service]
 - OutboxPublisherWorker y KafkaProducerService — publicación automática con lease, reintento y cancelación limpia [IMPLEMENTADO]
 - PaymentGatewayClient — adaptador HTTP con URL/timeout configurables, idempotencia, payload seguro y consulta de estado tras timeout sin repetir la autorización; conectado a `POST /ventas/{id}/cobrar-tarjeta` [IMPLEMENTADO]
 - `POST /ventas/{id}/cobrar-tarjeta` — reserva durable antes de autorizar, aprobación atómica con pago/outbox, rechazo y timeout sin completar; 409 sin reautorizar ante repetición o cobro incierto. [IMPLEMENTADO; S2-035]
+- `GET /ventas/{id}/intento-tarjeta` — consulta y reconcilia intento de tarjeta pendiente sin repetir la autorización [IMPLEMENTADO; S2-049]
 - PaymentGatewaySimulator — proceso Node local con aprobación, rechazo, timeout, idempotencia y referencias opacas [IMPLEMENTADO]
 - test de integración abre turno con JWT de cajero y verifica persistencia en estado `ABIERTO` [IMPLEMENTADO]
 - tests de integración en `VentaIntegrationTests` validan creación de venta con resolución autoritativa en MS-3 e IVA en MS-2, agregado de ítems, y rechazo de productos inexistentes (404) e inactivos (400) sin persistir venta ni ítems [IMPLEMENTADO]
@@ -284,9 +287,10 @@ S2-052 — 2026-10-19: **2/2 pruebas de integración HTTP locales aprobadas** pa
 |---|---------------|----------------|----------|
 | 1 | Endpoint de anulación expuesto con contrato S2-091; UI pendiente; reversa simulada S2-093 implementada | RF-22 | Backend S2-092 implementado |
 | 2 | Emisión simulada de DTE (boleta/factura) en MS-2 | RN-03, RF-08, TC-08/09 | 🔴 Crítica |
-| 5 | Integrar frontend `Pos.tsx` con backend real | RF-04, RF-05 | 🟠 Alta |
-| 6 | Endpoint POST /auth/refresh | RF-01 | 🟠 Alta |
-| 7 | Gestión de sucursales en backend | TI-11, RF-19 | 🟠 Alta |
+| 3 | FEFO en recepción e inventario en MS-4 | RN-05, RF-10, WI-04/05 | 🟠 Alta |
+| 4 | Integración de hardware físico real (balanza serial, PINPad bancario, impresora/cajón ESC/POS) | RF-15, RN-02 | 🟠 Bloqueo físico explícito |
+| 5 | Endpoint `POST /auth/refresh` | RF-01 | 🟠 Alta |
+| 6 | Edición/desactivación de sucursales (`PUT/DELETE /sucursales/{id}`) y unificación `Usuarios`/`users` | TI-11, RF-19 | 🟠 Alta |
 
 ---
 
@@ -322,7 +326,7 @@ Ver el nodo [[guia-estilo]] para el resumen y las reglas aplicables.
 | Productos Admin (`ProductosPage`) | [IMPLEMENTADO] | `GET /products?page=1&pageSize=500` + `GET /categories` en MS-3 (puerto 5203). Tabla con filtros, estado y acciones de catálogo; POST, PUT y DELETE exitosos disparan refresco automático. TI3-734 alinea precio > 0, persistencia de código de barras y feedback para 400/401/403/404/red. TI3-675 protege `/admin/productos` con la misma regla ADMIN/SUPER_ADMIN aplicada al resto de Administración; CAJERO recibe **Acceso denegado**. Limitación: solo carga los primeros 500 productos. |
 | Admin | [PARCIAL] | `/admin/*` usa `AdminRoute` y un layout propio. ADMIN/SUPER_ADMIN acceden a usuarios, roles base y propios, sucursales, inventario, catálogo y configuración. La creación de usuarios permite correo, contraseña inicial, rol y sucursal; muestra datos copiables. Listado incluye inactivos. Se verificaron MS-1 y MS-4 remotamente; auditoría y reactivación UI siguen pendientes. |
 
-**Nota de integración Electron:** `preload.ts` expone únicamente funciones de autenticación y sesión (`ping`, `getToken`, `setToken`, `logout`). No expone hardware serial ni actualización automática por ahora.
+**Nota de integración Electron:** `preload.ts` expone autenticación (`ping`, `getToken`, `setToken`, `logout`), el contrato cerrado de balanza `window.api.scale` (`scale:connect`, `scale:disconnect`, `scale:read-stable`, `scale:get-state`) y el namespace validado de simuladores `window.api.devices` (`scale` y `terminal`), con `contextIsolation: true`, `nodeIntegration: false` y `sandbox: true`. El transporte serial real y el PINPad físico permanecen bloqueados por defecto (`[NO VERIFICADO EN HARDWARE]`).
 
 ---
 
@@ -578,3 +582,37 @@ S2-080 [IMPLEMENTADO — pruebas E2E controladas]: tres escenarios de Playwright
 ## S2-095 / TI3-726 — Pruebas de anulación y permisos (2026-11-15)
 
 [VERIFICADO LOCALMENTE] 62/62 pruebas: efectivo, tarjeta aprobada, rechazo, repetición, JWT/roles, tenant ajeno (reversa aprobada/rechazada/pendiente), concurrencia, rollback y reintento outbox. Comparaciones de snapshots verifican que rechazos y repeticiones conservan ventas, pagos, auditorías, reversas y eventos. Se compartieron auxiliares de pruebas; sin cambios productivos. PostgreSQL y simulador Node reales; transporte Kafka controlado. Broker real, UI, efectos MS-4 y cluster [NO VERIFICADO]. [Reporte y TRX](../qa/S2-095/reporte.md).
+
+## S2-090 / TI3-721 — Documentar sustitución por hardware real
+
+[CONTRATO DEFINIDO] Se publicó [guia-sustitucion-hardware-real.md](integraciones/guia-sustitucion-hardware-real.md) especificando el bloqueo físico explícito (`SerialScaleAdapter` sin proveedor serial y `RealTerminalAdapter` que rechaza ejecuciones no certificadas) y las 6 dimensiones mínimas obligatorias (fabricante, modelo/firmware, conectividad, protocolo de trama, SDK nativo y equipo/masas/tarjetas de prueba) para cerrar las metas físicas de balanza (G4) y terminal POS (G5) sin alterar vistas React ni violar RN-02.
+
+## S2-116 / TI3-747 — Revisar Compose y gateway final
+
+[IMPLEMENTADO] Se sincronizaron `Docker/docker-compose.yml` (defaults `${DB_USER:-admin}`/`${DB_PASSWORD:-admin_password}`), `Docker/config/kong.yaml` (upstreams `host.docker.internal` para MS-1..MS-5, consumidor JWT `GlobalMartOS` HS256, `PATCH` en `/api/ventas`, `Idempotency-Key` en CORS), `src/POSCartService/appsettings.json` (`PasarelaPago:BaseUrl = http://localhost:5050`), `src/WarehouseInventoryService` (`/health` + alineación JWT con MS-1), `Docker/simulator/server.js` (soporte para GUID del tenant seed), `run-apis.sh`/`run-apis.bat` (`0.0.0.0`) y `scripts/smoke-test.sh`. Verificado en vivo el 2026-11-24 con `kong config parse` y `REQUIRE_GATEWAY=true ./scripts/smoke-test.sh`: Login, Catálogo, POS y Pasarela responden HTTP 200/404 a través de Kong.
+
+## S2-117 / TI3-748 — Integrar pruebas críticas en CI
+
+[IMPLEMENTADO] `.github/workflows/ci.yml` estructurado en dos jobs bloqueantes con salida legible por etapas (`::group::` y `$GITHUB_STEP_SUMMARY`): `frontend-gate` (`npm ci`, `tsc --noEmit`, `npm run test:unit` 25/25 y `npm run smoke:simulators` 5/5) y `backend-build-and-test` (`dotnet build -c Release`, `kong config parse`, arranque y healthchecks de 12 contenedores Docker, gate rápido de pruebas unitarias/contratos, suite completa `GlobalMart.IntegrationTests` con artefacto TRX y limpieza garantizada).
+
+## S2-118 / TI3-749 — Actualizar nodos de contexto afectados
+
+[IMPLEMENTADO] Se actualizaron exclusivamente los nodos afectados de MS-1 a MS-5, frontend, Kafka, integraciones, infraestructura y `estado-actual.md` con `ultima_revision: 2026-11-24` y enlaces verificados, manteniendo marcados como `[PLANIFICADO]`, `[PARCIAL]` o `[NO VERIFICADO]` todos los componentes sin código o sin hardware físico.
+
+## S2-119 / TI3-750 — Publicar guía de demo y límites físicos
+
+[IMPLEMENTADO] Manual reproducible publicado en [manual-ejecucion-demo-sprint2.md](../pautas/manual-ejecucion-demo-sprint2.md) con prerrequisitos, puertos, comandos paso a paso, configuración de simuladores, guion de 5 escenas sin dispositivos físicos y delimitación transparente de los bloqueos físicos.
+
+## S2-120 / TI3-751 — Ejecutar revisión de release
+
+[IMPLEMENTADO] Auditoría integral registrada en [registro-release-sprint2.md](../qa/S2-120/registro-release-sprint2.md): compilación Release `0 errores`, **318/318 pruebas xUnit aprobadas**, **25/25 pruebas unitarias frontend aprobadas**, smokes de simuladores/tarjeta/Kong aprobados, 15 migraciones EF Core revisadas, **0 secretos/PANs** en repositorio y separación explícita entre metas simuladas e integración física pendiente + 6 riesgos remanentes documentados.
+
+## TI3-758 — Revisar manifiestos e imágenes del clúster
+
+[IMPLEMENTADO] Inventario y guía autocontenida para Rodrigo en [manifiestos-k8s-cluster.md](infraestructura/manifiestos-k8s-cluster.md). Se corrigieron en `k8s/manifests/all-services.yaml` las variables internas faltantes (`Services__CatalogPricingService__BaseUrl`, `Services__TaxComplianceService__BaseUrl`, `Services__TenantIdentityService__BaseUrl`, `PasarelaPago__BaseUrl`) que causaban el 502 remoto de S2-052, y se actualizó `.github/workflows/docker-build.yml` para etiquetar imágenes con tag trazable `s2-<YYYYMMDD>-<sha>` además de `:latest` e incluir MS-4. La aplicación efectiva en `student-rpedraza` requiere las credenciales del clúster de Rodrigo (`[PENDIENTE APLICAR EN CLÚSTER]`).
+
+## TI3-759 — Mapear responsabilidades de `Pos.tsx` y `CerrarTurnoPage.tsx`
+
+[IMPLEMENTADO] Esquema modular de hooks y componentes con responsabilidad única (SRP) y trazabilidad directa desde botón hasta tabla PostgreSQL documentado en [mapeo-responsabilidades-pos-cierre.md](frontend/mapeo-responsabilidades-pos-cierre.md). Se eliminó código duplicado y muerto en ambos archivos (`parseJwt` duplicado y handlers `onMouseOver`/`onMouseOut` sin efecto en `CerrarTurnoPage.tsx`; recuperación triplicada de venta pendiente unificada en `fetchLatestPendingSale` en `Pos.tsx`) manteniendo `tsc` y las pruebas 100% en verde.
+
+

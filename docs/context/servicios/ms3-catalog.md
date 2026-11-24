@@ -5,7 +5,7 @@ titulo: MS-3 · Catalog & Pricing Service
 estado: parcial
 fuentes: [src/CatalogPricingService/]
 verificado_contra_codigo: true
-ultima_revision: 2026-11-19
+ultima_revision: 2026-11-24
 depende_de: [ms1-identity]
 publica: []
 consume: []
@@ -126,8 +126,8 @@ PUT ajeno e inexistente retornan el mismo 404 y body; GET por ID, lookup y DELET
 | CP-15 | Gestionar Categorías | [IMPLEMENTADO] |
 | CP-06 | Configurar UOM | [PARCIAL — campo existe en modelo] |
 | CP-07 | Convertir Unidades | [PLANIFICADO] |
-| CP-08 | Producto a Granel | [PARCIAL — `es_peso_variable` en modelo] |
-| CP-09 | Capturar Peso de Balanza | [PLANIFICADO — requiere frontend] |
+| CP-08 | Producto a Granel | [IMPLEMENTADO — `es_peso_variable` en modelo y validado en MS-5 S2-062..064] |
+| CP-09 | Capturar Peso de Balanza | [PARCIAL — implementado con simulador IPC en POS; hardware físico pendiente] |
 | CP-11 | Precio Dinámico | [PLANIFICADO] |
 | CP-12 | Descuento/Promoción | [PLANIFICADO] |
 | CP-13 | Rango Fechas Promoción | [PLANIFICADO] |

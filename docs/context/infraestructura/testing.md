@@ -3,19 +3,27 @@ id: testing
 tipo: infra
 titulo: Estrategia de Testing — GlobalMart OS
 estado: parcial
-fuentes: [src/POSCartService/tests/, src/TaxComplianceService/tests/, .github/workflows/ci.yml]
+fuentes: [tests/GlobalMart.IntegrationTests/, tests/GlobalMart.Tests/, globalmart-frontend/tests/, globalmart-frontend/e2e/, scripts/, .github/workflows/ci.yml]
 verificado_contra_codigo: true
-ultima_revision: 2026-11-01
-depende_de: [stack]
+ultima_revision: 2026-11-24
+depende_de: [stack, ci-cd]
 publica: []
 consume: []
-reglas: [RNF-07]
+reglas: [RN-01, RN-02, RN-06, RNF-07]
 ---
 # Estrategia de Testing — GlobalMart OS
 
-> Estado real de los tests. La cobertura actual es muy baja respecto al objetivo RNF-07 (≥80%).
+> Estado real verificado contra ejecución en Release el 2026-11-24. El proyecto cuenta con **318 pruebas automatizadas xUnit en backend** (`GlobalMart.IntegrationTests`), **47 pruebas unitarias en `GlobalMart.Tests`**, **25 pruebas unitarias Node en frontend** (`tests/*.test.cjs`), **smoke de simuladores sin hardware** y **scripts de smoke HTTP/Gateway**, todos aprobados sin fallos. El porcentaje formal de cobertura de líneas (RNF-07 ≥ 80%) permanece `[NO MEDIDO]` por ausencia de colector de cobertura global, por lo que no se atribuye 80%.
 
-## Tests existentes (verificados en código)
+## Suites Automatizadas Verificadas (2026-11-24)
+
+| Suite / Proyecto | Tecnología | Casos Ejecutados | Estado Real |
+|---|---|---|---|
+| `tests/GlobalMart.IntegrationTests` | xUnit + `WebApplicationFactory` + PostgreSQL 16 + Kafka + Simulador Node | **318 / 318 aprobados** (0 fallos, 0 omitidos, Release) | `[IMPLEMENTADO]` |
+| `tests/GlobalMart.Tests` | xUnit (.NET 8) | **47 / 47 aprobados** (Identity, Tax, Warehouse) | `[IMPLEMENTADO]` |
+| `globalmart-frontend/tests/*.test.cjs` | `node:test` (`npm run test:unit`) | **25 / 25 aprobados** (IPC, contratos balanza/serial, `TerminalPort`, RBAC, Zod IVA, usuarios) | `[IMPLEMENTADO]` |
+| `globalmart-frontend/tests/smoke-simulators.ts` | TypeScript / `ts-node` (`npm run smoke:simulators`) | **5 / 5 bloques aprobados** (balanza + terminal mock + bloqueo `RealTerminalAdapter`) | `[IMPLEMENTADO]` |
+| `scripts/smoke-test.sh` | Bash + `curl` sobre Kong (:8000) o APIs directas | **100% de aserciones aprobadas** (Auth, Catalog, POS y Pasarela vía Gateway) | `[IMPLEMENTADO]` |
 
 ### S2-055 / TI3-686 — Cobro tarjeta desde Electron [IMPLEMENTADO, alcance acotado]
 
@@ -25,76 +33,23 @@ reglas: [RNF-07]
 
 `globalmart-frontend/playwright.electron.config.ts` ejecuta el main, preload y renderer reales con perfil independiente por caso, login ficticio y APIs interceptadas de MS-1/MS-3/MS-5. Cubre login → 404 sin turno → apertura → POS vacío, persistencia IPC tras recarga y rechazo 401 sin sesión. `npm run ci:local` compila y verifica TypeScript antes de ejecutar la suite. Validación Windows del 2026-10-18: **2/2 aprobadas**. No certifica venta/cobro ni aislamiento RN-01 del backend; los mocks no validan firmas JWT. [Guía](../../../globalmart-frontend/e2e/electron/README.md) y [evidencia](../../qa/S2-024/reporte.md).
 
-| Proyecto | Tipo | Estado |
-|---------|------|--------|
-| `POSCartService.AgregarItemTest` | Console app (smoke test) | [IMPLEMENTADO] |
-| `POSCartService.ManualTest` | Console app (smoke test) | [IMPLEMENTADO] |
-| `TaxComplianceService.ManualTest` | Console app (smoke test) | [IMPLEMENTADO] |
-| `CatalogPricingService/tests/tests_manual_producto.http` | HTTP manual test | [IMPLEMENTADO] |
-| `GlobalMart.IntegrationTests` | xUnit + WebApplicationFactory | [IMPLEMENTADO] |
+## Límites y Brechas Abiertas
 
-Los smoke tests existentes son console apps que hacen requests HTTP y muestran resultados en consola. `GlobalMart.IntegrationTests` agrega assertions xUnit reales sobre los flujos de MS-1 y MS-5.
-
-## Objetivo de tests (RNF-07)
-
-- ≥ 80% de cobertura en lógica crítica de MS-1, MS-2, MS-5 → **NO CUMPLIDO**
-- Tests de integración: apertura de turno y flujo turno → venta → ítems → IVA → **PARCIALMENTE IMPLEMENTADO**
-- Tests Playwright de renderer: **PARCIAL**, S2-025 ejecutada con 1 aprobado y 2 fallidos; integración completa de venta pendiente.
-
-## Stack de testing configurado
-
-En las dependencias del proyecto:
-- **xUnit** — framework de tests unitarios
-- **FluentAssertions** — assertions expresivas
-- **Moq** — mocking
-- **WebApplicationFactory** — tests de integración ASP.NET Core
-
-Los flujos de venta y cobro usan handlers HTTP en memoria para simular respuestas deterministas de MS-2 y MS-3 mientras ejecutan el pipeline real de MS-5. La publicación de `sale.completed` cuenta además con pruebas de integración que cubren productor real, consumidor real de MS-4 y descuento de stock verificado por API mediante polling. El cuadre de caja también se verifica mediante HTTP con una venta y pago efectivo persistidos. `CobroIntegrationTests` y `KafkaPublishIntegrationTests` comparten la colección xUnit `POS integration tests` con `DisableParallelization = true` para evitar carreras al ejecutar migraciones EF Core sobre la misma base PostgreSQL.
-
-## Cómo ejecutar los smoke tests
-
-```bash
-# Agregar ítem a venta (requiere MS-5 corriendo)
-dotnet run --project src/POSCartService/tests/POSCartService.AgregarItemTest
-
-# Test manual de tax
-dotnet run --project src/TaxComplianceService/tests/TaxComplianceService.ManualTest
-```
-
-## Tests de CI
-
-S2-023 corrige `CopyServiceRuntimeDependencies` de `GlobalMart.IntegrationTests.csproj`: las dependencias de los servicios se copian desde `bin/$(Configuration)/net8.0`, evitando sobrescribir Release con DLL antiguas de Debug. La suite RN-01 (`--filter 'Plan=S2-023'`) requiere `GLOBALMART_TEST_POSTGRES`, usa JWT y PostgreSQL reales en esquemas exclusivos y conecta MS-5 con MS-3 por HTTP en memoria. MS-2 y el envío a Kafka se sustituyen; el migrador de arranque se omite solo en estos hosts porque S2-022 ya crea el modelo EF. Ejecución Release 2026-10-14: **18/18 aprobadas**, sin fallos ni omisiones. [Reporte y reproducción](../../qa/S2-023/reporte.md).
-
-Ampliación posterior del mismo día: **32/32 Release aprobadas**, sin fallos ni omisiones, tras reforzar los repositorios y uniformar PUT ajeno/inexistente a 404. Incluye 19 casos HTTP y 13 directos de repositorios contra PostgreSQL, con ausencia de tenant y entidades rastreadas. [Evidencia ampliada](../../qa/S2-023/S2-023-refuerzo.trx).
-
-El pipeline en GitHub Actions ejecuta `dotnet test GlobalMartOS.sln --configuration Release`. Los console apps de smoke testing compilan y terminan (exit code 0) sin ejecutar casos de prueba reales.
-
-## Brechas críticas
-
-| Brecha | Impacto |
-|--------|---------|
-| Sin tests unitarios xUnit | RNF-07 no cumplido |
-| Sin tests de integración | Regresiones no detectadas |
-| Regresión Playwright S2-025 fallida | POS sin respuesta MS-5 y carrito compartido entre sesiones |
-| Sin coverage report en CI | No se puede medir cobertura |
-
-## Recomendaciones para agregar tests
-
-```bash
-# Crear test de integración para VentaService
-dotnet new xunit -n POSCartService.Tests -o src/POSCartService/tests/POSCartService.Tests
-
-# Agregar a la solución
-dotnet sln GlobalMartOS.sln add src/POSCartService/tests/POSCartService.Tests/POSCartService.Tests.csproj
-```
+| Brecha | Estado / Impacto |
+|---|---|
+| Métrica porcentual RNF-07 (≥ 80%) | `[NO MEDIDO]` — no se reporta porcentaje global de líneas sin `coverlet.collector` configurado sobre todos los MS. |
+| E2E integrado sobre hardware físico | `[NO VERIFICADO]` — balanza y terminal físico bloqueados hasta disponer de equipos y protocolos homologados ([[guia-sustitucion-hardware-real]]). |
+| E2E completo contra clúster universitario | `[NO VERIFICADO]` — requiere aplicar las variables corregidas de [[manifiestos-k8s-cluster]] en `student-rpedraza`. |
 
 ## Conexiones
 - CI/CD: [[ci-cd]]
+- Reglas: [[reglas-negocio]] (RN-01, RN-02, RN-06)
 - Stack: [[stack]]
 
 ## Fuentes
-- `src/POSCartService/tests/POSCartService.AgregarItemTest/Program.cs`
-- `src/TaxComplianceService/tests/TaxComplianceService.ManualTest/Program.cs`
+- `tests/GlobalMart.IntegrationTests/`
+- `tests/GlobalMart.Tests/`
+- `globalmart-frontend/tests/`
 - `.github/workflows/ci.yml`
 
 ## S2-022 — Fixtures de dos tenants y turnos

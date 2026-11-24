@@ -5,99 +5,86 @@ titulo: Cómo Ejecutar GlobalMart OS
 estado: implementado
 fuentes: [Docker/docker-compose.yml, Docker/config/kong.yaml, DOCKER.md, run-apis.bat, .github/workflows/ci.yml]
 verificado_contra_codigo: true
-ultima_revision: 2026-11-18
+ultima_revision: 2026-11-24
 depende_de: [stack, docker-compose]
 publica: []
 consume: []
 reglas: []
 ---
-# Cómo Ejecutar GlobalMart OS — Guía de Arranque del Núcleo
+# Cómo Ejecutar GlobalMart OS
 
-> Comandos y orden verificado para levantar el entorno completo de desarrollo de forma reproducible (TI3-661 / S2-030).
-> **Importante:** Docker Compose levanta la infraestructura compartida (PostgreSQL x8, Kafka, Kong Gateway, Grafana). Los microservicios .NET (MS-1 a MS-5) se ejecutan en el host.
+Guía rápida para levantar el entorno de desarrollo local.
 
-## Requisitos previos
+## Prerrequisitos
 
-- Docker Desktop / Docker Engine con Compose v2
-- .NET 8 SDK
-- Node.js 20+ (para el frontend Electron)
-- Git y curl / bash
+- **.NET 8 SDK** (`dotnet --version` >= 8.0)
+- **Node.js 20+** y **npm** (`node --version`)
+- **Docker** y **Docker Compose v2** (`docker compose version`)
+
+---
 
 ## 1. Clonar y configurar variables de entorno
 
 ```bash
-git clone <repo>
+git clone https://github.com/rpedrazav/TallerIntegracion3.git
 cd TallerIntegracion3
 
-# Copiar variables de entorno de infraestructura
-cp Docker/env.example Docker/.env
-# Editar Docker/.env si se requieren credenciales personalizadas
-
-# Copiar variables de entorno del frontend (opcional para desarrollo local)
+# Frontend: copiar variables de entorno de ejemplo
 cp globalmart-frontend/.env.example globalmart-frontend/.env
 ```
 
-## 2. Levantar la infraestructura compartida (Docker Compose)
+---
 
-> Docker Compose **NO** levanta las APIs .NET; únicamente aprovisiona las bases de datos, el broker de mensajería y el API gateway.
+## 2. Levantar la infraestructura (PostgreSQL x8, Kafka, Kong)
 
 ```bash
-# Levantar PostgreSQL x8, Kafka, Zookeeper, Kong Gateway, Kafdrop, Prometheus y Grafana
+# Levantar bases de datos, broker de eventos y API Gateway
 docker compose -f Docker/docker-compose.yml up -d
 
-# Verificar que los contenedores estén 'healthy'
+# Verificar que los contenedores estén sanos (healthy)
 docker compose -f Docker/docker-compose.yml ps
 ```
 
 Puertos de infraestructura:
-- **Kong API Gateway (Proxy):** `http://localhost:8000` (Admin: `:8001`). Enruta a los microservicios del host (`host.docker.internal:5124/5203/5205/5000/5050`) y valida el JWT de MS-1 con un consumer de desarrollo (S3-029). Ver [[kong]].
+- **Kong API Gateway (Proxy):** `http://localhost:8000` (Admin: `:8001`, GUI: `:8002`). Enruta a los microservicios del host (`host.docker.internal:5124/5239/5203/5205/5000/5050`) y valida el JWT de MS-1 con un consumer de desarrollo sincronizado con `GlobalMartOS` (S3-029). Ver [[kong]].
 - **Simulador de Pagos:** `http://localhost:5050` (Gateway: `http://localhost:8000/simulator/payments`)
 - **Apache Kafka:** `localhost:9092` (Zookeeper: `:2181`)
 - **Kafdrop (Kafka UI):** `http://localhost:9000`
-- **PostgreSQL x8:** Puertos `5432` a `5439` (mapeados por microservicio)
-- **Grafana:** `http://localhost:3000` (`admin`/`admin`)
+- **PostgreSQL por servicio:** puertos `5432` a `5439` (ver [[docker-compose]])
 
-## 3. Ejecutar los microservicios del núcleo (MS-1 a MS-5)
+---
 
-Una vez que la infraestructura está saludable, iniciar los 5 microservicios en el host:
+## 3. Iniciar los microservicios (.NET 8)
 
+En terminales separadas, o usando el script automatizado:
+
+**En Linux / macOS:**
 ```bash
-# En Linux / macOS:
+chmod +x run-apis.sh
 ./run-apis.sh
+```
 
-# En Windows:
+**En Windows:**
+```bat
 run-apis.bat
 ```
 
-O manualmente por servicio en terminales separadas:
+O individualmente con `dotnet run`:
 ```bash
-dotnet run --project src/TenantIdentityService      # MS-1 (:5124)
-dotnet run --project src/TaxComplianceService        # MS-2 (:5239)
-dotnet run --project src/CatalogPricingService       # MS-3 (:5203)
-dotnet run --project src/WarehouseInventoryService   # MS-4 (:5205)
-dotnet run --project src/POSCartService              # MS-5 (:5000)
+dotnet run --project src/TenantIdentityService      # :5124
+dotnet run --project src/TaxComplianceService       # :5239
+dotnet run --project src/CatalogPricingService      # :5203
+dotnet run --project src/WarehouseInventoryService  # :5205
+dotnet run --project src/POSCartService             # :5000
 ```
 
-## 4. Validar el núcleo con Smoke Test HTTP
+---
 
-Ejecutar el script automatizado para verificar el flujo crítico completo (health, login de cajero seed, consulta de catálogo, estado de POS y pasarela simulada):
-
-```bash
-./scripts/smoke-test.sh
-```
-
-El script valida:
-1. Health checks (`/health`) en MS-1 a MS-5.
-2. Autenticación pública en `POST /api/auth/login` con credenciales seed (`cajero@demo.cl` / `demo1234`).
-3. Consulta autorizada a `GET /api/products` (MS-3 vía Kong) usando el token JWT obtenido.
-4. Consulta autorizada a `GET /api/turnos/activo` (MS-5 vía Kong).
-5. Health check y cobro seguro `sim-approved-v1` en Simulador de Pagos (directo y vía Kong), verificando el bloqueo estricto de números de tarjeta (RN-02 / PCI DSS).
-
-## 5. Ejecutar el frontend Electron
+## 4. Iniciar el frontend de escritorio (Electron + React)
 
 ```bash
 cd globalmart-frontend
-npm ci
+npm install
 npm start    # Abre la app Electron
 ```
 
@@ -109,57 +96,33 @@ API_MODE=local npm start     # Tráfico vía Kong (:8000) hacia los servicios de
 `local` requiere `docker compose` (Kong) y `run-apis` en ejecución. Si Kong responde 503/502, el microservicio de ese puerto no está levantado en el host; si responde 401 «No credentials found for given 'iss'», el `kong.yaml` cargado no tiene el consumer JWT (recrear el contenedor: `docker compose -f Docker/docker-compose.yml up -d --force-recreate kong`).
 
 **Seed local de desarrollo (credenciales de prueba):**
-- Email: `cajero@demo.cl`
-- Password: `demo1234`
+- Cajero: `cajero@demo.cl` / Password: `demo1234`
+- Administrador: `admin@demo.cl` / Password: `demo1234`
 - Tenant ID: `aaaaaaaa-0000-0000-0000-000000000001`
+
+> Para el guion completo de demostración del Sprint 2 (sin dispositivos físicos) y límites de hardware, consultar [`docs/pautas/manual-ejecucion-demo-sprint2.md`](../../pautas/manual-ejecucion-demo-sprint2.md).
 
 ## 5. Ejecutar tests
 
 ```bash
-# Todos los tests del solution
+# Tests de la solución completa (.NET 8)
 dotnet test GlobalMartOS.sln
 
-# Un proyecto específico
-dotnet test src/POSCartService/tests/POSCartService.AgregarItemTest/
+# Solo tests de integración del flujo de venta
+dotnet test tests/GlobalMart.IntegrationTests/GlobalMart.IntegrationTests.csproj
+
+# Pruebas del frontend
+cd globalmart-frontend
+npm run typecheck       # Gate TypeScript (tsc --noEmit)
+npm run test:unit       # Pruebas unitarias de IPC y contratos
+npm run smoke:simulators# Smoke de periféricos sin hardware
+npm test                # Tests unitarios Jest
 ```
 
-## 6. Aplicar migraciones de BD
+---
 
-Las migraciones se aplican automáticamente al iniciar cada servicio en modo Development (`db.Database.Migrate()`).
+## 6. Monitoreo (Opcional)
 
-Para aplicar manualmente:
-```bash
-cd src/TenantIdentityService
-dotnet ef database update
-```
-
-## 7. Detener todo
-
-```bash
-docker compose -f Docker/docker-compose.yml down
-
-# Con limpieza de volúmenes (borra todas las BDs)
-docker compose -f Docker/docker-compose.yml down -v
-```
-
-## Variables de entorno clave (NO commitear valores reales)
-
-Ver `Docker/env.example` para lista completa. Variables principales:
-- `DB_USER`, `DB_PASSWORD` — credenciales PostgreSQL
-- `JWT_SECRET` — secreto para firmar JWT
-- `KAFKA_HOST` — host de Kafka
-- `GRAFANA_ADMIN_PASSWORD` — contraseña Grafana
-
-## Conexiones
-- Docker: [[docker-compose]]
-- Stack: [[stack]]
-- Gateway y Rutas: [[kong]], [[matriz-rutas]]
-- CI/CD: [[ci-cd]]
-
-## Fuentes
-- `Docker/docker-compose.yml`
-- `run-apis.sh`
-- `run-apis.bat`
-- `scripts/smoke-test.sh`
-- `DOCKER.md`
-- `.github/workflows/ci.yml`
+Si se levantó el stack de observabilidad:
+- **Grafana:** `http://localhost:3000` (admin / admin)
+- **Prometheus:** `http://localhost:9090`

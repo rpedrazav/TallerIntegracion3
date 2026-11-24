@@ -5,7 +5,7 @@ titulo: MS-5 · POS & Cart Service
 estado: parcial
 fuentes: [src/POSCartService/, Docker/simulator/server.js, tests/GlobalMart.IntegrationTests/TurnoIntegrationTests.cs, tests/GlobalMart.IntegrationTests/SucursalOperativaIntegrationTests.cs, tests/GlobalMart.IntegrationTests/PaymentSimulatorIntegrationTests.cs, tests/GlobalMart.IntegrationTests/PaymentRetrySafetyTests.cs, tests/GlobalMart.IntegrationTests/CobroSeguroIntegrationTests.cs, docs/qa/S2-035/reporte.md, docs/qa/TI3-773/reporte.md, tests/GlobalMart.IntegrationTests/CobrarTarjetaIntegrationTests.cs, tests/GlobalMart.IntegrationTests/PaymentEventSequenceContractTests.cs]
 verificado_contra_codigo: true
-ultima_revision: 2026-11-22
+ultima_revision: 2026-11-24
 depende_de: [ms1-identity, ms2-tax, ms3-catalog]
 publica: [sale.completed, sale.reversed]
 consume: []
@@ -68,8 +68,10 @@ desplegados MS-1 → MS-5 queda [NO VERIFICADA]. La URL se toma de `Services:Ide
 | DELETE | `/api/ventas/{id}/items/{itemId}` | JWT | [IMPLEMENTADO] |
 | GET | `/api/ventas/{id}` | JWT | [IMPLEMENTADO] |
 | GET | `/api/ventas/turno/{turnoId}` | JWT | [IMPLEMENTADO] |
+| PATCH | `/api/ventas/{id}/metodo-pago` | JWT | [IMPLEMENTADO — cambia método entre EFECTIVO y TARJETA en venta PENDIENTE] |
 | POST | `/api/ventas/{id}/cobrar` | JWT | [IMPLEMENTADO — valida monto_recibido ≥ total, calcula vuelto y persiste venta, pago y sale.completed pendiente en una transacción] |
 | POST | `/api/ventas/{id}/cobrar-tarjeta` | JWT | [IMPLEMENTADO — reserva previa, aprobación/rechazo/timeout y bloqueo de repetición; S2-035] |
+| GET | `/api/ventas/{id}/intento-tarjeta` | JWT | [IMPLEMENTADO — consulta y reconcilia intento pendiente sin reautorizar; S2-049] |
 | POST | `/api/ventas/{id}/anular` | JWT + ADMIN | [IMPLEMENTADO S2-092/S2-093; efectivo o reversa tarjeta confirmada] |
 | GET | `/api/ventas/{id}/reversa-tarjeta` | JWT + ADMIN | [IMPLEMENTADO S2-093; consulta y reconciliación de reversa] |
 | GET | `/health` | Público | [IMPLEMENTADO] |
@@ -230,20 +232,20 @@ await _ventaRepository.CompletarConOutboxAsync(venta.Id, pago, outboxMessage);
 | PC-01 | Abrir Turno de Caja | [IMPLEMENTADO] |
 | PC-02 | Registrar Fondo de Apertura | [IMPLEMENTADO] |
 | PC-03 | Cerrar Turno de Caja | [IMPLEMENTADO] |
-| PC-04 | Cuadre de Caja | [PARCIAL — sin declaración de billetes] |
-| PC-05 | Declarar Billetes y Monedas | [PLANIFICADO] |
+| PC-04 | Cuadre de Caja | [IMPLEMENTADO — `POST /turnos/cuadre` + conteo en `CerrarTurnoPage`] |
+| PC-05 | Declarar Billetes y Monedas | [PARCIAL — desglose interactivo en `CerrarTurnoPage`, MS-5 recibe total declarado] |
 | PC-06 | Iniciar Nueva Venta (Carrito) | [IMPLEMENTADO] |
 | PC-07 | Agregar Producto (escaneo) | [IMPLEMENTADO] |
 | PC-08 | Agregar Producto (búsqueda) | [IMPLEMENTADO] |
-| PC-09 | Agregar Producto a Granel | [PARCIAL — modelo soporta PesoKg] |
-| PC-10 | Integrar Peso de Balanza | [PLANIFICADO] |
+| PC-09 | Agregar Producto a Granel | [IMPLEMENTADO — validación y cálculo autoritativo S2-062..064] |
+| PC-10 | Integrar Peso de Balanza | [PARCIAL — simulador IPC conectado en POS; hardware físico pendiente] |
 | PC-11 | Modificar Cantidad | [IMPLEMENTADO] |
 | PC-12 | Eliminar Ítem del Carrito | [IMPLEMENTADO] |
 | PC-13 | Descuento Manual | [PLANIFICADO] |
 | PC-14 | Calcular Total con Impuestos | [IMPLEMENTADO] |
 | PC-15 | Cobrar en Efectivo | [IMPLEMENTADO — endpoint expuesto, valida monto ≥ total, calcula vuelto y persiste sale.completed pendiente] |
-| PC-16 | Calcular Vuelto | [PLANIFICADO] |
-| PC-17 | Cobrar con Tarjeta | [IMPLEMENTADO — cobro backend con simulador; S2-035] |
+| PC-16 | Calcular Vuelto | [IMPLEMENTADO — calculado en `POST /ventas/{id}/cobrar` y mostrado en `PaymentModal`] |
+| PC-17 | Cobrar con Tarjeta | [IMPLEMENTADO CON SIMULADOR — cobro backend e idempotencia S2-035/S2-049] |
 | PC-18 | Pago Mixto (efectivo + tarjeta) | [PLANIFICADO] |
 | PC-19 | Emitir Recibo / Comprobante | [PLANIFICADO] |
 | PC-20 | Anular Venta (Devolución) | [PARCIAL — implementado en VentaService.AnularAsync] |

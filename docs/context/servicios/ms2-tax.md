@@ -5,7 +5,7 @@ titulo: MS-2 · Tax & Compliance Service
 estado: parcial
 fuentes: [src/TaxComplianceService/, src/POSCartService/Services/TaxClient.cs]
 verificado_contra_codigo: true
-ultima_revision: 2026-11-15
+ultima_revision: 2026-11-24
 depende_de: [ms1-identity]
 publica: []
 consume: []
@@ -37,9 +37,9 @@ src/TaxComplianceService/
 
 | Método | Ruta | Auth | Estado |
 |--------|------|------|--------|
-| POST | `/tax/calculate` | JWT | [IMPLEMENTADO] |
-| POST | `/comprobantes` | JWT | [IMPLEMENTADO] |
-| GET | `/comprobantes/{id}` | JWT | [IMPLEMENTADO] |
+| POST | `/tax/calculate` (alias `/api/tax/calculate`) | JWT | [IMPLEMENTADO] |
+| POST | `/comprobantes` (alias `/api/comprobantes`) | JWT | [IMPLEMENTADO] |
+| GET | `/comprobantes/{id}` (alias `/api/comprobantes/{id}`) | JWT | [IMPLEMENTADO] |
 | GET | `/health` | Público | [IMPLEMENTADO] |
 
 ## Emisión de comprobantes (implementada)
@@ -205,11 +205,12 @@ Comprobante
 
 ## Cómo es consumido
 
-MS-5 (POSCartService) llama a MS-2 directamente (no vía Kong) en cada operación de carrito:
+MS-5 (POSCartService) llama a MS-2 directamente en cada operación de carrito:
+- Al crear venta inicial (`POST /ventas` — S2-003) → calcula IVA real del tenant desde la creación
 - Al agregar ítem → recalcula IVA
-- Al modificar cantidad → recalcula IVA  
+- Al modificar cantidad/peso → recalcula IVA  
 - Al eliminar ítem → recalcula IVA
-- Al completar venta → (pendiente de implementar)
+- Al completar venta → (emisión de comprobante automático aún pendiente de conectar)
 
 `src/POSCartService/Services/TaxClient.cs` — cliente HTTP hacia MS-2.
 

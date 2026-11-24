@@ -5,7 +5,7 @@ titulo: Pantallas del Frontend — GlobalMart OS
 estado: parcial
 fuentes: [globalmart-frontend/src/pages/, globalmart-frontend/src/components/, globalmart-frontend/src/api/client.ts, globalmart-frontend/src/hardware/scale-cart.ts, globalmart-frontend/src/payments/SimulatedTerminalAdapter.ts, globalmart-frontend/src/payments/terminal-ipc.ts, globalmart-frontend/src/payments/synchronizeCardPayment.ts, globalmart-frontend/src/preload.ts, globalmart-frontend/tests/scale-main-preload.integration.test.cjs, globalmart-frontend/tests/user-edit.test.cjs, globalmart-frontend/tests/user-deactivation.test.cjs, globalmart-frontend/e2e/admin-flows.spec.ts, globalmart-frontend/e2e/productos-admin.spec.ts, globalmart-frontend/e2e/weight-cart.spec.ts, globalmart-frontend/tests/terminal-port.test.cjs, globalmart-frontend/tests/terminal-ipc.test.cjs, globalmart-frontend/tests/synchronized-card-payment.test.cjs]
 verificado_contra_codigo: true
-ultima_revision: 2026-11-23
+ultima_revision: 2026-11-24
 depende_de: [estructura, ms1-identity, ms5-pos, guia-estilo]
 publica: []
 consume: []
@@ -205,19 +205,17 @@ Creación y edición conservan el modal ante error y muestran mensajes comprensi
 ## BarcodeInput.tsx [IMPLEMENTADO]
 
 ```typescript
-// Componente con debounce para búsqueda de productos
-// Recibe: onSearch callback
-// El debounce evita múltiples llamadas al escribir rápido
-// Actualmente onSearch solo hace console.log (sin llamar MS-3)
+// Componente con debounce para búsqueda y escaneo de productos en el POS
+// Recibe: onSearch (Enter / escáner -> lookup exacto + fallback search), onTyping (búsqueda incremental) y clearSignal
+// Conectado a MS-3 mediante catalogApi en Pos.tsx
 ```
 
 ## CartItem.tsx [IMPLEMENTADO]
 
 ```typescript
-// Componente que muestra un ítem del carrito
-// Props: ProductItem { id, name, price, quantity }
-// Permite cambiar cantidad y eliminar ítem (estado local en Pos.tsx)
-// Sin integración con API de MS-5
+// Componente que muestra un ítem del carrito (borrador local o venta PENDIENTE de MS-5)
+// Soporta productos unitarios y de peso variable (3 decimales en kg, solo lectura manual)
+// Delega cambios de cantidad y eliminación a Pos.tsx, que sincroniza en serie con MS-5
 ```
 
 ## Pantallas diseñadas (PLANIFICADAS)
@@ -228,14 +226,14 @@ Según diagramas `diagramas/rodrigo/`:
 - R3: Component Tree (árbol de componentes React)
 - R4: State Management (gestión de estado)
 
-Pantallas no implementadas:
-- Cierre de Turno y Cuadre de Caja (PC-04)
-- Dashboard de ventas
-- Gestión de inventario
-- Programa de lealtad
+Pantallas no implementadas (Sprints posteriores):
+- Dashboard de ventas (MS-7)
+- Gestión de inventario / FEFO / recepciones (MS-4)
+- Programa de lealtad (MS-8)
 
 ## Conexiones
 - Estructura: [[estructura]]
+- Mapeo de responsabilidades POS y Cierre (TI3-759): [mapeo-responsabilidades-pos-cierre](mapeo-responsabilidades-pos-cierre.md)
 - Guía visual aprobada: [[guia-estilo]]
 - Auth: [[auth-y-roles]]
 - Diagramas UI: [[indice-diagramas]]

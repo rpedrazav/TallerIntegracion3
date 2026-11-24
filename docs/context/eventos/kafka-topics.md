@@ -5,7 +5,7 @@ titulo: Kafka Topics — Diseño vs Implementación Real
 estado: parcial
 fuentes: [src/POSCartService/Services/KafkaProducerService.cs, src/POSCartService/Services/OutboxPublisherWorker.cs, src/POSCartService/Messaging/SaleCompletedEvent.cs, src/WarehouseInventoryService/Messaging/KafkaConsumerService.cs, src/WarehouseInventoryService/Repositories/StockRepository.cs, tests/GlobalMart.IntegrationTests/OutboxBrokerRecoveryIntegrationTests.cs, tests/GlobalMart.Tests/MS4_Warehouse/SaleEventProcessor_MovimientoStockTests.cs, Docker/docker-compose.yml, Docker/scripts/init-kafka-topics.sh]
 verificado_contra_codigo: true
-ultima_revision: 2026-11-20
+ultima_revision: 2026-11-24
 depende_de: [ms5-pos, ms4-inventory]
 publica: [sale.completed, sale.completed.error, sale.reversed]
 consume: [sale.completed]

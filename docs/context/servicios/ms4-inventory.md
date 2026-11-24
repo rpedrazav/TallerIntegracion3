@@ -5,7 +5,7 @@ titulo: MS-4 · Warehouse & Inventory Service
 estado: parcial
 fuentes: [src/WarehouseInventoryService/, src/WarehouseInventoryService/Repositories/StockRepository.cs, tests/GlobalMart.Tests/MS4_Warehouse/, tests/GlobalMart.IntegrationTests/StockConsumerIntegrationTests.cs, Docker/docker-compose.yml]
 verificado_contra_codigo: true
-ultima_revision: 2026-11-20
+ultima_revision: 2026-11-24
 depende_de: [ms5-pos]
 publica: [sale.completed.error]
 consume: [sale.completed]
@@ -53,13 +53,13 @@ src/WarehouseInventoryService/
 
 | Método | Ruta | Auth | Estado |
 |--------|------|------|--------|
-| GET | `/stock/{productId}?sucursal_id=` | JWT | [IMPLEMENTADO] |
+| GET | `/stock/{productId}?sucursal_id=` (alias `/api/stock/{productId}`) | JWT | [IMPLEMENTADO] |
 | GET | `/stock?sucursal_id=` | JWT | [IMPLEMENTADO] |
 | POST | `/stock/ajuste` | JWT + ADMIN/REPONEDOR | [IMPLEMENTADO] |
 | POST | `/recepciones` | JWT + ADMIN/REPONEDOR | [IMPLEMENTADO; PostgreSQL 3/3 EN RAMA `local`] |
 | GET | `/lotes?porVencer=&sucursal_id=` | JWT + ADMIN/REPONEDOR | [IMPLEMENTADO EN CÓDIGO] |
 | POST | `/seed` | JWT + ADMIN del tenant demo (solo Development) | [IMPLEMENTADO] TI3-258 |
-| GET | `/health` | Público | [IMPLEMENTADO] |
+| GET | `/health` | Público (`/health`) | [IMPLEMENTADO] |
 
 ### No implementados
 - `POST /mermas` — registrar merma [PLANIFICADO]
@@ -182,6 +182,7 @@ EventoKafkaProcesado
 |--------|---------|
 | Stock agregado sin lotes disponibles | El evento queda en reintento sin cambios hasta que una recepción aporte lotes |
 | Sin alertas Kafka | stock.alert/expiry.alert no se generan |
+| No incluido aún en `k8s/manifests/all-services.yaml` | Imagen compilada en `docker-build.yml`, pendiente de desplegar junto con Kafka en K8s |
 
 ## Conexiones
 - Consume: `sale.completed` ← [[ms5-pos]] [IMPLEMENTADO EN CÓDIGO]

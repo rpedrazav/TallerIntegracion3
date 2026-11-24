@@ -5,7 +5,7 @@ titulo: Frontend — Estructura del Proyecto Electron + React
 estado: parcial
 fuentes: [globalmart-frontend/src/, globalmart-frontend/package.json, globalmart-frontend/forge.config.ts]
 verificado_contra_codigo: true
-ultima_revision: 2026-11-22
+ultima_revision: 2026-11-24
 depende_de: [stack, ms1-identity, guia-estilo]
 publica: []
 consume: []
@@ -38,10 +38,27 @@ globalmart-frontend/
 │   │   ├── ProductosPage.tsx
 │   │   └── Admin.tsx     Pantalla administración
 │   ├── components/
-│   │   ├── AppLayout.tsx Layout general de la app
+│   │   ├── AppLayout.tsx Layout general y navegación RBAC
+│   │   ├── admin/
+│   │   │   ├── UsuariosList.tsx · CrearUsuarioModal.tsx · EditarUsuarioModal.tsx
+│   │   │   ├── TenantConfig.tsx
+│   │   │   └── editarUsuario.ts · desactivarUsuario.ts
 │   │   └── pos/
-│   │       ├── BarcodeInput.tsx  Input con debounce para búsqueda
-│   │       └── CartItem.tsx      Componente de ítem en carrito
+│   │       ├── BarcodeInput.tsx  Input con debounce para búsqueda MS-3
+│   │       ├── CartItem.tsx      Componente de ítem en carrito
+│   │       └── PaymentModal.tsx  Modal de cobro efectivo y tarjeta simulada
+│   ├── config/
+│   │   ├── api.ts        Resolución de modos remote / gateway / local (S2-028)
+│   │   └── devices.config.ts Configuración de adaptadores de dispositivos
+│   ├── devices/
+│   │   ├── DeviceManager.ts  Orquestador de terminal y balanza (S2-087)
+│   │   └── adapters/     MockTerminalAdapter · RealTerminalAdapter · MockScaleAdapter
+│   ├── payments/
+│   │   ├── TerminalPort.ts · terminalStateMachine.ts · Ms5TerminalAdapter.ts (S2-071)
+│   ├── store/
+│   │   └── useTenantStore.ts Estado de rol activo / esAdmin
+│   ├── utils/
+│   │   └── jwt.ts · adminAccess.ts
 │   ├── hooks/
 │   │   └── useAuth.ts    Hook de autenticación con electron-store
 │   ├── hardware/
@@ -98,6 +115,7 @@ globalmart-frontend/
 ## Conexiones
 - Autenticación: [[auth-y-roles]]
 - Pantallas detalle: [[pantallas]]
+- Mapeo modular POS y Cierre de Turno: [mapeo-responsabilidades-pos-cierre](mapeo-responsabilidades-pos-cierre.md)
 - Guía visual: [[guia-estilo]]
 - IPC Electron: [[electron-ipc]]
 - API que consume: [[ms1-identity]], [[ms5-pos]], [[ms3-catalog]]

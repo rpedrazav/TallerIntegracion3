@@ -5,7 +5,7 @@ titulo: Electron IPC — Comunicación Main/Renderer
 estado: parcial
 fuentes: [globalmart-frontend/src/preload.ts, globalmart-frontend/src/index.ts, globalmart-frontend/src/types/global.d.ts, globalmart-frontend/src/hardware/scale-contract.ts, globalmart-frontend/src/hardware/simulated-scale-adapter.ts, globalmart-frontend/src/hardware/serial-scale-adapter.ts, globalmart-frontend/src/hardware/scale-adapter-factory.ts, globalmart-frontend/src/hardware/scale-ipc.ts, globalmart-frontend/tests/scale-contract.test.cjs, globalmart-frontend/tests/simulated-scale-adapter.test.cjs, globalmart-frontend/tests/serial-scale-adapter.test.cjs, globalmart-frontend/tests/scale-ipc.test.cjs]
 verificado_contra_codigo: true
-ultima_revision: 2026-10-25
+ultima_revision: 2026-11-24
 depende_de: [estructura]
 publica: []
 consume: []
@@ -84,6 +84,7 @@ Se amplió la superficie segura en `preload.ts` (`window.api.devices`) para term
 ## Conexiones
 - Estructura: [[estructura]]
 - Hardware: [[hardware]]
+- Sustitución por hardware real (S2-090): [guia-sustitucion-hardware-real](../integraciones/guia-sustitucion-hardware-real.md)
 - Auth: [[auth-y-roles]]
 - Límites terminal: [[limites-terminal-simulado]]
 

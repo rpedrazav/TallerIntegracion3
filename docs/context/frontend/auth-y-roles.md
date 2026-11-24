@@ -5,7 +5,7 @@ titulo: Autenticación y Roles en el Frontend
 estado: parcial
 fuentes: [globalmart-frontend/src/hooks/useAuth.ts, globalmart-frontend/src/pages/Login.tsx, globalmart-frontend/src/api/client.ts, globalmart-frontend/src/App.tsx, globalmart-frontend/src/components/AppLayout.tsx, globalmart-frontend/src/store/useTenantStore.ts, globalmart-frontend/src/pages/AdminRoles.tsx, globalmart-frontend/src/components/admin/CrearUsuarioModal.tsx, globalmart-frontend/tests/admin-access.test.cjs, globalmart-frontend/e2e/admin.spec.ts]
 verificado_contra_codigo: true
-ultima_revision: 2026-11-19
+ultima_revision: 2026-11-24
 depende_de: [estructura, rbac-multirol, ms1-identity]
 publica: []
 consume: []
@@ -44,7 +44,7 @@ El JWT se guarda mediante `window.api.setToken` en electron-store. Login tambié
 
 `App.tsx` declara `AdminRoute` como guard común de `/admin` y todas sus rutas hijas (usuarios, roles, inventario, sucursales, productos y configuración). Sin sesión redirige a `/login`; con sesión cuyo `active_role` no sea `ADMIN` o `SUPER_ADMIN`, muestra `Acceso denegado` sin montar `AdminLayout`. `AppLayout` usa el mismo `esAdmin` para ocultar el enlace de Administración. TI3-736 amplía la prueba de rol activo con acceso directo a `/admin/productos`: el caso CAJERO multirol informa `Acceso denegado` y no monta `ProductosPage`. La regresión administrativa combinada aprobó 34/34 casos con resumen final y exit code 0; ocho corresponden a acceso Admin.
 
-Este control mantiene coherente la interfaz, pero no sustituye la autorización del backend: los endpoints administrativos conservan sus atributos y políticas de autorización independientes.
+Este control mantiene coherente la interfaz, pero no sustituye la autorización del backend: los endpoints administrativos conservan sus atributos y políticas de autorización independientes. Las llamadas protegidas redirigen a `/login` tras recibir HTTP 401 [IMPLEMENTADO].
 
 ## JWT decodificado (estructura real)
 
@@ -68,7 +68,6 @@ Este control mantiene coherente la interfaz, pero no sustituye la autorización 
 
 | Brecha | Impacto |
 |--------|---------|
-| URL base de MS-1 | Configurada en `src/api/client.ts`; configuración por entorno [NO VERIFICADO] |
 | Sin refresh token | Al expirar el JWT, hay que hacer login nuevamente |
 | Sin RoleSwitcher | Usuarios multi-rol no pueden cambiar su rol activo |
 | Expiración del token | Las llamadas protegidas redirigen al login si reciben 401; no hay renovación de JWT |

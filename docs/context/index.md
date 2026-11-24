@@ -5,7 +5,7 @@ titulo: Índice del Grafo de Conocimiento — GlobalMart OS
 estado: vigente
 fuentes: [docs/context/_reports/inventario.md, GlobalMart_ContextMaster.md]
 verificado_contra_codigo: true
-ultima_revision: 2026-11-14
+ultima_revision: 2026-11-24
 depende_de: []
 publica: []
 consume: []
@@ -91,6 +91,7 @@ reglas: []
 |------|---------------|
 | `[[estructura]]` | Estructura del proyecto frontend |
 | `[[pantallas]]` | Pantallas implementadas |
+| [mapeo-responsabilidades-pos-cierre](frontend/mapeo-responsabilidades-pos-cierre.md) | Esquema modular SRP y trazabilidad botón→BD de `Pos.tsx` y `CerrarTurnoPage.tsx` (TI3-759) |
 | `[[guia-estilo]]` | Sistema visual aprobado, tokens y reglas de accesibilidad |
 | `[[electron-ipc]]` | Comunicación Electron main/renderer |
 | `[[auth-y-roles]]` | Manejo de JWT en el frontend |
@@ -99,6 +100,8 @@ reglas: []
 | Nodo | Cuándo leerlo |
 |------|---------------|
 | `[[hardware]]` | Balanza, Terminal POS |
+| [limites-terminal-simulado](integraciones/limites-terminal-simulado.md) | Fronteras y matriz de contrato del terminal simulado (S2-086) |
+| [guia-sustitucion-hardware-real](integraciones/guia-sustitucion-hardware-real.md) | Datos mínimos obligatorios y bloqueo físico para balanza y terminal real (S2-090) |
 | `[[fiscal]]` | SII, AFIP, IRS |
 | `[[pasarela-pago]]` | Stripe, Transbank, MercadoPago |
 | `[[transporte-3pl]]` | Couriers y tracking |
@@ -110,8 +113,12 @@ reglas: []
 |------|---------------|
 | `[[docker-compose]]` | Para modificar el entorno de desarrollo |
 | `[[kong]]` | Para agregar rutas al API Gateway |
+| [matriz-rutas](infraestructura/matriz-rutas.md) | Matriz integral de puertos, rutas duales, Kong e Ingress TLS |
+| [manifiestos-k8s-cluster](infraestructura/manifiestos-k8s-cluster.md) | Inventario K8s, tags de imágenes, variables por MS y guía para Rodrigo (TI3-758) |
 | `[[ci-cd]]` | Para entender el pipeline de CI |
 | `[[testing]]` | Para escribir o entender tests |
+| [manual-ejecucion-demo-sprint2](../pautas/manual-ejecucion-demo-sprint2.md) | Guía reproducible de demo sin hardware físico y límites (S2-119) |
+| [registro-release-sprint2](../qa/S2-120/registro-release-sprint2.md) | Auditoría de cierre de Sprint 2: build, tests, rutas, migraciones y riesgos (S2-120) |
 
 ### `planificacion/` — Sprints y roadmap
 

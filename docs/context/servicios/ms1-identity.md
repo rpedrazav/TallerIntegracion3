@@ -5,7 +5,7 @@ titulo: MS-1 · Tenant & Identity Service
 estado: parcial
 fuentes: [src/TenantIdentityService/, tests/GlobalMart.IntegrationTests/SucursalIntegrationTests.cs, tests/GlobalMart.IntegrationTests/ReactivarUsuarioIntegrationTests.cs, docs/qa/TI3-799/reporte.md, globalmart-frontend/src/pages/Admin.tsx, globalmart-frontend/src/pages/AdminRoles.tsx, globalmart-frontend/src/components/admin/UsuariosList.tsx, Docker/config/kong.yaml]
 verificado_contra_codigo: true
-ultima_revision: 2026-11-22
+ultima_revision: 2026-11-24
 depende_de: []
 publica: []
 consume: []
@@ -309,9 +309,10 @@ Consumidores actuales de `SucursalId` (como `Guid`, sin FK por ser otro microser
 
 **Notas de implementación:**
 - `active_role` se determina por prioridad: SUPER_ADMIN > ADMIN > CAJERO > REPONEDOR > CLIENTE_AFILIADO
-- `sucursal_id` mencionado en el ContextMaster NO está en el JWT real generado [DISCREPANCIA]
+- `sucursal_id` se emite en el JWT tomando la primera asignación de `UsuarioSucursales` (cadena vacía `""` si el usuario no tiene sucursal asignada)
 - Expiración: configurable via `Jwt:ExpirationHours` (default 8 horas)
 - SUPER_ADMIN no puede ser asignado por un ADMIN (protección en UsuarioController)
+- Seed de desarrollo (`Program.cs`): aprovisiona tanto `cajero@demo.cl` (CAJERO) como `admin@demo.cl` (ADMIN) en el tenant demo `aaaaaaaa-0000-0000-0000-000000000001`, asegurando `admin@demo.cl` incluso si el tenant ya existía previamente (`adeeae7`).
 
 ## Multi-tenant en MS-1
 
