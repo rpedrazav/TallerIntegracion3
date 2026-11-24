@@ -5,7 +5,7 @@ titulo: Integración con Hardware — Balanza y Terminal POS
 estado: parcial
 fuentes: [GlobalMart_ContextMaster.md#sec12, diagramas/rodrigo/, globalmart-frontend/src/index.ts, globalmart-frontend/src/preload.ts, globalmart-frontend/src/hardware/scale-contract.ts, globalmart-frontend/src/hardware/simulated-scale-adapter.ts, globalmart-frontend/src/hardware/serial-scale-adapter.ts, globalmart-frontend/src/hardware/scale-adapter-factory.ts, globalmart-frontend/src/hardware/scale-ipc.ts, globalmart-frontend/tests/scale-contract.test.cjs, globalmart-frontend/tests/simulated-scale-adapter.test.cjs, globalmart-frontend/tests/serial-scale-adapter.test.cjs, globalmart-frontend/tests/scale-ipc.test.cjs]
 verificado_contra_codigo: true
-ultima_revision: 2026-10-25
+ultima_revision: 2026-11-24
 depende_de: [ms5-pos, electron-ipc]
 publica: []
 consume: []
@@ -159,6 +159,12 @@ En `globalmart-frontend/src/devices/`:
 - Valida lectura de balanza (cero inicial, tara y lectura estable) y operaciones de terminal (inicio, aprobación con token opaco, rechazo y cancelación limpia).
 - Ejecución 100% libre de hardware en entornos CI / headless.
 
+## Sustitución por Hardware Real y Bloqueo Físico (S2-090 / TI3-721)
+
+- Especificación completa en [guia-sustitucion-hardware-real.md](guia-sustitucion-hardware-real.md).
+- Define la ficha obligatoria de 6 dimensiones (fabricante, modelo/firmware, conectividad, protocolo de trama, SDK nativo y equipo/masas/tarjetas de prueba) requerida para cerrar las metas físicas de **Balanza (G4)** y **Terminal POS (G5)**.
+- Documenta el bloqueo físico explícito (`SerialScaleAdapter` deshabilitado sin transporte/parser inyectado y `RealTerminalAdapter` que rechaza ejecuciones no homologadas) y el procedimiento de conexión en Electron Main / MS-5 sin alterar `Pos.tsx` ni `preload.ts`.
+
 ## Casos de uso afectados
 
 | ID | Caso de Uso | Estado |
@@ -175,6 +181,7 @@ En `globalmart-frontend/src/devices/`:
 - POS backend: [[ms5-pos]]
 - Pasarela de pago: [[pasarela-pago]]
 - Límites terminal: [[limites-terminal-simulado]]
+- Sustitución por hardware real: [guia-sustitucion-hardware-real](guia-sustitucion-hardware-real.md)
 
 ## Fuentes
 - `GlobalMart_ContextMaster.md` §12

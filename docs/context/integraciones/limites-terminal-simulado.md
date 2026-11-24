@@ -5,7 +5,7 @@ titulo: Límites del Terminal POS Simulado y Matriz de Contrato (S2-086)
 estado: implementado
 fuentes: [globalmart-frontend/src/devices/, globalmart-frontend/src/preload.ts]
 verificado_contra_codigo: true
-ultima_revision: 2026-10-25
+ultima_revision: 2026-11-24
 depende_de: [hardware, pasarela-pago, electron-ipc]
 publica: []
 consume: []
@@ -53,6 +53,6 @@ reglas: [RN-02]
 | Elemento | Estado | Dependencia Requerida | Evidencia Pendiente |
 |---|---|---|---|
 | Simulador Mock en Memoria | ✅ Implementado | Ninguna (Software puro) | `npm run smoke:simulators` ejecutado con éxito. |
-| Adaptador Hardware Real | ⚠️ Reservado | Homologación con fabricante y SDK oficial | Certificación de laboratorio con terminal físico real. |
+| Adaptador Hardware Real | ⚠️ Reservado | Homologación con fabricante y SDK oficial (ver [guia-sustitucion-hardware-real](guia-sustitucion-hardware-real.md)) | Certificación de laboratorio con terminal físico real `[NO VERIFICADO]`. |
 | Integración IPC Segura | ✅ Implementado | Electron Preload + contextIsolation | Handlers validados contra inyección de tipos. |
 | Desacoplamiento Pasarela | ✅ Implementado | MS-5 `/ventas/{id}/cobrar-tarjeta` | Endpoint y tests de correlación ejecutados. |
