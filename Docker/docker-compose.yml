@@ -251,7 +251,7 @@ services:
       - minimarket-net
     environment:
       KAFKA_BROKER: kafka:${KAFKA_INTERNAL_PORT:-29092}
-      KAFKA_INIT_TOPICS: ${KAFKA_INIT_TOPICS:-sale.completed,stock.alert,expiry.alert,sale.reversed,stock.updated,purchase.received,fx.rate.updated,points.updated,tenant.created,tenant.updated,user.registered,product.created,product.price_updated,shift.closed,stock.low,product.expiring_soon,purchase_order.received}
+      KAFKA_INIT_TOPICS: ${KAFKA_INIT_TOPICS:-sale.completed,sale.completed.error,stock.alert,expiry.alert,sale.reversed,stock.updated,purchase.received,fx.rate.updated,points.updated,tenant.created,tenant.updated,user.registered,product.created,product.price_updated,shift.closed,stock.low,product.expiring_soon,purchase_order.received}
       KAFKA_TOPIC_PARTITIONS: ${KAFKA_TOPIC_PARTITIONS:-1}
       KAFKA_TOPIC_REPLICATION_FACTOR: ${KAFKA_TOPIC_REPLICATION_FACTOR:-1}
     entrypoint:

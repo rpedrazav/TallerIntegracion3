@@ -1,4 +1,3 @@
-using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using POSCartService.DTOs;
@@ -13,7 +12,6 @@ namespace POSCartService.Controllers;
 /// Requiere JWT válido con claims cajero_id (o sub) y tenant_id.
 /// </summary>
 [ApiController]
-[Route("ventas")]
 [Route("api/ventas")]
 [Authorize]
 public sealed class VentasController : ControllerBase
@@ -43,20 +41,92 @@ public sealed class VentasController : ControllerBase
 
 
 
-    // ── Helpers ────────────────────────────────────────────────────────────────
-
-    private bool TryGetClaims(out Guid cajeroId, out Guid tenantId)
+    /// <summary>Anulación total de efectivo o tarjeta con reversa confirmada, autorizada por ADMIN del mismo tenant (S2-092).</summary>
+    [HttpPost("{id:guid}/anular")]
+    [Authorize(Roles = "ADMIN")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> Anular(Guid id, [FromBody] System.Text.Json.JsonElement request)
     {
-        var cajeroClaim = User.FindFirst("cajero_id")?.Value
-            ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value
-            ?? User.FindFirst("sub")?.Value;
-        var tenantClaim = User.FindFirst("tenant_id")?.Value;
+        if (!User.TryGetClaims(out var adminId, out var tenantId) || adminId == Guid.Empty || tenantId == Guid.Empty)
+            return Unauthorized(new { codigo = "IDENTIDAD_INVALIDA", error = "Token sin identidad o tenant válido." });
 
-        cajeroId = default;
-        tenantId = default;
+        // Contrato estricto: no ignorar una solicitud parcial ni identidad suministrada por cliente.
+        if (request.ValueKind != System.Text.Json.JsonValueKind.Object
+            || request.EnumerateObject().Count() != 1
+            || !request.TryGetProperty("motivo", out var motivoJson)
+            || motivoJson.ValueKind != System.Text.Json.JsonValueKind.String)
+            return BadRequest(new { codigo = "SOLICITUD_INVALIDA", error = "Se requiere únicamente motivo como texto." });
+        var motivo = motivoJson.GetString()!.Trim();
+        if (motivo.Length is < 1 or > 500)
+            return BadRequest(new { codigo = "SOLICITUD_INVALIDA", error = "motivo debe contener entre 1 y 500 caracteres." });
 
-        return Guid.TryParse(cajeroClaim, out cajeroId)
-            && Guid.TryParse(tenantClaim, out tenantId);
+        try
+        {
+            var venta = await _ventaService.AnularAsync(id, adminId, motivo);
+            return Ok(new
+            {
+                venta_id = venta.Id,
+                estado = venta.Estado.ToString(),
+                anulacion = new
+                {
+                    motivo = venta.Anulacion!.Motivo,
+                    autorizado_por = venta.Anulacion.AutorizadoPor,
+                    created_at = venta.Anulacion.CreatedAt
+                },
+                reembolso_tarjeta = venta.MetodoPago == MetodoPagoVenta.TARJETA ? "CONFIRMADO_SIMULADO" : "NO_APLICA",
+                devolucion_efectivo = venta.MetodoPago == MetodoPagoVenta.EFECTIVO ? "GESTION_MANUAL" : "NO_APLICA"
+            });
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound(new { codigo = "VENTA_NO_ENCONTRADA", error = "Venta no encontrada." });
+        }
+        catch (AnulacionConflictException ex)
+        {
+            return Conflict(new { codigo = ex.Codigo, error = ex.Message });
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Forbid();
+        }
+        catch (Exception ex)
+        {
+            _logger?.LogError(ex, "Error al anular venta {VentaId} del tenant {TenantId}", id, tenantId);
+            return StatusCode(500, new { codigo = "ERROR_PERSISTENCIA", error = "No se pudo confirmar la anulación." });
+        }
+    }
+
+    /// <summary>Consulta y reconcilia una reversa pendiente sin reenviar la devolución.</summary>
+    [HttpGet("{id:guid}/reversa-tarjeta")]
+    [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
+    [Authorize(Roles = "ADMIN")]
+    public async Task<IActionResult> ConsultarReversa(Guid id, [FromServices] ReversaTarjetaService reversas)
+    {
+        if (!User.TryGetClaims(out var adminId, out var tenantId) || adminId == Guid.Empty || tenantId == Guid.Empty)
+            return Unauthorized();
+        try
+        {
+            var r = await reversas.ConsultarAsync(id);
+            return Ok(new {
+                reversa_id = r.Id, venta_id = r.VentaId, estado = r.Estado.ToString(), monto = r.Monto, moneda = r.Moneda,
+                referencia_pago = r.ReferenciaPago, referencia_reversa = r.ReferenciaReversa, codigo_rechazo = r.CodigoRechazo,
+                motivo = r.Motivo, autorizado_por = r.AutorizadoPor, created_at = r.CreatedAt, updated_at = r.UpdatedAt,
+                reembolso_confirmado = r.Estado == EstadoReversa.APROBADA
+            });
+        }
+        catch (KeyNotFoundException) { return NotFound(new { codigo = "REVERSA_NO_ENCONTRADA", error = "Reversa no encontrada." }); }
+        catch (UnauthorizedAccessException) { return Forbid(); }
+        catch (AnulacionConflictException ex) { return Conflict(new { codigo = ex.Codigo, error = ex.Message }); }
+        catch (Exception ex)
+        {
+            _logger?.LogError(ex, "Error al reconciliar reversa de venta {VentaId}", id);
+            return StatusCode(500, new { codigo = "ERROR_PERSISTENCIA", error = "No se pudo confirmar el resultado local; consulte nuevamente." });
+        }
     }
 
     // ── POST /ventas ───────────────────────────────────────────────────────────
@@ -79,10 +149,11 @@ public sealed class VentasController : ControllerBase
     [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
     public async Task<IActionResult> Crear(
         [FromBody] CrearVentaRequest request,
+        [FromServices] ISucursalClient sucursales,
         CancellationToken cancellationToken)
     {
         // 1. Extraer claims del JWT
-        if (!TryGetClaims(out var cajeroId, out var tenantId))
+        if (!User.TryGetClaims(out var cajeroId, out var tenantId))
             return Unauthorized(new { error = "Token inválido: faltan cajero_id/sub o tenant_id." });
 
         // 2. Verificar turno activo — RN-04: solo se puede vender en turno ABIERTO
@@ -96,6 +167,19 @@ public sealed class VentasController : ControllerBase
             });
         }
 
+
+        var authHeader = Request.Headers.Authorization.ToString();
+        try
+        {
+            if (!await sucursales.IsActiveAsync(turno.SucursalId, authHeader, cancellationToken))
+                return NotFound(new { error = "Sucursal no encontrada o inactiva." });
+        }
+        catch (ExternalServiceException)
+        {
+            return StatusCode(StatusCodes.Status503ServiceUnavailable,
+                new { error = "No se pudo validar la sucursal." });
+        }
+
         // 3. Parsear método de pago
         if (!Enum.TryParse<MetodoPagoVenta>(request.MetodoPago, ignoreCase: true, out var metodoPago))
         {
@@ -103,8 +187,6 @@ public sealed class VentasController : ControllerBase
         }
 
         // 4. Token Bearer para propagación a microservicios MS-3 y MS-2
-        var authHeader = Request.Headers.Authorization.ToString();
-
         // 5. Validar y resolver cada producto consultando MS-3 (CatalogPricingService)
         // NOTA CONTRATO S2-001 / S2-002: Ningún precio o impuesto aportado por el renderer es autoridad.
         // Se resuelven autoritativamente desde MS-3 y MS-2.
@@ -141,24 +223,16 @@ public sealed class VentasController : ControllerBase
                 });
             }
 
-            // Determinar cantidad y peso
-            decimal cantidad = itemRequest.Cantidad;
             decimal? pesoKg = itemRequest.PesoKg;
-
-            if (producto.EsPesoVariable && pesoKg.HasValue && pesoKg.Value > 0)
-            {
-                cantidad = pesoKg.Value;
-            }
-            else if (cantidad <= 0)
-            {
-                cantidad = 1;
-            }
+            var errorCantidad = ReglasCantidadItem.Validar(producto.EsPesoVariable,
+                itemRequest.Cantidad, pesoKg, permitirCantidadUnitariaOmitida: true, out var cantidad);
+            if (errorCantidad is not null)
+                return BadRequest(new { error = errorCantidad });
 
             if (producto.PrecioBase < 0)
                 return BadRequest(new { error = "El precio de catálogo no puede ser negativo." });
 
             decimal precioUnitario = producto.PrecioBase;
-            decimal subtotalItem = Math.Round(precioUnitario * cantidad, 2, MidpointRounding.ToEven);
 
             itemsDominio.Add(new ItemVenta
             {
@@ -166,8 +240,7 @@ public sealed class VentasController : ControllerBase
                 NombreProducto = producto.Nombre,
                 Cantidad       = cantidad,
                 PesoKg         = pesoKg,
-                PrecioUnitario = precioUnitario,
-                Subtotal       = subtotalItem
+                PrecioUnitario = precioUnitario
             });
 
             itemsParaCalculoTax.Add(new TaxItemDto
@@ -203,7 +276,10 @@ public sealed class VentasController : ControllerBase
             });
         }
 
-        // 7. Crear la venta a través del servicio de dominio con totales autoritativos de MS-2
+        // 7. Crear la venta con importes autoritativos de MS-2 (también el subtotal por línea; en CLP, pesos enteros)
+        for (var i = 0; i < itemsDominio.Count; i++)
+            itemsDominio[i].Subtotal = taxResult.Items[i].Subtotal;
+
         var venta = await _ventaService.CrearAsync(
             turnoId:    turno.Id,
             cajeroId:   cajeroId,
@@ -252,7 +328,7 @@ public sealed class VentasController : ControllerBase
         CancellationToken cancellationToken)
     {
         // 1. Extraer claims del JWT
-        if (!TryGetClaims(out _, out _))
+        if (!User.TryGetClaims(out _, out _))
             return Unauthorized(new { error = "Token inválido: faltan cajero_id/sub o tenant_id." });
 
         // 2. Verificar que la venta exista
@@ -294,37 +370,17 @@ public sealed class VentasController : ControllerBase
             return BadRequest(new { error = $"El producto '{producto.Nombre}' está inactivo y no se puede vender." });
         }
 
-        // 6. Validar S2-061 antes de calcular impuestos o mutar el carrito.
-        // La clasificación proviene del catálogo, nunca del cliente.
-        decimal cantidad = request.Cantidad ?? 1m;
+        // Validar antes de calcular impuestos o mutar el carrito.
         decimal? pesoKg = request.PesoKg;
-
-        if (producto.EsPesoVariable)
-        {
-            if (!pesoKg.HasValue)
-                return BadRequest(new { error = "peso_kg es obligatorio para productos de peso variable." });
-            if (pesoKg.Value < 0.010m)
-                return BadRequest(new { error = "peso_kg debe ser mayor o igual a 0.010 kg (10 gramos)." });
-            if (pesoKg.Value % 0.001m != 0)
-                return BadRequest(new { error = "peso_kg debe expresarse en incrementos de 0.001 kg (1 gramo), sin redondeo." });
-            if (request.Cantidad.HasValue && request.Cantidad.Value != pesoKg.Value)
-                return BadRequest(new { error = "cantidad debe coincidir con peso_kg para productos de peso variable." });
-
-            cantidad = pesoKg.Value;
-        }
-        else
-        {
-            if (pesoKg.HasValue)
-                return BadRequest(new { error = "peso_kg no corresponde a un producto que no es de peso variable." });
-            if (cantidad <= 0)
-                return BadRequest(new { error = "cantidad debe ser mayor a 0." });
-        }
+        var errorCantidad = ReglasCantidadItem.Validar(producto.EsPesoVariable,
+            request.Cantidad, pesoKg, permitirCantidadUnitariaOmitida: true, out var cantidad);
+        if (errorCantidad is not null)
+            return BadRequest(new { error = errorCantidad });
 
         if (producto.PrecioBase < 0)
             return BadRequest(new { error = "El precio de catálogo no puede ser negativo." });
 
         decimal precioUnitario = producto.PrecioBase;
-        decimal subtotalItem = Math.Round(precioUnitario * cantidad, 2, MidpointRounding.ToEven);
 
         var nuevoItem = new ItemVenta
         {
@@ -334,8 +390,7 @@ public sealed class VentasController : ControllerBase
             NombreProducto = producto.Nombre,
             Cantidad       = cantidad,
             PesoKg         = pesoKg,
-            PrecioUnitario = precioUnitario,
-            Subtotal       = subtotalItem
+            PrecioUnitario = precioUnitario
         };
 
         // 7. Llamar a MS-2 POST /api/tax/calculate para calcular el IVA consolidado
@@ -375,7 +430,9 @@ public sealed class VentasController : ControllerBase
             });
         }
 
-        // 8. Persistir ítem y actualizar venta con totales calculados
+        // 8. Persistir ítem (subtotal de línea según MS-2) y actualizar venta con totales calculados
+        var itemTax = taxResult.Items[^1];
+        nuevoItem.Subtotal = itemTax.Subtotal;
         var (_, itemPersistido) = await _ventaService.AgregarItemAsync(
             id,
             nuevoItem,
@@ -384,8 +441,7 @@ public sealed class VentasController : ControllerBase
             impuestos: taxResult.Iva,
             total:     taxResult.Total);
 
-        var itemTax = taxResult.Items.LastOrDefault();
-        var response = ItemVentaResponse.FromModel(itemPersistido, itemTax?.Iva, itemTax?.Total);
+        var response = ItemVentaResponse.FromModel(itemPersistido, itemTax.Iva, itemTax.Total);
 
         return CreatedAtAction(
             nameof(GetById),
@@ -419,7 +475,7 @@ public sealed class VentasController : ControllerBase
         CancellationToken cancellationToken)
     {
         // 1. Extraer claims del JWT
-        if (!TryGetClaims(out _, out _))
+        if (!User.TryGetClaims(out _, out _))
             return Unauthorized(new { error = "Token inválido: faltan cajero_id/sub o tenant_id." });
 
         // 2. Verificar que la venta exista
@@ -460,30 +516,11 @@ public sealed class VentasController : ControllerBase
         if (!producto.IsActive)
             return BadRequest(new { error = "El producto del ítem está inactivo." });
 
-        decimal nuevaCantidad;
         decimal? nuevoPesoKg = request.PesoKg;
-        if (producto.EsPesoVariable)
-        {
-            if (!nuevoPesoKg.HasValue)
-                return BadRequest(new { error = "peso_kg es obligatorio para productos de peso variable." });
-            if (nuevoPesoKg.Value < 0.010m)
-                return BadRequest(new { error = "peso_kg debe ser mayor o igual a 0.010 kg (10 gramos)." });
-            if (nuevoPesoKg.Value % 0.001m != 0)
-                return BadRequest(new { error = "peso_kg debe expresarse en incrementos de 0.001 kg (1 gramo), sin redondeo." });
-            if (request.Cantidad.HasValue && request.Cantidad.Value != nuevoPesoKg.Value)
-                return BadRequest(new { error = "cantidad debe coincidir con peso_kg para productos de peso variable." });
-            nuevaCantidad = nuevoPesoKg.Value;
-        }
-        else
-        {
-            if (nuevoPesoKg.HasValue)
-                return BadRequest(new { error = "peso_kg no corresponde a un producto que no es de peso variable." });
-            if (!request.Cantidad.HasValue || request.Cantidad.Value <= 0)
-                return BadRequest(new { error = "cantidad debe ser mayor a 0." });
-            nuevaCantidad = request.Cantidad.Value;
-        }
-
-        decimal nuevoSubtotalItem = Math.Round(item.PrecioUnitario * nuevaCantidad, 2, MidpointRounding.ToEven);
+        var errorCantidad = ReglasCantidadItem.Validar(producto.EsPesoVariable,
+            request.Cantidad, nuevoPesoKg, permitirCantidadUnitariaOmitida: false, out var nuevaCantidad);
+        if (errorCantidad is not null)
+            return BadRequest(new { error = errorCantidad });
 
         // 6. Recalcular IVA y totales consolidados de la venta consultando MS-2
         var itemsParaCalculo = venta.Items.Select(i => new TaxItemDto
@@ -517,23 +554,19 @@ public sealed class VentasController : ControllerBase
             });
         }
 
-        // 7. Persistir modificación del ítem y actualizar totales de la venta
+        // 7. Persistir modificación del ítem (subtotal de línea según MS-2) y actualizar totales de la venta
+        var itemTax = taxResult.Items[venta.Items.ToList().FindIndex(i => i.Id == itemId)];
         var (_, itemActualizado) = await _ventaService.ModificarCantidadItemAsync(
             id,
             itemId,
             nuevaCantidad:        nuevaCantidad,
             nuevoPesoKg:          nuevoPesoKg,
-            nuevoSubtotalItem:    nuevoSubtotalItem,
+            nuevoSubtotalItem:    itemTax.Subtotal,
             nuevoSubtotalVenta:   taxResult.Subtotal,
             nuevosImpuestosVenta: taxResult.Iva,
             nuevoTotalVenta:      taxResult.Total);
 
-        var indexItem = venta.Items.ToList().FindIndex(i => i.Id == itemId);
-        var itemTax = (indexItem >= 0 && indexItem < taxResult.Items.Count)
-            ? taxResult.Items[indexItem]
-            : null;
-
-        var response = ItemVentaResponse.FromModel(itemActualizado, itemTax?.Iva, itemTax?.Total);
+        var response = ItemVentaResponse.FromModel(itemActualizado, itemTax.Iva, itemTax.Total);
         return Ok(response);
     }
 
@@ -560,7 +593,7 @@ public sealed class VentasController : ControllerBase
         CancellationToken cancellationToken)
     {
         // 1. Extraer claims del JWT
-        if (!TryGetClaims(out _, out _))
+        if (!User.TryGetClaims(out _, out _))
             return Unauthorized(new { error = "Token inválido: faltan cajero_id/sub o tenant_id." });
 
         // 2. Verificar que la venta exista
@@ -665,7 +698,7 @@ public sealed class VentasController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetById(Guid id)
     {
-        if (!TryGetClaims(out _, out _))
+        if (!User.TryGetClaims(out _, out _))
             return Unauthorized(new { error = "Token inválido: faltan cajero_id/sub o tenant_id." });
 
         var venta = await _ventaService.GetByIdAsync(id);
@@ -686,7 +719,7 @@ public sealed class VentasController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> GetByTurno(Guid turnoId)
     {
-        if (!TryGetClaims(out _, out _))
+        if (!User.TryGetClaims(out _, out _))
             return Unauthorized(new { error = "Token inválido: faltan cajero_id/sub o tenant_id." });
 
         var ventas = await _ventaService.GetByTurnoAsync(turnoId);
@@ -721,7 +754,7 @@ public sealed class VentasController : ControllerBase
         [FromBody] CobrarVentaRequest request)
     {
         // 1. Extraer claims del JWT
-        if (!TryGetClaims(out _, out _))
+        if (!User.TryGetClaims(out _, out _))
             return Unauthorized(new { error = "Token inválido: faltan cajero_id/sub o tenant_id." });
 
         // 2. Verificar que la venta exista
@@ -778,7 +811,7 @@ public sealed class VentasController : ControllerBase
     [HttpPatch("{id:guid}/metodo-pago")]
     public async Task<IActionResult> CambiarMetodoPago([FromRoute] Guid id, [FromBody] CambiarMetodoPagoRequest request)
     {
-        if (!TryGetClaims(out var cajeroId, out var tenantId))
+        if (!User.TryGetClaims(out var cajeroId, out var tenantId))
             return Unauthorized(new { error = "Token inválido: faltan cajero_id/sub o tenant_id." });
         var turno = await _turnoService.GetActivo(cajeroId, tenantId);
         if (turno is null)
@@ -826,7 +859,7 @@ public sealed class VentasController : ControllerBase
         CancellationToken cancellationToken)
     {
         // 1. Extraer y validar claims del JWT (RN-07 / RN-01)
-        if (!TryGetClaims(out var cajeroId, out var tenantId))
+        if (!User.TryGetClaims(out var cajeroId, out var tenantId))
             return Unauthorized(new { error = "Token inválido: faltan cajero_id/sub o tenant_id." });
 
         // 2. Verificar turno activo del cajero en el tenant (RN-06)
@@ -1051,7 +1084,7 @@ public sealed class VentasController : ControllerBase
     [HttpGet("{id:guid}/intento-tarjeta")]
     public async Task<IActionResult> ConsultarIntentoTarjeta([FromRoute] Guid id, CancellationToken cancellationToken)
     {
-        if (!TryGetClaims(out var cajeroId, out var tenantId))
+        if (!User.TryGetClaims(out var cajeroId, out var tenantId))
             return Unauthorized(new { error = "Token inválido: faltan cajero_id/sub o tenant_id." });
         var venta = await _ventaService.GetByIdAsync(id);
         if (venta is null || venta.TenantId != tenantId || venta.CajeroId != cajeroId)

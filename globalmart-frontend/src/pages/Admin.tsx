@@ -6,22 +6,36 @@ import EditarUsuarioModal from '../components/admin/EditarUsuarioModal';
 import { SolicitudEdicionUsuario } from '../components/admin/editarUsuario';
 import {
   crearSolicitudDesactivacionUsuario,
+  crearSolicitudReactivacionUsuario,
+  marcarUsuarioActivo,
   marcarUsuarioInactivo,
 } from '../components/admin/desactivarUsuario';
 import UsuariosList, { Usuario } from '../components/admin/UsuariosList';
 import TenantConfig from '../components/admin/TenantConfig';
 import { buildServiceUrl } from '../config/api';
+import { parseJwt } from '../utils/jwt';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 export default function Admin() {
   const { token } = useAuth();
-  const [tabActiva, setTabActiva] = useState<'usuarios' | 'configuracion'>('usuarios');
+  const location = useLocation();
+  const navigate = useNavigate();
+  const tabActiva = location.pathname.endsWith('/configuracion') ? 'configuracion' : 'usuarios';
+  const tenantId = parseJwt(token)?.tenant_id ?? '';
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [sucursales, setSucursales] = useState<Array<{ id: string; nombre: string }>>([]);
+  const [roles, setRoles] = useState<string[]>(['CAJERO', 'REPONEDOR', 'ADMIN']);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [modalAbierto, setModalAbierto] = useState(false);
   const [usuarioEditando, setUsuarioEditando] = useState<Usuario | null>(null);
   const [deactivatingUserId, setDeactivatingUserId] = useState<string | null>(null);
+  const [reactivatingUserId, setReactivatingUserId] = useState<string | null>(null);
   const [success, setSuccess] = useState('');
+  const [credenciales, setCredenciales] = useState<CrearUsuarioValues | null>(null);
+  const [copyError, setCopyError] = useState('');
   const [reloadTick, setReloadTick] = useState(0);
 
   const recargar = useCallback(() => {
@@ -37,11 +51,12 @@ export default function Admin() {
       setError('');
       try {
         const res = await axios.get(buildServiceUrl('identity', '/users'), {
-          params: { page: 1, pageSize: 100 },
+          params: { page, pageSize: 100 },
           headers: { Authorization: `Bearer ${token}` },
         });
         if (!isMounted) return;
         setUsuarios(res.data.items ?? (Array.isArray(res.data) ? res.data : []));
+        setTotalPages(res.data.totalPages ?? 1);
       } catch (err) {
         if (!isMounted) return;
         const status = isAxiosError(err) ? err.response?.status : undefined;
@@ -57,7 +72,19 @@ export default function Admin() {
 
     void load();
     return () => { isMounted = false; };
-  }, [token, reloadTick, tabActiva]);
+  }, [token, reloadTick, tabActiva, page]);
+
+  useEffect(() => {
+    if (!token) return;
+    void axios.get<Array<{ id: string; nombre: string; activa: boolean }>>(buildServiceUrl('identity', '/sucursales'),
+      { headers: { Authorization: `Bearer ${token}` } })
+      .then(response => setSucursales(response.data.filter(s => s.activa)))
+      .catch(() => setSucursales([]));
+    void axios.get<Array<{ nombre: string }>>(buildServiceUrl('identity', '/users/roles'),
+      { headers: { Authorization: `Bearer ${token}` } })
+      .then(response => setRoles(response.data.map(role => role.nombre)))
+      .catch(() => setRoles(['CAJERO', 'REPONEDOR', 'ADMIN']));
+  }, [token]);
 
   const crearUsuario = async (v: CrearUsuarioValues) => {
     const headers = { Authorization: `Bearer ${token}` };
@@ -67,19 +94,22 @@ export default function Admin() {
         {
           nombre: v.nombre,
           email: v.email,
+          tenantId,
+          sucursalId: v.sucursalId,
           password: v.password,
           roles: [v.rol],
         },
         { headers },
       );
-      if (!res.data?.roles || res.data.roles.length === 0) {
-        await axios.post(buildServiceUrl('identity', `/users/${res.data.id}/roles`), { roles: [v.rol] }, { headers });
-      }
+      if (!res.data?.id || !res.data?.roles?.includes(v.rol))
+        throw new Error('No se pudo confirmar la asignación del rol.');
     } catch (err) {
       let msg: string | undefined;
       if (isAxiosError(err)) {
         const data = err.response?.data;
-        if (data?.message) {
+        if (err.response?.status === 403) {
+          msg = data?.message ?? 'No tienes permisos para crear usuarios.';
+        } else if (data?.message) {
           msg = data.message;
         } else if (data?.errors && typeof data.errors === 'object') {
           const list = Object.values(data.errors).flat();
@@ -90,10 +120,16 @@ export default function Admin() {
       }
       throw new Error(msg ?? 'No se pudo crear el usuario.');
     }
+    setCredenciales(v);
+    setSuccess('Usuario creado. Copia las credenciales antes de cerrar este apartado.');
     recargar();
   };
 
   const editarUsuario = async (solicitud: SolicitudEdicionUsuario) => {
+    if (!usuarioEditando?.activo) {
+      throw new Error('No se puede editar un usuario inactivo.');
+    }
+
     try {
       await axios.request({
         method: solicitud.method,
@@ -188,6 +224,56 @@ export default function Admin() {
     }
   };
 
+  const reactivarUsuario = async (usuario: Usuario) => {
+    if (reactivatingUserId !== null) return;
+
+    const solicitud = crearSolicitudReactivacionUsuario(usuario);
+    setReactivatingUserId(usuario.id);
+    setError('');
+    setSuccess('');
+
+    try {
+      const response = await axios.request({
+        method: solicitud.method,
+        url: buildServiceUrl('identity', solicitud.path),
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (response.status !== 204) throw new Error('Respuesta inesperada al reactivar el usuario.');
+
+      setUsuarios(actuales => marcarUsuarioActivo(actuales, usuario.id));
+      setSuccess(`${usuario.nombre} fue reactivado exitosamente.`);
+    } catch (err) {
+      if (!isAxiosError(err)) {
+        setError(err instanceof Error ? err.message : 'No se pudo reactivar el usuario.');
+        return;
+      }
+
+      const data = err.response?.data;
+      const serverMessage = typeof data?.message === 'string' ? data.message : undefined;
+      if (!err.response) {
+        setError('No se pudo conectar con el servicio de usuarios.');
+        return;
+      }
+
+      switch (err.response.status) {
+        case 401:
+          setError(serverMessage ?? 'La sesión no es válida. Vuelve a iniciar sesión.');
+          break;
+        case 403:
+          setError(serverMessage ?? 'No tienes permisos para reactivar usuarios.');
+          break;
+        case 404:
+          setError(serverMessage ?? 'El usuario no existe o pertenece a otro tenant.');
+          break;
+        default:
+          setError(serverMessage ?? 'No se pudo reactivar el usuario.');
+      }
+    } finally {
+      setReactivatingUserId(null);
+    }
+  };
+
   const tabButtonStyle = (activa: boolean): React.CSSProperties => ({
     padding: '0.6rem 1.25rem',
     borderRadius: '8px',
@@ -229,7 +315,7 @@ export default function Admin() {
             </button>
             <button
               type="button"
-              onClick={() => setModalAbierto(true)}
+              onClick={() => { setCredenciales(null); setModalAbierto(true); }}
               style={{
                 background: 'var(--color-primary)',
                 color: 'var(--color-on-primary)',
@@ -250,14 +336,14 @@ export default function Admin() {
       <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem', borderBottom: '1px solid var(--color-line)', paddingBottom: '0.75rem' }}>
         <button
           type="button"
-          onClick={() => setTabActiva('usuarios')}
+          onClick={() => navigate('/admin/usuarios')}
           style={tabButtonStyle(tabActiva === 'usuarios')}
         >
           Usuarios
         </button>
         <button
           type="button"
-          onClick={() => setTabActiva('configuracion')}
+          onClick={() => navigate('/admin/configuracion')}
           style={tabButtonStyle(tabActiva === 'configuracion')}
         >
           Configuración del Tenant
@@ -298,20 +384,47 @@ export default function Admin() {
             </div>
           )}
 
+          {credenciales && <section aria-label="Credenciales del nuevo usuario" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-line)', borderRadius: 8, padding: '1rem', marginBottom: '1rem' }}>
+            <h3>Nuevo usuario creado</h3>
+            <p>Entrega estos datos al usuario para iniciar sesión en otro equipo. La contraseña se muestra solo en esta sesión.</p>
+            <textarea readOnly aria-label="Datos de acceso" value={`Tenant ID: ${tenantId}\nCorreo: ${credenciales.email}\nContraseña inicial: ${credenciales.password}\nRol: ${credenciales.rol}`} style={{ width: '100%', minHeight: 100 }} />
+            <div><button type="button" onClick={async () => {
+              try { await navigator.clipboard.writeText(`Tenant ID: ${tenantId}\nCorreo: ${credenciales.email}\nContraseña inicial: ${credenciales.password}\nRol: ${credenciales.rol}`); setCopyError('Datos copiados.'); }
+              catch { setCopyError('Selecciona el texto y cópialo manualmente.'); }
+            }}>Copiar datos</button> <button type="button" onClick={() => { setCredenciales(null); setCopyError(''); }}>Ocultar</button></div>
+            {copyError && <p role="status">{copyError}</p>}
+          </section>}
+
           <UsuariosList
             usuarios={usuarios}
             loading={loading}
             error={error}
             onEdit={usuario => {
               setSuccess('');
+              if (!usuario.activo) {
+                setUsuarioEditando(null);
+                setError('No se puede editar un usuario inactivo.');
+                return;
+              }
+              setError('');
               setUsuarioEditando(usuario);
             }}
             onDeactivate={desactivarUsuario}
+            onReactivate={reactivarUsuario}
             deactivatingUserId={deactivatingUserId}
+            reactivatingUserId={reactivatingUserId}
           />
+          <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', marginTop: '1rem' }}>
+            <button type="button" disabled={page <= 1 || loading} onClick={() => setPage(p => p - 1)}>Anterior</button>
+            <span>Página {page} de {totalPages}</span>
+            <button type="button" disabled={page >= totalPages || loading} onClick={() => setPage(p => p + 1)}>Siguiente</button>
+          </div>
 
           <CrearUsuarioModal
             isOpen={modalAbierto}
+            tenantId={tenantId}
+            sucursales={sucursales}
+            roles={roles}
             onClose={() => setModalAbierto(false)}
             onSubmit={crearUsuario}
           />

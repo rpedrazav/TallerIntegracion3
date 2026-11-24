@@ -3,9 +3,9 @@ id: roadmap
 tipo: planificacion
 titulo: Roadmap — Sprints 1 a 8
 estado: vigente
-fuentes: [GlobalMart_ContextMaster.md#sec18, docs/context/planificacion/sprint-actual.md]
+fuentes: [GlobalMart_ContextMaster.md#sec18, docs/context/planificacion/sprint-actual.md, tareas/plan_sprint2_revisado.xlsx, docs/defensa-sprint2/01-resumen.md]
 verificado_contra_codigo: true
-ultima_revision: 2026-09-29
+ultima_revision: 2026-11-14
 depende_de: [sprint-actual]
 publica: []
 consume: []
@@ -17,44 +17,35 @@ reglas: []
 
 ---
 
-## Sprint 1 — Fundamentos, Backend Core y POS Base [EN CURSO]
+## Sprint 1 — Fundamentos, Backend Core y POS Base [COMPLETADO]
 
-**Duración:** 4 semanas | **Estado actual:** Semana 3 de 4 (penúltimo día al 29-09-2026)  
+**Semanas:** 1 a 4. Detalle en [[sprints-anteriores]].
 **Objetivo:** Infraestructura base, autenticación multi-tenant, catálogo de productos, flujo inicial de ventas en POS y primer consumidor Kafka con idempotencia.
 
-| Entregable / Hito | Servicio | Estado |
-|---|---|---|
-| Infraestructura Docker completa (8 PostgreSQL, Kafka, Kong, Grafana) | Infra | ✅ Completado |
-| Autenticación JWT, CRUD usuarios y configuración tenant | MS-1 | ✅ Completado |
-| Cálculo de IVA integrado con configuración de tenant | MS-2 | ✅ Completado |
-| Catálogo de productos, categorías jerárquicas y búsqueda trigram | MS-3 | ✅ Completado |
-| Consulta de stock y consumidor Kafka `sale.completed` con idempotencia | MS-4 | ✅ Completado |
-| Apertura/cierre de turnos y operaciones de carrito (crear, agregar, modificar) | MS-5 | ✅ Completado |
-| Frontend Electron + React: Login funcional y UI base de POS | Frontend | 🟡 Parcial |
-| Publicación de `sale.completed` a Kafka al completar venta | MS-5 | 🔴 Pendiente (Semana 4) |
-| Exponer endpoints HTTP de cobro y anulación en controller | MS-5 | 🔴 Pendiente (Semana 4) |
+---
+
+## Sprint 2 — POS Avanzado, Cobro con Tarjeta y Hardware Simulado [COMPLETADO — Semana 8 trasladada]
+
+**Semanas:** 5 a 8. **Plan:** [plan_sprint2_revisado.xlsx](../../../tareas/plan_sprint2_revisado.xlsx), 120 tareas / 120 h en metas G1–G5 y H.
+**Objetivo:** Completar el ciclo de venta en mostrador con cobro de tarjeta y hardware mediante simuladores y contratos reemplazables.
+
+- G1 Administración · G2 Carrito y venta funcional · G3 Cobro con tarjeta (pasarela simulada) · G4 Balanza (simulada) · G5 Terminal POS (simulado) · H Salud técnica.
+- Las 30 tareas de la **Semana 8** (`S2-091`..`S2-120`) no se ejecutaron por exigencia del profesor y pasan a la Semana 9 del Sprint 3. Ver [[sprint-actual]].
+- Fuera de alcance por decisión del plan: DTE, FEFO, compras, dashboards, devoluciones parciales, pagos mixtos. Cajón de dinero e impresora de recibos no se incluyeron en el plan revisado.
 
 ---
 
-## Sprint 2 — POS Avanzado, Cobro con Tarjeta y Hardware [PLANIFICADO]
+## Sprint 3 — Arrastre del Sprint 2, Inventario FEFO y Recepciones [EN CURSO]
 
-**Objetivo:** Completar el ciclo de venta en mostrador con cobro de tarjetas y soporte para hardware.
+**Semanas:** 9 a 12. **Capacidad:** 120 h.
+**Objetivo:** dejar todo pulido y funcionando. Prioridad: microservicios → funcionalidad → frontend.
 
-- Integración con pasarela de cobro externa (simulada/sandbox tipo Mercado Pago).
-- Cobro en efectivo con cálculo automático de vuelto y comprobante.
-- Integración de balanza serial/USB para productos de peso variable (`EsPesoVariable`).
-- Integración de cajón de dinero e impresora de recibos vía IPC en Electron.
-
----
-
-## Sprint 3 — Inventario FEFO y Recepciones [PLANIFICADO]
-
-**Objetivo:** Control estricto de mercancía y caducidades en bodega y sala.
-
-- Endpoints de recepción de mercancía y creación de lotes con fecha de caducidad.
-- Aplicación de la regla FEFO (*First-Expired, First-Out*) al descontar stock por ventas.
-- Generación de alertas automáticas Kafka (`stock.alert`, `expiry.alert`).
-- Registro de mermas, transferencias entre sucursales y ajustes manuales.
+- **Semana 9:** arrastre íntegro de la Semana 8 del Sprint 2 (anulación, consumidor Kafka de MS-4, Administración, terminal POS, salud técnica y release).
+- **Semanas 10–12 (por planificar):** alcance del roadmap y pendientes restantes:
+  - Endpoints de recepción de mercancía y creación de lotes con fecha de caducidad.
+  - Aplicación de la regla FEFO (*First-Expired, First-Out*) al descontar stock por ventas.
+  - Generación de alertas automáticas Kafka (`stock.alert`, `expiry.alert`).
+  - Registro de mermas, transferencias entre sucursales y ajustes manuales.
 
 ---
 

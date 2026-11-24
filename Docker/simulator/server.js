@@ -16,6 +16,7 @@
 
 const http = require('http');
 const crypto = require('crypto');
+const handleReversal = require('./reversals');
 
 const PORT = parseInt(process.env.PORT || '5050', 10);
 const HOST = process.env.HOST || '0.0.0.0';
@@ -29,7 +30,8 @@ const SENSITIVE_CARD_PATTERNS = [
 
 // Almacén en memoria de idempotencia: key = `${tenant_id}:${request_id}`
 const idempotencyStore = new Map();
-const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+// Cualquier GUID hexadecimal, como los que acepta MS-5 (el tenant demo no es RFC v1-v5).
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const SCENARIO_PATTERN = /^[a-z0-9-]{1,64}$/;
 
 function safeUuid(value) {
@@ -126,6 +128,8 @@ const server = http.createServer((req, res) => {
       timestamp: new Date().toISOString()
     });
   }
+
+  if (handleReversal(req, res, requestUrl, idempotencyStore, sendJson, containsCardData)) return;
 
   // 2. Consulta de estado por la misma clave idempotente (S2-039)
   const statusRoute = urlPath.match(/^\/(?:api\/)?simulator\/payments\/([^/]+)$/i);

@@ -1,0 +1,558 @@
+{
+  "config": {
+    "argv": [
+      "C:\\Program Files\\nodejs\\node.exe",
+      "C:\\Users\\dp877\\Desktop\\Universidad\\Semestre 6\\TallerIntegra3\\TallerIntegracion3\\globalmart-frontend\\node_modules\\@playwright\\test\\cli.js",
+      "test",
+      "--config",
+      "playwright.electron.config.ts",
+      "--grep",
+      "@integrado",
+      "--reporter=list,json"
+    ],
+    "configFile": "C:\\Users\\dp877\\Desktop\\Universidad\\Semestre 6\\TallerIntegra3\\TallerIntegracion3\\globalmart-frontend\\playwright.electron.config.ts",
+    "rootDir": "C:/Users/dp877/Desktop/Universidad/Semestre 6/TallerIntegra3/TallerIntegracion3/globalmart-frontend/e2e/electron",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "C:/Users/dp877/Desktop/Universidad/Semestre 6/TallerIntegra3/TallerIntegracion3/globalmart-frontend/test-results/electron",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "C:/Users/dp877/Desktop/Universidad/Semestre 6/TallerIntegra3/TallerIntegracion3/globalmart-frontend/e2e/electron",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      }
+    ],
+    "filteredProjects": [
+      {
+        "grep": {},
+        "grepInvert": null,
+        "outputDir": "C:\\Users\\dp877\\Desktop\\Universidad\\Semestre 6\\TallerIntegra3\\TallerIntegracion3\\globalmart-frontend\\test-results\\electron",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "name": "",
+        "testDir": "C:\\Users\\dp877\\Desktop\\Universidad\\Semestre 6\\TallerIntegra3\\TallerIntegracion3\\globalmart-frontend\\e2e\\electron",
+        "snapshotDir": "C:\\Users\\dp877\\Desktop\\Universidad\\Semestre 6\\TallerIntegra3\\TallerIntegracion3\\globalmart-frontend\\e2e\\electron",
+        "testIgnore": [],
+        "testMatch": "**/*.@(spec|test).?(c|m)[jt]s?(x)",
+        "timeout": 30000,
+        "use": {},
+        "dependencies": [],
+        "ignoreSnapshots": false,
+        "__projectId": ""
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "list"
+      ],
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "default",
+    "updateSourceMethod": "patch",
+    "version": "1.64.0",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "admin-venta.integrated.spec.ts",
+      "file": "admin-venta.integrated.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "@integrado ADMIN entra al panel y crea un producto en MS-3",
+          "ok": true,
+          "tags": [
+            "integrado"
+          ],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [
+                {
+                  "type": "serial",
+                  "location": {
+                    "file": "C:\\Users\\dp877\\Desktop\\Universidad\\Semestre 6\\TallerIntegra3\\TallerIntegracion3\\globalmart-frontend\\e2e\\electron\\admin-venta.integrated.spec.ts",
+                    "line": 0,
+                    "column": 0
+                  }
+                }
+              ],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1947,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-15T18:40:04.544Z",
+                  "annotations": [
+                    {
+                      "type": "serial",
+                      "location": {
+                        "file": "C:\\Users\\dp877\\Desktop\\Universidad\\Semestre 6\\TallerIntegra3\\TallerIntegracion3\\globalmart-frontend\\e2e\\electron\\admin-venta.integrated.spec.ts",
+                        "line": 0,
+                        "column": 0
+                      }
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "853bd9e7f308a7169970-ce0d929e0429e9914721",
+          "file": "admin-venta.integrated.spec.ts",
+          "line": 13,
+          "column": 5
+        },
+        {
+          "title": "@integrado CAJERO abre turno, vende en efectivo y cierra sin totales divergentes",
+          "ok": true,
+          "tags": [
+            "integrado"
+          ],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [
+                {
+                  "type": "serial",
+                  "location": {
+                    "file": "C:\\Users\\dp877\\Desktop\\Universidad\\Semestre 6\\TallerIntegra3\\TallerIntegracion3\\globalmart-frontend\\e2e\\electron\\admin-venta.integrated.spec.ts",
+                    "line": 0,
+                    "column": 0
+                  }
+                }
+              ],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 4662,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-15T18:40:06.524Z",
+                  "annotations": [
+                    {
+                      "type": "serial",
+                      "location": {
+                        "file": "C:\\Users\\dp877\\Desktop\\Universidad\\Semestre 6\\TallerIntegra3\\TallerIntegracion3\\globalmart-frontend\\e2e\\electron\\admin-venta.integrated.spec.ts",
+                        "line": 0,
+                        "column": 0
+                      }
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "853bd9e7f308a7169970-102f5ab91739ee6b49a5",
+          "file": "admin-venta.integrated.spec.ts",
+          "line": 29,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "tarjeta-pesaje.integrated.spec.ts",
+      "file": "tarjeta-pesaje.integrated.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "@integrado tarjeta aprobada completa la venta con un solo pago",
+          "ok": true,
+          "tags": [
+            "integrado"
+          ],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [
+                {
+                  "type": "serial",
+                  "location": {
+                    "file": "C:\\Users\\dp877\\Desktop\\Universidad\\Semestre 6\\TallerIntegra3\\TallerIntegracion3\\globalmart-frontend\\e2e\\electron\\tarjeta-pesaje.integrated.spec.ts",
+                    "line": 0,
+                    "column": 0
+                  }
+                }
+              ],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3676,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [
+                    {
+                      "buffer": ""
+                    },
+                    {
+                      "buffer": ""
+                    },
+                    {
+                      "buffer": ""
+                    }
+                  ],
+                  "retry": 0,
+                  "startTime": "2026-11-15T18:40:11.207Z",
+                  "annotations": [
+                    {
+                      "type": "serial",
+                      "location": {
+                        "file": "C:\\Users\\dp877\\Desktop\\Universidad\\Semestre 6\\TallerIntegra3\\TallerIntegracion3\\globalmart-frontend\\e2e\\electron\\tarjeta-pesaje.integrated.spec.ts",
+                        "line": 0,
+                        "column": 0
+                      }
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0a8f82bcdd2eec26272d-7a5769111a9066b35654",
+          "file": "tarjeta-pesaje.integrated.spec.ts",
+          "line": 66,
+          "column": 5
+        },
+        {
+          "title": "@integrado tarjeta rechazada no completa la venta y el reintento cobra una sola vez",
+          "ok": true,
+          "tags": [
+            "integrado"
+          ],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [
+                {
+                  "type": "serial",
+                  "location": {
+                    "file": "C:\\Users\\dp877\\Desktop\\Universidad\\Semestre 6\\TallerIntegra3\\TallerIntegracion3\\globalmart-frontend\\e2e\\electron\\tarjeta-pesaje.integrated.spec.ts",
+                    "line": 0,
+                    "column": 0
+                  }
+                },
+                {
+                  "type": "api-esperada",
+                  "description": "422"
+                }
+              ],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 5125,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [
+                    {
+                      "buffer": ""
+                    },
+                    {
+                      "buffer": ""
+                    },
+                    {
+                      "buffer": ""
+                    },
+                    {
+                      "buffer": ""
+                    },
+                    {
+                      "buffer": ""
+                    },
+                    {
+                      "buffer": ""
+                    }
+                  ],
+                  "retry": 0,
+                  "startTime": "2026-11-15T18:40:15.072Z",
+                  "annotations": [
+                    {
+                      "type": "serial",
+                      "location": {
+                        "file": "C:\\Users\\dp877\\Desktop\\Universidad\\Semestre 6\\TallerIntegra3\\TallerIntegracion3\\globalmart-frontend\\e2e\\electron\\tarjeta-pesaje.integrated.spec.ts",
+                        "line": 0,
+                        "column": 0
+                      }
+                    },
+                    {
+                      "type": "api-esperada",
+                      "description": "422"
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0a8f82bcdd2eec26272d-7c6fd4c064165ba3e852",
+          "file": "tarjeta-pesaje.integrated.spec.ts",
+          "line": 81,
+          "column": 5
+        },
+        {
+          "title": "@integrado timeout de pasarela deja la venta pendiente y no permite un segundo cargo",
+          "ok": true,
+          "tags": [
+            "integrado"
+          ],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [
+                {
+                  "type": "serial",
+                  "location": {
+                    "file": "C:\\Users\\dp877\\Desktop\\Universidad\\Semestre 6\\TallerIntegra3\\TallerIntegracion3\\globalmart-frontend\\e2e\\electron\\tarjeta-pesaje.integrated.spec.ts",
+                    "line": 0,
+                    "column": 0
+                  }
+                },
+                {
+                  "type": "api-esperada",
+                  "description": "409,502,504"
+                }
+              ],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 44812,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [
+                    {
+                      "buffer": ""
+                    },
+                    {
+                      "buffer": ""
+                    },
+                    {
+                      "buffer": ""
+                    },
+                    {
+                      "buffer": ""
+                    },
+                    {
+                      "buffer": ""
+                    },
+                    {
+                      "buffer": ""
+                    }
+                  ],
+                  "retry": 0,
+                  "startTime": "2026-11-15T18:40:20.212Z",
+                  "annotations": [
+                    {
+                      "type": "serial",
+                      "location": {
+                        "file": "C:\\Users\\dp877\\Desktop\\Universidad\\Semestre 6\\TallerIntegra3\\TallerIntegracion3\\globalmart-frontend\\e2e\\electron\\tarjeta-pesaje.integrated.spec.ts",
+                        "line": 0,
+                        "column": 0
+                      }
+                    },
+                    {
+                      "type": "api-esperada",
+                      "description": "409,502,504"
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0a8f82bcdd2eec26272d-5f4ed00aadd292a0392f",
+          "file": "tarjeta-pesaje.integrated.spec.ts",
+          "line": 101,
+          "column": 5
+        },
+        {
+          "title": "@integrado peso estable de la balanza simulada llega a MS-5 como una línea",
+          "ok": true,
+          "tags": [
+            "integrado"
+          ],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [
+                {
+                  "type": "serial",
+                  "location": {
+                    "file": "C:\\Users\\dp877\\Desktop\\Universidad\\Semestre 6\\TallerIntegra3\\TallerIntegracion3\\globalmart-frontend\\e2e\\electron\\tarjeta-pesaje.integrated.spec.ts",
+                    "line": 0,
+                    "column": 0
+                  }
+                }
+              ],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2549,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-15T18:41:05.044Z",
+                  "annotations": [
+                    {
+                      "type": "serial",
+                      "location": {
+                        "file": "C:\\Users\\dp877\\Desktop\\Universidad\\Semestre 6\\TallerIntegra3\\TallerIntegracion3\\globalmart-frontend\\e2e\\electron\\tarjeta-pesaje.integrated.spec.ts",
+                        "line": 0,
+                        "column": 0
+                      }
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0a8f82bcdd2eec26272d-a91698b910ae809319f7",
+          "file": "tarjeta-pesaje.integrated.spec.ts",
+          "line": 129,
+          "column": 5
+        },
+        {
+          "title": "@integrado balanza con falla permite entrada manual y conserva una sola línea",
+          "ok": true,
+          "tags": [
+            "integrado"
+          ],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [
+                {
+                  "type": "serial",
+                  "location": {
+                    "file": "C:\\Users\\dp877\\Desktop\\Universidad\\Semestre 6\\TallerIntegra3\\TallerIntegracion3\\globalmart-frontend\\e2e\\electron\\tarjeta-pesaje.integrated.spec.ts",
+                    "line": 0,
+                    "column": 0
+                  }
+                }
+              ],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2578,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-15T18:41:07.612Z",
+                  "annotations": [
+                    {
+                      "type": "serial",
+                      "location": {
+                        "file": "C:\\Users\\dp877\\Desktop\\Universidad\\Semestre 6\\TallerIntegra3\\TallerIntegracion3\\globalmart-frontend\\e2e\\electron\\tarjeta-pesaje.integrated.spec.ts",
+                        "line": 0,
+                        "column": 0
+                      }
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0a8f82bcdd2eec26272d-74ea8fd41cd0082495d3",
+          "file": "tarjeta-pesaje.integrated.spec.ts",
+          "line": 143,
+          "column": 5
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-11-15T18:40:04.143Z",
+    "duration": 66079.065,
+    "expected": 7,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

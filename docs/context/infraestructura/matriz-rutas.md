@@ -5,7 +5,7 @@ titulo: Matriz Integral de Rutas, Puertos y Endpoints
 estado: implementado
 fuentes: [Docker/config/kong.yaml, src/*/Controllers/*.cs, src/*/Properties/launchSettings.json, globalmart-frontend/src/, new-ingresses.yaml]
 verificado_contra_codigo: true
-ultima_revision: 2026-10-18
+ultima_revision: 2026-10-27
 depende_de: [ms1-identity, ms2-tax, ms3-catalog, ms4-warehouse, ms5-pos, kong]
 publica: []
 consume: []
@@ -13,6 +13,8 @@ reglas: [RN-01, RN-06, RN-07]
 ---
 
 # Matriz Integral de Rutas, Puertos y Endpoints — GlobalMart OS
+
+MS-4 añade `GET /stock`, `POST /stock/ajuste` y `GET /health`. El frontend usa `INVENTORY_API_URL`/`REACT_APP_INVENTORY_API_URL` o `https://inventory-rpedraza.dev.censei.cl` en modo remoto. El manifiesto de ese host está en `k8s/manifests/warehouse-inventory.yaml`; el Ingress respondió 200 a `/health` y los endpoints se probaron por port-forward.
 
 > Tarea: **TI3-657 (Plan ID: S2-026)**  
 > Este documento consolida el inventario auditado y verificado de todos los endpoints de la plataforma, comparando las rutas expuestas por el API Gateway (Kong), los atributos de enrutamiento en controladores ASP.NET Core 8, los puertos locales de desarrollo, los puertos internos de contenedor y los componentes consumidores del frontend de escritorio (Electron + React).
@@ -26,7 +28,7 @@ reglas: [RN-01, RN-06, RN-07]
 | **MS-1 Tenant & Identity** | `tenant-identity-service` | `5124` (HTTP) / `7206` (HTTPS) | `5001` / `8080` | `8000` (`/api/auth`, `/api/users`, `/api/tenants`) | `https://auth-rpedraza.dev.censei.cl` |
 | **MS-2 Tax & Compliance** | `tax-compliance-service` | `5239` (HTTP) / `7062` (HTTPS) | `5002` / `8080` | N/A (Consumo interno vía MS-5) | N/A |
 | **MS-3 Catalog & Pricing** | `catalog-pricing-service` | `5203` (HTTP) / `7250` (HTTPS) | `5003` / `8080` | `8000` (`/api/products`, `/api/categories`, `/api/prices`) | `https://catalog-rpedraza.dev.censei.cl` |
-| **MS-4 Warehouse & Inventory**| `warehouse-inventory-service`| `5205` (HTTP) / `7019` (HTTPS) | `5004` / `8080` | N/A (Event-driven vía Kafka) | N/A |
+| **MS-4 Warehouse & Inventory**| `warehouse-inventory-service`| `5205` (HTTP) / `7019` (HTTPS) | `5004` / `8080` | N/A (eventos Kafka desactivados en clúster sin broker) | `https://inventory-rpedraza.dev.censei.cl` |
 | **MS-5 POS & Cart** | `pos-cart-service` | `5000` (HTTP Kestrel default) | `5005` / `8080` | `8000` (`/api/turnos`, `/api/ventas`) | `https://pos-rpedraza.dev.censei.cl` |
 | **MS-6 Supply Chain** | `supply-chain-service` | `[PLANIFICADO]` | `5006` / `8080` | `[PLANIFICADO]` | `[PLANIFICADO]` |
 | **MS-7 Analytics & Notif.** | `analytics-notification-service` | `5127` (HTTP) / `7209` (HTTPS) | `5007` / `8080` | `[PLANIFICADO]` | `[PLANIFICADO]` |
@@ -72,20 +74,20 @@ Los Ingress remotos de MS-1, MS-3 y MS-5 usan el secreto TLS `globalmart-dev-tls
 
 | Endpoint Lógico | Método | Ruta Controlador (`[Route]`) | Ruta Kong (`kong.yaml`) | Auth / Requisitos | Consumidor Frontend |
 |---|---|---|---|---|---|
-| Consultar Turno Activo | `GET` | `turnos/activo`, `api/turnos/activo` | `/api/turnos` | ✅ JWT (Claims: cajero_id, tenant_id, RN-06) | `src/api/client.ts` (`posApi.activeShift`), `Pos.tsx` |
-| Abrir Turno de Caja | `POST` | `turnos/abrir`, `api/turnos/abrir` | `/api/turnos` | ✅ JWT (Claims: cajero_id, tenant_id, RN-06) | `src/api/client.ts` (`posApi.openShift`), `Pos.tsx` |
-| Cuadre de Turno | `POST` | `turnos/cuadre`, `api/turnos/cuadre` | `/api/turnos` | ✅ JWT (Claims: cajero_id, tenant_id, RN-06) | `src/api/client.ts` (`posApi.balanceShift`), `Pos.tsx` |
-| Cerrar Turno de Caja | `POST` | `turnos/cerrar`, `api/turnos/cerrar` | `/api/turnos` | ✅ JWT (Claims: cajero_id, tenant_id, RN-06) | `src/api/client.ts` (`posApi.closeShift`), `Pos.tsx` |
-| Listar Ventas de Turno | `GET` | `ventas/turno/{shiftId}`, `api/ventas/turno/{shiftId}` | `/api/ventas` | ✅ JWT (Claims: cajero_id, tenant_id) | `src/api/client.ts` (`posApi.salesByShift`), `Pos.tsx` |
-| Obtener Venta por ID | `GET` | `ventas/{saleId}`, `api/ventas/{saleId}` | `/api/ventas` | ✅ JWT (Claims: cajero_id, tenant_id) | `src/api/client.ts` (`posApi.getSale`), `Pos.tsx` |
-| Iniciar/Crear Venta | `POST` | `ventas`, `api/ventas` | `/api/ventas` | ✅ JWT (Turno ABIERTO, RN-06) | `src/api/client.ts` (`posApi.createSale`), `Pos.tsx` |
-| Agregar Ítem a Venta | `POST` | `ventas/{id}/items`, `api/ventas/{id}/items` | `/api/ventas` | ✅ JWT (RN-01, RN-06) | `src/api/client.ts` (`posApi.addSaleItem`), `Pos.tsx` |
-| Actualizar Ítem en Venta | `PUT` | `ventas/{id}/items/{itemId}`, `api/ventas/{id}/items/{itemId}` | `/api/ventas` | ✅ JWT (RN-01, RN-06) | `src/api/client.ts` (`posApi.updateSaleItem`), `Pos.tsx` |
-| Eliminar Ítem de Venta | `DELETE` | `ventas/{id}/items/{itemId}`, `api/ventas/{id}/items/{itemId}` | `/api/ventas` | ✅ JWT (RN-01, RN-06) | `src/api/client.ts` (`posApi.deleteSaleItem`), `Pos.tsx` |
-| Cobrar en Efectivo | `POST` | `ventas/{id}/cobrar`, `api/ventas/{id}/cobrar` | `/api/ventas` | ✅ JWT (RN-01) | `src/api/client.ts`, `Pos.tsx` |
-| Cobrar con Tarjeta | `POST` | `ventas/{id}/cobrar-tarjeta`, `api/ventas/{id}/cobrar-tarjeta` | `/api/ventas` | ✅ JWT (RN-01, RN-02, RN-06) | `posApi.chargeCard`, `Pos.tsx` |
-| Consultar Intento de Tarjeta | `GET` | `ventas/{id}/intento-tarjeta`, `api/ventas/{id}/intento-tarjeta` | `/api/ventas` | ✅ JWT del cajero y tenant de la venta | `posApi.cardAttemptStatus`, `Pos.tsx` |
-| Anular Venta | `POST` | `ventas/{id}/anular`, `api/ventas/{id}/anular` | `/api/ventas` | ✅ JWT (RN-01) | `Pos.tsx` |
+| Consultar Turno Activo | `GET` | `api/turnos/activo` | `/api/turnos` | ✅ JWT (Claims: cajero_id, tenant_id, RN-06) | `src/api/client.ts` (`posApi.activeShift`), `Pos.tsx` |
+| Abrir Turno de Caja | `POST` | `api/turnos/abrir` | `/api/turnos` | ✅ JWT (Claims: cajero_id, tenant_id, RN-06) | `src/api/client.ts` (`posApi.openShift`), `Pos.tsx` |
+| Cuadre de Turno | `POST` | `api/turnos/cuadre` | `/api/turnos` | ✅ JWT (Claims: cajero_id, tenant_id, RN-06) | `src/api/client.ts` (`posApi.balanceShift`), `Pos.tsx` |
+| Cerrar Turno de Caja | `POST` | `api/turnos/cerrar` | `/api/turnos` | ✅ JWT (Claims: cajero_id, tenant_id, RN-06) | `src/api/client.ts` (`posApi.closeShift`), `Pos.tsx` |
+| Listar Ventas de Turno | `GET` | `api/ventas/turno/{shiftId}` | `/api/ventas` | ✅ JWT (Claims: cajero_id, tenant_id) | `src/api/client.ts` (`posApi.salesByShift`), `Pos.tsx` |
+| Obtener Venta por ID | `GET` | `api/ventas/{saleId}` | `/api/ventas` | ✅ JWT (Claims: cajero_id, tenant_id) | `src/api/client.ts` (`posApi.getSale`), `Pos.tsx` |
+| Iniciar/Crear Venta | `POST` | `api/ventas` | `/api/ventas` | ✅ JWT (Turno ABIERTO, RN-06) | `src/api/client.ts` (`posApi.createSale`), `Pos.tsx` |
+| Agregar Ítem a Venta | `POST` | `api/ventas/{id}/items` | `/api/ventas` | ✅ JWT (RN-01, RN-06) | `src/api/client.ts` (`posApi.addSaleItem`), `Pos.tsx` |
+| Actualizar Ítem en Venta | `PUT` | `api/ventas/{id}/items/{itemId}` | `/api/ventas` | ✅ JWT (RN-01, RN-06) | `src/api/client.ts` (`posApi.updateSaleItem`), `Pos.tsx` |
+| Eliminar Ítem de Venta | `DELETE` | `api/ventas/{id}/items/{itemId}` | `/api/ventas` | ✅ JWT (RN-01, RN-06) | `src/api/client.ts` (`posApi.deleteSaleItem`), `Pos.tsx` |
+| Cobrar en Efectivo | `POST` | `api/ventas/{id}/cobrar` | `/api/ventas` | ✅ JWT (RN-01) | `src/api/client.ts`, `Pos.tsx` |
+| Cobrar con Tarjeta | `POST` | `api/ventas/{id}/cobrar-tarjeta` | `/api/ventas` | ✅ JWT (RN-01, RN-02, RN-06) | `posApi.chargeCard`, `Pos.tsx` |
+| Consultar Intento de Tarjeta | `GET` | `api/ventas/{id}/intento-tarjeta` | `/api/ventas` | ✅ JWT del cajero y tenant de la venta | `posApi.cardAttemptStatus`, `Pos.tsx` |
+| Anular Venta | `POST` | `api/ventas/{id}/anular` | `/api/ventas` | ✅ JWT (RN-01) | `Pos.tsx` |
 
 ### MS-2: Tax & Compliance Service (Dev Host :5239 — Inter-servicio)
 

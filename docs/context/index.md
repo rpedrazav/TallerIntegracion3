@@ -5,7 +5,7 @@ titulo: Índice del Grafo de Conocimiento — GlobalMart OS
 estado: vigente
 fuentes: [docs/context/_reports/inventario.md, GlobalMart_ContextMaster.md]
 verificado_contra_codigo: true
-ultima_revision: 2026-10-23
+ultima_revision: 2026-11-14
 depende_de: []
 publica: []
 consume: []
@@ -62,6 +62,7 @@ reglas: []
 | `[[requerimientos-no-funcionales]]` | Para restricciones de calidad |
 | `[[rbac-multirol]]` | Para todo lo relacionado con roles y permisos |
 | `[[multi-tenant]]` | Para lógica de aislamiento de datos |
+| [anulacion-venta](dominio/anulacion-venta.md) | S2-091: contrato HTTP y ADMIN para anulación total; backend S2-092 y reversa simulada S2-093; tarjeta solo se anula con reversa confirmada |
 | [peso-variable](dominio/peso-variable.md) | Contrato S2-061: kg, precisión, mínimo, cantidad y precio de ítems pesables |
 | `[[fefo]]` | Para inventario de perecederos |
 | `[[costo-landed]]` | Para cálculo de costos de importación |
@@ -83,6 +84,7 @@ reglas: []
 | Nodo | Cuándo leerlo |
 |------|---------------|
 | `[[kafka-topics]]` | Para cualquier cambio en eventos Kafka |
+| [sale-reversed-outbox](eventos/sale-reversed-outbox.md) | S2-094: anulación total, payload e identidad estable por outbox |
 
 ### `frontend/` — App Electron + React
 | Nodo | Cuándo leerlo |
@@ -117,6 +119,7 @@ Para tareas con ID `S2-xxx`, consultar primero la carpeta [tareas/](../../tareas
 
 - [plan_sprint2_revisado.xlsx](../../tareas/plan_sprint2_revisado.xlsx): hoja `Resumen` con las cinco metas y límites físicos; hoja `Sprint 2` con ID, entregable, aceptación y asignación. Es la fuente consultada para S2-021.
 - [sprint2_youtrack_resultado.json](../../tareas/sprint2_youtrack_resultado.json): correspondencia de IDs del plan con YouTrack (S2-021 → TI3-652).
+- Las tareas `S2-091`..`S2-120` (Semana 8 del Sprint 2) se trasladaron a la Semana 9 del Sprint 3; avance en `[[sprint-actual]]`.
 - [Matriz S2-021](../../diagramas/matriz/S2-021-matriz-aceptacion.md): escenarios, resultados esperados, dependencias y separación entre validación simulada y física. Define pruebas pendientes; no certifica su ejecución.
 
 Los archivos de planificación describen objetivos. Contrastar su estado con `estado-actual.md` y evidencia de código/pruebas antes de declarar una funcionalidad implementada.

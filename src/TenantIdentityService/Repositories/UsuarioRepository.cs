@@ -17,12 +17,16 @@ public class UsuarioRepository : IUsuarioRepository
         _db = db;
     }
 
-    public async Task<IEnumerable<Usuario>> GetAllAsync(Guid tenantId)
+    public async Task<Usuario?> FindByEmailAsync(string email, Guid tenantId)
     {
         return await _db.Usuarios
             .IgnoreQueryFilters()
-            .Where(usuario => usuario.TenantId == tenantId)
-            .ToListAsync();
+            .Include(usuario => usuario.UsuarioRoles)
+                .ThenInclude(usuarioRol => usuarioRol.Rol)
+            .Include(usuario => usuario.UsuarioSucursales)
+            .FirstOrDefaultAsync(usuario => usuario.TenantId == tenantId
+                && usuario.Email.ToLower() == email.ToLower()
+                && usuario.Activo);
     }
 
     public async Task<PagedResult<Usuario>> GetActivePagedAsync(
@@ -34,7 +38,7 @@ public class UsuarioRepository : IUsuarioRepository
             .IgnoreQueryFilters()
             .Include(usuario => usuario.UsuarioRoles)
                 .ThenInclude(usuarioRol => usuarioRol.Rol)
-            .Where(usuario => usuario.TenantId == tenantId && usuario.Activo);
+            .Where(usuario => usuario.TenantId == tenantId);
 
         var totalItems = await query.CountAsync();
         var items = await query
@@ -89,46 +93,54 @@ public class UsuarioRepository : IUsuarioRepository
     private static bool EsViolacionDeUnicidad(DbUpdateException ex)
         => ex.InnerException is PostgresException { SqlState: UniqueViolationSqlState };
 
-    public async Task<Usuario> UpdateAsync(Usuario usuario)
-    {
-        var usuarioExistente = await _db.Usuarios
-            .IgnoreQueryFilters()
-            .FirstOrDefaultAsync(existing => existing.Id == usuario.Id
-                                          && existing.TenantId == usuario.TenantId);
-
-        if (usuarioExistente is null)
-            throw new KeyNotFoundException("El usuario no existe en el tenant indicado.");
-
-        _db.Entry(usuarioExistente).CurrentValues.SetValues(usuario);
-        await _db.SaveChangesAsync();
-        return usuarioExistente;
-    }
-
     public async Task<UsuarioActualizadoDto?> UpdateBasicAsync(
         Guid id, Guid tenantId, ActualizarUsuarioDto request)
     {
-        var usuario = await _db.CuentasUsuarios
+        var usuario = await _db.Usuarios.IgnoreQueryFilters()
+            .Include(u => u.UsuarioSucursales)
             .SingleOrDefaultAsync(u => u.Id == id && u.TenantId == tenantId);
         if (usuario is null)
             return null;
 
-        // El UPDATE también filtra por tenant. El índice real arbitra duplicados,
-        // incluso si dos solicitudes intentan guardar el mismo email simultáneamente.
-        var updated = await _db.CuentasUsuarios
-            .Where(u => u.Id == id && u.TenantId == tenantId)
-            .ExecuteUpdateAsync(setters => setters
-                .SetProperty(u => u.Email, request.Email)
-                .SetProperty(u => u.SucursalId, request.SucursalId));
+        if (request.SucursalId.HasValue)
+        {
+            var sucursal = await _db.Sucursales.SingleOrDefaultAsync(s =>
+                s.Id == request.SucursalId.Value && s.TenantId == tenantId && s.Activa);
+            if (sucursal is null)
+                throw new ArgumentException("La sucursal no existe o no está activa en este tenant.");
 
-        return updated == 0 ? null
-            : new UsuarioActualizadoDto(id, tenantId, request.Email, request.SucursalId);
+            if (!usuario.UsuarioSucursales.Any(us => us.SucursalId == sucursal.Id) || usuario.UsuarioSucursales.Count != 1)
+            {
+                _db.UsuarioSucursales.RemoveRange(usuario.UsuarioSucursales.Where(us => us.SucursalId != sucursal.Id));
+                if (!usuario.UsuarioSucursales.Any(us => us.SucursalId == sucursal.Id))
+                    usuario.UsuarioSucursales.Add(new UsuarioSucursal
+                    {
+                        UsuarioId = id,
+                        SucursalId = sucursal.Id
+                    });
+            }
+        }
+
+        usuario.Email = request.Email.Trim().ToLowerInvariant();
+        await _db.SaveChangesAsync();
+        return new UsuarioActualizadoDto(id, tenantId, usuario.Email,
+            request.SucursalId ?? usuario.UsuarioSucursales.FirstOrDefault()?.SucursalId);
     }
 
     public async Task<bool> DeactivateAsync(Guid id, Guid tenantId)
     {
-        var updated = await _db.CuentasUsuarios
+        var updated = await _db.Usuarios.IgnoreQueryFilters()
             .Where(usuario => usuario.Id == id && usuario.TenantId == tenantId)
             .ExecuteUpdateAsync(setters => setters.SetProperty(usuario => usuario.Activo, false));
+
+        return updated > 0;
+    }
+
+    public async Task<bool> ReactivateAsync(Guid id, Guid tenantId)
+    {
+        var updated = await _db.Usuarios.IgnoreQueryFilters()
+            .Where(usuario => usuario.Id == id && usuario.TenantId == tenantId)
+            .ExecuteUpdateAsync(setters => setters.SetProperty(usuario => usuario.Activo, true));
 
         return updated > 0;
     }
@@ -138,6 +150,7 @@ public class UsuarioRepository : IUsuarioRepository
         var usuario = await _db.Usuarios
             .IgnoreQueryFilters()
             .Include(u => u.UsuarioRoles)
+                .ThenInclude(ur => ur.Rol)
             .FirstOrDefaultAsync(existing => existing.Id == userId
                                           && existing.TenantId == tenantId);
 
@@ -163,13 +176,19 @@ public class UsuarioRepository : IUsuarioRepository
             };
         }
 
-        usuario.UsuarioRoles.Clear();
+        foreach (var oldRole in usuario.UsuarioRoles.Where(ur => !validRoleIds.Contains(ur.RolId)).ToList())
+        {
+            usuario.UsuarioRoles.Remove(oldRole);
+            _db.UsuarioRoles.Remove(oldRole);
+        }
         foreach (var role in roles)
         {
-            usuario.UsuarioRoles.Add(new UsuarioRol
+            if (!usuario.UsuarioRoles.Any(ur => ur.RolId == role.Id))
+                usuario.UsuarioRoles.Add(new UsuarioRol
             {
                 UsuarioId = userId,
-                RolId = role.Id
+                RolId = role.Id,
+                Rol = role
             });
         }
 
@@ -205,19 +224,5 @@ public class UsuarioRepository : IUsuarioRepository
         return normalizedRoleNames
             .Where(roleName => !existingRoles.Contains(roleName))
             .ToArray();
-    }
-
-    public async Task<bool> DeletePermanentlyAsync(Guid id, Guid tenantId)
-    {
-        var usuario = await _db.Usuarios
-            .IgnoreQueryFilters()
-            .FirstOrDefaultAsync(u => u.Id == id && u.TenantId == tenantId);
-
-        if (usuario is null)
-            return false;
-
-        _db.Usuarios.Remove(usuario);
-        await _db.SaveChangesAsync();
-        return true;
     }
 }

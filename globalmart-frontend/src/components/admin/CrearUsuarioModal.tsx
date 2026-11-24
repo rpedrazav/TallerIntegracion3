@@ -1,14 +1,15 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 // Roles asignables por un ADMIN de tenant (SUPER_ADMIN está prohibido en MS-1).
 export const ROLES_ASIGNABLES = ['CAJERO', 'REPONEDOR', 'ADMIN'] as const;
-export type RolAsignable = (typeof ROLES_ASIGNABLES)[number];
+export type RolAsignable = string;
 
 export interface CrearUsuarioValues {
   nombre: string;
   email: string;
   password: string;
   rol: RolAsignable;
+  sucursalId?: string;
 }
 
 interface FormState extends CrearUsuarioValues {
@@ -19,6 +20,9 @@ type Errors = Partial<Record<keyof FormState, string>>;
 
 interface Props {
   isOpen: boolean;
+  tenantId: string;
+  sucursales: Array<{ id: string; nombre: string }>;
+  roles?: string[];
   onClose: () => void;
   /** Recibe los valores ya validados. Puede lanzar un Error para mostrar un mensaje del servidor. */
   onSubmit: (values: CrearUsuarioValues) => Promise<void> | void;
@@ -33,9 +37,16 @@ const FORM_INICIAL: FormState = {
   password: '',
   confirmarPassword: '',
   rol: 'CAJERO',
+  sucursalId: '',
 };
 
-export function validarUsuario(f: FormState): Errors {
+function generarPasswordInicial(): string {
+  const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%';
+  const bytes = crypto.getRandomValues(new Uint8Array(14));
+  return 'Gm7!' + Array.from(bytes, b => alphabet[b % alphabet.length]).join('');
+}
+
+export function validarUsuario(f: FormState, roles: readonly string[] = ROLES_ASIGNABLES): Errors {
   const e: Errors = {};
   if (!f.nombre.trim()) e.nombre = 'El nombre es obligatorio.';
   else if (f.nombre.trim().length < 2) e.nombre = 'El nombre debe tener al menos 2 caracteres.';
@@ -58,7 +69,7 @@ export function validarUsuario(f: FormState): Errors {
   if (!f.confirmarPassword) e.confirmarPassword = 'Confirma la contraseña.';
   else if (f.confirmarPassword !== f.password) e.confirmarPassword = 'Las contraseñas no coinciden.';
 
-  if (!ROLES_ASIGNABLES.includes(f.rol)) e.rol = 'Selecciona un rol válido.';
+  if (!roles.includes(f.rol)) e.rol = 'Selecciona un rol válido.';
   return e;
 }
 
@@ -88,16 +99,49 @@ const btnSecondary: React.CSSProperties = {
   ...btnBase, background: 'transparent', color: 'var(--color-ink)', border: '1px solid var(--color-line)',
 };
 
-const CrearUsuarioModal: React.FC<Props> = ({ isOpen, onClose, onSubmit }) => {
+const FOCUSABLE_SELECTOR = [
+  'button:not([disabled])',
+  'input:not([disabled])',
+  'select:not([disabled])',
+  'textarea:not([disabled])',
+  '[href]',
+  '[tabindex]:not([tabindex="-1"])',
+].join(',');
+
+const CrearUsuarioModal: React.FC<Props> = ({ isOpen, tenantId, sucursales, roles = [...ROLES_ASIGNABLES], onClose, onSubmit }) => {
   const [form, setForm] = useState<FormState>(FORM_INICIAL);
   const [touched, setTouched] = useState<Partial<Record<keyof FormState, boolean>>>({});
   const [submitted, setSubmitted] = useState(false);
   const [saving, setSaving] = useState(false);
   const [serverError, setServerError] = useState('');
+  const [mostrarPassword, setMostrarPassword] = useState(false);
+  const dialogRef = useRef<HTMLFormElement>(null);
+  const previousFocusRef = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const password = generarPasswordInicial();
+    setForm({ ...FORM_INICIAL, password, confirmarPassword: password });
+    setMostrarPassword(false);
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    previousFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const frame = window.requestAnimationFrame(() => {
+      const dialog = dialogRef.current;
+      const first = dialog?.querySelector<HTMLElement>(FOCUSABLE_SELECTOR);
+      (first ?? dialog)?.focus();
+    });
+    return () => {
+      window.cancelAnimationFrame(frame);
+      previousFocusRef.current?.focus();
+    };
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
-  const errors = validarUsuario(form);
+  const errors = validarUsuario(form, roles);
   const show = (k: keyof FormState) => (submitted || touched[k]) && errors[k];
 
   const set = <K extends keyof FormState>(k: K, v: FormState[K]) => {
@@ -114,6 +158,32 @@ const CrearUsuarioModal: React.FC<Props> = ({ isOpen, onClose, onSubmit }) => {
     onClose();
   };
 
+  const handleDialogKeyDown = (event: React.KeyboardEvent<HTMLFormElement>) => {
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      cerrar();
+      return;
+    }
+    if (event.key !== 'Tab') return;
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+    const focusable = Array.from(dialog.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR));
+    if (focusable.length === 0) {
+      event.preventDefault();
+      dialog.focus();
+      return;
+    }
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (event.shiftKey && (document.activeElement === first || !dialog.contains(document.activeElement))) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && (document.activeElement === last || !dialog.contains(document.activeElement))) {
+      event.preventDefault();
+      first.focus();
+    }
+  };
+
   const handleSubmit = async (ev: React.FormEvent) => {
     ev.preventDefault();
     setSubmitted(true);
@@ -125,6 +195,7 @@ const CrearUsuarioModal: React.FC<Props> = ({ isOpen, onClose, onSubmit }) => {
         email: form.email.trim().toLowerCase(),
         password: form.password,
         rol: form.rol,
+        sucursalId: form.sucursalId || undefined,
       });
       setSaving(false);
       cerrar();
@@ -146,17 +217,19 @@ const CrearUsuarioModal: React.FC<Props> = ({ isOpen, onClose, onSubmit }) => {
         value={form[k]}
         disabled={saving}
         aria-invalid={!!show(k)}
+        aria-describedby={show(k) ? `cu-${k}-error` : undefined}
         onChange={e => set(k, e.target.value as never)}
         onBlur={() => setTouched(t => ({ ...t, [k]: true }))}
         style={inputStyle(!!show(k))}
       />
-      {show(k) && <div role="alert" style={errorStyle}>{errors[k]}</div>}
+      {show(k) && <div id={`cu-${k}-error`} role="alert" style={errorStyle}>{errors[k]}</div>}
     </div>
   );
 
   return (
     <div style={overlayStyle} onClick={cerrar}>
       <form
+        ref={dialogRef}
         style={modalStyle}
         onClick={e => e.stopPropagation()}
         onSubmit={handleSubmit}
@@ -164,12 +237,19 @@ const CrearUsuarioModal: React.FC<Props> = ({ isOpen, onClose, onSubmit }) => {
         role="dialog"
         aria-modal="true"
         aria-labelledby="cu-titulo"
+        tabIndex={-1}
+        onKeyDown={handleDialogKeyDown}
       >
         <h3 id="cu-titulo" style={{ marginTop: 0 }}>Crear usuario</h3>
 
         {campo('nombre', 'Nombre', 'text', 'name')}
         {campo('email', 'Correo electrónico', 'email', 'email')}
-        {campo('password', 'Contraseña', 'password', 'new-password')}
+        <div style={{ marginBottom: '0.9rem' }}><label htmlFor="cu-tenant" style={labelStyle}>Tenant ID</label>
+          <input id="cu-tenant" value={tenantId} readOnly style={inputStyle(false)} />
+          <small>El usuario pertenece al tenant de esta sesión.</small>
+        </div>
+        {campo('password', 'Contraseña inicial', mostrarPassword ? 'text' : 'password', 'new-password')}
+        <button type="button" onClick={() => setMostrarPassword(v => !v)} style={btnSecondary}>{mostrarPassword ? 'Ocultar' : 'Mostrar'} contraseña</button>
         <small style={{ color: 'var(--color-ink-soft)', fontSize: '0.75rem', display: 'block', marginTop: '-0.5rem', marginBottom: '0.7rem' }}>
           Mínimo 8 caracteres, al menos una mayúscula, minúscula, número y símbolo.
         </small>
@@ -181,12 +261,22 @@ const CrearUsuarioModal: React.FC<Props> = ({ isOpen, onClose, onSubmit }) => {
             id="cu-rol"
             value={form.rol}
             disabled={saving}
-            onChange={e => set('rol', e.target.value as RolAsignable)}
+            aria-invalid={!!show('rol')}
+            aria-describedby={show('rol') ? 'cu-rol-error' : undefined}
+            onChange={e => set('rol', e.target.value)}
             style={inputStyle(!!show('rol'))}
           >
-            {ROLES_ASIGNABLES.map(r => <option key={r} value={r}>{r}</option>)}
+            {roles.map(r => <option key={r} value={r}>{r}</option>)}
           </select>
-          {show('rol') && <div role="alert" style={errorStyle}>{errors.rol}</div>}
+          {show('rol') && <div id="cu-rol-error" role="alert" style={errorStyle}>{errors.rol}</div>}
+        </div>
+
+        <div style={{ marginBottom: '0.9rem' }}>
+          <label htmlFor="cu-sucursal" style={labelStyle}>Sucursal inicial</label>
+          <select id="cu-sucursal" value={form.sucursalId} onChange={e => set('sucursalId', e.target.value)} style={inputStyle(false)}>
+            <option value="">Sin asignar</option>
+            {sucursales.map(s => <option key={s.id} value={s.id}>{s.nombre}</option>)}
+          </select>
         </div>
 
         {serverError && <div role="alert" style={{ ...errorStyle, marginBottom: '0.75rem' }}>{serverError}</div>}

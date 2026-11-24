@@ -73,3 +73,6 @@ Para cada fila registrar: ID y variante, fecha, ejecutor, commit, configuración
 Para RN02-04 y RN02-05 recorrer desde UI real hasta persistencia y eventos; para fallos usar instrumentación identificada. No aprobar E2E usando respuestas simuladas de MS-5 ni solo tests del adaptador. Validar perfiles de logs también en rutas de excepción. La configuración de espera asíncrona y cualquier código HTTP futuro de tarjeta deben documentarse al implementar el contrato, hoy [NO VERIFICADO].
 
 **Cierre de S2-051:** matriz definida, métodos/resultados/idempotencia/logs trazados y prohibición expresa de captura local de PAN/CVV. **Cierre de la meta de tarjeta:** ejecutar y aprobar los casos aplicables, resolver bloqueos Must y adjuntar evidencia; la entrega documental no cierra la brecha E2E. MIXTO solo exige el rechazo RN02-03, no su implementación.
+
+
+# 

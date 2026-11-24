@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useMemo } from 'react';
+﻿import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios, { AxiosError } from 'axios';
 import { useAuth } from '../hooks/useAuth';
@@ -74,6 +74,8 @@ export default function CerrarTurnoPage() {
   const [cuadreSynced, setCuadreSynced] = useState<boolean>(false);
 
   const [isClosingTurno, setIsClosingTurno] = useState<boolean>(false);
+  // <dialog> nativo con showModal(): Escape, foco atrapado y restauración de foco los da el navegador (S3-036).
+  const confirmDialogRef = useRef<HTMLDialogElement>(null);
   const [turnoClosedSuccess, setTurnoClosedSuccess] = useState<boolean>(false);
 
   const [errorMsg, setErrorMsg] = useState<string>('');
@@ -230,10 +232,7 @@ export default function CerrarTurnoPage() {
 
   // Confirmar y cerrar turno (POST /api/turnos/cerrar)
   const handleCerrarTurno = async () => {
-    if (!window.confirm(`¿Confirmas el cierre del turno con un monto declarado de $${totalDeclarado.toLocaleString('es-CL')}?`)) {
-      return;
-    }
-
+    confirmDialogRef.current?.close();
     setIsClosingTurno(true);
     setErrorMsg('');
 
@@ -867,7 +866,7 @@ export default function CerrarTurnoPage() {
 
                 <button
                   type="button"
-                  onClick={handleCerrarTurno}
+                  onClick={() => confirmDialogRef.current?.showModal()}
                   disabled={isClosingTurno || noTurnoOpen}
                   style={{
                     padding: '0.85rem 2rem',
@@ -891,6 +890,32 @@ export default function CerrarTurnoPage() {
                   {isClosingTurno ? 'Cerrando Turno...' : '🔒 Confirmar y Cerrar Turno'}
                 </button>
               </div>
+
+              <dialog
+                ref={confirmDialogRef}
+                aria-modal="true"
+                aria-labelledby="confirmar-cierre-titulo"
+                onClick={(e) => { if (e.target === e.currentTarget) e.currentTarget.close(); }}
+                style={{ padding: 0, border: '1px solid var(--color-line)', borderRadius: '12px', background: 'var(--color-surface)', color: 'var(--color-ink)' }}
+              >
+                <div style={{ padding: '1.5rem', maxWidth: '420px' }}>
+                  <h3 id="confirmar-cierre-titulo" style={{ marginTop: 0 }}>Confirmar cierre de turno</h3>
+                  <p>Monto declarado: <strong>${totalDeclarado.toLocaleString('es-CL')}</strong></p>
+                  {cuadreSynced && cuadreResult && (
+                    <p>Diferencia del cuadre: <strong>${cuadreResult.diferencia.toLocaleString('es-CL')}</strong></p>
+                  )}
+                  <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
+                    <button type="button" autoFocus onClick={() => confirmDialogRef.current?.close()}
+                      style={{ padding: '0.6rem 1.1rem', borderRadius: '8px', border: '1px solid var(--color-line)', background: 'transparent', color: 'var(--color-ink)', fontWeight: 600, cursor: 'pointer' }}>
+                      Cancelar
+                    </button>
+                    <button type="button" onClick={handleCerrarTurno}
+                      style={{ padding: '0.6rem 1.1rem', borderRadius: '8px', border: 'none', background: 'var(--color-danger)', color: 'var(--color-surface)', fontWeight: 700, cursor: 'pointer' }}>
+                      Confirmar cierre
+                    </button>
+                  </div>
+                </div>
+              </dialog>
             </>
           )}
         </div>

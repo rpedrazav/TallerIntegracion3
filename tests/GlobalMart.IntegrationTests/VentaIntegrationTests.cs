@@ -79,7 +79,7 @@ public partial class VentaIntegrationTests : IClassFixture<Ms5WebApplicationFact
         using var client = configuredFactory.CreateClient();
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-        var abrirTurnoResponse = await client.PostAsJsonAsync("/turnos/abrir", new
+        var abrirTurnoResponse = await client.PostAsJsonAsync("/api/turnos/abrir", new
         {
             sucursal_id = sucursalId,
             monto_fondo_inicial = 50000m
@@ -88,7 +88,7 @@ public partial class VentaIntegrationTests : IClassFixture<Ms5WebApplicationFact
 
         var turnoId = await ReadGuidPropertyAsync(abrirTurnoResponse, "id");
 
-        var crearVentaResponse = await client.PostAsJsonAsync("/ventas", new
+        var crearVentaResponse = await client.PostAsJsonAsync("/api/ventas", new
         {
             items = new[]
             {
@@ -125,7 +125,7 @@ public partial class VentaIntegrationTests : IClassFixture<Ms5WebApplicationFact
             Assert.Equal(238m, initialVenta.Total);
         }
 
-        var agregarItemResponse = await client.PostAsJsonAsync($"/ventas/{ventaId}/items", new
+        var agregarItemResponse = await client.PostAsJsonAsync($"/api/ventas/{ventaId}/items", new
         {
             producto_id = ProductTwoId,
             cantidad = 1m
@@ -183,14 +183,14 @@ public partial class VentaIntegrationTests : IClassFixture<Ms5WebApplicationFact
         using var client = configuredFactory.CreateClient();
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-        var abrirTurnoResponse = await client.PostAsJsonAsync("/turnos/abrir", new
+        var abrirTurnoResponse = await client.PostAsJsonAsync("/api/turnos/abrir", new
         {
             sucursal_id = sucursalId,
             monto_fondo_inicial = 50000m
         });
         Assert.Equal(HttpStatusCode.OK, abrirTurnoResponse.StatusCode);
 
-        var response = await client.PostAsJsonAsync("/ventas", new
+        var response = await client.PostAsJsonAsync("/api/ventas", new
         {
             items = new[]
             {
@@ -251,14 +251,14 @@ public partial class VentaIntegrationTests : IClassFixture<Ms5WebApplicationFact
         using var client = configuredFactory.CreateClient();
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-        var abrirTurnoResponse = await client.PostAsJsonAsync("/turnos/abrir", new
+        var abrirTurnoResponse = await client.PostAsJsonAsync("/api/turnos/abrir", new
         {
             sucursal_id = sucursalId,
             monto_fondo_inicial = 50000m
         });
         Assert.Equal(HttpStatusCode.OK, abrirTurnoResponse.StatusCode);
 
-        var response = await client.PostAsJsonAsync("/ventas", new
+        var response = await client.PostAsJsonAsync("/api/ventas", new
         {
             items = new[]
             {
@@ -325,7 +325,7 @@ public partial class VentaIntegrationTests : IClassFixture<Ms5WebApplicationFact
 
         // No se abre turno — el cajero no tiene turno ABIERTO
 
-        var response = await client.PostAsJsonAsync("/ventas", new
+        var response = await client.PostAsJsonAsync("/api/ventas", new
         {
             items = new[]
             {
@@ -391,7 +391,7 @@ public partial class VentaIntegrationTests : IClassFixture<Ms5WebApplicationFact
         using var client = configuredFactory.CreateClient();
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-        var abrirTurnoResponse = await client.PostAsJsonAsync("/turnos/abrir", new
+        var abrirTurnoResponse = await client.PostAsJsonAsync("/api/turnos/abrir", new
         {
             sucursal_id         = sucursalId,
             monto_fondo_inicial = 50000m
@@ -400,7 +400,7 @@ public partial class VentaIntegrationTests : IClassFixture<Ms5WebApplicationFact
 
         // El request incluye precio_unitario falsificado (99999).
         // El servidor DEBE ignorarlo y usar el precio de MS-3 (100m para ProductOneId).
-        var crearVentaResponse = await client.PostAsJsonAsync("/ventas", new
+        var crearVentaResponse = await client.PostAsJsonAsync("/api/ventas", new
         {
             items = new[]
             {
@@ -489,12 +489,12 @@ public partial class VentaIntegrationTests : IClassFixture<Ms5WebApplicationFact
         using var client = configuredFactory.CreateClient();
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer",
             CreateCajeroToken(configuredFactory.Services.GetRequiredService<IConfiguration>(), tenantId, cajeroId));
-        var turno = await client.PostAsJsonAsync("/turnos/abrir", new
+        var turno = await client.PostAsJsonAsync("/api/turnos/abrir", new
         {
             sucursal_id = Guid.NewGuid(), monto_fondo_inicial = 50000m
         });
         Assert.Equal(HttpStatusCode.OK, turno.StatusCode);
-        var crear = await client.PostAsJsonAsync("/ventas", new
+        var crear = await client.PostAsJsonAsync("/api/ventas", new
         {
             items = new[] { new { producto_id = ProductOneId, cantidad = 2m } },
             metodo_pago = "EFECTIVO"
@@ -589,17 +589,17 @@ public partial class VentaIntegrationTests : IClassFixture<Ms5WebApplicationFact
         using var client = factory.CreateClient();
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer",
             CreateCajeroToken(factory.Services.GetRequiredService<IConfiguration>(), tenant, cajero));
-        Assert.Equal(HttpStatusCode.OK, (await client.PostAsJsonAsync("/turnos/abrir", new
+        Assert.Equal(HttpStatusCode.OK, (await client.PostAsJsonAsync("/api/turnos/abrir", new
         {
             sucursal_id = Guid.NewGuid(), monto_fondo_inicial = 0m
         })).StatusCode);
-        var crear = await client.PostAsJsonAsync("/ventas", new
+        var crear = await client.PostAsJsonAsync("/api/ventas", new
         {
             items = new[] { new { producto_id = ProductOneId, cantidad = 2m } }, metodo_pago = "EFECTIVO"
         });
         Assert.Equal(HttpStatusCode.Created, crear.StatusCode);
         var ventaId = await ReadGuidPropertyAsync(crear, "id");
-        var response = await client.PostAsJsonAsync($"/ventas/{ventaId}/items", new
+        var response = await client.PostAsJsonAsync($"/api/ventas/{ventaId}/items", new
         {
             producto_id = ProductTwoId, peso_kg = peso,
             precio_unitario = 99999m, subtotal = 99999m, impuestos = 99999m, total = 99999m,
@@ -628,12 +628,12 @@ public partial class VentaIntegrationTests : IClassFixture<Ms5WebApplicationFact
             Assert.Equal(venta.Subtotal + venta.Impuestos, venta.Total);
             Assert.Equal(venta.Items.Sum(i => i.Subtotal), venta.Subtotal);
             // La respuesta tras recargar también debe coincidir con la base.
-            using var get = JsonDocument.Parse(await client.GetStringAsync($"/ventas/{ventaId}"));
+            using var get = JsonDocument.Parse(await client.GetStringAsync($"/api/ventas/{ventaId}"));
             Assert.Equal(venta.Total, get.RootElement.GetProperty("total").GetDecimal());
         }
         await Verificar(200m);
         // Otra petición obliga a cargar el snapshot persistido y recalcular el carrito mixto.
-        Assert.Equal(HttpStatusCode.Created, (await client.PostAsJsonAsync($"/ventas/{ventaId}/items",
+        Assert.Equal(HttpStatusCode.Created, (await client.PostAsJsonAsync($"/api/ventas/{ventaId}/items",
             new { producto_id = ProductOneId, cantidad = 1m })).StatusCode);
         await Verificar(300m);
     }

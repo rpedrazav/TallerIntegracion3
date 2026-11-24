@@ -3,17 +3,32 @@ id: ms5-pos
 tipo: microservicio
 titulo: MS-5 · POS & Cart Service
 estado: parcial
-fuentes: [src/POSCartService/, Docker/simulator/server.js, tests/GlobalMart.IntegrationTests/PaymentSimulatorIntegrationTests.cs, tests/GlobalMart.IntegrationTests/PaymentRetrySafetyTests.cs, tests/GlobalMart.IntegrationTests/CobroSeguroIntegrationTests.cs, docs/qa/S2-035/reporte.md, tests/GlobalMart.IntegrationTests/CobrarTarjetaIntegrationTests.cs, tests/GlobalMart.IntegrationTests/PaymentEventSequenceContractTests.cs]
+fuentes: [src/POSCartService/, Docker/simulator/server.js, tests/GlobalMart.IntegrationTests/TurnoIntegrationTests.cs, tests/GlobalMart.IntegrationTests/SucursalOperativaIntegrationTests.cs, tests/GlobalMart.IntegrationTests/PaymentSimulatorIntegrationTests.cs, tests/GlobalMart.IntegrationTests/PaymentRetrySafetyTests.cs, tests/GlobalMart.IntegrationTests/CobroSeguroIntegrationTests.cs, docs/qa/S2-035/reporte.md, docs/qa/TI3-773/reporte.md, tests/GlobalMart.IntegrationTests/CobrarTarjetaIntegrationTests.cs, tests/GlobalMart.IntegrationTests/PaymentEventSequenceContractTests.cs]
 verificado_contra_codigo: true
-ultima_revision: 2026-10-24
+ultima_revision: 2026-11-22
 depende_de: [ms1-identity, ms2-tax, ms3-catalog]
-publica: [sale.completed]
+publica: [sale.completed, sale.reversed]
 consume: []
 reglas: [RN-01, RN-02, RN-03, RN-06, RF-02, RF-03, RF-04, RF-05, RF-06, RF-07]
 ---
 # MS-5 · POS & Cart Service
 
+## S2-055 / TI3-686 — Verificación desde Electron
+
+[IMPLEMENTADO, alcance acotado] `ElectronCardE2ETests` ejecuta apertura y venta TARJETA desde UI, conecta MS-5 con PostgreSQL migrado y simulador Node reales y compara venta, intento, pago, referencia y evento durable. Aprobación: COMPLETADA + 1 pago + 1 `sale.completed`; rechazo: PENDIENTE + 0 pagos + 0 eventos. Identidad, catálogo e IVA controlados; no verifica entrega Kafka ni todos los servicios desplegados. Validación Windows 2026-10-19: **2/2 aprobadas**, capturas y JSON de concordancia en [S2-055](../../qa/S2-055/reporte.md). No cambia endpoints ni comportamiento productivo.
+
 > Servicio central del punto de venta. Gestiona turnos de caja y el ciclo completo de una venta (carrito, ítems, cobro, anulación). Integrado con MS-2 (IVA) y MS-3 (productos). Persiste y publica `sale.completed` mediante outbox; el frontend usa los cobros en efectivo y tarjeta simulada. El hardware físico sigue pendiente.
+
+## TI3-773 — Validación operativa de sucursal
+
+[IMPLEMENTADO Y PROBADO LOCALMENTE] `SucursalClient` consulta el contrato existente
+`GET /sucursales` de MS-1 y propaga el JWT. Antes de abrir un turno y antes de crear una venta,
+MS-5 exige que el id figure activo en el listado del tenant. Una sucursal inexistente, ajena o
+inactiva devuelve 404 sin revelar la causa; MS-1 no disponible o una respuesta inválida devuelve
+503 y bloquea la operación. La segunda validación cubre una sucursal desactivada después de abrir
+el turno. No se alteran turnos ni ventas históricas. Integración dirigida: 9/9 escenarios nuevos y
+6/6 regresiones aprobadas con PostgreSQL aislado, exit code 0. La integración entre procesos
+desplegados MS-1 → MS-5 queda [NO VERIFICADA]. La URL se toma de `Services:IdentityUrl`.
 
 ## Contrato Oficial de Creación de Venta (POST /ventas) — S2-001 / S2-002 / S2-003
 
@@ -23,8 +38,8 @@ reglas: [RN-01, RN-02, RN-03, RN-06, RF-02, RF-03, RF-04, RF-05, RF-06, RF-07]
 | Campo | Origen / Aceptado | Fuente de Verdad / Cálculo |
 |---|---|---|
 | `producto_id` | **Cliente (Request)** | Obligatorio. UUID del producto. Validado contra MS-3 (activo y perteneciente al catálogo). |
-| `cantidad` | **Cliente (Request)** | Obligatorio para venta unitaria ($> 0$, default 1). Si se provee `peso_kg`, MS-5 asigna `cantidad = peso_kg`. |
-| `peso_kg` | **Cliente (Request)** | Opcional. Capturado desde balanza para productos a granel (`EsPesoVariable`). |
+| `cantidad` | **Cliente (Request)** | En no pesables: positivo, omisión/null usa 1 al crear/agregar. En pesables: opcional; si tiene valor debe coincidir con `peso_kg` (S2-065). |
+| `peso_kg` | **Cliente (Request)** | Obligatorio en pesables, mínimo 0.010 kg e incrementos de 0.001; ausente/null en no pesables (S2-065). |
 | `precio_unitario` | **MS-5 (Calculado)** | Resuelto autoritativamente desde MS-3 (`precioBase`). Si el cliente lo envía, MS-5 **lo ignora/sobreescribe**. |
 | `nombre_producto` | **MS-5 (Calculado)** | Obtenido autoritativamente desde MS-3 al momento de la venta para snapshot histórico inmutable. |
 | `subtotal` | **MS-5 (Calculado)** | $\text{precio\_unitario} \times \text{cantidad}$ calculado por MS-5. |
@@ -42,19 +57,21 @@ reglas: [RN-01, RN-02, RN-03, RN-06, RF-02, RF-03, RF-04, RF-05, RF-06, RF-07]
 
 | Método | Ruta | Auth | Estado |
 |--------|------|------|--------|
-| POST | `/turnos/abrir` (alias `/api/turnos/abrir`) | JWT | [IMPLEMENTADO] |
-| GET | `/turnos/activo` (alias `/api/turnos/activo`) | JWT | [IMPLEMENTADO] |
-| POST | `/turnos/cerrar` (alias `/api/turnos/cerrar`) | JWT | [IMPLEMENTADO] |
-| POST | `/turnos/cuadre` (alias `/api/turnos/cuadre`) | JWT | [IMPLEMENTADO — suma pagos EFECTIVO/COMPLETADAS; retorna efectivo_esperado, monto_declarado, diferencia] |
-| POST | `/ventas` (alias `/api/ventas`) | JWT | [IMPLEMENTADO — Contrato fijado S2-001] |
-| POST | `/ventas/{id}/items` (alias `/api/ventas/{id}/items`) | JWT | [IMPLEMENTADO] |
-| PUT | `/ventas/{id}/items/{itemId}` (alias `/api/ventas/{id}/items/{itemId}`) | JWT | [IMPLEMENTADO] |
-| DELETE | `/ventas/{id}/items/{itemId}` (alias `/api/ventas/{id}/items/{itemId}`) | JWT | [IMPLEMENTADO] |
-| GET | `/ventas/{id}` (alias `/api/ventas/{id}`) | JWT | [IMPLEMENTADO] |
-| GET | `/ventas/turno/{turnoId}` (alias `/api/ventas/turno/{turnoId}`) | JWT | [IMPLEMENTADO] |
-| POST | `/ventas/{id}/cobrar` (alias `/api/ventas/{id}/cobrar`) | JWT | [IMPLEMENTADO — valida monto_recibido ≥ total, calcula vuelto y persiste venta, pago y sale.completed pendiente en una transacción] |
-| POST | `/ventas/{id}/cobrar-tarjeta` (alias `/api/ventas/{id}/cobrar-tarjeta`) | JWT | [IMPLEMENTADO — reserva previa, aprobación/rechazo/timeout y bloqueo de repetición; S2-035] |
-| POST | `/ventas/{id}/anular` (alias `/api/ventas/{id}/anular`) | JWT | [PLANIFICADO en controller — implementado en VentaService.AnularAsync] |
+| POST | `/api/turnos/abrir` | JWT | [IMPLEMENTADO] |
+| GET | `/api/turnos/activo` | JWT | [IMPLEMENTADO] |
+| GET | `/api/turnos/abiertos` | JWT ADMIN | [IMPLEMENTADO — turnos ABIERTOS del tenant del JWT; el ADMIN los usa para ver y anular ventas (TI3-763)] |
+| POST | `/api/turnos/cerrar` | JWT | [IMPLEMENTADO] |
+| POST | `/api/turnos/cuadre` | JWT | [IMPLEMENTADO — suma efectivo neto (Monto − Vuelto) de pagos EFECTIVO de ventas COMPLETADAS, sin fondo inicial (S2-112); retorna efectivo_esperado, monto_declarado, diferencia] |
+| POST | `/api/ventas` | JWT | [IMPLEMENTADO — Contrato fijado S2-001] |
+| POST | `/api/ventas/{id}/items` | JWT | [IMPLEMENTADO] |
+| PUT | `/api/ventas/{id}/items/{itemId}` | JWT | [IMPLEMENTADO] |
+| DELETE | `/api/ventas/{id}/items/{itemId}` | JWT | [IMPLEMENTADO] |
+| GET | `/api/ventas/{id}` | JWT | [IMPLEMENTADO] |
+| GET | `/api/ventas/turno/{turnoId}` | JWT | [IMPLEMENTADO] |
+| POST | `/api/ventas/{id}/cobrar` | JWT | [IMPLEMENTADO — valida monto_recibido ≥ total, calcula vuelto y persiste venta, pago y sale.completed pendiente en una transacción] |
+| POST | `/api/ventas/{id}/cobrar-tarjeta` | JWT | [IMPLEMENTADO — reserva previa, aprobación/rechazo/timeout y bloqueo de repetición; S2-035] |
+| POST | `/api/ventas/{id}/anular` | JWT + ADMIN | [IMPLEMENTADO S2-092/S2-093; efectivo o reversa tarjeta confirmada] |
+| GET | `/api/ventas/{id}/reversa-tarjeta` | JWT + ADMIN | [IMPLEMENTADO S2-093; consulta y reconciliación de reversa] |
 | GET | `/health` | Público | [IMPLEMENTADO] |
 
 > Ver [[matriz-rutas]] para la comparativa exhaustiva de rutas Kong, controladores y puertos de host.
@@ -105,9 +122,10 @@ Antes de autorizar tarjeta, MS-5 persiste un `IntentoPago PENDIENTE` con clave d
    → GET /ventas/{id}/intento-tarjeta reconcilia el mismo intento sin repetir el POST
 
 6. POST /ventas/{id}/anular  { motivo }
-   → VentaService.AnularAsync: estado → ANULADA
+   → ADMIN del tenant, COMPLETADA, turno original abierto; tarjeta exige reversa S2-093 confirmada
+   → VentaService.AnularAsync verifica identidad ADMIN; repositorio confirma estado ANULADA y auditoría en una transacción
    → Crea Anulacion { ventaId, autorizadoPor, motivo }
-   → ❌ NO solicita reembolso a pasarela
+   → Tarjeta aprobada e incertidumbre → 409 sin mutación ni llamada de pasarela
 ```
 
 ## Modelo de datos
@@ -233,7 +251,7 @@ await _ventaRepository.CompletarConOutboxAsync(venta.Id, pago, outboxMessage);
 | PC-22 | Poner Venta en Espera (Hold) | [PLANIFICADO] |
 | PC-23 | Recuperar Venta de Espera | [PLANIFICADO] |
 | PC-24 | Publicar sale.completed | [IMPLEMENTADO — outbox, worker y reintentos automáticos] |
-| PC-25 | Publicar sale.reversed | [PLANIFICADO] |
+| PC-25 | Publicar sale.reversed | [IMPLEMENTADO por outbox S2-094] |
 | PC-26 | Leer Tarjeta en Terminal (NFC/chip/mag) | [PLANIFICADO] |
 | PC-27 | Enviar Solicitud a Pasarela | [IMPLEMENTADO — invocado desde cobrar-tarjeta] |
 | PC-28 | Recibir Respuesta de Pasarela | [IMPLEMENTADO — aprobación, rechazo y timeout; S2-035] |
@@ -258,6 +276,8 @@ await _ventaRepository.CompletarConOutboxAsync(venta.Id, pago, outboxMessage);
 - `src/POSCartService/Controllers/TurnosController.cs`
 - `src/POSCartService/Services/VentaService.cs`
 - `src/POSCartService/Services/TurnoService.cs`
+- `src/POSCartService/Services/SucursalClient.cs`
+- `tests/GlobalMart.IntegrationTests/SucursalOperativaIntegrationTests.cs`
 - `src/POSCartService/Services/IPaymentGatewayClient.cs`
 - `src/POSCartService/Services/PaymentGatewayClient.cs`
 - `tests/GlobalMart.IntegrationTests/TurnoIntegrationTests.cs`
@@ -354,7 +374,7 @@ Validación: **54/54 pruebas backend**, incluidas **17 S2-035** y **5 S2-040**, 
 
 ## S2-061 — Contrato de peso variable
 
-[CONTRATO DEFINIDO] El [contrato de ítem pesable](../dominio/peso-variable.md) fija kg, precisión de 0.001 kg, mínimo de 0.010 kg y `Cantidad = PesoKg`, con conversión explícita desde gramos y ejemplos de aceptación/rechazo. Especifica precio por kg autoritativo y snapshot con cuatro decimales. **La tabla S2-001 anterior describe el comportamiento actual; no acredita estas nuevas validaciones.** S2-062 implementa tipo, mínimo, precisión y coherencia cantidad/peso al agregar. S2-064 completa las reglas al modificar. Siguen pendientes las reglas completas en crear y la unidad de catálogo; S2-063 resuelve la precisión persistida del precio.
+[CONTRATO DEFINIDO] El [contrato de ítem pesable](../dominio/peso-variable.md) fija kg, precisión de 0.001 kg, mínimo de 0.010 kg y `Cantidad = PesoKg`, con conversión explícita desde gramos y ejemplos de aceptación/rechazo. Especifica precio por kg autoritativo y snapshot con cuatro decimales. **La tabla S2-001 anterior describe el comportamiento actual; no acredita estas nuevas validaciones.** S2-062 implementa tipo, mínimo, precisión y coherencia cantidad/peso al agregar. S2-064 completa las reglas al modificar. S2-065 completa las reglas en crear; sigue pendiente la unidad de catálogo; S2-063 resuelve la precisión persistida del precio.
 
 ## S2-062 — Validar peso al agregar ítem
 
@@ -376,6 +396,12 @@ Validación S2-064 del 2026-10-24: **75/75 pruebas Release aprobadas**, incluida
 
 Verificación final S2-064: recompilación Release y **33/33 casos S2-064/S2-063 aprobados**, sin fallos ni omisiones; evidencia adicional en el reporte S2-064.
 
+## S2-065 — Fronteras de peso y tenant
+
+[IMPLEMENTADO — backend] Crear, agregar y editar comparten `ReglasCantidadItem`. Crear ya no convierte la ausencia de peso pesable en cantidad 1: rechaza con 400 sin persistir; el DTO de creación usa cantidad nullable. Las pruebas usan catálogo MS-3 real para productos pesables propios/ajenos, JWT firmado y PostgreSQL aislado. La conversión del adaptador se incorpora con S2-067/S2-069/S2-070; la validación de UUID de unidad sigue pendiente. [Matriz y evidencia](../../qa/S2-065/reporte.md).
+
+Validación del 2026-10-26: **84/84 pruebas Release aprobadas**, sin fallos ni omisiones (nueve nuevas con matrices, 75 de regresión). Diagnóstico previo: 7/8 aprobadas y fallo reproducido de creación sin peso. [Evidencia y límites](../../qa/S2-065/reporte.md).
+
 ## S2-059 — Logs estructurados de correlación de cobro [IMPLEMENTADO]
 
 [IMPLEMENTADO] Se integró registro de correlación en `VentasController.cs` y `PaymentGatewayClient.cs` bajo la etiqueta unificada `[COBRO_CORRELATION]`. Traza cada fase del cobro (`Entrada`, `Llamada pasarela`, `Respuesta pasarela`) asociando `CorrelationId`, `IntentoId`, `VentaId` y `TenantId`. Prohíbe y excluye de forma estricta cualquier dato confidencial de tarjeta (PAN, CVV, secretos), validado mediante la suite `CobroTarjetaCorrelationIntegrationTests`.
@@ -387,3 +413,39 @@ Verificación final S2-064: recompilación Release y **33/33 casos S2-064/S2-063
 2. **Rechazado:** Devuelve HTTP 422 y mantiene la venta en estado `PENDIENTE`.
 3. **Pérdida temporal / Timeout:** Devuelve HTTP 504 / 503 y mantiene la venta en estado `PENDIENTE` sin registrar pagos espurios.
 
+## S2-091 — Alcance de anulación total
+
+[BASE HISTÓRICA S2-092; tarjeta ampliada en S2-093 abajo] Ver [contrato HTTP, permisos y matriz](../dominio/anulacion-venta.md). Solo anulación total ADMIN del tenant para efectivo completado y turno original abierto. La ruta y el servicio verifican autorización; el repositorio comprueba estado/pagos/intentos dentro de una transacción con bloqueo de turno y venta. Rechazos 400/401/403/404/409 sin mutación; tarjeta aprobada sin reembolso disponible e intentos inciertos quedan bloqueados. Parciales, mixtos, devolución física, reversión fiscal y reposición de inventario no se implementan. No hay migración ni cambios de UI. [Pruebas y límites](../../qa/S2-092/reporte.md).
+
+## Integración de ramas — 2026-11-01
+
+El destino local de impuestos en `Services:TaxComplianceService:BaseUrl` se corrige a `http://localhost:5239`, coincidiendo con launchSettings de MS-2.
+
+
+## S2-093 — Reversa total de tarjeta [IMPLEMENTADO backend]
+
+`POST /ventas/{id}/anular` (también `/api`) admite tarjeta completada: exige ADMIN del mismo tenant, motivo, turno original ABIERTO, un pago y un intento APROBADO con referencia opaca, monto y moneda coherentes. El renderer no proporciona importes ni datos bancarios.
+
+1. `ReversaTarjetaService` bloquea turno y venta para reservar `ReversaPago` PENDIENTE en PostgreSQL; índice único `(TenantId, VentaId)`. Confirma esa reserva antes de llamar al simulador, sin mantener locks durante HTTP.
+2. `IReversalGatewayClient.ReverseAsync` envía referencia opaca original y el Id de reversa como `request_id`/`Idempotency-Key`. Se verifica que la respuesta coincida en solicitud, tenant, venta, referencia, importe y moneda.
+3. REVERSED confirma **juntos** estado APROBADA de reversa, venta ANULADA, auditoría original y outbox `sale.reversed` (S2-094). Devuelve 200, `reembolso_tarjeta: CONFIRMADO_SIMULADO` y `devolucion_efectivo: NO_APLICA`. Conserva pago, intento de autorización, ítems, montos y outbox históricos.
+4. DECLINED persiste RECHAZADA y código; devuelve 409 `REVERSA_RECHAZADA`. La venta sigue COMPLETADA, sin auditoría de anulación y sin afirmar devolución.
+5. Timeout, error HTTP, JSON o respuesta inconsistente conservan PENDIENTE; 409 `REVERSA_PENDIENTE`. Un fallo de commit deja la reserva recuperable, sin confirmación local parcial.
+
+**Consulta:** `GET /ventas/{id}/reversa-tarjeta` (alias `/api`), JWT + ADMIN. Devuelve estado, identidades, referencias, monto/moneda, motivo, autorizador, fechas y `reembolso_confirmado`. No se implementa pantalla. Un caso inexistente o ajeno devuelve 404 `REVERSA_NO_ENCONTRADA`. Si está PENDIENTE, consulta al simulador y reconcilia el resultado local; por ello esta consulta puede actualizar el estado. No reenvía una reversa. Si el turno se cerró después de reservar, igualmente registra una devolución externa ya confirmada.
+
+**Repetición:** nunca genera otro POST externo para una venta con reversa reservada. APROBADA retorna el éxito existente; RECHAZADA o PENDIENTE mantienen 409. No hay reintento automático de rechazo ni nueva clave. Un caso pendiente sin resultado externo requiere revisión; no se presume aprobado ni rechazado.
+
+Se añade migración `AddReversasPago`. La aplicación ejecuta migraciones al iniciar. Deben desplegarse MS-5, el simulador completo (incluye `reversals.js`) y la configuración Kong correspondiente. Pruebas locales y límites en [reporte S2-093](../../qa/S2-093/reporte.md). Despliegue en cluster [NO VERIFICADO]. No incluye devoluciones parciales, reposición MS-4, reversión fiscal ni reembolso bancario real.
+
+## S2-094 — Publicación de anulación por outbox
+
+[IMPLEMENTADO] `SaleReversedEvent.CreateOutbox` prepara un snapshot ligado a la venta original, con EventId estable tomado de Anulacion.Id. Efectivo y tarjeta aprobada guardan el evento junto con estado/auditoría en la misma transacción. El worker existente publica y reintenta ese mismo JSON en `sale.reversed`; no se llama a Kafka durante la anulación. Sin nueva migración ni consumidor MS-4. [Contrato](../eventos/sale-reversed-outbox.md), [pruebas](../../qa/S2-094/reporte.md).
+
+## S2-112 — Subtotal de línea desde MS-2
+
+[IMPLEMENTADO] Al crear una venta, agregar un ítem o cambiar su cantidad, MS-5 ya no calcula `precio × cantidad` por su cuenta: guarda el subtotal de línea que devuelve MS-2 (en CLP, pesos enteros), igual que el subtotal, el IVA y el total. Así Σ líneas = subtotal de la venta.
+
+## S2-095 — Cobertura de anulación total
+
+[VERIFICADO LOCALMENTE] Las suites de efectivo y tarjeta comparten auxiliares JWT/snapshot y trait `Plan=S2-095`. 62/62 casos aprobados incluyendo regresión outbox: permisos, estados, eventos únicos, repetición y aislamiento de dos tenants. No se cambió el flujo productivo. [Matriz, reproducción y TRX](../../qa/S2-095/reporte.md).

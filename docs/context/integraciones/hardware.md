@@ -15,6 +15,12 @@ reglas: [RF-15]
 
 > Dispositivos físicos en el mostrador del minimarket. La integración ocurre en el proceso principal de Electron (Node.js) y se expone al renderer vía IPC. **Estado: PARCIAL** — contrato, simulador, IPC y estructura serial intercambiable implementados; la integración visual, el transporte/parser de un modelo real y la compatibilidad física siguen pendientes.
 
+## S2-082 — Validación y redondeo del simulador
+
+[IMPLEMENTADO, validado el 2026-10-25] `SimulatedScaleAdapter` rechaza unidades distintas de `g`/`kg` también en ejecución, antes de normalizar; devuelve `invalid_reading`. `MockScaleAdapter.simularPeso` exige un número finito no negativo antes de modificar el peso almacenado, evitando aceptar `Infinity`.
+
+La suite [ScaleParserRoundingIntegrationTests](../../../tests/GlobalMart.IntegrationTests/ScaleParserRoundingIntegrationTests.cs) ejecuta módulos TypeScript productivos y el callback real de incorporación al carrito: **43/43 casos aprobados, sin omisiones**. Cubre conversión g/kg, mínimo de 10 g, precisión de 1 g, ruido flotante, entradas inválidas, estados simulados, tara y redondeo. Los 13 casos inválidos del carrito producen cero llamadas a los espías de agregar/actualizar de MS-5; los dos controles válidos producen una llamada. Reproducción: [run-s2082.ps1](../../../tests/GlobalMart.IntegrationTests/run-s2082.ps1). Typecheck aprobado. No acredita HTTP/BD, detección física de estabilidad ni un parser de protocolo serial: [NO VERIFICADO].
+
 ## Balanza Física
 
 **Protocolo:** Puerto serial (COM) o USB.
@@ -35,6 +41,8 @@ reglas: [RF-15]
 **Si balanza no responde:** el cajero ingresa el peso manualmente (fallback de UI).
 
 El [contrato S2-061](../dominio/peso-variable.md) define mínimo de 0.010 kg, precisión de 0.001 kg y rechazo de lecturas sin unidad. El simulador aplica el mínimo y la precisión, recibe unidad explícita `g`/`kg` y normaliza a kg. La integración física sigue pendiente.
+
+**Protocolo de prueba física — S2-085 (CONDICIONADA, pendiente de modelo real):** [protocolo y checklist](../../qa/S2-085/protocolo-balanza-fisica.md) con identificación de puerto (COM/VID-PID), parámetros serie, comandos y formato de trama, estabilidad, tolerancia (≤ 1 `e` de placa), robustez de conexión, conversión S2-061 y flujo POS. Incluye la herramienta de captura [capturar-balanza.ps1](../../qa/S2-085/capturar-balanza.ps1). Ningún paso se ha ejecutado con hardware: [NO VERIFICADO].
 
 ## S2-066 / TI3-697 — Interfaz de balanza [IMPLEMENTADO]
 

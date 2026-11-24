@@ -5,7 +5,7 @@ titulo: Estrategia de Testing — GlobalMart OS
 estado: parcial
 fuentes: [src/POSCartService/tests/, src/TaxComplianceService/tests/, .github/workflows/ci.yml]
 verificado_contra_codigo: true
-ultima_revision: 2026-10-14
+ultima_revision: 2026-11-01
 depende_de: [stack]
 publica: []
 consume: []
@@ -16,6 +16,14 @@ reglas: [RNF-07]
 > Estado real de los tests. La cobertura actual es muy baja respecto al objetivo RNF-07 (≥80%).
 
 ## Tests existentes (verificados en código)
+
+### S2-055 / TI3-686 — Cobro tarjeta desde Electron [IMPLEMENTADO, alcance acotado]
+
+`ElectronCardE2ETests` y `e2e/electron/card-backend.cjs` automatizan apertura, creación de venta y cobro aprobado/rechazado desde main/preload/renderer reales. MS-5 con JWT validado, PostgreSQL migrado y proceso Node del simulador son reales; identidad, catálogo e IVA son fixtures. Comprueba venta, intento, pago, referencia opaca, autorización única y payload outbox. No acredita entrega Kafka (worker deshabilitado), Kong ni integración desplegada MS-1/MS-2/MS-3. Windows 2026-10-19: **2/2 aprobadas, 0 omitidas**, con capturas de apertura, venta y resultado. Comando `npm run test:e2e:card`; requiere `GLOBALMART_TEST_POSTGRES` y sesión gráfica. El comando habilita `GLOBALMART_ELECTRON_E2E=1`; la suite backend ordinaria omite estos E2E para no exigir escritorio. [Reproducción](../../../globalmart-frontend/e2e/electron/README.md) y [evidencias](../../qa/S2-055/reporte.md).
+
+### S2-024 / TI3-655 — Esqueleto E2E de Electron [IMPLEMENTADO]
+
+`globalmart-frontend/playwright.electron.config.ts` ejecuta el main, preload y renderer reales con perfil independiente por caso, login ficticio y APIs interceptadas de MS-1/MS-3/MS-5. Cubre login → 404 sin turno → apertura → POS vacío, persistencia IPC tras recarga y rechazo 401 sin sesión. `npm run ci:local` compila y verifica TypeScript antes de ejecutar la suite. Validación Windows del 2026-10-18: **2/2 aprobadas**. No certifica venta/cobro ni aislamiento RN-01 del backend; los mocks no validan firmas JWT. [Guía](../../../globalmart-frontend/e2e/electron/README.md) y [evidencia](../../qa/S2-024/reporte.md).
 
 | Proyecto | Tipo | Estado |
 |---------|------|--------|
@@ -41,7 +49,7 @@ En las dependencias del proyecto:
 - **Moq** — mocking
 - **WebApplicationFactory** — tests de integración ASP.NET Core
 
-Los flujos de venta y cobro usan handlers HTTP en memoria para simular respuestas deterministas de MS-2 y MS-3 mientras ejecutan el pipeline real de MS-5. La publicación de `sale.completed` cuenta además con pruebas de integración que cubren productor real, consumidor real de MS-4 y descuento de stock verificado por API mediante polling. El cuadre de caja también se verifica mediante HTTP con una venta y pago efectivo persistidos.
+Los flujos de venta y cobro usan handlers HTTP en memoria para simular respuestas deterministas de MS-2 y MS-3 mientras ejecutan el pipeline real de MS-5. La publicación de `sale.completed` cuenta además con pruebas de integración que cubren productor real, consumidor real de MS-4 y descuento de stock verificado por API mediante polling. El cuadre de caja también se verifica mediante HTTP con una venta y pago efectivo persistidos. `CobroIntegrationTests` y `KafkaPublishIntegrationTests` comparten la colección xUnit `POS integration tests` con `DisableParallelization = true` para evitar carreras al ejecutar migraciones EF Core sobre la misma base PostgreSQL.
 
 ## Cómo ejecutar los smoke tests
 
@@ -95,4 +103,12 @@ dotnet sln GlobalMartOS.sln add src/POSCartService/tests/POSCartService.Tests/PO
 
 ## S2-025 — Regresión de carrito
 
-[PARCIAL] Suite Playwright sobre el renderer real de POS, con catálogo y puente de sesión controlados. Ejecución 2026-10-12: 1 aprobado (agregar, cantidad, eliminar y recargar), 2 fallidos (sin respuesta de ventas MS-5 y persistencia del carrito al cambiar sesión de tenant). Pos usa `pos_cart` sin partición por tenant y calcula IVA local al 19%. Igualdad con totales de MS-5 y aislamiento HTTP de backend [NO VERIFICADO]. No acredita E2E completo ni venta funcional. Reporte y capturas: [S2-025](../../qa/S2-025/reporte.md).
+[PARCIAL] Suite Playwright sobre el renderer real de POS, con catálogo y puente de sesión controlados. Ejecución 2026-10-12: 1 aprobado (agregar, cantidad, eliminar y recargar), 2 fallidos (sin respuesta de ventas MS-5 y persistencia del carrito al cambiar sesión de tenant). En aquella revisión, Pos usaba `pos_cart` sin partición por tenant y calculaba IVA local al 19%; esa descripción histórica fue superada por la integración del 2026-11-01. Igualdad con totales de MS-5 y aislamiento HTTP de backend [NO VERIFICADO]. No acredita E2E completo ni venta funcional. Reporte y capturas: [S2-025](../../qa/S2-025/reporte.md).
+
+## Integración de ramas — 2026-11-01
+
+`GlobalMart.Tests` forma parte de la solución: 47 pruebas unitarias de Identity, Tax e inventario aprobadas. La suite administrativa previa se conserva en `admin-flows.spec.ts` y se adapta al formulario actual. `cart.spec.ts` valida el renderer con fixtures HTTP de turnos y ventas (IVA 20 %); no acredita integración real con MS-5. Los flujos reales se verifican en las suites .NET/Electron.
+
+S2-082/S2-083/S2-084: se adaptan los harness de extracción de callbacks al flujo actual `readProductWeight` → confirmación → `commitProductToCart`, y se leen subtotal, IVA y total vigentes sin exigir la variable retirada `tasaIva`. La conexión explícita `GLOBALMART_TEST_POSTGRES` también sirve para S2-084. Suite dirigida: 62/62 aprobadas.
+
+Validación final 2026-11-01: solución Release con 445 aprobadas, cero fallos y 1 caso Electron opt-in omitido; StockConsumerIntegrationTests se excluyó por falta de Kafka local. Pruebas Electron de login/turno: 2/2 aprobadas. Evidencia y alcance en [reporte de integración](../../qa/integracion-main-2026-11-01.md).

@@ -33,6 +33,7 @@ using Xunit;
 
 namespace GlobalMart.IntegrationTests;
 
+[Collection("POS integration tests")]
 public class CobroIntegrationTests : IClassFixture<Ms5WebApplicationFactory>
 {
     private static readonly Guid ProductOneId = Guid.Parse("11111111-1111-1111-1111-111111111111");
@@ -90,14 +91,14 @@ public class CobroIntegrationTests : IClassFixture<Ms5WebApplicationFactory>
         using var client = configuredFactory.CreateClient();
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-        var abrirTurnoResponse = await client.PostAsJsonAsync("/turnos/abrir", new
+        var abrirTurnoResponse = await client.PostAsJsonAsync("/api/turnos/abrir", new
         {
             sucursal_id = sucursalId,
             monto_fondo_inicial = 50000m
         });
         Assert.Equal(HttpStatusCode.OK, abrirTurnoResponse.StatusCode);
 
-        var crearVentaResponse = await client.PostAsJsonAsync("/ventas", new
+        var crearVentaResponse = await client.PostAsJsonAsync("/api/ventas", new
         {
             items = new[]
             {
@@ -115,14 +116,14 @@ public class CobroIntegrationTests : IClassFixture<Ms5WebApplicationFactory>
 
         var ventaId = await ReadGuidPropertyAsync(crearVentaResponse, "id");
 
-        var agregarItemResponse = await client.PostAsJsonAsync($"/ventas/{ventaId}/items", new
+        var agregarItemResponse = await client.PostAsJsonAsync($"/api/ventas/{ventaId}/items", new
         {
             producto_id = ProductTwoId,
             cantidad = 1m
         });
         Assert.Equal(HttpStatusCode.Created, agregarItemResponse.StatusCode);
 
-        var cobrarResponse = await client.PostAsJsonAsync($"/ventas/{ventaId}/cobrar", new
+        var cobrarResponse = await client.PostAsJsonAsync($"/api/ventas/{ventaId}/cobrar", new
         {
             monto_recibido = montoRecibido
         });
@@ -194,7 +195,7 @@ public class CobroIntegrationTests : IClassFixture<Ms5WebApplicationFactory>
         using var client = configuredFactory.CreateClient();
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-        var abrirTurnoResponse = await client.PostAsJsonAsync("/turnos/abrir", new
+        var abrirTurnoResponse = await client.PostAsJsonAsync("/api/turnos/abrir", new
         {
             sucursal_id = sucursalId,
             monto_fondo_inicial = 50000m
@@ -202,7 +203,7 @@ public class CobroIntegrationTests : IClassFixture<Ms5WebApplicationFactory>
         Assert.Equal(HttpStatusCode.OK, abrirTurnoResponse.StatusCode);
 
         // Crear venta con método de pago TARJETA
-        var crearVentaResponse = await client.PostAsJsonAsync("/ventas", new
+        var crearVentaResponse = await client.PostAsJsonAsync("/api/ventas", new
         {
             items = new[]
             {
@@ -219,7 +220,7 @@ public class CobroIntegrationTests : IClassFixture<Ms5WebApplicationFactory>
         var ventaId = await ReadGuidPropertyAsync(crearVentaResponse, "id");
 
         // Intentar cobrar en efectivo a través de POST /ventas/{id}/cobrar
-        var cobrarResponse = await client.PostAsJsonAsync($"/ventas/{ventaId}/cobrar", new
+        var cobrarResponse = await client.PostAsJsonAsync($"/api/ventas/{ventaId}/cobrar", new
         {
             monto_recibido = 1000m
         });
@@ -282,7 +283,7 @@ public class CobroIntegrationTests : IClassFixture<Ms5WebApplicationFactory>
         using var client = configuredFactory.CreateClient();
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-        var abrirTurnoResponse = await client.PostAsJsonAsync("/turnos/abrir", new
+        var abrirTurnoResponse = await client.PostAsJsonAsync("/api/turnos/abrir", new
         {
             sucursal_id = sucursalId,
             monto_fondo_inicial = 50000m
@@ -290,7 +291,7 @@ public class CobroIntegrationTests : IClassFixture<Ms5WebApplicationFactory>
         Assert.Equal(HttpStatusCode.OK, abrirTurnoResponse.StatusCode);
 
         // Crear venta con método de pago MIXTO
-        var crearVentaResponse = await client.PostAsJsonAsync("/ventas", new
+        var crearVentaResponse = await client.PostAsJsonAsync("/api/ventas", new
         {
             items = new[]
             {
@@ -307,7 +308,7 @@ public class CobroIntegrationTests : IClassFixture<Ms5WebApplicationFactory>
         var ventaId = await ReadGuidPropertyAsync(crearVentaResponse, "id");
 
         // Intentar cobrar en efectivo
-        var cobrarResponse = await client.PostAsJsonAsync($"/ventas/{ventaId}/cobrar", new
+        var cobrarResponse = await client.PostAsJsonAsync($"/api/ventas/{ventaId}/cobrar", new
         {
             monto_recibido = 1000m
         });

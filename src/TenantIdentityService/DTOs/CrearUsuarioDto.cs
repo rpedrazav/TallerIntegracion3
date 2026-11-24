@@ -6,6 +6,10 @@ namespace TenantIdentityService.DTOs;
 /// </summary>
 public class CrearUsuarioDto
 {
+    /// <summary>Tenant solicitado; si se envía debe coincidir con el tenant del JWT.</summary>
+    public Guid? TenantId { get; set; }
+    /// <summary>Sucursal inicial opcional; debe pertenecer al tenant autenticado.</summary>
+    public Guid? SucursalId { get; set; }
     /// <summary>Nombre completo del usuario (2–100 caracteres).</summary>
     public string Nombre { get; set; } = string.Empty;
 

@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using System.Text.Json;
 using POSCartService.Messaging;
 using POSCartService.Models;
@@ -8,18 +9,20 @@ namespace POSCartService.Services;
 public class VentaService : IVentaService
 {
     private readonly IVentaRepository _ventaRepository;
+    private readonly IHttpContextAccessor? _httpContextAccessor;
+    private readonly ReversaTarjetaService? _reversas;
     private readonly IItemVentaRepository? _itemVentaRepository;
 
     public VentaService(
         IVentaRepository ventaRepository,
         IItemVentaRepository? itemVentaRepository = null,
-        IKafkaProducerService? kafkaProducer = null)
+        IHttpContextAccessor? httpContextAccessor = null,
+        ReversaTarjetaService? reversas = null)
     {
         _ventaRepository     = ventaRepository ?? throw new ArgumentNullException(nameof(ventaRepository));
         _itemVentaRepository = itemVentaRepository;
-        // La publicación directa se reemplazó por outbox en S2-008. Se conserva el
-        // parámetro opcional para no romper los ejecutables de prueba existentes.
-        _ = kafkaProducer;
+        _httpContextAccessor = httpContextAccessor;
+        _reversas = reversas;
     }
 
 
@@ -97,42 +100,7 @@ public class VentaService : IVentaService
             Vuelto  = vuelto
         };
 
-        var eventId = Guid.NewGuid();
-        var timestamp = DateTime.UtcNow;
-        var evento = new SaleCompletedEvent
-        {
-            EventId       = eventId,
-            SchemaVersion = 1,
-            TenantId      = venta.TenantId,
-            VentaId       = venta.Id,
-            CajeroId      = venta.CajeroId,
-            SucursalId    = venta.SucursalId,
-            Subtotal      = venta.Subtotal,
-            Iva           = venta.Impuestos,
-            Total         = venta.Total,
-            MetodoPago    = venta.MetodoPago.ToString(),
-            Timestamp     = timestamp,
-            Items         = venta.Items.Select(i => new SaleCompletedItemEvent
-            {
-                ProductoId     = i.ProductoId,
-                Cantidad       = i.Cantidad,
-                PrecioUnitario = i.PrecioUnitario
-            }).ToList()
-        };
-        var outboxMessage = new OutboxMessage
-        {
-            EventId          = eventId,
-            TenantId         = venta.TenantId,
-            VentaId          = venta.Id,
-            EventType        = "sale.completed",
-            SchemaVersion    = evento.SchemaVersion,
-            Topic            = "sale.completed",
-            MessageKey       = venta.TenantId.ToString(),
-            Payload          = JsonSerializer.Serialize(evento),
-            Status           = OutboxStatus.PENDIENTE,
-            CreatedAt        = timestamp,
-            NextAttemptAt    = timestamp
-        };
+        var outboxMessage = CrearOutboxVentaCompletada(venta);
 
         return await _ventaRepository.CompletarConOutboxAsync(venta.Id, pago, outboxMessage);
     }
@@ -140,22 +108,24 @@ public class VentaService : IVentaService
     /// <inheritdoc/>
     public async Task<Venta> AnularAsync(Guid ventaId, Guid cajeroId, string motivo)
     {
-        var venta = await _ventaRepository.GetByIdAsync(ventaId)
-            ?? throw new KeyNotFoundException($"Venta {ventaId} no encontrada.");
+        // Defensa también para llamadas internas: no aceptar una identidad enviada por el body.
+        var user = _httpContextAccessor?.HttpContext?.User;
+        var userId = user?.FindFirst("cajero_id")?.Value
+            ?? user?.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? user?.FindFirst("sub")?.Value;
+        if (user?.Identity?.IsAuthenticated != true || !user.IsInRole("ADMIN")
+            || !Guid.TryParse(userId, out var adminId) || adminId == Guid.Empty || adminId != cajeroId
+            || !Guid.TryParse(user.FindFirst("tenant_id")?.Value, out var tenantId) || tenantId == Guid.Empty)
+            throw new UnauthorizedAccessException("La anulación requiere un ADMIN autenticado del tenant.");
 
-        if (venta.Estado is EstadoVenta.ANULADA or EstadoVenta.CANCELADA)
-            throw new InvalidOperationException(
-                $"La venta ya se encuentra en estado {venta.Estado} y no puede anularse nuevamente.");
+        motivo = motivo?.Trim() ?? string.Empty;
+        if (motivo.Length is < 1 or > 500)
+            throw new ArgumentException("motivo debe contener entre 1 y 500 caracteres.", nameof(motivo));
 
-        venta.Estado    = EstadoVenta.ANULADA;
-        venta.Anulacion = new Anulacion
-        {
-            VentaId       = venta.Id,
-            AutorizadoPor = cajeroId,
-            Motivo        = motivo
-        };
-
-        return await _ventaRepository.ActualizarAsync(venta);
+        var venta = await _ventaRepository.GetByIdAsync(ventaId);
+        if (venta is null || venta.TenantId != tenantId) throw new KeyNotFoundException("Venta no encontrada.");
+        if (venta.MetodoPago == MetodoPagoVenta.TARJETA && _reversas is not null)
+            return await _reversas.AnularAsync(ventaId, motivo);
+        return await _ventaRepository.AnularTotalAsync(ventaId, tenantId, adminId, motivo);
     }
 
     /// <inheritdoc/>
@@ -297,6 +267,17 @@ public class VentaService : IVentaService
             Referencia = intentoPago.Referencia
         };
 
+        var outboxMessage = CrearOutboxVentaCompletada(venta);
+
+        intentoPago.TenantId  = venta.TenantId;
+        intentoPago.VentaId   = venta.Id;
+        intentoPago.CreatedAt = intentoPago.CreatedAt == default ? outboxMessage.CreatedAt : intentoPago.CreatedAt;
+
+        return await _ventaRepository.CompletarTarjetaConOutboxAsync(venta.Id, pago, intentoPago, outboxMessage);
+    }
+
+    private static OutboxMessage CrearOutboxVentaCompletada(Venta venta)
+    {
         var eventId = Guid.NewGuid();
         var timestamp = DateTime.UtcNow;
         var evento = new SaleCompletedEvent
@@ -319,35 +300,21 @@ public class VentaService : IVentaService
                 PrecioUnitario = i.PrecioUnitario
             }).ToList()
         };
-        var outboxMessage = new OutboxMessage
+        return new OutboxMessage
         {
-            EventId       = eventId,
-            TenantId      = venta.TenantId,
-            VentaId       = venta.Id,
-            EventType     = "sale.completed",
-            SchemaVersion = evento.SchemaVersion,
-            Topic         = "sale.completed",
-            MessageKey    = venta.TenantId.ToString(),
-            Payload       = JsonSerializer.Serialize(evento),
-            Status        = OutboxStatus.PENDIENTE,
-            CreatedAt     = timestamp,
-            NextAttemptAt = timestamp
+            EventId          = eventId,
+            TenantId         = venta.TenantId,
+            VentaId          = venta.Id,
+            EventType        = "sale.completed",
+            SchemaVersion    = evento.SchemaVersion,
+            Topic            = "sale.completed",
+            MessageKey       = venta.TenantId.ToString(),
+            Payload          = JsonSerializer.Serialize(evento),
+            Status           = OutboxStatus.PENDIENTE,
+            CreatedAt        = timestamp,
+            NextAttemptAt    = timestamp
         };
-
-        intentoPago.TenantId  = venta.TenantId;
-        intentoPago.VentaId   = venta.Id;
-        intentoPago.CreatedAt = intentoPago.CreatedAt == default ? timestamp : intentoPago.CreatedAt;
-
-        return await _ventaRepository.CompletarTarjetaConOutboxAsync(venta.Id, pago, intentoPago, outboxMessage);
     }
-
-    /// <inheritdoc/>
-    public Task<bool> ReservarIntentoPagoAsync(IntentoPago intentoPago)
-        => _ventaRepository.ReservarIntentoPagoAsync(intentoPago);
-
-    /// <inheritdoc/>
-    public Task RegistrarIntentoPagoAsync(IntentoPago intentoPago)
-        => _ventaRepository.RegistrarIntentoPagoAsync(intentoPago);
 
     public Task<IntentoPago> IniciarIntentoPagoAsync(Guid ventaId, Guid requestId)
         => _ventaRepository.IniciarIntentoPagoAsync(ventaId, requestId);
@@ -358,5 +325,3 @@ public class VentaService : IVentaService
     public Task ActualizarIntentoPagoAsync(IntentoPago intentoPago)
         => _ventaRepository.ActualizarIntentoPagoAsync(intentoPago);
 }
-
-

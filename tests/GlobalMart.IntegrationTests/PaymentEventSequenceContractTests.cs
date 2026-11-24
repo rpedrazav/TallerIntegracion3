@@ -93,6 +93,9 @@ public sealed class PaymentEventSequenceContractTests
     private sealed class RecordingVentaRepository(Pos.Models.Venta venta)
         : Pos.Repositories.IVentaRepository
     {
+        public Task<Pos.Models.Venta> AnularTotalAsync(Guid ventaId, Guid tenantId, Guid autorizadoPor, string motivo)
+            => throw new NotSupportedException();
+
         public Pos.Models.Pago? Pago { get; private set; }
         public Pos.Models.IntentoPago? Intento { get; private set; }
         public Pos.Models.OutboxMessage? Outbox { get; private set; }
@@ -115,8 +118,6 @@ public sealed class PaymentEventSequenceContractTests
 
         public Task<IReadOnlyList<Pos.Models.Venta>> GetByTurnoAsync(Guid turnoId) =>
             throw new NotSupportedException();
-        public Task<IReadOnlyList<Pos.Models.Venta>> GetByCajeroAsync(Guid cajeroId, DateTime desde, DateTime hasta) =>
-            throw new NotSupportedException();
         public Task<Pos.Models.Venta> CrearAsync(Pos.Models.Venta nuevaVenta) =>
             throw new NotSupportedException();
         public Task<Pos.Models.Venta> ActualizarAsync(Pos.Models.Venta actualizada) =>
@@ -128,8 +129,6 @@ public sealed class PaymentEventSequenceContractTests
             Pos.Models.Pago pago,
             Pos.Models.OutboxMessage outboxMessage) => throw new NotSupportedException();
         public Task<bool> ReservarIntentoPagoAsync(Pos.Models.IntentoPago intentoPago) =>
-            throw new NotSupportedException();
-        public Task RegistrarIntentoPagoAsync(Pos.Models.IntentoPago intentoPago) =>
             throw new NotSupportedException();
         public Task<Pos.Models.IntentoPago> IniciarIntentoPagoAsync(Guid ventaId, Guid requestId) =>
             throw new NotSupportedException();

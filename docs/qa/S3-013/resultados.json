@@ -1,0 +1,935 @@
+{
+  "config": {
+    "argv": [
+      "/usr/bin/node",
+      "/home/sebacachyos/Documentos/Informatica/Semestre6/TallerIntegracion3/NewRepo/TallerIntegracion3/globalmart-frontend/node_modules/.bin/playwright",
+      "test",
+      "e2e/ventas-turno.spec.ts",
+      "--reporter=list,json"
+    ],
+    "configFile": "/home/sebacachyos/Documentos/Informatica/Semestre6/TallerIntegracion3/NewRepo/TallerIntegracion3/globalmart-frontend/playwright.config.ts",
+    "rootDir": "/home/sebacachyos/Documentos/Informatica/Semestre6/TallerIntegracion3/NewRepo/TallerIntegracion3/globalmart-frontend/e2e",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/sebacachyos/Documentos/Informatica/Semestre6/TallerIntegracion3/NewRepo/TallerIntegracion3/globalmart-frontend/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/home/sebacachyos/Documentos/Informatica/Semestre6/TallerIntegracion3/NewRepo/TallerIntegracion3/globalmart-frontend/e2e",
+        "testIgnore": [
+          "**/electron/**"
+        ],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 20000
+      }
+    ],
+    "filteredProjects": [
+      {
+        "grep": {},
+        "grepInvert": null,
+        "outputDir": "/home/sebacachyos/Documentos/Informatica/Semestre6/TallerIntegracion3/NewRepo/TallerIntegracion3/globalmart-frontend/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "name": "",
+        "testDir": "/home/sebacachyos/Documentos/Informatica/Semestre6/TallerIntegracion3/NewRepo/TallerIntegracion3/globalmart-frontend/e2e",
+        "snapshotDir": "/home/sebacachyos/Documentos/Informatica/Semestre6/TallerIntegracion3/NewRepo/TallerIntegracion3/globalmart-frontend/e2e",
+        "testIgnore": "**/electron/**",
+        "testMatch": "**/*.@(spec|test).?(c|m)[jt]s?(x)",
+        "timeout": 20000,
+        "use": {
+          "baseURL": "http://127.0.0.1:4175",
+          "viewport": {
+            "width": 1440,
+            "height": 900
+          },
+          "screenshot": "only-on-failure",
+          "trace": "retain-on-failure"
+        },
+        "dependencies": [],
+        "ignoreSnapshots": false,
+        "__projectId": ""
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "list"
+      ],
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "default",
+    "updateSourceMethod": "patch",
+    "version": "1.64.0",
+    "workers": 1,
+    "webServer": {
+      "command": "node e2e/serve.cjs",
+      "url": "http://127.0.0.1:4175",
+      "reuseExistingServer": false
+    }
+  },
+  "suites": [
+    {
+      "title": "ventas-turno.spec.ts",
+      "file": "ventas-turno.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "CAJERO ve las ventas del turno sin la acción Anular",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 20000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 459,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-23T14:41:49.184Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "67a0cb45bb74c94c50d4-0d9837d693301351e40e",
+          "file": "ventas-turno.spec.ts",
+          "line": 28,
+          "column": 5
+        },
+        {
+          "title": "ADMIN anula con motivo obligatorio y la lista muestra ANULADA",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 20000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 601,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-23T14:41:49.728Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "67a0cb45bb74c94c50d4-13b7a7054799e4b0da2f",
+          "file": "ventas-turno.spec.ts",
+          "line": 34,
+          "column": 5
+        },
+        {
+          "title": "anulación 400 SOLICITUD_INVALIDA conserva la venta y explica el problema",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 20000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 647,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-23T14:41:50.344Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "67a0cb45bb74c94c50d4-c56891d52ad4420c257a",
+          "file": "ventas-turno.spec.ts",
+          "line": 72,
+          "column": 7
+        },
+        {
+          "title": "anulación 401 IDENTIDAD_INVALIDA conserva la venta y explica el problema",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 20000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 581,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-23T14:41:51.005Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "67a0cb45bb74c94c50d4-d2f2493036f5bc6bf816",
+          "file": "ventas-turno.spec.ts",
+          "line": 72,
+          "column": 7
+        },
+        {
+          "title": "anulación 404 VENTA_NO_ENCONTRADA conserva la venta y explica el problema",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 20000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 597,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-23T14:41:51.601Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "67a0cb45bb74c94c50d4-4e979ca6a9532764ed0a",
+          "file": "ventas-turno.spec.ts",
+          "line": 72,
+          "column": 7
+        },
+        {
+          "title": "anulación 409 ESTADO_NO_ANULABLE conserva la venta y explica el problema",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 20000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 597,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-23T14:41:52.211Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "67a0cb45bb74c94c50d4-36e389ec7a77ee463835",
+          "file": "ventas-turno.spec.ts",
+          "line": 72,
+          "column": 7
+        },
+        {
+          "title": "anulación 409 VENTA_YA_ANULADA conserva la venta y explica el problema",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 20000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 608,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-23T14:41:52.820Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "67a0cb45bb74c94c50d4-24972d307ad4858267ca",
+          "file": "ventas-turno.spec.ts",
+          "line": 72,
+          "column": 7
+        },
+        {
+          "title": "anulación 409 PAGO_INCIERTO conserva la venta y explica el problema",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 20000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 641,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-23T14:41:53.440Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "67a0cb45bb74c94c50d4-a6185ce518a99969acfc",
+          "file": "ventas-turno.spec.ts",
+          "line": 72,
+          "column": 7
+        },
+        {
+          "title": "anulación 409 METODO_NO_SOPORTADO conserva la venta y explica el problema",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 20000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 619,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-23T14:41:54.090Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "67a0cb45bb74c94c50d4-e25894e34f4ca1f058c3",
+          "file": "ventas-turno.spec.ts",
+          "line": 72,
+          "column": 7
+        },
+        {
+          "title": "anulación 409 REEMBOLSO_NO_DISPONIBLE conserva la venta y explica el problema",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 20000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 646,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-23T14:41:54.719Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "67a0cb45bb74c94c50d4-b039bb2fb63de2c2d9cb",
+          "file": "ventas-turno.spec.ts",
+          "line": 72,
+          "column": 7
+        },
+        {
+          "title": "anulación 409 PAGO_INCONSISTENTE conserva la venta y explica el problema",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 20000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 646,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-23T14:41:55.378Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "67a0cb45bb74c94c50d4-f4084770e9920d6ee91e",
+          "file": "ventas-turno.spec.ts",
+          "line": 72,
+          "column": 7
+        },
+        {
+          "title": "anulación 409 TURNO_NO_ANULABLE conserva la venta y explica el problema",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 20000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 623,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-23T14:41:56.038Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "67a0cb45bb74c94c50d4-a7f9c6e900a852625cde",
+          "file": "ventas-turno.spec.ts",
+          "line": 72,
+          "column": 7
+        },
+        {
+          "title": "anulación 409 REVERSA_RECHAZADA conserva la venta y explica el problema",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 20000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 635,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-23T14:41:56.676Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "67a0cb45bb74c94c50d4-ba78d4377087da2d6611",
+          "file": "ventas-turno.spec.ts",
+          "line": 72,
+          "column": 7
+        },
+        {
+          "title": "anulación 409 REVERSA_PENDIENTE conserva la venta y explica el problema",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 20000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 618,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-23T14:41:57.323Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "67a0cb45bb74c94c50d4-97524c65609a602e5128",
+          "file": "ventas-turno.spec.ts",
+          "line": 72,
+          "column": 7
+        },
+        {
+          "title": "anulación 500 ERROR_PERSISTENCIA conserva la venta y explica el problema",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 20000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 602,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-23T14:41:57.955Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "67a0cb45bb74c94c50d4-92f8ee28ecc243299ad9",
+          "file": "ventas-turno.spec.ts",
+          "line": 72,
+          "column": 7
+        },
+        {
+          "title": "anulación 400 sin código conserva la venta y explica el problema",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 20000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 637,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-23T14:41:58.570Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "67a0cb45bb74c94c50d4-169ee248f9c9d293d999",
+          "file": "ventas-turno.spec.ts",
+          "line": 72,
+          "column": 7
+        },
+        {
+          "title": "anulación 401 sin código conserva la venta y explica el problema",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 20000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 590,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-23T14:41:59.221Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "67a0cb45bb74c94c50d4-6815872f49d2b33fda1f",
+          "file": "ventas-turno.spec.ts",
+          "line": 72,
+          "column": 7
+        },
+        {
+          "title": "anulación 403 sin código conserva la venta y explica el problema",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 20000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 597,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-23T14:41:59.823Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "67a0cb45bb74c94c50d4-baab7fdbad678b7d4d44",
+          "file": "ventas-turno.spec.ts",
+          "line": 72,
+          "column": 7
+        },
+        {
+          "title": "anulación 404 sin código conserva la venta y explica el problema",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 20000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 627,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-23T14:42:00.431Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "67a0cb45bb74c94c50d4-4d2c513000d3e4bb88be",
+          "file": "ventas-turno.spec.ts",
+          "line": 72,
+          "column": 7
+        },
+        {
+          "title": "anulación 409 DESCONOCIDO conserva la venta y explica el problema",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 20000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 635,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-23T14:42:01.073Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "67a0cb45bb74c94c50d4-0b99cd2f9d63627f7ad8",
+          "file": "ventas-turno.spec.ts",
+          "line": 72,
+          "column": 7
+        },
+        {
+          "title": "anulación 500 sin código conserva la venta y explica el problema",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 20000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 653,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-23T14:42:01.716Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "67a0cb45bb74c94c50d4-2cce3c18481652f3364b",
+          "file": "ventas-turno.spec.ts",
+          "line": 72,
+          "column": 7
+        },
+        {
+          "title": "anulación 0 sin código conserva la venta y explica el problema",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 20000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 659,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-23T14:42:02.381Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "67a0cb45bb74c94c50d4-cf3389084f980054678e",
+          "file": "ventas-turno.spec.ts",
+          "line": 72,
+          "column": 7
+        },
+        {
+          "title": "respuesta perdida recupera ANULADA del servidor sin repetir el POST",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 20000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 594,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-23T14:42:03.052Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "67a0cb45bb74c94c50d4-d941fa03f7785106d954",
+          "file": "ventas-turno.spec.ts",
+          "line": 100,
+          "column": 5
+        },
+        {
+          "title": "fallo al refrescar no deja una venta desactualizada como confirmada",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 20000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 602,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-23T14:42:03.656Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "67a0cb45bb74c94c50d4-cbcb46c1724cf33caa96",
+          "file": "ventas-turno.spec.ts",
+          "line": 117,
+          "column": 5
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-11-23T14:41:46.870Z",
+    "duration": 17475.854,
+    "expected": 24,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

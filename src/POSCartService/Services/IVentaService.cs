@@ -57,9 +57,9 @@ public interface IVentaService
     Task<Venta> CompletarAsync(Guid ventaId, decimal montoRecibido, decimal vuelto);
 
     /// <summary>
-    /// Marca una venta como ANULADA y registra el motivo de anulación.
+    /// Anula totalmente efectivo completado, con ADMIN autenticado y turno original abierto.
     /// </summary>
-    /// <exception cref="InvalidOperationException">Si la venta ya está ANULADA o CANCELADA.</exception>
+    /// <exception cref="InvalidOperationException">Si el estado, turno o situación del pago impide anular.</exception>
     Task<Venta> AnularAsync(Guid ventaId, Guid cajeroId, string motivo);
 
     /// <summary>
@@ -129,18 +129,6 @@ public interface IVentaService
     /// <param name="intentoPago">Intento de pago con datos de la respuesta de la pasarela (Status=APROBADO se asigna internamente).</param>
     /// <exception cref="InvalidOperationException">Si la venta no está en estado PENDIENTE o no es TARJETA.</exception>
     Task<Venta> CompletarTarjetaAsync(Guid ventaId, IntentoPago intentoPago);
-
-    /// <summary>
-    /// Reserva y confirma el intento antes de autorizar en la pasarela. Devuelve false
-    /// si la clave ya existe o la venta tiene un cobro aprobado/en curso/incierto.
-    /// </summary>
-    Task<bool> ReservarIntentoPagoAsync(IntentoPago intentoPago);
-
-    /// <summary>
-    /// Actualiza un intento previamente reservado sin modificar el estado de la venta.
-    /// Se usa cuando la pasarela rechaza o no responde dentro del tiempo límite.
-    /// </summary>
-    Task RegistrarIntentoPagoAsync(IntentoPago intentoPago);
 
     Task<IntentoPago> IniciarIntentoPagoAsync(Guid ventaId, Guid requestId);
     Task<IntentoPago?> GetUltimoIntentoPagoAsync(Guid ventaId);

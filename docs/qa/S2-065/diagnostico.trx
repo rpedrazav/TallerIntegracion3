@@ -1,0 +1,95 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="0bb54418-092a-4d0d-bff6-1cdcabb95b78" name="@sebacachyos 2026-10-26 14:55:27" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2026-10-26T14:55:27.9991101-03:00" queuing="2026-10-26T14:55:27.9991102-03:00" start="2026-10-26T14:55:19.7411590-03:00" finish="2026-10-26T14:55:48.6267476-03:00" />
+  <TestSettings name="default" id="3fa1f0c1-aeb0-4c40-bcd5-4f463ac92561">
+    <Deployment runDeploymentRoot="_sebacachyos_2026-10-26_14_55_27" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="5dcdc969-ac2c-4ba1-9b6d-3afa8f1f7d4c" testId="80fc24a3-6f70-bdbf-8e2a-aa011d0af8eb" testName="GlobalMart.IntegrationTests.VentaTenantIsolationTests.FronterasPeso_HTTPRealCatalogo_RechazaSinCambiarAmbosTenants(operation: &quot;add&quot;)" computerName="sebacachyos" duration="00:00:00.4661236" startTime="2026-10-26T14:55:42.9441499-03:00" endTime="2026-10-26T14:55:42.9441500-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="5dcdc969-ac2c-4ba1-9b6d-3afa8f1f7d4c" />
+    <UnitTestResult executionId="eb5faacc-b1b2-4851-a326-1b6d7ad6507f" testId="3c64b60b-5742-bda4-246b-7cb3abc3ce06" testName="GlobalMart.IntegrationTests.VentaTenantIsolationTests.PesableAjeno_CrearAgregarEditar_NoFiltraDatosNiMuta(actorB: False)" computerName="sebacachyos" duration="00:00:00.1920043" startTime="2026-10-26T14:55:39.8847621-03:00" endTime="2026-10-26T14:55:39.8847622-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="eb5faacc-b1b2-4851-a326-1b6d7ad6507f" />
+    <UnitTestResult executionId="8cf527cc-4aee-4bb2-9284-a9972f071bca" testId="783f7742-4f4c-9aef-5884-ca53bd383d12" testName="GlobalMart.IntegrationTests.VentaTenantIsolationTests.BordesAceptados_ImportesExactos_ConCatalogoReal(operation: &quot;add&quot;)" computerName="sebacachyos" duration="00:00:01.1218809" startTime="2026-10-26T14:55:27.9635130-03:00" endTime="2026-10-26T14:55:27.9635336-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="8cf527cc-4aee-4bb2-9284-a9972f071bca" />
+    <UnitTestResult executionId="15b216e6-5f7c-4c74-aa84-878d98ebeff3" testId="53e15ed2-527b-4edd-6cdd-ae4729221929" testName="GlobalMart.IntegrationTests.VentaTenantIsolationTests.BordesAceptados_ImportesExactos_ConCatalogoReal(operation: &quot;create&quot;)" computerName="sebacachyos" duration="00:00:00.3978628" startTime="2026-10-26T14:55:31.0840223-03:00" endTime="2026-10-26T14:55:31.0840224-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="15b216e6-5f7c-4c74-aa84-878d98ebeff3" />
+    <UnitTestResult executionId="b6794f97-9c70-4b46-a4ed-f0f53d8de6f3" testId="b3c84e8a-9ecb-3bc2-9156-d18bd695955e" testName="GlobalMart.IntegrationTests.VentaTenantIsolationTests.PesableAjeno_CrearAgregarEditar_NoFiltraDatosNiMuta(actorB: True)" computerName="sebacachyos" duration="00:00:00.2212864" startTime="2026-10-26T14:55:37.0539193-03:00" endTime="2026-10-26T14:55:37.0539194-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="b6794f97-9c70-4b46-a4ed-f0f53d8de6f3" />
+    <UnitTestResult executionId="cbde5872-d256-4c5c-a803-da1f1c07e798" testId="150f7ae7-a827-ed94-67cc-9114429d3582" testName="GlobalMart.IntegrationTests.VentaTenantIsolationTests.FronterasPeso_HTTPRealCatalogo_RechazaSinCambiarAmbosTenants(operation: &quot;edit&quot;)" computerName="sebacachyos" duration="00:00:00.3941010" startTime="2026-10-26T14:55:45.9705880-03:00" endTime="2026-10-26T14:55:45.9705880-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="cbde5872-d256-4c5c-a803-da1f1c07e798" />
+    <UnitTestResult executionId="483d88a5-3cd2-404c-a18c-5a3d637645a3" testId="1bf9ac9d-6037-7ce1-6f5b-f0ca604b7df0" testName="GlobalMart.IntegrationTests.VentaTenantIsolationTests.BordesAceptados_ImportesExactos_ConCatalogoReal(operation: &quot;edit&quot;)" computerName="sebacachyos" duration="00:00:00.3579817" startTime="2026-10-26T14:55:34.1843226-03:00" endTime="2026-10-26T14:55:34.1843227-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="483d88a5-3cd2-404c-a18c-5a3d637645a3" />
+    <UnitTestResult executionId="f3498c8e-d019-409d-bab1-79afea5e6985" testId="249b3320-efa1-7f96-8c76-e5ce47cf5a1c" testName="GlobalMart.IntegrationTests.VentaTenantIsolationTests.FronterasPeso_HTTPRealCatalogo_RechazaSinCambiarAmbosTenants(operation: &quot;create&quot;)" computerName="sebacachyos" duration="00:00:00.0589277" startTime="2026-10-26T14:55:48.5316171-03:00" endTime="2026-10-26T14:55:48.5316172-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="f3498c8e-d019-409d-bab1-79afea5e6985">
+      <Output>
+        <ErrorInfo>
+          <Message>create {}: 201 {"id":"b07e70be-8c4a-47fd-a4d5-60696d536cdb","turno_id":"a3e25277-7a6d-4da7-8ff2-49d72cde53dc","cajero_id":"91872601-cd49-4af9-a723-bed05feb7fed","sucursal_id":"a6ca08a0-e4de-4c29-8a79-34d4890e4a29","tenant_id":"7b8c7b3e-cf48-445a-b74b-e0a70a84f0db","subtotal":12.35,"impuestos":2.35,"total":14.70,"metodo_pago":"EFECTIVO","estado":"PENDIENTE","created_at":"2026-10-26T17:55:48.4792342Z","items":[{"id":"dd1e7112-a80f-45c3-a441-49d122c93a78","producto_id":"a3396871-1f9c-4225-a0a7-062dca2c6301","nombre_producto":"Producto fixture","cantidad":1,"peso_kg":null,"precio_unitario":12.3456,"subtotal":12.35}]}</Message>
+          <StackTrace>   at GlobalMart.IntegrationTests.VentaTenantIsolationTests.FronterasPeso_HTTPRealCatalogo_RechazaSinCambiarAmbosTenants(String operation) in /home/sebacachyos/Documentos/Informatica/Semestre6/TallerIntegracion3/NewRepo/TallerIntegracion3/tests/GlobalMart.IntegrationTests/PesoFronterasTenantTests.cs:line 58
+   at GlobalMart.IntegrationTests.VentaTenantIsolationTests.FronterasPeso_HTTPRealCatalogo_RechazaSinCambiarAmbosTenants(String operation) in /home/sebacachyos/Documentos/Informatica/Semestre6/TallerIntegracion3/NewRepo/TallerIntegracion3/tests/GlobalMart.IntegrationTests/PesoFronterasTenantTests.cs:line 74
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="GlobalMart.IntegrationTests.VentaTenantIsolationTests.BordesAceptados_ImportesExactos_ConCatalogoReal(operation: &quot;edit&quot;)" storage="/home/sebacachyos/documentos/informatica/semestre6/tallerintegracion3/newrepo/tallerintegracion3/tests/globalmart.integrationtests/bin/release/net8.0/globalmart.integrationtests.dll" id="1bf9ac9d-6037-7ce1-6f5b-f0ca604b7df0">
+      <Execution id="483d88a5-3cd2-404c-a18c-5a3d637645a3" />
+      <TestMethod codeBase="/home/sebacachyos/Documentos/Informatica/Semestre6/TallerIntegracion3/NewRepo/TallerIntegracion3/tests/GlobalMart.IntegrationTests/bin/Release/net8.0/GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.VentaTenantIsolationTests" name="BordesAceptados_ImportesExactos_ConCatalogoReal" />
+    </UnitTest>
+    <UnitTest name="GlobalMart.IntegrationTests.VentaTenantIsolationTests.FronterasPeso_HTTPRealCatalogo_RechazaSinCambiarAmbosTenants(operation: &quot;create&quot;)" storage="/home/sebacachyos/documentos/informatica/semestre6/tallerintegracion3/newrepo/tallerintegracion3/tests/globalmart.integrationtests/bin/release/net8.0/globalmart.integrationtests.dll" id="249b3320-efa1-7f96-8c76-e5ce47cf5a1c">
+      <Execution id="f3498c8e-d019-409d-bab1-79afea5e6985" />
+      <TestMethod codeBase="/home/sebacachyos/Documentos/Informatica/Semestre6/TallerIntegracion3/NewRepo/TallerIntegracion3/tests/GlobalMart.IntegrationTests/bin/Release/net8.0/GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.VentaTenantIsolationTests" name="FronterasPeso_HTTPRealCatalogo_RechazaSinCambiarAmbosTenants" />
+    </UnitTest>
+    <UnitTest name="GlobalMart.IntegrationTests.VentaTenantIsolationTests.BordesAceptados_ImportesExactos_ConCatalogoReal(operation: &quot;add&quot;)" storage="/home/sebacachyos/documentos/informatica/semestre6/tallerintegracion3/newrepo/tallerintegracion3/tests/globalmart.integrationtests/bin/release/net8.0/globalmart.integrationtests.dll" id="783f7742-4f4c-9aef-5884-ca53bd383d12">
+      <Execution id="8cf527cc-4aee-4bb2-9284-a9972f071bca" />
+      <TestMethod codeBase="/home/sebacachyos/Documentos/Informatica/Semestre6/TallerIntegracion3/NewRepo/TallerIntegracion3/tests/GlobalMart.IntegrationTests/bin/Release/net8.0/GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.VentaTenantIsolationTests" name="BordesAceptados_ImportesExactos_ConCatalogoReal" />
+    </UnitTest>
+    <UnitTest name="GlobalMart.IntegrationTests.VentaTenantIsolationTests.PesableAjeno_CrearAgregarEditar_NoFiltraDatosNiMuta(actorB: False)" storage="/home/sebacachyos/documentos/informatica/semestre6/tallerintegracion3/newrepo/tallerintegracion3/tests/globalmart.integrationtests/bin/release/net8.0/globalmart.integrationtests.dll" id="3c64b60b-5742-bda4-246b-7cb3abc3ce06">
+      <Execution id="eb5faacc-b1b2-4851-a326-1b6d7ad6507f" />
+      <TestMethod codeBase="/home/sebacachyos/Documentos/Informatica/Semestre6/TallerIntegracion3/NewRepo/TallerIntegracion3/tests/GlobalMart.IntegrationTests/bin/Release/net8.0/GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.VentaTenantIsolationTests" name="PesableAjeno_CrearAgregarEditar_NoFiltraDatosNiMuta" />
+    </UnitTest>
+    <UnitTest name="GlobalMart.IntegrationTests.VentaTenantIsolationTests.FronterasPeso_HTTPRealCatalogo_RechazaSinCambiarAmbosTenants(operation: &quot;add&quot;)" storage="/home/sebacachyos/documentos/informatica/semestre6/tallerintegracion3/newrepo/tallerintegracion3/tests/globalmart.integrationtests/bin/release/net8.0/globalmart.integrationtests.dll" id="80fc24a3-6f70-bdbf-8e2a-aa011d0af8eb">
+      <Execution id="5dcdc969-ac2c-4ba1-9b6d-3afa8f1f7d4c" />
+      <TestMethod codeBase="/home/sebacachyos/Documentos/Informatica/Semestre6/TallerIntegracion3/NewRepo/TallerIntegracion3/tests/GlobalMart.IntegrationTests/bin/Release/net8.0/GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.VentaTenantIsolationTests" name="FronterasPeso_HTTPRealCatalogo_RechazaSinCambiarAmbosTenants" />
+    </UnitTest>
+    <UnitTest name="GlobalMart.IntegrationTests.VentaTenantIsolationTests.BordesAceptados_ImportesExactos_ConCatalogoReal(operation: &quot;create&quot;)" storage="/home/sebacachyos/documentos/informatica/semestre6/tallerintegracion3/newrepo/tallerintegracion3/tests/globalmart.integrationtests/bin/release/net8.0/globalmart.integrationtests.dll" id="53e15ed2-527b-4edd-6cdd-ae4729221929">
+      <Execution id="15b216e6-5f7c-4c74-aa84-878d98ebeff3" />
+      <TestMethod codeBase="/home/sebacachyos/Documentos/Informatica/Semestre6/TallerIntegracion3/NewRepo/TallerIntegracion3/tests/GlobalMart.IntegrationTests/bin/Release/net8.0/GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.VentaTenantIsolationTests" name="BordesAceptados_ImportesExactos_ConCatalogoReal" />
+    </UnitTest>
+    <UnitTest name="GlobalMart.IntegrationTests.VentaTenantIsolationTests.FronterasPeso_HTTPRealCatalogo_RechazaSinCambiarAmbosTenants(operation: &quot;edit&quot;)" storage="/home/sebacachyos/documentos/informatica/semestre6/tallerintegracion3/newrepo/tallerintegracion3/tests/globalmart.integrationtests/bin/release/net8.0/globalmart.integrationtests.dll" id="150f7ae7-a827-ed94-67cc-9114429d3582">
+      <Execution id="cbde5872-d256-4c5c-a803-da1f1c07e798" />
+      <TestMethod codeBase="/home/sebacachyos/Documentos/Informatica/Semestre6/TallerIntegracion3/NewRepo/TallerIntegracion3/tests/GlobalMart.IntegrationTests/bin/Release/net8.0/GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.VentaTenantIsolationTests" name="FronterasPeso_HTTPRealCatalogo_RechazaSinCambiarAmbosTenants" />
+    </UnitTest>
+    <UnitTest name="GlobalMart.IntegrationTests.VentaTenantIsolationTests.PesableAjeno_CrearAgregarEditar_NoFiltraDatosNiMuta(actorB: True)" storage="/home/sebacachyos/documentos/informatica/semestre6/tallerintegracion3/newrepo/tallerintegracion3/tests/globalmart.integrationtests/bin/release/net8.0/globalmart.integrationtests.dll" id="b3c84e8a-9ecb-3bc2-9156-d18bd695955e">
+      <Execution id="b6794f97-9c70-4b46-a4ed-f0f53d8de6f3" />
+      <TestMethod codeBase="/home/sebacachyos/Documentos/Informatica/Semestre6/TallerIntegracion3/NewRepo/TallerIntegracion3/tests/GlobalMart.IntegrationTests/bin/Release/net8.0/GlobalMart.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="GlobalMart.IntegrationTests.VentaTenantIsolationTests" name="PesableAjeno_CrearAgregarEditar_NoFiltraDatosNiMuta" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="80fc24a3-6f70-bdbf-8e2a-aa011d0af8eb" executionId="5dcdc969-ac2c-4ba1-9b6d-3afa8f1f7d4c" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="3c64b60b-5742-bda4-246b-7cb3abc3ce06" executionId="eb5faacc-b1b2-4851-a326-1b6d7ad6507f" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="783f7742-4f4c-9aef-5884-ca53bd383d12" executionId="8cf527cc-4aee-4bb2-9284-a9972f071bca" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="53e15ed2-527b-4edd-6cdd-ae4729221929" executionId="15b216e6-5f7c-4c74-aa84-878d98ebeff3" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="b3c84e8a-9ecb-3bc2-9156-d18bd695955e" executionId="b6794f97-9c70-4b46-a4ed-f0f53d8de6f3" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="150f7ae7-a827-ed94-67cc-9114429d3582" executionId="cbde5872-d256-4c5c-a803-da1f1c07e798" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="1bf9ac9d-6037-7ce1-6f5b-f0ca604b7df0" executionId="483d88a5-3cd2-404c-a18c-5a3d637645a3" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="249b3320-efa1-7f96-8c76-e5ce47cf5a1c" executionId="f3498c8e-d019-409d-bab1-79afea5e6985" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="Results Not in a List" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="All Loaded Results" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Failed">
+    <Counters total="8" executed="8" passed="7" failed="1" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Output>
+      <StdOut>[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v2.8.2+699d445a1a (64-bit .NET 8.0.32)
+[xUnit.net 00:00:00.14]   Discovering: GlobalMart.IntegrationTests
+[xUnit.net 00:00:00.30]   Discovered:  GlobalMart.IntegrationTests
+[xUnit.net 00:00:00.31]   Starting:    GlobalMart.IntegrationTests
+[xUnit.net 00:00:28.33]       create {}: 201 {"id":"b07e70be-8c4a-47fd-a4d5-60696d536cdb","turno_id":"a3e25277-7a6d-4da7-8ff2-49d72cde53dc","cajero_id":"91872601-cd49-4af9-a723-bed05feb7fed","sucursal_id":"a6ca08a0-e4de-4c29-8a79-34d4890e4a29","tenant_id":"7b8c7b3e-cf48-445a-b74b-e0a70a84f0db","subtotal":12.35,"impuestos":2.35,"total":14.70,"metodo_pago":"EFECTIVO","estado":"PENDIENTE","created_at":"2026-10-26T17:55:48.4792342Z","items":[{"id":"dd1e7112-a80f-45c3-a441-49d122c93a78","producto_id":"a3396871-1f9c-4225-a0a7-062dca2c6301","nombre_producto":"Producto fixture","cantidad":1,"peso_kg":null,"precio_unitario":12.3456,"subtotal":12.35}]}
+[xUnit.net 00:00:28.33]       Stack Trace:
+[xUnit.net 00:00:28.33]         /home/sebacachyos/Documentos/Informatica/Semestre6/TallerIntegracion3/NewRepo/TallerIntegracion3/tests/GlobalMart.IntegrationTests/PesoFronterasTenantTests.cs(58,0): at GlobalMart.IntegrationTests.VentaTenantIsolationTests.FronterasPeso_HTTPRealCatalogo_RechazaSinCambiarAmbosTenants(String operation)
+[xUnit.net 00:00:28.33]         /home/sebacachyos/Documentos/Informatica/Semestre6/TallerIntegracion3/NewRepo/TallerIntegracion3/tests/GlobalMart.IntegrationTests/PesoFronterasTenantTests.cs(74,0): at GlobalMart.IntegrationTests.VentaTenantIsolationTests.FronterasPeso_HTTPRealCatalogo_RechazaSinCambiarAmbosTenants(String operation)
+[xUnit.net 00:00:28.33]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:28.34]   Finished:    GlobalMart.IntegrationTests
+</StdOut>
+    </Output>
+    <RunInfos>
+      <RunInfo computerName="sebacachyos" outcome="Error" timestamp="2026-10-26T14:55:48.5287113-03:00">
+        <Text>[xUnit.net 00:00:28.33]     GlobalMart.IntegrationTests.VentaTenantIsolationTests.FronterasPeso_HTTPRealCatalogo_RechazaSinCambiarAmbosTenants(operation: "create") [FAIL]</Text>
+      </RunInfo>
+    </RunInfos>
+  </ResultSummary>
+</TestRun>

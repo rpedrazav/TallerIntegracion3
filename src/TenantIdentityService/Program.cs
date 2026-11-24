@@ -95,7 +95,6 @@ builder.Services.AddHealthChecks();
 
 // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ 6. Servicios de AutenticaciÃƒÂ³n (Tarea Rodrigo W2) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 // Scoped: una instancia por request HTTP (correcto para servicios con DbContext)
-builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
 builder.Services.AddScoped<ITenantRepository, TenantRepository>();
 builder.Services.AddScoped<ISucursalRepository, SucursalRepository>();
@@ -106,6 +105,12 @@ builder.Services.AddScoped<IJwtService,     JwtService>();
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
 var app = builder.Build();
+
+if (args.Contains("--bootstrap-admin", StringComparer.Ordinal))
+{
+    await AdminBootstrap.RunAsync(app.Services);
+    return;
+}
 
 // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ Pipeline de Middlewares Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 
@@ -131,69 +136,47 @@ if (app.Environment.IsDevelopment())
     var db = scope.ServiceProvider.GetRequiredService<TenantDbContext>();
     db.Database.Migrate(); // Aplica migraciones pendientes al iniciar
 
-    // Seed mÃƒÂ­nimo: crea un tenant y un usuario CAJERO de prueba si no existen.
-    // Credenciales de prueba Ã¢â€ â€™ email: cajero@demo.cl | password: demo1234
-    // TenantId fijo para facilitar las pruebas con Postman.
+    // Seed de desarrollo: tenant demo, CAJERO y ADMIN (password: demo1234).
+    // Cada registro se crea si falta, así un entorno sembrado antes también recibe el ADMIN.
     var tenantIdDemo = Guid.Parse("aaaaaaaa-0000-0000-0000-000000000001");
 
     if (!db.Tenants.IgnoreQueryFilters().Any(t => t.Id == tenantIdDemo))
-    {
-        var tenant = new TenantIdentityService.Models.Tenant
+        db.Tenants.Add(new TenantIdentityService.Models.Tenant
         {
-            Id           = tenantIdDemo,
-            Nombre       = "Minimarket Demo",
-            Pais         = "CL",
-            Moneda       = "CLP",
-            Idioma       = "es",
-            ZonaHoraria  = "America/Santiago",
+            Id            = tenantIdDemo,
+            Nombre        = "Minimarket Demo",
+            Pais          = "CL",
+            Moneda        = "CLP",
+            Idioma        = "es",
+            ZonaHoraria   = "America/Santiago",
             PorcentajeIva = 19
-        };
+        });
 
-        var rolCajeroId = Guid.Parse("11111111-0000-0000-0000-000000000001"); // Seed de roles en DbContext (CAJERO)
-        var rolAdminId  = Guid.Parse("11111111-0000-0000-0000-000000000003"); // Seed de roles en DbContext (ADMIN)
-
-        var usuario = new TenantIdentityService.Models.Usuario
+    void SeedUsuario(string id, string nombre, string email, string rolId)
+    {
+        var usuarioId = Guid.Parse(id);
+        if (db.Usuarios.IgnoreQueryFilters().Any(u => u.Id == usuarioId)) return;
+        db.Usuarios.Add(new TenantIdentityService.Models.Usuario
         {
-            Id           = Guid.Parse("bbbbbbbb-0000-0000-0000-000000000001"),
+            Id           = usuarioId,
             TenantId     = tenantIdDemo,
-            Nombre       = "Cajero Demo",
-            Email        = "cajero@demo.cl",
+            Nombre       = nombre,
+            Email        = email,
             PasswordHash = BCrypt.Net.BCrypt.HashPassword("demo1234"),
             Activo       = true
-        };
+        });
+        db.UsuarioRoles.Add(new TenantIdentityService.Models.UsuarioRol { UsuarioId = usuarioId, RolId = Guid.Parse(rolId) });
+    }
 
-        var usuarioRol = new TenantIdentityService.Models.UsuarioRol
-        {
-            UsuarioId = usuario.Id,
-            RolId     = rolCajeroId
-        };
+    // Roles sembrados en el DbContext: CAJERO ...0001, ADMIN ...0003.
+    SeedUsuario("bbbbbbbb-0000-0000-0000-000000000001", "Cajero Demo", "cajero@demo.cl", "11111111-0000-0000-0000-000000000001");
+    SeedUsuario("bbbbbbbb-0000-0000-0000-000000000002", "Admin Demo", "admin@demo.cl", "11111111-0000-0000-0000-000000000003");
 
-        var admin = new TenantIdentityService.Models.Usuario
-        {
-            Id           = Guid.Parse("bbbbbbbb-0000-0000-0000-000000000002"),
-            TenantId     = tenantIdDemo,
-            Nombre       = "Admin Demo",
-            Email        = "admin@demo.cl",
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword("demo1234"),
-            Activo       = true
-        };
-
-        var adminRol = new TenantIdentityService.Models.UsuarioRol
-        {
-            UsuarioId = admin.Id,
-            RolId     = rolAdminId
-        };
-
-        db.Tenants.Add(tenant);
-        db.Usuarios.Add(usuario);
-        db.UsuarioRoles.Add(usuarioRol);
-        db.Usuarios.Add(admin);
-        db.UsuarioRoles.Add(adminRol);
+    if (db.ChangeTracker.HasChanges())
+    {
         db.SaveChanges();
-
-        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
-        logger.LogInformation(
-            "Seed de desarrollo aplicado. Cajero: cajero@demo.cl | Admin: admin@demo.cl | password: demo1234 | tenantId: {TenantId}",
+        scope.ServiceProvider.GetRequiredService<ILogger<Program>>().LogInformation(
+            "Seed de desarrollo aplicado. Cajero: cajero@demo.cl | Admin: admin@demo.cl | tenantId: {TenantId}",
             tenantIdDemo);
     }
     else if (!db.Usuarios.IgnoreQueryFilters().Any(u => u.Email == "admin@demo.cl"))

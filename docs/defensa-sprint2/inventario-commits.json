@@ -1,0 +1,3171 @@
+{
+  "corte": "f0e6f31e51068b971fcfb2018a76f19b53d41db7",
+  "metodo": "Referencias disponibles tras fetch; desde 2026-10-10; delta frente al primer padre; stash separado.",
+  "objetos": [
+    {
+      "hash": "f913592d8cc01fcd9f4425e39ab2f0bea08f9947",
+      "date": "2026-10-11T17:26:58-03:00",
+      "committer_date": "2026-10-11T17:26:58-03:00",
+      "author": "iignvcioo",
+      "parents": [
+        "60757c6279742f8eeea71889bba648728257dcdf"
+      ],
+      "message": "Planificacion tareas Sprint 2",
+      "files": [
+        "tareas/plan_sprint2_revisado.xlsx",
+        "tareas/sprint2_youtrack_resultado.json",
+        "tareas/sprintplan_to_youtrack.py",
+        "tareas/tareas_sprint2_youtrack.csv",
+        "tareas/tareas_sprint2_youtrack.xlsx"
+      ],
+      "integrated": true,
+      "refs": [
+        "* dev",
+        "  main",
+        "  remotes/origin/HEAD -> origin/main",
+        "  remotes/origin/dev",
+        "  remotes/origin/local",
+        "  remotes/origin/main"
+      ],
+      "tipo": "Trabajo / Dev",
+      "observacion": "Incorpora plan revisado de 120 tareas/120 horas, exportaciones y conversor para YouTrack. La planificación no demuestra ejecución.",
+      "numero": 1
+    },
+    {
+      "hash": "4a96e914b5f01b41eaa948293a0989da7e4bd9bc",
+      "date": "2026-10-11T17:32:02-03:00",
+      "committer_date": "2026-10-11T17:32:02-03:00",
+      "author": "iignvcioo",
+      "parents": [
+        "f913592d8cc01fcd9f4425e39ab2f0bea08f9947"
+      ],
+      "message": "correccion errores\n\nse corrigen errores de versiones, valores y sintaxis",
+      "files": [
+        "docs/context/frontend/pantallas.md",
+        "globalmart-frontend/src/components/admin/TenantConfig.tsx"
+      ],
+      "integrated": true,
+      "refs": [
+        "* dev",
+        "  main",
+        "  remotes/origin/HEAD -> origin/main",
+        "  remotes/origin/dev",
+        "  remotes/origin/local",
+        "  remotes/origin/main"
+      ],
+      "tipo": "Trabajo / Dev",
+      "observacion": "Ajusta Zod y valueAsNumber en TenantConfig; corrige representación numérica del IVA en el formulario.",
+      "numero": 2
+    },
+    {
+      "hash": "00572cfb5054e43bea900b06b4baef43328b34c7",
+      "date": "2026-10-12T15:26:48-03:00",
+      "committer_date": "2026-10-12T15:26:48-03:00",
+      "author": "Daniel Prado",
+      "parents": [
+        "4a96e914b5f01b41eaa948293a0989da7e4bd9bc"
+      ],
+      "message": "Crear fixtures de dos tenants y turnos completado",
+      "files": [
+        "docs/context/estado-actual.md",
+        "docs/context/infraestructura/testing.md",
+        "docs/context/servicios/ms5-pos.md",
+        "tests/GlobalMart.IntegrationTests/Fixtures/README.md",
+        "tests/GlobalMart.IntegrationTests/Fixtures/TwoTenantFixture.cs",
+        "tests/GlobalMart.IntegrationTests/TwoTenantFixtureTests.cs"
+      ],
+      "integrated": true,
+      "refs": [
+        "* dev",
+        "  main",
+        "  remotes/origin/HEAD -> origin/main",
+        "  remotes/origin/dev",
+        "  remotes/origin/local",
+        "  remotes/origin/main"
+      ],
+      "tipo": "Trabajo / Dev",
+      "observacion": "Crea fixture reutilizable de dos tenants y limpieza aislada, con pruebas de la infraestructura de test.",
+      "numero": 3
+    },
+    {
+      "hash": "a451b5d22e4632ae811e8adcf1814b9de98b20c2",
+      "date": "2026-10-12T15:59:46-03:00",
+      "committer_date": "2026-10-12T15:59:46-03:00",
+      "author": "Daniel Prado",
+      "parents": [
+        "00572cfb5054e43bea900b06b4baef43328b34c7"
+      ],
+      "message": "qa: Ejecutar regresión de carrito y ademas se corrigio un error de la tarea anterior.",
+      "files": [
+        ".github/workflows/ci.yml",
+        ".gitignore",
+        "docs/context/estado-actual.md",
+        "docs/context/frontend/pantallas.md",
+        "docs/context/infraestructura/testing.md",
+        "docs/context/servicios/ms5-pos.md",
+        "docs/qa/S2-025/ms5-fallo.png",
+        "docs/qa/S2-025/ms5-trace.zip",
+        "docs/qa/S2-025/playwright-report/data/054125bebb812891e5f38bd361971b08cc3c0d53.zip",
+        "docs/qa/S2-025/playwright-report/data/327374064d8ea917176236425c2f7f7a12728491.png",
+        "docs/qa/S2-025/playwright-report/data/4b99ff1446a2a175b3b41b8c1fa9233bbe84dc72.zip",
+        "docs/qa/S2-025/playwright-report/data/5ae5697734ac21b4b576f5bf51e41fda0076206d.md",
+        "docs/qa/S2-025/playwright-report/data/9d7ccf1cd9a399b8041e9342a4076386dc1c3629.png",
+        "docs/qa/S2-025/playwright-report/data/ea363605b48ad55aca2a98613dc07e406effbb43.md",
+        "docs/qa/S2-025/playwright-report/index.html",
+        "docs/qa/S2-025/playwright-report/trace/assets/codeMirrorModule-BEB2e8M3.js",
+        "docs/qa/S2-025/playwright-report/trace/assets/defaultSettingsView-D-g2vrvf.js",
+        "docs/qa/S2-025/playwright-report/trace/assets/urlMatch-L3liM589.js",
+        "docs/qa/S2-025/playwright-report/trace/codeMirrorModule.-QdMvsKi.css",
+        "docs/qa/S2-025/playwright-report/trace/codicon.DCmgc-ay.ttf",
+        "docs/qa/S2-025/playwright-report/trace/defaultSettingsView.C8BeHuxd.css",
+        "docs/qa/S2-025/playwright-report/trace/index.7-c5LSTW.js",
+        "docs/qa/S2-025/playwright-report/trace/index.B_TqY17P.css",
+        "docs/qa/S2-025/playwright-report/trace/index.html",
+        "docs/qa/S2-025/playwright-report/trace/manifest.webmanifest",
+        "docs/qa/S2-025/playwright-report/trace/playwright-logo.svg",
+        "docs/qa/S2-025/playwright-report/trace/snapshot.B_Jk1wbt.js",
+        "docs/qa/S2-025/playwright-report/trace/snapshot.html",
+        "docs/qa/S2-025/playwright-report/trace/sw.bundle.js",
+        "docs/qa/S2-025/playwright-report/trace/uiMode.CYwC_gH1.js",
+        "docs/qa/S2-025/playwright-report/trace/uiMode.CyMfwkXJ.css",
+        "docs/qa/S2-025/playwright-report/trace/uiMode.html",
+        "docs/qa/S2-025/playwright-report/trace/xtermModule.kHJ-D0s7.css",
+        "docs/qa/S2-025/reporte.md",
+        "docs/qa/S2-025/results.json",
+        "docs/qa/S2-025/tenant-fallo.png",
+        "docs/qa/S2-025/tenant-trace.zip",
+        "globalmart-frontend/e2e/README.md",
+        "globalmart-frontend/e2e/cart.spec.ts",
+        "globalmart-frontend/e2e/renderer.tsx",
+        "globalmart-frontend/e2e/serve.cjs",
+        "globalmart-frontend/package-lock.json",
+        "globalmart-frontend/package.json",
+        "globalmart-frontend/playwright.config.ts"
+      ],
+      "integrated": true,
+      "refs": [
+        "* dev",
+        "  main",
+        "  remotes/origin/HEAD -> origin/main",
+        "  remotes/origin/dev",
+        "  remotes/origin/local",
+        "  remotes/origin/main"
+      ],
+      "tipo": "Trabajo / Dev",
+      "observacion": "Agrega regresión de renderer y registra 1 aprobado/2 fallidos; no equivale a aceptación del carrito backend.",
+      "numero": 4
+    },
+    {
+      "hash": "a5d998dd049ad216bd5c0336523fcba6dc1c76de",
+      "date": "2026-10-13T12:50:33-03:00",
+      "committer_date": "2026-10-13T12:50:33-03:00",
+      "author": "SPereda2005",
+      "parents": [
+        "a451b5d22e4632ae811e8adcf1814b9de98b20c2"
+      ],
+      "message": "TI3-632\n\npush para comprobar estado de la tarea luego de ser pusheada a cluster.",
+      "files": [
+        "docs/context/estado-actual.md",
+        "docs/context/servicios/ms5-pos.md",
+        "src/POSCartService/Controllers/VentasController.cs",
+        "src/POSCartService/DTOs/CrearVentaRequest.cs",
+        "src/POSCartService/Validators/CrearVentaRequestValidator.cs",
+        "tests/GlobalMart.IntegrationTests/CrearVentaRequestValidatorTests.cs"
+      ],
+      "integrated": true,
+      "refs": [
+        "* dev",
+        "  main",
+        "  remotes/origin/HEAD -> origin/main",
+        "  remotes/origin/dev",
+        "  remotes/origin/local",
+        "  remotes/origin/main"
+      ],
+      "tipo": "Trabajo / Dev",
+      "observacion": "Relaja datos informativos del request de venta y fija contrato; todavía necesita resolución autoritativa posterior.",
+      "numero": 5
+    },
+    {
+      "hash": "806450bec2bda6cee096bb62cbc02b204d5daae9",
+      "date": "2026-10-13T13:39:33-03:00",
+      "committer_date": "2026-10-13T13:39:33-03:00",
+      "author": "Daniel Prado",
+      "parents": [
+        "a5d998dd049ad216bd5c0336523fcba6dc1c76de"
+      ],
+      "message": "Definir casos de aceptación de las cinco metas",
+      "files": [
+        "diagramas/matriz/S2-021-matriz-aceptacion.md",
+        "docs/context/index.md"
+      ],
+      "integrated": true,
+      "refs": [
+        "* dev",
+        "  main",
+        "  remotes/origin/HEAD -> origin/main",
+        "  remotes/origin/dev",
+        "  remotes/origin/local",
+        "  remotes/origin/main"
+      ],
+      "tipo": "Trabajo / Dev",
+      "observacion": "Define matriz de aceptación de cinco metas y diferencia prueba simulada de física.",
+      "numero": 6
+    },
+    {
+      "hash": "152f39b00076de93573a261f9721ad1c29eb3c5c",
+      "date": "2026-10-13T15:12:17-03:00",
+      "committer_date": "2026-10-13T15:12:17-03:00",
+      "author": "SPereda2005",
+      "parents": [
+        "a5d998dd049ad216bd5c0336523fcba6dc1c76de"
+      ],
+      "message": "TI3-633 completada\n\nSe implementó la resolución autoritativa de catálogo (MS-3) e impuestos (MS-2) en el endpoint POST /ventas, garantizando que ningún precio o impuesto provisto por el cliente actúe como autoridad, y asegurando el rechazo atómico de productos inválidos.",
+      "files": [
+        "docs/context/estado-actual.md",
+        "docs/context/servicios/ms5-pos.md",
+        "src/POSCartService/Controllers/VentasController.cs",
+        "src/POSCartService/Services/IVentaService.cs",
+        "src/POSCartService/Services/VentaService.cs",
+        "src/POSCartService/tests/POSCartService.ManualTest/Program.cs",
+        "tests/GlobalMart.IntegrationTests/VentaIntegrationTests.cs"
+      ],
+      "integrated": true,
+      "refs": [
+        "* dev",
+        "  main",
+        "  remotes/origin/HEAD -> origin/main",
+        "  remotes/origin/dev",
+        "  remotes/origin/local",
+        "  remotes/origin/main"
+      ],
+      "tipo": "Trabajo / Dev",
+      "observacion": "Resuelve productos en MS-3 y totales en MS-2 antes de persistir creación; actualiza contrato de servicio y pruebas.",
+      "numero": 7
+    },
+    {
+      "hash": "b062da44211f0e422962f85396f08e33b2554aad",
+      "date": "2026-10-13T15:12:21-03:00",
+      "committer_date": "2026-10-13T15:12:21-03:00",
+      "author": "SPereda2005",
+      "parents": [
+        "152f39b00076de93573a261f9721ad1c29eb3c5c",
+        "806450bec2bda6cee096bb62cbc02b204d5daae9"
+      ],
+      "message": "Merge remote-tracking branch 'origin/dev' into dev",
+      "files": [
+        "diagramas/matriz/S2-021-matriz-aceptacion.md",
+        "docs/context/index.md"
+      ],
+      "integrated": true,
+      "refs": [
+        "* dev",
+        "  main",
+        "  remotes/origin/HEAD -> origin/main",
+        "  remotes/origin/dev",
+        "  remotes/origin/local",
+        "  remotes/origin/main"
+      ],
+      "tipo": "Merge / Dev",
+      "observacion": "Merge: incorpora la matriz de aceptación; los archivos entrantes no se reasignan como autoría original del integrador.",
+      "numero": 8
+    },
+    {
+      "hash": "566576be9d4f7d020171cb56d549864f4f570a10",
+      "date": "2026-10-13T15:50:31-03:00",
+      "committer_date": "2026-10-13T15:50:31-03:00",
+      "author": "iignvcioo",
+      "parents": [
+        "4a96e914b5f01b41eaa948293a0989da7e4bd9bc"
+      ],
+      "message": "index on dev: 4a96e91 correccion errores",
+      "files": [
+        "docs/context/infraestructura/kubernetes.md",
+        "globalmart-frontend/src/api/client.ts",
+        "k8s/manifests/hpa-api.yaml"
+      ],
+      "integrated": false,
+      "refs": [],
+      "tipo": "Stash — excluido de entregas",
+      "observacion": "Objeto auxiliar del índice de stash; no se contabiliza como entrega. Incluye instantánea de API/HPA/documentación.",
+      "numero": 9
+    },
+    {
+      "hash": "ad0e295ccfdd246f5a6f320ed3da289ca35e4a1e",
+      "date": "2026-10-13T15:50:31-03:00",
+      "committer_date": "2026-10-13T15:50:31-03:00",
+      "author": "iignvcioo",
+      "parents": [
+        "4a96e914b5f01b41eaa948293a0989da7e4bd9bc",
+        "566576be9d4f7d020171cb56d549864f4f570a10"
+      ],
+      "message": "On dev: !!GitHub_Desktop<dev>",
+      "files": [
+        "Deploy-To-K8s.ps1",
+        "docs/context/estado-actual.md",
+        "docs/context/frontend/auth-y-roles.md",
+        "docs/context/frontend/estructura.md",
+        "docs/context/frontend/pantallas.md",
+        "docs/context/index.md",
+        "docs/context/infraestructura/kubernetes.md",
+        "globalmart-frontend/src/api/client.ts",
+        "globalmart-frontend/src/pages/AbrirTurnoPage.tsx",
+        "globalmart-frontend/src/pages/CerrarTurnoPage.tsx",
+        "globalmart-frontend/src/pages/Login.tsx",
+        "globalmart-frontend/src/pages/Pos.tsx",
+        "k8s/manifests/all-services.yaml",
+        "k8s/manifests/hpa-api.yaml"
+      ],
+      "integrated": false,
+      "refs": [],
+      "tipo": "Stash — excluido de entregas",
+      "observacion": "Stash de GitHub Desktop con cambios de API y Kubernetes; no es entrega integrada ni prueba de despliegue.",
+      "numero": 10
+    },
+    {
+      "hash": "e1a269113ceeef94ed89dd79502b830fc2557ab2",
+      "date": "2026-10-13T15:54:20-03:00",
+      "committer_date": "2026-10-13T15:54:20-03:00",
+      "author": "iignvcioo",
+      "parents": [
+        "b062da44211f0e422962f85396f08e33b2554aad"
+      ],
+      "message": "Centralizar clientes API de login, catálogo y turnos\n\nExtrae clientes tipados para MS-1, MS-3 y MS-5 con URL base,\ntoken JWT, timeout de 15 segundos y manejo de 401 centralizados.\n\nMigra Login, POS y las páginas de turnos al módulo API y\nactualiza los nodos de contexto afectados.\n\nMantiene el carrito local, sin integrar ventas de MS-5.",
+      "files": [
+        "docs/context/estado-actual.md",
+        "docs/context/frontend/auth-y-roles.md",
+        "docs/context/frontend/estructura.md",
+        "docs/context/frontend/pantallas.md",
+        "globalmart-frontend/src/api/client.ts",
+        "globalmart-frontend/src/pages/AbrirTurnoPage.tsx",
+        "globalmart-frontend/src/pages/CerrarTurnoPage.tsx",
+        "globalmart-frontend/src/pages/Login.tsx",
+        "globalmart-frontend/src/pages/Pos.tsx"
+      ],
+      "integrated": true,
+      "refs": [
+        "* dev",
+        "  main",
+        "  remotes/origin/HEAD -> origin/main",
+        "  remotes/origin/dev",
+        "  remotes/origin/local",
+        "  remotes/origin/main"
+      ],
+      "tipo": "Trabajo / Dev",
+      "observacion": "Centraliza API tipada, JWT, timeout y 401; migra login/turnos/POS sin completar aún la venta persistida.",
+      "numero": 11
+    },
+    {
+      "hash": "b20025693dbd44553a9d74718ec2cd1c3093c0e7",
+      "date": "2026-10-13T20:58:33-03:00",
+      "committer_date": "2026-10-13T20:58:33-03:00",
+      "author": "SPereda2005",
+      "parents": [
+        "e1a269113ceeef94ed89dd79502b830fc2557ab2"
+      ],
+      "message": "docs(context): documentar cumplimiento de S2-003 en MS-5 y estado actual",
+      "files": [
+        "docs/context/estado-actual.md",
+        "docs/context/servicios/ms5-pos.md"
+      ],
+      "integrated": true,
+      "refs": [
+        "* dev",
+        "  main",
+        "  remotes/origin/HEAD -> origin/main",
+        "  remotes/origin/dev",
+        "  remotes/origin/local",
+        "  remotes/origin/main"
+      ],
+      "tipo": "Trabajo / Dev",
+      "observacion": "Actualiza grafo para S2-003; el cálculo se implementó en 152f39b, no se cuenta otra implementación.",
+      "numero": 12
+    },
+    {
+      "hash": "c86909ca3c944da0c185da90a66e3f2be1881197",
+      "date": "2026-10-13T21:22:43-03:00",
+      "committer_date": "2026-10-13T21:22:43-03:00",
+      "author": "SPereda2005",
+      "parents": [
+        "b20025693dbd44553a9d74718ec2cd1c3093c0e7"
+      ],
+      "message": "TI3-635 completada: restringir método de cobro efectivo (S2-004)",
+      "files": [
+        "docs/context/estado-actual.md",
+        "docs/context/servicios/ms5-pos.md",
+        "src/POSCartService/Controllers/VentasController.cs",
+        "src/POSCartService/Services/VentaService.cs",
+        "tests/GlobalMart.IntegrationTests/CobroIntegrationTests.cs"
+      ],
+      "integrated": true,
+      "refs": [
+        "* dev",
+        "  main",
+        "  remotes/origin/HEAD -> origin/main",
+        "  remotes/origin/dev",
+        "  remotes/origin/local",
+        "  remotes/origin/main"
+      ],
+      "tipo": "Trabajo / Dev",
+      "observacion": "Impide cobro EFECTIVO sobre TARJETA/MIXTO en controller y servicio y verifica ausencia de pago.",
+      "numero": 13
+    },
+    {
+      "hash": "cb7b8df333e309d4e8e93e87498aa10e54d02c10",
+      "date": "2026-10-14T00:45:21-03:00",
+      "committer_date": "2026-10-14T00:45:21-03:00",
+      "author": "martinxoo",
+      "parents": [
+        "c86909ca3c944da0c185da90a66e3f2be1881197"
+      ],
+      "message": "TI3-642\n\nElegir contrato de baja de producto",
+      "files": [
+        "docs/context/estado-actual.md",
+        "docs/context/frontend/pantallas.md",
+        "docs/context/servicios/ms3-catalog.md",
+        "globalmart-frontend/src/pages/ProductosPage.tsx",
+        "src/CatalogPricingService/Controllers/ProductoController.cs",
+        "src/CatalogPricingService/Data/IProductoRepository.cs",
+        "src/CatalogPricingService/Data/ProductoRepository.cs",
+        "src/CatalogPricingService/Services/IProductoService.cs",
+        "src/CatalogPricingService/Services/ProductoService.cs",
+        "tests/GlobalMart.IntegrationTests/DesactivarProductoIntegrationTests.cs"
+      ],
+      "integrated": true,
+      "refs": [
+        "* dev",
+        "  main",
+        "  remotes/origin/HEAD -> origin/main",
+        "  remotes/origin/dev",
+        "  remotes/origin/local",
+        "  remotes/origin/main"
+      ],
+      "tipo": "Trabajo / Dev",
+      "observacion": "Baja lógica ADMIN por tenant, idempotencia, conservación histórica y confirmación visual de producto.",
+      "numero": 14
+    },
+    {
+      "hash": "b415c99ceaaaf2859ad6e51880fa5f12cb8db889",
+      "date": "2026-10-14T00:59:00-03:00",
+      "committer_date": "2026-10-14T00:59:00-03:00",
+      "author": "martinxoo",
+      "parents": [
+        "cb7b8df333e309d4e8e93e87498aa10e54d02c10"
+      ],
+      "message": "Solucion de error minimo",
+      "files": [
+        "tests/GlobalMart.IntegrationTests/DesactivarProductoIntegrationTests.cs"
+      ],
+      "integrated": true,
+      "refs": [
+        "* dev",
+        "  main",
+        "  remotes/origin/HEAD -> origin/main",
+        "  remotes/origin/dev",
+        "  remotes/origin/local",
+        "  remotes/origin/main"
+      ],
+      "tipo": "Trabajo / Dev",
+      "observacion": "Corrige configuración de conexión y esquema de migraciones de tests de baja, evitando arrancar la factoría base sobre esquema compartido.",
+      "numero": 15
+    },
+    {
+      "hash": "4bb39aa947e6e7586d437b8ab490c1a99c03f02e",
+      "date": "2026-10-14T01:22:04-03:00",
+      "committer_date": "2026-10-14T01:22:04-03:00",
+      "author": "martinxoo",
+      "parents": [
+        "b415c99ceaaaf2859ad6e51880fa5f12cb8db889"
+      ],
+      "message": "TI3-643\n\nImplementar desactivación en MS-3",
+      "files": [
+        "docs/context/estado-actual.md",
+        "docs/context/servicios/ms3-catalog.md",
+        "src/CatalogPricingService/Data/IProductoRepository.cs",
+        "src/CatalogPricingService/Data/ProductoRepository.cs",
+        "src/CatalogPricingService/Services/ProductoService.cs",
+        "tests/GlobalMart.IntegrationTests/DesactivarProductoIntegrationTests.cs"
+      ],
+      "integrated": true,
+      "refs": [
+        "* dev",
+        "  main",
+        "  remotes/origin/HEAD -> origin/main",
+        "  remotes/origin/dev",
+        "  remotes/origin/local",
+        "  remotes/origin/main"
+      ],
+      "tipo": "Trabajo / Dev",
+      "observacion": "Separa consulta activa para venta de consulta administrativa que permite reactivar; amplía prueba de producto inactivo.",
+      "numero": 16
+    },
+    {
+      "hash": "18339813f950b4becfffcef7d046e7907172dff0",
+      "date": "2026-10-14T11:40:13-03:00",
+      "committer_date": "2026-10-14T11:40:13-03:00",
+      "author": "SPereda2005",
+      "parents": [
+        "4bb39aa947e6e7586d437b8ab490c1a99c03f02e"
+      ],
+      "message": "test(ms5): S2-005 — pruebas creación segura y turno abierto (TI3-636)\n\nAgrega dos tests de integración en VentaIntegrationTests que cubren los\ncuatro escenarios requeridos por S2-005:\n\n- CrearVenta_SinTurnoAbierto_Retorna409SinPersistir: sin turno ABIERTO el\n  endpoint POST /ventas retorna 409 Conflict sin persistir ninguna venta.\n\n- CrearVenta_PrecioFalsificadoEsIgnorado_UsaPrecioDeMS3: el campo\n  precio_unitario del request es ignorado; el precio, IVA (vía TaxStubHandler\n  al 19%) y total persistidos provienen de MS-3 y MS-2 respectivamente.\n\nLos otros dos escenarios ya estaban cubiertos:\n- Producto inactivo → 400 (CrearVenta_ProductoInactivo_Retorna400SinPersistir)\n- IVA por tenant desde MS-2 (CrearVenta_AgregarDosProductos_CalculaTotalConIvaCorrectamente)\n\nNo se modifica código de producción; la lógica ya existe desde S2-002/S2-004.\n\nTests: 157/158 pasando (1 fallo pre-existente requiere GLOBALMART_TEST_POSTGRES).\n\nActualiza docs/context/estado-actual.md y docs/context/servicios/ms5-pos.md.",
+      "files": [
+        "docs/context/estado-actual.md",
+        "docs/context/servicios/ms5-pos.md",
+        "tests/GlobalMart.IntegrationTests/VentaIntegrationTests.cs"
+      ],
+      "integrated": true,
+      "refs": [
+        "* dev",
+        "  main",
+        "  remotes/origin/HEAD -> origin/main",
+        "  remotes/origin/dev",
+        "  remotes/origin/local",
+        "  remotes/origin/main"
+      ],
+      "tipo": "Trabajo / Dev",
+      "observacion": "Agrega pruebas de precio falsificado y turno inexistente; otros escenarios seguros ya estaban presentes.",
+      "numero": 17
+    },
+    {
+      "hash": "d44e22b13c9c4621e2d3dc8954b04f2186d4f01e",
+      "date": "2026-10-14T15:12:19-03:00",
+      "committer_date": "2026-10-14T15:12:19-03:00",
+      "author": "Daniel Prado",
+      "parents": [
+        "18339813f950b4becfffcef7d046e7907172dff0"
+      ],
+      "message": "Probar aislamiento de venta y producto",
+      "files": [
+        "docs/context/estado-actual.md",
+        "docs/context/infraestructura/testing.md",
+        "docs/context/servicios/ms3-catalog.md",
+        "docs/context/servicios/ms5-pos.md",
+        "docs/qa/S2-023/S2-023-refuerzo.trx",
+        "docs/qa/S2-023/S2-023.trx",
+        "docs/qa/S2-023/reporte.md",
+        "src/CatalogPricingService/Controllers/ProductoController.cs",
+        "src/CatalogPricingService/Services/ProductoService.cs",
+        "src/POSCartService/Repositories/ItemVentaRepository.cs",
+        "src/POSCartService/Repositories/VentaRepository.cs",
+        "tests/GlobalMart.IntegrationTests/Fixtures/README.md",
+        "tests/GlobalMart.IntegrationTests/Fixtures/Rn01HttpSupport.cs",
+        "tests/GlobalMart.IntegrationTests/GlobalMart.IntegrationTests.csproj",
+        "tests/GlobalMart.IntegrationTests/PosRepositoryTenantIsolationTests.cs",
+        "tests/GlobalMart.IntegrationTests/ProductoTenantIsolationIntegrationTests.cs",
+        "tests/GlobalMart.IntegrationTests/VentaTenantIsolationTests.cs"
+      ],
+      "integrated": true,
+      "refs": [
+        "* dev",
+        "  main",
+        "  remotes/origin/HEAD -> origin/main",
+        "  remotes/origin/dev",
+        "  remotes/origin/local",
+        "  remotes/origin/main"
+      ],
+      "tipo": "Trabajo / Dev",
+      "observacion": "Agrega aislamiento HTTP y directo de repositorios; refuerza mutaciones por tenant persistido y 404 de producto ajeno.",
+      "numero": 18
+    },
+    {
+      "hash": "ccf7bf330b2e9ae25d93d689d7926db9f81d0071",
+      "date": "2026-10-14T18:49:01-03:00",
+      "committer_date": "2026-10-14T18:49:01-03:00",
+      "author": "iignvcioo",
+      "parents": [
+        "d44e22b13c9c4621e2d3dc8954b04f2186d4f01e"
+      ],
+      "message": "Exigir turno activo antes de mostrar el POS\n\nConsulta el turno activo al entrar al POS y muestra un estado de carga\nmientras se verifica.\n\nRedirige a apertura cuando no existe un turno y bloquea el carrito\ncon opción de reintento si falla la consulta.\n\nActualiza el estado documentado del frontend.",
+      "files": [
+        "docs/context/estado-actual.md",
+        "docs/context/frontend/pantallas.md",
+        "globalmart-frontend/src/pages/Pos.tsx"
+      ],
+      "integrated": true,
+      "refs": [
+        "* dev",
+        "  main",
+        "  remotes/origin/HEAD -> origin/main",
+        "  remotes/origin/dev",
+        "  remotes/origin/local",
+        "  remotes/origin/main"
+      ],
+      "tipo": "Trabajo / Dev",
+      "observacion": "Consulta turno antes de operar POS, distingue carga, ausencia y fallo recuperable.",
+      "numero": 19
+    },
+    {
+      "hash": "160846eb68bac27937560baabb6a10d4ed545c73",
+      "date": "2026-10-14T19:24:28-03:00",
+      "committer_date": "2026-10-14T19:24:28-03:00",
+      "author": "iignvcioo",
+      "parents": [
+        "ccf7bf330b2e9ae25d93d689d7926db9f81d0071"
+      ],
+      "message": "Iniciar venta en MS-5 y recuperar venta pendiente en POS\n\nEnvía producto y cantidad al contrato de creación de ventas de MS-5\nsin enviar precios ni impuestos desde el cliente.\n\nUsa la respuesta del servidor como fuente de verdad para el ID,\nlos ítems y los totales, y recupera la venta pendiente al recargar POS.\n\nMuestra errores de inicio, evita reintentos duplicados desde la\ninterfaz y actualiza los nodos de contexto afectados.",
+      "files": [
+        "docs/context/estado-actual.md",
+        "docs/context/frontend/pantallas.md",
+        "globalmart-frontend/src/api/client.ts",
+        "globalmart-frontend/src/components/pos/CartItem.tsx",
+        "globalmart-frontend/src/pages/Pos.tsx"
+      ],
+      "integrated": true,
+      "refs": [
+        "* dev",
+        "  main",
+        "  remotes/origin/HEAD -> origin/main",
+        "  remotes/origin/dev",
+        "  remotes/origin/local",
+        "  remotes/origin/main"
+      ],
+      "tipo": "Trabajo / Dev",
+      "observacion": "Integra creación de venta con respuesta autoritativa y recuperación por identificador desde MS-5.",
+      "numero": 20
+    },
+    {
+      "hash": "f612f9aa4a35460ba9ec56d52530fc9fc1bbb962",
+      "date": "2026-10-14T19:28:52-03:00",
+      "committer_date": "2026-10-14T19:28:52-03:00",
+      "author": "iignvcioo",
+      "parents": [
+        "160846eb68bac27937560baabb6a10d4ed545c73"
+      ],
+      "message": "sincronizar ítems y totales de venta con MS-5\n\nConectar búsqueda y escaneo con la creación y actualización de ítems en MS-5.\nRefrescar la venta tras cada operación para mostrar carrito, subtotal,\nimpuestos y total devueltos por la API.\nActualizar el contexto del frontend y el estado actual.",
+      "files": [
+        "docs/context/estado-actual.md",
+        "docs/context/frontend/pantallas.md",
+        "globalmart-frontend/src/api/client.ts",
+        "globalmart-frontend/src/components/pos/CartItem.tsx",
+        "globalmart-frontend/src/pages/Pos.tsx"
+      ],
+      "integrated": true,
+      "refs": [
+        "* dev",
+        "  main",
+        "  remotes/origin/HEAD -> origin/main",
+        "  remotes/origin/dev",
+        "  remotes/origin/local",
+        "  remotes/origin/main"
+      ],
+      "tipo": "Trabajo / Dev",
+      "observacion": "Envía mutaciones de ítems y refresca venta/totales desde MS-5; reduce autoridad del estado local.",
+      "numero": 21
+    },
+    {
+      "hash": "9dedcc50684998bb0791c214e7947939c0503021",
+      "date": "2026-10-14T19:51:38-03:00",
+      "committer_date": "2026-10-14T19:51:38-03:00",
+      "author": "iignvcioo",
+      "parents": [
+        "f612f9aa4a35460ba9ec56d52530fc9fc1bbb962"
+      ],
+      "message": "sincronizar eliminación y recuperación de venta pendiente\n\nEliminar ítems de la venta pendiente mediante MS-5 y refrescar el carrito.\nRecuperar la venta completa desde GET /ventas/{id} al abrir el POS.\nMostrar errores y permitir reintentar cuando no se puede confirmar su estado.\nActualizar los nodos de contexto afectados.",
+      "files": [
+        "docs/context/estado-actual.md",
+        "docs/context/frontend/pantallas.md",
+        "globalmart-frontend/src/api/client.ts",
+        "globalmart-frontend/src/pages/Pos.tsx"
+      ],
+      "integrated": true,
+      "refs": [
+        "* dev",
+        "  main",
+        "  remotes/origin/HEAD -> origin/main",
+        "  remotes/origin/dev",
+        "  remotes/origin/local",
+        "  remotes/origin/main"
+      ],
+      "tipo": "Trabajo / Dev",
+      "observacion": "Conecta eliminación y recuperación de venta pendiente con feedback ante estado no confirmado.",
+      "numero": 22
+    },
+    {
+      "hash": "054d7d382ca6a91967e96dc885b9cfb6b1558c68",
+      "date": "2026-10-14T22:02:08-03:00",
+      "committer_date": "2026-10-14T22:02:08-03:00",
+      "author": "nmartinez",
+      "parents": [
+        "9dedcc50684998bb0791c214e7947939c0503021"
+      ],
+      "message": "docs(S2-006): definir contrato sale.completed y reintentos outbox",
+      "files": [
+        "docs/context/eventos/sale-completed-outbox.md"
+      ],
+      "integrated": true,
+      "refs": [
+        "* dev",
+        "  main",
+        "  remotes/origin/HEAD -> origin/main",
+        "  remotes/origin/dev",
+        "  remotes/origin/local",
+        "  remotes/origin/main"
+      ],
+      "tipo": "Trabajo / Dev",
+      "observacion": "Contrato versionado de sale.completed, identidad estable, reintentos y límites de entrega/deduplicación.",
+      "numero": 23
+    },
+    {
+      "hash": "2e546dc7110791c030047eacf9e5432ceff6be75",
+      "date": "2026-10-14T23:05:48-03:00",
+      "committer_date": "2026-10-14T23:05:48-03:00",
+      "author": "nmartinez",
+      "parents": [
+        "054d7d382ca6a91967e96dc885b9cfb6b1558c68"
+      ],
+      "message": "feat(S2-007): agregar entidad y migracion outbox en MS-5",
+      "files": [
+        "docs/context/estado-actual.md",
+        "docs/context/eventos/sale-completed-outbox.md",
+        "docs/context/servicios/ms5-pos.md",
+        "docs/qa/S2-007/S2-007.trx",
+        "src/POSCartService/Data/Migrations/20261015020010_AddOutboxMessages.Designer.cs",
+        "src/POSCartService/Data/Migrations/20261015020010_AddOutboxMessages.cs",
+        "src/POSCartService/Data/Migrations/PosCartDbContextModelSnapshot.cs",
+        "src/POSCartService/Data/PosCartDbContext.cs",
+        "src/POSCartService/Models/OutboxMessage.cs",
+        "tests/GlobalMart.IntegrationTests/OutboxMigrationTests.cs"
+      ],
+      "integrated": true,
+      "refs": [
+        "* dev",
+        "  main",
+        "  remotes/origin/HEAD -> origin/main",
+        "  remotes/origin/dev",
+        "  remotes/origin/local",
+        "  remotes/origin/main"
+      ],
+      "tipo": "Trabajo / Dev",
+      "observacion": "Entidad y migración OutboxMessages con filtros e índices; prueba de migración y unicidad.",
+      "numero": 24
+    },
+    {
+      "hash": "b4f6d20d5d9f6cdc9e85b73124b56e29bc5a7073",
+      "date": "2026-10-15T00:55:54-03:00",
+      "committer_date": "2026-10-15T00:55:54-03:00",
+      "author": "martinxoo",
+      "parents": [
+        "2e546dc7110791c030047eacf9e5432ceff6be75"
+      ],
+      "message": "TI3-645\n\nCorregir tipos de TenantConfig",
+      "files": [
+        "docs/context/frontend/pantallas.md",
+        "globalmart-frontend/src/components/admin/TenantConfig.tsx"
+      ],
+      "integrated": true,
+      "refs": [
+        "* dev",
+        "  main",
+        "  remotes/origin/HEAD -> origin/main",
+        "  remotes/origin/dev",
+        "  remotes/origin/local",
+        "  remotes/origin/main"
+      ],
+      "tipo": "Trabajo / Dev",
+      "observacion": "Ajusta tipado de entrada/salida del formulario TenantConfig; no implementa un nuevo endpoint fiscal.",
+      "numero": 25
+    },
+    {
+      "hash": "577fbd1f3d3cfb3bc792661ae928374eebe04dcc",
+      "date": "2026-10-15T01:28:53-03:00",
+      "committer_date": "2026-10-15T01:28:53-03:00",
+      "author": "martinxoo",
+      "parents": [
+        "b4f6d20d5d9f6cdc9e85b73124b56e29bc5a7073"
+      ],
+      "message": "TI3-646\n\nProbar baja y formulario por tenant",
+      "files": [
+        "docs/context/frontend/pantallas.md",
+        "globalmart-frontend/e2e/renderer.tsx",
+        "globalmart-frontend/e2e/tenant-config.spec.ts",
+        "globalmart-frontend/tests/tenant-config-schema.test.cjs"
+      ],
+      "integrated": true,
+      "refs": [
+        "* dev",
+        "  main",
+        "  remotes/origin/HEAD -> origin/main",
+        "  remotes/origin/dev",
+        "  remotes/origin/local",
+        "  remotes/origin/main"
+      ],
+      "tipo": "Trabajo / Dev",
+      "observacion": "Agrega pruebas de esquema y UI de configuración por tenant con dependencias controladas.",
+      "numero": 26
+    },
+    {
+      "hash": "7f26d0fec50937cda0bec87a22af6b34dd41814d",
+      "date": "2026-10-15T01:56:12-03:00",
+      "committer_date": "2026-10-15T01:56:12-03:00",
+      "author": "martinxoo",
+      "parents": [
+        "577fbd1f3d3cfb3bc792661ae928374eebe04dcc"
+      ],
+      "message": "TI3-672\n\nDefinir estados y permisos Admin",
+      "files": [
+        "docs/context/estado-actual.md",
+        "docs/context/frontend/pantallas.md",
+        "docs/context/servicios/ms1-identity.md",
+        "globalmart-frontend/src/App.tsx",
+        "globalmart-frontend/src/components/AppLayout.tsx",
+        "globalmart-frontend/src/utils/adminAccess.ts",
+        "globalmart-frontend/tests/admin-access.test.cjs"
+      ],
+      "integrated": true,
+      "refs": [
+        "* dev",
+        "  main",
+        "  remotes/origin/HEAD -> origin/main",
+        "  remotes/origin/dev",
+        "  remotes/origin/local",
+        "  remotes/origin/main"
+      ],
+      "tipo": "Trabajo / Dev",
+      "observacion": "Centraliza permisos visuales Admin y navegación; no sustituye autorización backend.",
+      "numero": 27
+    },
+    {
+      "hash": "0602a936469683c8a1f3409477c6c644aa9fe5c0",
+      "date": "2026-10-15T11:25:23-03:00",
+      "committer_date": "2026-10-15T11:25:34-03:00",
+      "author": "nmartinez",
+      "parents": [
+        "7f26d0fec50937cda0bec87a22af6b34dd41814d"
+      ],
+      "message": "feat(pos): persistir venta y evento outbox atomicamente",
+      "files": [
+        "docs/context/estado-actual.md",
+        "docs/context/eventos/kafka-topics.md",
+        "docs/context/eventos/sale-completed-outbox.md",
+        "docs/context/servicios/ms5-pos.md",
+        "docs/qa/S2-008/S2-008.trx",
+        "src/POSCartService/Messaging/SaleCompletedEvent.cs",
+        "src/POSCartService/Repositories/IVentaRepository.cs",
+        "src/POSCartService/Repositories/VentaRepository.cs",
+        "src/POSCartService/Services/KafkaProducerService.cs",
+        "src/POSCartService/Services/VentaService.cs",
+        "tests/GlobalMart.IntegrationTests/CobroIntegrationTests.cs",
+        "tests/GlobalMart.IntegrationTests/KafkaPublishIntegrationTests.cs",
+        "tests/GlobalMart.IntegrationTests/VentaOutboxTransactionTests.cs",
+        "tests/GlobalMart.IntegrationTests/VentaTenantIsolationTests.cs"
+      ],
+      "integrated": true,
+      "refs": [
+        "* dev",
+        "  main",
+        "  remotes/origin/HEAD -> origin/main",
+        "  remotes/origin/dev",
+        "  remotes/origin/local",
+        "  remotes/origin/main"
+      ],
+      "tipo": "Trabajo / Dev",
+      "observacion": "Guarda venta/pago/outbox en transacción y prueba rollback; elimina publicación directa como requisito del cobro.",
+      "numero": 28
+    },
+    {
+      "hash": "4cf822c347c18d987282a31b5babe3e2f3582a31",
+      "date": "2026-10-15T11:40:15-03:00",
+      "committer_date": "2026-10-15T11:40:15-03:00",
+      "author": "nmartinez",
+      "parents": [
+        "0602a936469683c8a1f3409477c6c644aa9fe5c0"
+      ],
+      "message": "feat(pos): publicar eventos pendientes desde outbox",
+      "files": [
+        "docs/context/estado-actual.md",
+        "docs/context/eventos/kafka-topics.md",
+        "docs/context/eventos/sale-completed-outbox.md",
+        "docs/context/servicios/ms5-pos.md",
+        "docs/qa/S2-009/S2-009.trx",
+        "src/POSCartService/Models/OutboxMessage.cs",
+        "src/POSCartService/Program.cs",
+        "src/POSCartService/Repositories/IOutboxRepository.cs",
+        "src/POSCartService/Repositories/OutboxRepository.cs",
+        "src/POSCartService/Services/IOutboxPublisherService.cs",
+        "src/POSCartService/Services/KafkaProducerService.cs",
+        "src/POSCartService/Services/OutboxPublisherOptions.cs",
+        "src/POSCartService/Services/OutboxPublisherService.cs",
+        "src/POSCartService/Services/OutboxPublisherWorker.cs",
+        "tests/GlobalMart.IntegrationTests/Ms5WebApplicationFactory.cs",
+        "tests/GlobalMart.IntegrationTests/OutboxPublisherWorkerTests.cs",
+        "tests/GlobalMart.IntegrationTests/VentaTenantIsolationTests.cs"
+      ],
+      "integrated": true,
+      "refs": [
+        "* dev",
+        "  main",
+        "  remotes/origin/HEAD -> origin/main",
+        "  remotes/origin/dev",
+        "  remotes/origin/local",
+        "  remotes/origin/main"
+      ],
+      "tipo": "Trabajo / Dev",
+      "observacion": "Publicador de fondo con reserva, lease, reintento y cancelación; respeta contexto de tenant en procesamiento.",
+      "numero": 29
+    },
+    {
+      "hash": "731a23fc0f794be061a12882952ad4d003757cac",
+      "date": "2026-10-15T15:38:27-03:00",
+      "committer_date": "2026-10-15T15:38:27-03:00",
+      "author": "nmartinez",
+      "parents": [
+        "4cf822c347c18d987282a31b5babe3e2f3582a31"
+      ],
+      "message": "test(pos): validar recuperacion del outbox tras caida",
+      "files": [
+        "docs/context/estado-actual.md",
+        "docs/context/eventos/kafka-topics.md",
+        "docs/context/eventos/sale-completed-outbox.md",
+        "docs/context/servicios/ms5-pos.md",
+        "docs/qa/S2-010/S2-010.trx",
+        "tests/GlobalMart.IntegrationTests/OutboxBrokerRecoveryIntegrationTests.cs"
+      ],
+      "integrated": true,
+      "refs": [
+        "* dev",
+        "  main",
+        "  remotes/origin/HEAD -> origin/main",
+        "  remotes/origin/dev",
+        "  remotes/origin/local",
+        "  remotes/origin/main"
+      ],
+      "tipo": "Trabajo / Dev",
+      "observacion": "Prueba cobro y recuperación del outbox con PostgreSQL real y productor controlado; no cae Kafka real.",
+      "numero": 30
+    },
+    {
+      "hash": "0ca5d0f64e785660b1e288df0d42f7f9da2c8979",
+      "date": "2026-10-16T14:15:29-03:00",
+      "committer_date": "2026-10-16T14:15:29-03:00",
+      "author": "nmartinez",
+      "parents": [
+        "731a23fc0f794be061a12882952ad4d003757cac"
+      ],
+      "message": "docs(payments): definir escenarios del simulador",
+      "files": [
+        "docs/context/estado-actual.md",
+        "docs/context/integraciones/pasarela-pago.md"
+      ],
+      "integrated": true,
+      "refs": [
+        "* dev",
+        "  main",
+        "  remotes/origin/HEAD -> origin/main",
+        "  remotes/origin/dev",
+        "  remotes/origin/local",
+        "  remotes/origin/main"
+      ],
+      "tipo": "Trabajo / Dev",
+      "observacion": "Documenta escenarios y contrato del simulador; es definición, no nueva ejecución de autorizaciones.",
+      "numero": 31
+    },
+    {
+      "hash": "866e5b156356706f02d5ceaadedcd9965c9b7ed5",
+      "date": "2026-10-16T14:30:57-03:00",
+      "committer_date": "2026-10-16T14:30:57-03:00",
+      "author": "nmartinez",
+      "parents": [
+        "0ca5d0f64e785660b1e288df0d42f7f9da2c8979"
+      ],
+      "message": "feat(pos): agregar adaptador HTTP de pasarela",
+      "files": [
+        "docs/context/dominio/reglas-negocio.md",
+        "docs/context/dominio/requerimientos-funcionales.md",
+        "docs/context/estado-actual.md",
+        "docs/context/integraciones/pasarela-pago.md",
+        "docs/context/servicios/ms5-pos.md",
+        "docs/qa/S2-037/S2-037.trx",
+        "src/POSCartService/DTOs/PaymentGatewayDtos.cs",
+        "src/POSCartService/Program.cs",
+        "src/POSCartService/Services/IPaymentGatewayClient.cs",
+        "src/POSCartService/Services/PaymentGatewayClient.cs",
+        "tests/GlobalMart.IntegrationTests/PaymentGatewayClientTests.cs"
+      ],
+      "integrated": true,
+      "refs": [
+        "* dev",
+        "  main",
+        "  remotes/origin/HEAD -> origin/main",
+        "  remotes/origin/dev",
+        "  remotes/origin/local",
+        "  remotes/origin/main"
+      ],
+      "tipo": "Trabajo / Dev",
+      "observacion": "Implementa adaptador HTTP y DTOs de referencias opacas; registra cliente y prueba payload/correlación.",
+      "numero": 32
+    },
+    {
+      "hash": "0fe41f9793f9422c2c57ec5566160c74bc20f3e8",
+      "date": "2026-10-16T21:10:47-03:00",
+      "committer_date": "2026-10-16T21:10:47-03:00",
+      "author": "Diego Leiva Caballero",
+      "parents": [
+        "866e5b156356706f02d5ceaadedcd9965c9b7ed5"
+      ],
+      "message": "TI3-657 (S2-026): Inventariar rutas y puertos reales.\n\nTI3-658 (S2-027): Corregir rutas Kong del flujo crítico y rutas duales.\n\nTI3-659 (S2-028): Parametrizar destinos de APIs en el frontend.",
+      "files": [
+        ".gitignore",
+        "Docker/config/kong.yaml",
+        "Docker/docker-compose.yml",
+        "docs/context/estado-actual.md",
+        "docs/context/infraestructura/kong.md",
+        "docs/context/infraestructura/matriz-rutas.md",
+        "docs/context/servicios/ms1-identity.md",
+        "docs/context/servicios/ms3-catalog.md",
+        "docs/context/servicios/ms5-pos.md",
+        "globalmart-frontend/.env.example",
+        "globalmart-frontend/src/api/client.ts",
+        "globalmart-frontend/src/components/admin/TenantConfig.tsx",
+        "globalmart-frontend/src/config/api.ts",
+        "globalmart-frontend/src/pages/Admin.tsx",
+        "globalmart-frontend/src/pages/ProductosPage.tsx",
+        "src/CatalogPricingService/Controllers/CategoriaController.cs",
+        "src/CatalogPricingService/Controllers/ProductoController.cs",
+        "src/CatalogPricingService/Program.cs",
+        "src/POSCartService/Controllers/VentasController.cs",
+        "src/TaxComplianceService/Controllers/ComprobantesController.cs",
+        "src/TaxComplianceService/Controllers/TaxController.cs",
+        "src/TenantIdentityService/Controllers/AuthController.cs",
+        "src/TenantIdentityService/Controllers/SucursalesController.cs",
+        "src/TenantIdentityService/Controllers/TenantConfigController.cs",
+        "src/TenantIdentityService/Middleware/TenantMiddleware.cs",
+        "src/WarehouseInventoryService/Controllers/StockController.cs",
+        "tests/GlobalMart.IntegrationTests/RoutePrefixIntegrationTests.cs"
+      ],
+      "integrated": true,
+      "refs": [
+        "* dev",
+        "  main",
+        "  remotes/origin/HEAD -> origin/main",
+        "  remotes/origin/dev",
+        "  remotes/origin/local",
+        "  remotes/origin/main"
+      ],
+      "tipo": "Trabajo / Dev",
+      "observacion": "Agrupa S2-026/027/028: inventario de rutas, alias compatibles con Kong y configuración central de destinos API.",
+      "numero": 33
+    },
+    {
+      "hash": "512f2b71419c11dc4925120245a78a8e16d95637",
+      "date": "2026-10-16T21:32:43-03:00",
+      "committer_date": "2026-10-16T21:32:43-03:00",
+      "author": "Diego Leiva Caballero",
+      "parents": [
+        "0fe41f9793f9422c2c57ec5566160c74bc20f3e8"
+      ],
+      "message": "TI3-660 : Añadir TypeScript al gate CI\n TI3-661 : Documentar arranque reproducible del núcleo\nTI3-687 : Definir configuración segura del simulador",
+      "files": [
+        ".env.example",
+        ".github/workflows/ci.yml",
+        "Docker/env.example",
+        "docs/context/estado-actual.md",
+        "docs/context/infraestructura/ci-cd.md",
+        "docs/context/integraciones/pasarela-pago.md",
+        "docs/context/proyecto/como-ejecutar.md",
+        "docs/context/servicios/ms5-pos.md",
+        "globalmart-frontend/package.json",
+        "run-apis.bat",
+        "run-apis.sh",
+        "scripts/smoke-test.sh",
+        "src/POSCartService/appsettings.json"
+      ],
+      "integrated": true,
+      "refs": [
+        "* dev",
+        "  main",
+        "  remotes/origin/HEAD -> origin/main",
+        "  remotes/origin/dev",
+        "  remotes/origin/local",
+        "  remotes/origin/main"
+      ],
+      "tipo": "Trabajo / Dev",
+      "observacion": "Agrupa S2-029/030/056: typecheck CI, arranque y configuración de pasarela. No demuestra reglas de protección de rama.",
+      "numero": 34
+    },
+    {
+      "hash": "1ca8853ea62c0c1fccf1b95b886d6996e74d0166",
+      "date": "2026-10-16T21:54:59-03:00",
+      "committer_date": "2026-10-16T21:54:59-03:00",
+      "author": "Diego Leiva Caballero",
+      "parents": [
+        "512f2b71419c11dc4925120245a78a8e16d95637"
+      ],
+      "message": "TI3-688: corporar simulador al entorno local\nTI3-689: Exponer ruta de pagos en gateway",
+      "files": [
+        ".env.example",
+        ".github/workflows/ci.yml",
+        "Docker/config/kong.yaml",
+        "Docker/docker-compose.yml",
+        "Docker/env.example",
+        "Docker/simulator/server.js",
+        "docs/context/estado-actual.md",
+        "docs/context/infraestructura/matriz-rutas.md",
+        "docs/context/integraciones/pasarela-pago.md",
+        "docs/context/proyecto/como-ejecutar.md",
+        "docs/context/servicios/ms5-pos.md",
+        "run-apis.bat",
+        "run-apis.sh",
+        "scripts/smoke-test.sh",
+        "tests/GlobalMart.IntegrationTests/PaymentSimulatorIntegrationTests.cs"
+      ],
+      "integrated": true,
+      "refs": [
+        "* dev",
+        "  main",
+        "  remotes/origin/HEAD -> origin/main",
+        "  remotes/origin/dev",
+        "  remotes/origin/local",
+        "  remotes/origin/main"
+      ],
+      "tipo": "Trabajo / Dev",
+      "observacion": "Agrupa S2-057/058: proceso simulador, Compose/CI y rutas Kong; los cambios de semántica posteriores pertenecen a otros commits.",
+      "numero": 35
+    },
+    {
+      "hash": "847ef12c065895f6cbccd9b86dfb4f8fbbf90c94",
+      "date": "2026-10-17T11:31:29-03:00",
+      "committer_date": "2026-10-17T11:31:29-03:00",
+      "author": "SPereda2005",
+      "parents": [
+        "1ca8853ea62c0c1fccf1b95b886d6996e74d0166"
+      ],
+      "message": "Definir contrato de pasarela simulada TI3-662",
+      "files": [
+        "docs/context/estado-actual.md",
+        "docs/context/integraciones/pasarela-pago.md",
+        "docs/context/servicios/ms5-pos.md",
+        "tests/GlobalMart.IntegrationTests/PaymentGatewayClientTests.cs"
+      ],
+      "integrated": true,
+      "refs": [
+        "* dev",
+        "  main",
+        "  remotes/origin/HEAD -> origin/main",
+        "  remotes/origin/dev",
+        "  remotes/origin/local",
+        "  remotes/origin/main"
+      ],
+      "tipo": "Trabajo / Dev",
+      "observacion": "Añade pruebas del contrato de pasarela y documentación; IPaymentGatewayClient/DTOs ya proceden de 866e5b1.",
+      "numero": 36
+    },
+    {
+      "hash": "60af3d652813fd039f301938d3b616c700485318",
+      "date": "2026-10-17T12:23:08-03:00",
+      "committer_date": "2026-10-17T12:23:08-03:00",
+      "author": "nmartinez",
+      "parents": [
+        "847ef12c065895f6cbccd9b86dfb4f8fbbf90c94"
+      ],
+      "message": "feat(payments): completar simulador de autorizaciones",
+      "files": [
+        "Docker/simulator/server.js",
+        "docs/context/estado-actual.md",
+        "docs/context/integraciones/pasarela-pago.md",
+        "docs/context/servicios/ms5-pos.md",
+        "docs/qa/S2-038/S2-038.trx",
+        "tests/GlobalMart.IntegrationTests/PaymentSimulatorIntegrationTests.cs"
+      ],
+      "integrated": true,
+      "refs": [
+        "* dev",
+        "  main",
+        "  remotes/origin/HEAD -> origin/main",
+        "  remotes/origin/dev",
+        "  remotes/origin/local",
+        "  remotes/origin/main"
+      ],
+      "tipo": "Trabajo / Dev",
+      "observacion": "Completa escenarios e idempotencia del simulador y pruebas con proceso Node; estado del simulador en memoria.",
+      "numero": 37
+    },
+    {
+      "hash": "ce97fe3683cc86096a3a2abc8bdd2e630af1c92d",
+      "date": "2026-10-17T14:02:05-03:00",
+      "committer_date": "2026-10-17T14:02:05-03:00",
+      "author": "SPereda2005",
+      "parents": [
+        "847ef12c065895f6cbccd9b86dfb4f8fbbf90c94"
+      ],
+      "message": "Agregar persistencia de intento de tarjeta (TI3-663)\n\nSe implementó la entidad IntentoPago (PENDIENTE, APROBADO, RECHAZADO, FALLIDO) en PosCartDbContext, configurando un índice único compuesto en (TenantId, IdempotencyKey) para garantizar la idempotencia en reintentos de pago. El modelo incluye el filtro global multi-tenant (RN-01) y cumple con PCI DSS al omitir por completo datos sensibles de tarjetas (RN-02). El cambio se consolidó con la migración 20261017163020_AddIntentoPago, la validación de la suite de pruebas de persistencia IntentoPagoPersistenceTests (4/4 exitosas) y el registro del Grafo de Contexto en estado-actual.md, pasarela-pago.md y ms5-pos.md.",
+      "files": [
+        "docs/context/estado-actual.md",
+        "docs/context/integraciones/pasarela-pago.md",
+        "docs/context/servicios/ms5-pos.md",
+        "src/POSCartService/Data/Migrations/20261017163020_AddIntentoPago.Designer.cs",
+        "src/POSCartService/Data/Migrations/20261017163020_AddIntentoPago.cs",
+        "src/POSCartService/Data/Migrations/PosCartDbContextModelSnapshot.cs",
+        "src/POSCartService/Data/PosCartDbContext.cs",
+        "src/POSCartService/Models/IntentoPago.cs",
+        "src/POSCartService/Models/Venta.cs",
+        "tests/GlobalMart.IntegrationTests/IntentoPagoPersistenceTests.cs"
+      ],
+      "integrated": true,
+      "refs": [
+        "* dev",
+        "  main",
+        "  remotes/origin/HEAD -> origin/main",
+        "  remotes/origin/dev",
+        "  remotes/origin/local",
+        "  remotes/origin/main"
+      ],
+      "tipo": "Trabajo / Dev",
+      "observacion": "Agrega IntentoPago, migración e índice tenant/clave. Los cuatro tests inspeccionan modelo/contrato; no acreditan por sí solos cobros concurrentes.",
+      "numero": 38
+    },
+    {
+      "hash": "d8851f9fe8f40e5514dd6689ac30a35d9eed8f62",
+      "date": "2026-10-17T14:02:09-03:00",
+      "committer_date": "2026-10-17T14:02:09-03:00",
+      "author": "SPereda2005",
+      "parents": [
+        "ce97fe3683cc86096a3a2abc8bdd2e630af1c92d",
+        "60af3d652813fd039f301938d3b616c700485318"
+      ],
+      "message": "Merge remote-tracking branch 'origin/dev' into dev",
+      "files": [
+        "Docker/simulator/server.js",
+        "docs/context/estado-actual.md",
+        "docs/context/integraciones/pasarela-pago.md",
+        "docs/context/servicios/ms5-pos.md",
+        "docs/qa/S2-038/S2-038.trx",
+        "tests/GlobalMart.IntegrationTests/PaymentSimulatorIntegrationTests.cs"
+      ],
+      "integrated": true,
+      "refs": [
+        "* dev",
+        "  main",
+        "  remotes/origin/HEAD -> origin/main",
+        "  remotes/origin/dev",
+        "  remotes/origin/local",
+        "  remotes/origin/main"
+      ],
+      "tipo": "Merge / Dev",
+      "observacion": "Merge de la evolución del simulador; diferencia respecto al primer padre no constituye autoría exclusiva.",
+      "numero": 39
+    },
+    {
+      "hash": "1060d5308c131d7ffe9e73bcd71a497bfda74101",
+      "date": "2026-10-17T14:04:49-03:00",
+      "committer_date": "2026-10-17T14:04:49-03:00",
+      "author": "nmartinez",
+      "parents": [
+        "d8851f9fe8f40e5514dd6689ac30a35d9eed8f62"
+      ],
+      "message": "feat(payments): evitar reintento inseguro tras timeout",
+      "files": [
+        "Docker/config/kong.yaml",
+        "Docker/simulator/server.js",
+        "docs/context/estado-actual.md",
+        "docs/context/infraestructura/kong.md",
+        "docs/context/infraestructura/matriz-rutas.md",
+        "docs/context/integraciones/pasarela-pago.md",
+        "docs/context/servicios/ms5-pos.md",
+        "docs/qa/S2-039/S2-039.trx",
+        "src/POSCartService/Exceptions/PaymentAuthorizationUncertainException.cs",
+        "src/POSCartService/Services/IPaymentGatewayClient.cs",
+        "src/POSCartService/Services/PaymentGatewayClient.cs",
+        "tests/GlobalMart.IntegrationTests/PaymentGatewayClientTests.cs",
+        "tests/GlobalMart.IntegrationTests/PaymentRetrySafetyTests.cs",
+        "tests/GlobalMart.IntegrationTests/PaymentSimulatorIntegrationTests.cs"
+      ],
+      "integrated": true,
+      "refs": [
+        "* dev",
+        "  main",
+        "  remotes/origin/HEAD -> origin/main",
+        "  remotes/origin/dev",
+        "  remotes/origin/local",
+        "  remotes/origin/main"
+      ],
+      "tipo": "Trabajo / Dev",
+      "observacion": "Consulta el mismo intento tras timeout, añade estado incierto y ruta GET; evita reautorizar automáticamente.",
+      "numero": 40
+    },
+    {
+      "hash": "4a20547e4261ba810385936c4ca3f5b2b115fe2b",
+      "date": "2026-10-17T16:32:59-03:00",
+      "committer_date": "2026-10-17T16:32:59-03:00",
+      "author": "Daniel Prado",
+      "parents": [
+        "1060d5308c131d7ffe9e73bcd71a497bfda74101"
+      ],
+      "message": "Definir matriz RN-02 de pagos",
+      "files": [
+        "diagramas/matriz/S2-051-matriz-rn02-pagos.md",
+        "docs/context/estado-actual.md",
+        "docs/context/integraciones/pasarela-pago.md",
+        "docs/qa/S2-040/reporte.md"
+      ],
+      "integrated": true,
+      "refs": [
+        "* dev",
+        "  main",
+        "  remotes/origin/HEAD -> origin/main",
+        "  remotes/origin/dev",
+        "  remotes/origin/local",
+        "  remotes/origin/main"
+      ],
+      "tipo": "Trabajo / Dev",
+      "observacion": "Matriz RN-02 con resultados, efectos y límites; diferencia aceptación documental de cierre E2E.",
+      "numero": 41
+    },
+    {
+      "hash": "31196e362a866e20af316b820c0f15af1da28e2f",
+      "date": "2026-10-17T16:47:52-03:00",
+      "committer_date": "2026-10-17T16:47:52-03:00",
+      "author": "SPereda2005",
+      "parents": [
+        "4a20547e4261ba810385936c4ca3f5b2b115fe2b"
+      ],
+      "message": "Crear endpoint cobrar-tarjeta (TI3-664)\n\n- Expone endpoint POST /ventas/{id}/cobrar-tarjeta en VentasController.\n- Implementa guardias estrictas previas: JWT (401), turno abierto (409), venta en tenant actual (404), estado PENDIENTE (409), método TARJETA (400) y total > 0 (400).\n- Asegura que ventas ajenas, completadas o sin turno nunca contactan a la pasarela externa.\n- Añade suite CobrarTarjetaIntegrationTests con 6/6 pruebas aprobadas.\n- Actualiza el Grafo de Contexto en estado-actual.md, pasarela-pago.md y ms5-pos.md.",
+      "files": [
+        "docs/context/estado-actual.md",
+        "docs/context/integraciones/pasarela-pago.md",
+        "docs/context/servicios/ms5-pos.md",
+        "src/POSCartService/Controllers/VentasController.cs",
+        "src/POSCartService/DTOs/CobrarTarjetaDTOs.cs",
+        "tests/GlobalMart.IntegrationTests/CobrarTarjetaIntegrationTests.cs"
+      ],
+      "integrated": true,
+      "refs": [
+        "* dev",
+        "  main",
+        "  remotes/origin/HEAD -> origin/main",
+        "  remotes/origin/dev",
+        "  remotes/origin/local",
+        "  remotes/origin/main"
+      ],
+      "tipo": "Trabajo / Dev",
+      "observacion": "Expone cobrar-tarjeta con guardias y DTOs; la finalización durable completa llega en pasos posteriores.",
+      "numero": 42
+    },
+    {
+      "hash": "186f8d583d6a2a0e6d049784fea3885203f3c305",
+      "date": "2026-10-17T17:10:11-03:00",
+      "committer_date": "2026-10-17T17:10:11-03:00",
+      "author": "SPereda2005",
+      "parents": [
+        "31196e362a866e20af316b820c0f15af1da28e2f"
+      ],
+      "message": "Persistir aprobacion y rechazo de cobro con tarjeta (TI3-665)\n\nSe integró la cobranza con tarjeta en la capa de datos, servicios y en VentasController, ramificando el flujo según el resultado: los pagos aprobados (200) completan la venta y emiten el evento sale.completed vía Outbox, mientras que los rechazados o fallidos (422/502/504) registran el intento manteniendo la venta en PENDIENTE. El cambio se validó con 4 nuevas pruebas de integración (trait S2-034, 10/10 pasaron) y se documentó en estado-actual.md, pasarela-pago.md y ms5-pos.md.",
+      "files": [
+        "docs/context/estado-actual.md",
+        "docs/context/integraciones/pasarela-pago.md",
+        "docs/context/servicios/ms5-pos.md",
+        "src/POSCartService/Controllers/VentasController.cs",
+        "src/POSCartService/Repositories/IVentaRepository.cs",
+        "src/POSCartService/Repositories/VentaRepository.cs",
+        "src/POSCartService/Services/IVentaService.cs",
+        "src/POSCartService/Services/VentaService.cs",
+        "tests/GlobalMart.IntegrationTests/CobrarTarjetaIntegrationTests.cs"
+      ],
+      "integrated": true,
+      "refs": [
+        "* dev",
+        "  main",
+        "  remotes/origin/HEAD -> origin/main",
+        "  remotes/origin/dev",
+        "  remotes/origin/local",
+        "  remotes/origin/main"
+      ],
+      "tipo": "Trabajo / Dev",
+      "observacion": "Integra aprobación/rechazo con persistencia de venta, pago, intento y outbox; amplía pruebas de tarjeta.",
+      "numero": 43
+    },
+    {
+      "hash": "72c135576af49ffde6f244bc8eba6236527f77c6",
+      "date": "2026-10-17T21:17:54-03:00",
+      "committer_date": "2026-10-17T21:17:54-03:00",
+      "author": "martinxoo",
+      "parents": [
+        "186f8d583d6a2a0e6d049784fea3885203f3c305"
+      ],
+      "message": "TI3-673\n\nImplementar edición de usuario",
+      "files": [
+        "docs/context/estado-actual.md",
+        "docs/context/frontend/pantallas.md",
+        "globalmart-frontend/src/components/admin/EditarUsuarioModal.tsx",
+        "globalmart-frontend/src/components/admin/UsuariosList.tsx",
+        "globalmart-frontend/src/components/admin/editarUsuario.ts",
+        "globalmart-frontend/src/pages/Admin.tsx",
+        "globalmart-frontend/tests/user-edit.test.cjs"
+      ],
+      "integrated": true,
+      "refs": [
+        "* dev",
+        "  main",
+        "  remotes/origin/HEAD -> origin/main",
+        "  remotes/origin/dev",
+        "  remotes/origin/local",
+        "  remotes/origin/main"
+      ],
+      "tipo": "Trabajo / Dev",
+      "observacion": "Implementa edición de usuario en UI/helper/modal y errores; no sustituye backend de edición preexistente.",
+      "numero": 44
+    },
+    {
+      "hash": "97dc4e768a7fee4ab18133bf962d9d004880da17",
+      "date": "2026-10-18T00:00:16-03:00",
+      "committer_date": "2026-10-18T00:00:16-03:00",
+      "author": "martinxoo",
+      "parents": [
+        "72c135576af49ffde6f244bc8eba6236527f77c6"
+      ],
+      "message": "TI3-674 Implementar desactivación de usuario\n\nAgrega baja lógica de usuarios desde Administración mediante confirmación y DELETE /users/{id}, con manejo de errores y actualización local para conservar al usuario visible como Inactivo. Incluye prueba de desactivación y documenta la dependencia backend para consultar usuarios inactivos tras una recarga.",
+      "files": [
+        "docs/context/estado-actual.md",
+        "docs/context/frontend/pantallas.md",
+        "globalmart-frontend/src/components/admin/UsuariosList.tsx",
+        "globalmart-frontend/src/components/admin/desactivarUsuario.ts",
+        "globalmart-frontend/src/pages/Admin.tsx",
+        "globalmart-frontend/tests/user-deactivation.test.cjs"
+      ],
+      "integrated": true,
+      "refs": [
+        "* dev",
+        "  main",
+        "  remotes/origin/HEAD -> origin/main",
+        "  remotes/origin/dev",
+        "  remotes/origin/local",
+        "  remotes/origin/main"
+      ],
+      "tipo": "Trabajo / Dev",
+      "observacion": "Baja lógica en interfaz con confirmación y estado inactivo; documenta dependencia del listado backend.",
+      "numero": 45
+    },
+    {
+      "hash": "e56597d569c908301eb6f97274d2ffc89ef36acf",
+      "date": "2026-10-18T00:15:50-03:00",
+      "committer_date": "2026-10-18T00:15:50-03:00",
+      "author": "martinxoo",
+      "parents": [
+        "97dc4e768a7fee4ab18133bf962d9d004880da17"
+      ],
+      "message": "TI3-675 Ajustar configuración y rol activo\n\nUnifica la protección de rutas administrativas con AdminRoute, bloquea /admin/productos para usuarios sin permisos y muestra feedback explícito de Acceso denegado a CAJERO, conservando intacto el flujo de carga y guardado de IVA para ADMIN/SUPER_ADMIN.",
+      "files": [
+        "docs/context/estado-actual.md",
+        "docs/context/frontend/pantallas.md",
+        "globalmart-frontend/src/App.tsx"
+      ],
+      "integrated": true,
+      "refs": [
+        "* dev",
+        "  main",
+        "  remotes/origin/HEAD -> origin/main",
+        "  remotes/origin/dev",
+        "  remotes/origin/local",
+        "  remotes/origin/main"
+      ],
+      "tipo": "Trabajo / Dev",
+      "observacion": "Unifica AdminRoute y protege productos; mejora feedback CAJERO sin atribuir autorización al frontend.",
+      "numero": 46
+    },
+    {
+      "hash": "ac583e8b6d50ef4b1133e21c87d4a5613a95b488",
+      "date": "2026-10-18T01:14:14-03:00",
+      "committer_date": "2026-10-18T01:14:14-03:00",
+      "author": "nmartinez",
+      "parents": [
+        "e56597d569c908301eb6f97274d2ffc89ef36acf"
+      ],
+      "message": "test(payments): validar secuencia de pago y outbox",
+      "files": [
+        "docs/context/estado-actual.md",
+        "docs/context/integraciones/pasarela-pago.md",
+        "docs/context/servicios/ms5-pos.md",
+        "docs/qa/S2-040/S2-040-contract.trx",
+        "docs/qa/S2-040/reporte.md",
+        "src/POSCartService/Data/Migrations/20261018040621_AddPagoGatewayReference.Designer.cs",
+        "src/POSCartService/Data/Migrations/20261018040621_AddPagoGatewayReference.cs",
+        "src/POSCartService/Data/Migrations/PosCartDbContextModelSnapshot.cs",
+        "src/POSCartService/Data/PosCartDbContext.cs",
+        "src/POSCartService/Models/Pago.cs",
+        "src/POSCartService/Services/VentaService.cs",
+        "tests/GlobalMart.IntegrationTests/CobrarTarjetaIntegrationTests.cs",
+        "tests/GlobalMart.IntegrationTests/PaymentEventSequenceContractTests.cs"
+      ],
+      "integrated": true,
+      "refs": [
+        "* dev",
+        "  main",
+        "  remotes/origin/HEAD -> origin/main",
+        "  remotes/origin/dev",
+        "  remotes/origin/local",
+        "  remotes/origin/main"
+      ],
+      "tipo": "Trabajo / Dev",
+      "observacion": "Prueba secuencia autorización/pago/evento y agrega referencia de pasarela en Pago con migración.",
+      "numero": 47
+    },
+    {
+      "hash": "32d1fb5a69a4296941fde148642d0dad85326013",
+      "date": "2026-10-18T12:06:00-03:00",
+      "committer_date": "2026-10-18T12:06:00-03:00",
+      "author": "iignvcioo",
+      "parents": [
+        "ac583e8b6d50ef4b1133e21c87d4a5613a95b488"
+      ],
+      "message": "definir UX del modal de cobro\n\nAgregar el contrato visual de cobro en efectivo y tarjeta al POS.\nDefinir los estados disponible, procesando, aprobado, rechazado e incierto.\nMostrar solo el monto y una referencia opaca para tarjeta, sin capturar sus datos.\nDocumentar el alcance actual del modal y del cobro pendiente de integración.",
+      "files": [
+        "docs/context/estado-actual.md",
+        "docs/context/frontend/pantallas.md",
+        "globalmart-frontend/src/components/pos/PaymentModal.css",
+        "globalmart-frontend/src/components/pos/PaymentModal.tsx",
+        "globalmart-frontend/src/pages/Pos.tsx"
+      ],
+      "integrated": true,
+      "refs": [
+        "* dev",
+        "  main",
+        "  remotes/origin/HEAD -> origin/main",
+        "  remotes/origin/dev",
+        "  remotes/origin/local",
+        "  remotes/origin/main"
+      ],
+      "tipo": "Trabajo / Dev",
+      "observacion": "Modal y estados visuales de cobro sin captura de tarjeta; integración funcional llega después.",
+      "numero": 48
+    },
+    {
+      "hash": "12a8c4bb50ed05e56b599f0569fe14210225ba29",
+      "date": "2026-10-18T12:15:15-03:00",
+      "committer_date": "2026-10-18T12:15:15-03:00",
+      "author": "iignvcioo",
+      "parents": [
+        "32d1fb5a69a4296941fde148642d0dad85326013"
+      ],
+      "message": "conectar cobro en efectivo con MS-5\n\nEnviar el monto recibido desde el modal al endpoint de cobro en efectivo.\nMostrar el vuelto devuelto por MS-5 y la diferencia si el monto es insuficiente.\nConservar la venta pendiente ante un 400 y evitar reintentos automáticos\ncuando el resultado no se puede confirmar.\nAgregar pruebas del flujo y actualizar el Grafo de Contexto.",
+      "files": [
+        "docs/context/estado-actual.md",
+        "docs/context/frontend/pantallas.md",
+        "docs/context/servicios/ms5-pos.md",
+        "globalmart-frontend/e2e/cash-payment.spec.ts",
+        "globalmart-frontend/src/api/client.ts",
+        "globalmart-frontend/src/components/pos/PaymentModal.css",
+        "globalmart-frontend/src/components/pos/PaymentModal.tsx",
+        "globalmart-frontend/src/pages/Pos.tsx"
+      ],
+      "integrated": true,
+      "refs": [
+        "* dev",
+        "  main",
+        "  remotes/origin/HEAD -> origin/main",
+        "  remotes/origin/dev",
+        "  remotes/origin/local",
+        "  remotes/origin/main"
+      ],
+      "tipo": "Trabajo / Dev",
+      "observacion": "Conecta efectivo, vuelto y monto insuficiente; pruebas UI con HTTP controlado.",
+      "numero": 49
+    },
+    {
+      "hash": "1331133587ec9818ab5bc85cb17934cb31ceee56",
+      "date": "2026-10-18T12:41:10-03:00",
+      "committer_date": "2026-10-18T12:41:10-03:00",
+      "author": "iignvcioo",
+      "parents": [
+        "12a8c4bb50ed05e56b599f0569fe14210225ba29"
+      ],
+      "message": "Arreglo cluster",
+      "files": [
+        "docs/context/estado-actual.md",
+        "docs/context/infraestructura/matriz-rutas.md",
+        "new-ingresses.yaml"
+      ],
+      "integrated": true,
+      "refs": [
+        "* dev",
+        "  main",
+        "  remotes/origin/HEAD -> origin/main",
+        "  remotes/origin/dev",
+        "  remotes/origin/local",
+        "  remotes/origin/main"
+      ],
+      "tipo": "Trabajo / Dev",
+      "observacion": "Actualiza reglas de Ingress y documentación; configuración no equivale por sí sola a validación remota completa.",
+      "numero": 50
+    },
+    {
+      "hash": "d9f4f55cd922734f5d422104335b278235100c93",
+      "date": "2026-10-18T12:56:59-03:00",
+      "committer_date": "2026-10-18T12:56:59-03:00",
+      "author": "iignvcioo",
+      "parents": [
+        "1331133587ec9818ab5bc85cb17934cb31ceee56"
+      ],
+      "message": "Conectar cobro con tarjeta y corregir búsqueda de productos en POS\n\nConecta el POS con el cobro de tarjeta simulado y muestra aprobación,\nrechazo o resultado incierto. Permite cambiar el método de pago de\nventas pendientes tras un rechazo.\n\nConsulta el catálogo desde el POS por nombre o código de barras,\nmuestra errores de búsqueda y conserva el acceso administrativo\nrestringido. Actualiza el grafo de contexto y añade pruebas dirigidas.",
+      "files": [
+        "docs/context/estado-actual.md",
+        "docs/context/frontend/pantallas.md",
+        "docs/context/servicios/ms3-catalog.md",
+        "docs/context/servicios/ms5-pos.md",
+        "globalmart-frontend/e2e/card-search.spec.ts",
+        "globalmart-frontend/src/api/client.ts",
+        "globalmart-frontend/src/components/pos/BarcodeInput.tsx",
+        "globalmart-frontend/src/components/pos/PaymentModal.tsx",
+        "globalmart-frontend/src/pages/Pos.tsx",
+        "src/CatalogPricingService/Data/ProductoRepository.cs",
+        "src/POSCartService/Controllers/VentasController.cs",
+        "src/POSCartService/DTOs/CambiarMetodoPagoRequest.cs",
+        "src/POSCartService/Repositories/IVentaRepository.cs",
+        "src/POSCartService/Repositories/VentaRepository.cs",
+        "src/POSCartService/Services/IVentaService.cs",
+        "src/POSCartService/Services/VentaService.cs",
+        "tests/GlobalMart.IntegrationTests/PaymentEventSequenceContractTests.cs"
+      ],
+      "integrated": true,
+      "refs": [
+        "* dev",
+        "  main",
+        "  remotes/origin/HEAD -> origin/main",
+        "  remotes/origin/dev",
+        "  remotes/origin/local",
+        "  remotes/origin/main"
+      ],
+      "tipo": "Trabajo / Dev",
+      "observacion": "Conecta tarjeta y búsqueda, agrega cambio de método de venta pendiente y ajuste de catálogo; pruebas dirigidas.",
+      "numero": 51
+    },
+    {
+      "hash": "f6727dbe7dc49a631887349bd2a7ea8fb28fc87d",
+      "date": "2026-10-18T13:10:44-03:00",
+      "committer_date": "2026-10-18T13:10:44-03:00",
+      "author": "iignvcioo",
+      "parents": [
+        "d9f4f55cd922734f5d422104335b278235100c93"
+      ],
+      "message": "Manejar timeout de tarjeta sin doble cobro\n\nPersiste el intento antes de autorizar y bloquea cobros adicionales\nmientras su resultado sea incierto.\n\nConsulta y reconcilia el intento con la misma clave, sin reenviar\nautomáticamente la autorización. Recupera el estado en el POS y\nhabilita el reintento manual solo tras un rechazo definitivo.",
+      "files": [
+        "docs/context/estado-actual.md",
+        "docs/context/frontend/pantallas.md",
+        "docs/context/infraestructura/matriz-rutas.md",
+        "docs/context/integraciones/pasarela-pago.md",
+        "docs/context/servicios/ms5-pos.md",
+        "globalmart-frontend/e2e/card-search.spec.ts",
+        "globalmart-frontend/src/api/client.ts",
+        "globalmart-frontend/src/components/pos/PaymentModal.tsx",
+        "globalmart-frontend/src/pages/Pos.tsx",
+        "src/POSCartService/Controllers/VentasController.cs",
+        "src/POSCartService/Repositories/IVentaRepository.cs",
+        "src/POSCartService/Repositories/VentaRepository.cs",
+        "src/POSCartService/Services/IVentaService.cs",
+        "src/POSCartService/Services/VentaService.cs",
+        "tests/GlobalMart.IntegrationTests/CobrarTarjetaIntegrationTests.cs",
+        "tests/GlobalMart.IntegrationTests/PaymentEventSequenceContractTests.cs"
+      ],
+      "integrated": true,
+      "refs": [
+        "* dev",
+        "  main",
+        "  remotes/origin/HEAD -> origin/main",
+        "  remotes/origin/dev",
+        "  remotes/origin/local",
+        "  remotes/origin/main"
+      ],
+      "tipo": "Trabajo / Dev",
+      "observacion": "Reserva durable y recuperación del intento mediante GET, bloqueo de nueva autorización incierta y recuperación UI.",
+      "numero": 52
+    },
+    {
+      "hash": "212cc56b8ffe0c44dc07650a40b01ebc2996f215",
+      "date": "2026-10-18T20:38:46-03:00",
+      "committer_date": "2026-10-18T20:38:46-03:00",
+      "author": "SPereda2005",
+      "parents": [
+        "186f8d583d6a2a0e6d049784fea3885203f3c305"
+      ],
+      "message": "Probar e implementar cobro seguro e idempotente S2-035 (TI3-666)\n\n- Agrega reserva previa atómica de IntentoPago en estado PENDIENTE antes de contactar a la pasarela externa.\n- Bloquea repetición de claves y cobros concurrentes retornando HTTP 409 sin realizar llamadas HTTP externas duplicadas.\n- Valida UUID no vacío y coherencia de Idempotency-Key en headers y body (HTTP 400).\n- Conserva venta en PENDIENTE sin pagos ni outbox ante rechazos (422) o respuestas inciertas/timeouts (504/502).\n- Añade suite CobroSeguroIntegrationTests con 17 pruebas end-to-end integrando MS-5, PostgreSQL y el simulador Node.js.\n- Genera reporte técnico en docs/qa/S2-035/reporte.md y actualiza el Grafo de Contexto.",
+      "files": [
+        "docs/context/estado-actual.md",
+        "docs/context/integraciones/pasarela-pago.md",
+        "docs/context/servicios/ms5-pos.md",
+        "docs/qa/S2-035/S2-035.trx",
+        "docs/qa/S2-035/antes.trx",
+        "docs/qa/S2-035/baseline.trx",
+        "docs/qa/S2-035/regresion.trx",
+        "docs/qa/S2-035/reporte.md",
+        "src/POSCartService/Controllers/VentasController.cs",
+        "src/POSCartService/DTOs/CobrarTarjetaDTOs.cs",
+        "src/POSCartService/Models/IntentoPago.cs",
+        "src/POSCartService/Repositories/IVentaRepository.cs",
+        "src/POSCartService/Repositories/VentaRepository.cs",
+        "src/POSCartService/Services/IVentaService.cs",
+        "src/POSCartService/Services/VentaService.cs",
+        "tests/GlobalMart.IntegrationTests/CobroSeguroIntegrationTests.cs"
+      ],
+      "integrated": true,
+      "refs": [
+        "* dev",
+        "  main",
+        "  remotes/origin/HEAD -> origin/main",
+        "  remotes/origin/dev",
+        "  remotes/origin/local",
+        "  remotes/origin/main"
+      ],
+      "tipo": "Trabajo / Dev",
+      "observacion": "Refuerza reserva previa con bloqueo por venta, clave estricta y pruebas concurrentes/rechazo/timeout.",
+      "numero": 53
+    },
+    {
+      "hash": "1ba6b371cd9f026ae0b8fd16dbf3b746a3991770",
+      "date": "2026-10-18T20:50:31-03:00",
+      "committer_date": "2026-10-18T20:50:31-03:00",
+      "author": "SPereda2005",
+      "parents": [
+        "212cc56b8ffe0c44dc07650a40b01ebc2996f215",
+        "f6727dbe7dc49a631887349bd2a7ea8fb28fc87d"
+      ],
+      "message": "Merge origin/dev: integrar cobro seguro con recuperacion de pagos",
+      "files": [
+        "docs/context/estado-actual.md",
+        "docs/context/frontend/pantallas.md",
+        "docs/context/infraestructura/matriz-rutas.md",
+        "docs/context/integraciones/pasarela-pago.md",
+        "docs/context/servicios/ms3-catalog.md",
+        "docs/context/servicios/ms5-pos.md",
+        "docs/qa/S2-035/merge-pagos.trx",
+        "docs/qa/S2-035/merge-ui.json",
+        "docs/qa/S2-035/merge.md",
+        "docs/qa/S2-035/reporte.md",
+        "docs/qa/S2-040/S2-040-contract.trx",
+        "docs/qa/S2-040/reporte.md",
+        "globalmart-frontend/e2e/card-search.spec.ts",
+        "globalmart-frontend/e2e/cash-payment.spec.ts",
+        "globalmart-frontend/src/App.tsx",
+        "globalmart-frontend/src/api/client.ts",
+        "globalmart-frontend/src/components/admin/EditarUsuarioModal.tsx",
+        "globalmart-frontend/src/components/admin/UsuariosList.tsx",
+        "globalmart-frontend/src/components/admin/desactivarUsuario.ts",
+        "globalmart-frontend/src/components/admin/editarUsuario.ts",
+        "globalmart-frontend/src/components/pos/BarcodeInput.tsx",
+        "globalmart-frontend/src/components/pos/PaymentModal.css",
+        "globalmart-frontend/src/components/pos/PaymentModal.tsx",
+        "globalmart-frontend/src/pages/Admin.tsx",
+        "globalmart-frontend/src/pages/Pos.tsx",
+        "globalmart-frontend/tests/user-deactivation.test.cjs",
+        "globalmart-frontend/tests/user-edit.test.cjs",
+        "new-ingresses.yaml",
+        "src/CatalogPricingService/Data/ProductoRepository.cs",
+        "src/POSCartService/Controllers/VentasController.cs",
+        "src/POSCartService/DTOs/CambiarMetodoPagoRequest.cs",
+        "src/POSCartService/Data/Migrations/20261018040621_AddPagoGatewayReference.Designer.cs",
+        "src/POSCartService/Data/Migrations/20261018040621_AddPagoGatewayReference.cs",
+        "src/POSCartService/Data/Migrations/PosCartDbContextModelSnapshot.cs",
+        "src/POSCartService/Data/PosCartDbContext.cs",
+        "src/POSCartService/Models/Pago.cs",
+        "src/POSCartService/Repositories/IVentaRepository.cs",
+        "src/POSCartService/Repositories/VentaRepository.cs",
+        "src/POSCartService/Services/IVentaService.cs",
+        "src/POSCartService/Services/VentaService.cs",
+        "tests/GlobalMart.IntegrationTests/CobrarTarjetaIntegrationTests.cs",
+        "tests/GlobalMart.IntegrationTests/CobroSeguroIntegrationTests.cs",
+        "tests/GlobalMart.IntegrationTests/PaymentEventSequenceContractTests.cs"
+      ],
+      "integrated": true,
+      "refs": [
+        "* dev",
+        "  main",
+        "  remotes/origin/HEAD -> origin/main",
+        "  remotes/origin/dev",
+        "  remotes/origin/local",
+        "  remotes/origin/main"
+      ],
+      "tipo": "Merge / Dev",
+      "observacion": "Merge semántico de reserva segura y recuperación; reporte 54/54 backend y 7/7 UI controlada. No duplica autoría de cambios entrantes.",
+      "numero": 54
+    },
+    {
+      "hash": "4d9fd64e31ea6a7da89e1ac969358837a520ad0d",
+      "date": "2026-10-18T20:57:18-03:00",
+      "committer_date": "2026-10-18T20:57:18-03:00",
+      "author": "Daniel Prado",
+      "parents": [
+        "1ba6b371cd9f026ae0b8fd16dbf3b746a3991770"
+      ],
+      "message": "prueba",
+      "files": [
+        "diagramas/matriz/S2-051-matriz-rn02-pagos.md"
+      ],
+      "integrated": false,
+      "refs": [
+        "main",
+        "  remotes/origin/HEAD -> origin/main",
+        "  remotes/origin/local",
+        "  remotes/origin/main"
+      ],
+      "tipo": "Trabajo / Rama",
+      "observacion": "Solo añade líneas vacías y un encabezado vacío a la matriz RN-02; no agrega prueba ni comportamiento pese al título «prueba».",
+      "numero": 55
+    },
+    {
+      "hash": "fac151121f8fbc3c9a5a43417a9183242ffbbdb5",
+      "date": "2026-10-18T21:32:26-03:00",
+      "committer_date": "2026-10-18T21:32:26-03:00",
+      "author": "Daniel Prado",
+      "parents": [
+        "4d9fd64e31ea6a7da89e1ac969358837a520ad0d"
+      ],
+      "message": "Configuracion de E2E para Electron para CI local",
+      "files": [
+        ".github/workflows/electron-e2e.yml",
+        "docs/context/estado-actual.md",
+        "docs/context/infraestructura/ci-cd.md",
+        "docs/context/infraestructura/testing.md",
+        "docs/qa/S2-024/reporte.md",
+        "globalmart-frontend/e2e/README.md",
+        "globalmart-frontend/e2e/electron/README.md",
+        "globalmart-frontend/e2e/electron/build.cjs",
+        "globalmart-frontend/e2e/electron/launch.cjs",
+        "globalmart-frontend/e2e/electron/pos.spec.ts",
+        "globalmart-frontend/package.json",
+        "globalmart-frontend/playwright.config.ts",
+        "globalmart-frontend/playwright.electron.config.ts"
+      ],
+      "integrated": false,
+      "refs": [
+        "remotes/origin/local"
+      ],
+      "tipo": "Trabajo / Rama",
+      "observacion": "Entorno E2E Electron local con APIs controladas, selección de ventana file y perfil aislado; ejecución CI remota no verificada.",
+      "numero": 56
+    },
+    {
+      "hash": "5dbc672881ba388a5e308d706ed3a6e2d7c8c323",
+      "date": "2026-10-18T21:37:03-03:00",
+      "committer_date": "2026-10-18T21:37:03-03:00",
+      "author": "Daniel Prado",
+      "parents": [
+        "fac151121f8fbc3c9a5a43417a9183242ffbbdb5"
+      ],
+      "message": "Configuracion de Ci local para Github Actions",
+      "files": [
+        ".github/workflows/electron-e2e.yml",
+        "docs/context/infraestructura/ci-cd.md"
+      ],
+      "integrated": false,
+      "refs": [
+        "remotes/origin/local"
+      ],
+      "tipo": "Trabajo / Rama",
+      "observacion": "Ajusta workflow Electron y documentación para ejecución local/autohospedada; no demuestra un run remoto exitoso.",
+      "numero": 57
+    },
+    {
+      "hash": "3eb4cb47955ee8976aaf1c108a95bfcab00bc875",
+      "date": "2026-10-19T00:57:21-03:00",
+      "committer_date": "2026-10-19T00:57:21-03:00",
+      "author": "martinxoo",
+      "parents": [
+        "5dbc672881ba388a5e308d706ed3a6e2d7c8c323"
+      ],
+      "message": "TI3-676 Probar flujos Admin en interfaz\n\nAgrega cobertura E2E de los flujos Admin de alta, edición, baja y configuración mediante fixtures HTTP, validando errores 400/403/409 sin pérdida de datos. Mejora el feedback de permisos en creación y el manejo de errores de validación en TenantConfig.",
+      "files": [
+        "docs/context/estado-actual.md",
+        "docs/context/frontend/pantallas.md",
+        "globalmart-frontend/e2e/admin.spec.ts",
+        "globalmart-frontend/e2e/renderer.tsx",
+        "globalmart-frontend/playwright.config.ts",
+        "globalmart-frontend/src/components/admin/TenantConfig.tsx",
+        "globalmart-frontend/src/pages/Admin.tsx"
+      ],
+      "integrated": false,
+      "refs": [
+        "remotes/origin/local"
+      ],
+      "tipo": "Trabajo / Rama",
+      "observacion": "Pruebas Admin de alta/edición/baja/configuración con fixtures HTTP y feedback; rama no integrada, distinta de admin.spec final.",
+      "numero": 58
+    },
+    {
+      "hash": "3148c9aa4a19b7a5448bb85107a41c1c060eb37b",
+      "date": "2026-10-19T12:30:51-03:00",
+      "committer_date": "2026-10-19T12:30:51-03:00",
+      "author": "Daniel Prado",
+      "parents": [
+        "3eb4cb47955ee8976aaf1c108a95bfcab00bc875"
+      ],
+      "message": "Automatizar flujo E2E tarjeta",
+      "files": [
+        "docs/context/estado-actual.md",
+        "docs/context/infraestructura/testing.md",
+        "docs/context/servicios/ms5-pos.md",
+        "docs/qa/S2-055/S2-055.trx",
+        "docs/qa/S2-055/aprobado/01-apertura.png",
+        "docs/qa/S2-055/aprobado/02-venta.png",
+        "docs/qa/S2-055/aprobado/03-resultado.png",
+        "docs/qa/S2-055/aprobado/ui-result.json",
+        "docs/qa/S2-055/aprobado/verification.json",
+        "docs/qa/S2-055/rechazado/01-apertura.png",
+        "docs/qa/S2-055/rechazado/02-venta.png",
+        "docs/qa/S2-055/rechazado/03-resultado.png",
+        "docs/qa/S2-055/rechazado/ui-result.json",
+        "docs/qa/S2-055/rechazado/verification.json",
+        "docs/qa/S2-055/reporte.md",
+        "globalmart-frontend/e2e/electron/README.md",
+        "globalmart-frontend/e2e/electron/card-backend.cjs",
+        "globalmart-frontend/e2e/electron/run-card.cjs",
+        "globalmart-frontend/package.json",
+        "tests/GlobalMart.IntegrationTests/ElectronCardE2ETests.cs"
+      ],
+      "integrated": false,
+      "refs": [
+        "remotes/origin/local"
+      ],
+      "tipo": "Trabajo / Rama",
+      "observacion": "E2E Electron con MS-5/PG/simulador real y dependencias identidad/catálogo/IVA controladas; outbox sin Kafka; rama no integrada.",
+      "numero": 59
+    },
+    {
+      "hash": "25a40f52648694c51c2ffa429c065349c3046202",
+      "date": "2026-10-19T12:44:14-03:00",
+      "committer_date": "2026-10-19T12:44:14-03:00",
+      "author": "Daniel Prado",
+      "parents": [
+        "1ba6b371cd9f026ae0b8fd16dbf3b746a3991770"
+      ],
+      "message": "Probar rechazo y timeout por HTTP",
+      "files": [
+        "docs/context/estado-actual.md",
+        "docs/context/servicios/ms5-pos.md",
+        "docs/qa/S2-052/S2-052.trx",
+        "docs/qa/S2-052/reporte.md",
+        "docs/qa/S2-052/resultado.json",
+        "scripts/test-s2-052.ps1",
+        "tests/GlobalMart.IntegrationTests/CobroSeguroIntegrationTests.cs"
+      ],
+      "integrated": true,
+      "refs": [
+        "* dev",
+        "  remotes/origin/dev",
+        "  remotes/origin/local"
+      ],
+      "tipo": "Trabajo / Dev",
+      "observacion": "Dos pruebas HTTP de rechazo/timeout y script; reporte distingue éxito local de bloqueo remoto al crear venta.",
+      "numero": 60
+    },
+    {
+      "hash": "abfd1f0e1050027701674889775d2f28c19e780a",
+      "date": "2026-10-19T13:44:48-03:00",
+      "committer_date": "2026-10-19T13:44:48-03:00",
+      "author": "Daniel Prado",
+      "parents": [
+        "25a40f52648694c51c2ffa429c065349c3046202"
+      ],
+      "message": "Probar autorización e idempotencia",
+      "files": [
+        "docs/context/estado-actual.md",
+        "docs/context/integraciones/pasarela-pago.md",
+        "docs/context/servicios/ms5-pos.md",
+        "docs/qa/S2-053/S2-053.trx",
+        "docs/qa/S2-053/remoto.json",
+        "docs/qa/S2-053/reporte.md",
+        "scripts/test-s2-053.ps1",
+        "tests/GlobalMart.IntegrationTests/CobroSeguroIntegrationTests.cs",
+        "tests/GlobalMart.IntegrationTests/PaymentSimulatorIntegrationTests.cs"
+      ],
+      "integrated": true,
+      "refs": [
+        "* dev",
+        "  remotes/origin/dev",
+        "  remotes/origin/local"
+      ],
+      "tipo": "Trabajo / Dev",
+      "observacion": "Prueba duplicado aprobado y pendiente y refuerza repetición directa del simulador; registra 3/3 y límites.",
+      "numero": 61
+    },
+    {
+      "hash": "e61d618cdaa1a9eb7074c94d97ecca3de0c8b148",
+      "date": "2026-10-23T20:44:36-03:00",
+      "committer_date": "2026-10-23T20:44:36-03:00",
+      "author": "SPereda2005",
+      "parents": [
+        "abfd1f0e1050027701674889775d2f28c19e780a"
+      ],
+      "message": "Definir contrato de peso variable TI3-692\n\nSe establece:\n- Unidad base: kilogramos.\n- Precisión: 1 gramo, con mínimo de 10 gramos, definidos para el simulador.\n- Cantidad = PesoKg; valores contradictorios se rechazan.\n- Conversión explícita: 750 g → 0.750 kg.\n- Precio por kilogramo obtenido del catálogo.\n- Ejemplos válidos y rechazados para crear, agregar y modificar ítems.\nActualicé el grafo de contexto y comprobé enlaces y ejemplos numéricos.",
+      "files": [
+        "docs/context/dominio/peso-variable.md",
+        "docs/context/estado-actual.md",
+        "docs/context/index.md",
+        "docs/context/integraciones/hardware.md",
+        "docs/context/servicios/ms3-catalog.md",
+        "docs/context/servicios/ms5-pos.md"
+      ],
+      "integrated": true,
+      "refs": [
+        "* dev",
+        "  remotes/origin/dev",
+        "  remotes/origin/local"
+      ],
+      "tipo": "Trabajo / Dev",
+      "observacion": "Define kg, mínimo/resolución y relación cantidad/peso; unidad UUID real de catálogo pendiente.",
+      "numero": 62
+    },
+    {
+      "hash": "e5141df2c4a485c2fb34aa2ef22c7df4d51fdc29",
+      "date": "2026-10-24T11:19:07-03:00",
+      "committer_date": "2026-10-24T11:19:07-03:00",
+      "author": "SPereda2005",
+      "parents": [
+        "e61d618cdaa1a9eb7074c94d97ecca3de0c8b148"
+      ],
+      "message": "Validar peso en agregar ítem. TI3-693\n\nConsulta EsPesoVariable del catálogo\nRechaza peso ausente, cero, negativo, inferior a 10 g o con fracciones de gramo. (Por definicion de contratp de peso variable)\nRechaza cantidad contradictoria y peso en productos no pesables\nAnte rechazo, el carrito y sus totales permanecen intactos",
+      "files": [
+        "docs/context/dominio/peso-variable.md",
+        "docs/context/estado-actual.md",
+        "docs/context/servicios/ms5-pos.md",
+        "docs/qa/S2-062/S2-062.trx",
+        "docs/qa/S2-062/reporte.md",
+        "src/POSCartService/Controllers/VentasController.cs",
+        "src/POSCartService/DTOs/AgregarItemDTOs.cs",
+        "tests/GlobalMart.IntegrationTests/VentaIntegrationTests.cs"
+      ],
+      "integrated": true,
+      "refs": [
+        "* dev",
+        "  remotes/origin/dev",
+        "  remotes/origin/local"
+      ],
+      "tipo": "Trabajo / Dev",
+      "observacion": "Valida agregado pesable antes de impuestos/persistencia y prueba fronteras; no cubre aún todos los caminos.",
+      "numero": 63
+    },
+    {
+      "hash": "ef6a40632bc975c961d289a6d41c7a67cc85d56d",
+      "date": "2026-10-24T12:00:07-03:00",
+      "committer_date": "2026-10-24T12:00:07-03:00",
+      "author": "SPereda2005",
+      "parents": [
+        "e5141df2c4a485c2fb34aa2ef22c7df4d51fdc29"
+      ],
+      "message": "Calcular total pesable en servidor. TI3-694\n\nUsa precio de MS-3 y peso validado, ignorando importes del renderer.\nConserva cuatro decimales del precio mediante una migración.\nRedondea subtotal e IVA por ítem y suma los totales.",
+      "files": [
+        "docs/context/dominio/peso-variable.md",
+        "docs/context/estado-actual.md",
+        "docs/context/servicios/ms2-tax.md",
+        "docs/context/servicios/ms3-catalog.md",
+        "docs/context/servicios/ms5-pos.md",
+        "docs/qa/S2-063/S2-063.trx",
+        "docs/qa/S2-063/reporte.md",
+        "src/POSCartService/Controllers/VentasController.cs",
+        "src/POSCartService/DTOs/AgregarItemDTOs.cs",
+        "src/POSCartService/Data/Migrations/20261024142752_PreserveItemPricePrecision.Designer.cs",
+        "src/POSCartService/Data/Migrations/20261024142752_PreserveItemPricePrecision.cs",
+        "src/POSCartService/Data/Migrations/PosCartDbContextModelSnapshot.cs",
+        "src/POSCartService/Data/PosCartDbContext.cs",
+        "src/TaxComplianceService/Services/TaxCalculatorService.cs",
+        "tests/GlobalMart.IntegrationTests/PesableTaxRoundingTests.cs",
+        "tests/GlobalMart.IntegrationTests/VentaIntegrationTests.cs"
+      ],
+      "integrated": true,
+      "refs": [
+        "* dev",
+        "  remotes/origin/dev",
+        "  remotes/origin/local"
+      ],
+      "tipo": "Trabajo / Dev",
+      "observacion": "Conserva cuatro decimales de precio, redondea subtotal/IVA por línea y agrega pruebas de cálculo.",
+      "numero": 64
+    },
+    {
+      "hash": "bbc5b5f5df03fec2af2a65e75d11bc6dfc01b291",
+      "date": "2026-10-24T14:31:54-03:00",
+      "committer_date": "2026-10-24T14:31:54-03:00",
+      "author": "Daniel Prado",
+      "parents": [
+        "ef6a40632bc975c961d289a6d41c7a67cc85d56d"
+      ],
+      "message": "probar el aislamento de pago",
+      "files": [
+        "tests/GlobalMart.IntegrationTests/CobroSeguroIntegrationTests.cs",
+        "tests/GlobalMart.IntegrationTests/S2054.Build.props",
+        "tests/GlobalMart.IntegrationTests/qa/S2-054/README.md",
+        "tests/GlobalMart.IntegrationTests/qa/S2-054/S2-054-regression.trx",
+        "tests/GlobalMart.IntegrationTests/qa/S2-054/S2-054.trx"
+      ],
+      "integrated": true,
+      "refs": [
+        "* dev",
+        "  remotes/origin/dev",
+        "  remotes/origin/local"
+      ],
+      "tipo": "Trabajo / Dev",
+      "observacion": "Agrega aislamiento del pago S2-054 con evidencia propia y propiedades de build de prueba.",
+      "numero": 65
+    },
+    {
+      "hash": "8c20feeab5e9e08cd8df49a5e73e6a18a6cd7a98",
+      "date": "2026-10-24T16:17:34-03:00",
+      "committer_date": "2026-10-24T16:17:34-03:00",
+      "author": "Daniel Prado",
+      "parents": [
+        "3148c9aa4a19b7a5448bb85107a41c1c060eb37b"
+      ],
+      "message": "Preparar protocolo de prueba física",
+      "files": [
+        "docs/context/estado-actual.md",
+        "docs/context/integraciones/hardware.md",
+        "docs/qa/S2-085/capturar-balanza.ps1",
+        "docs/qa/S2-085/protocolo-balanza-fisica.md"
+      ],
+      "integrated": false,
+      "refs": [
+        "remotes/origin/local"
+      ],
+      "tipo": "Trabajo / Rama",
+      "observacion": "Protocolo/captura serial física condicionados a equipo y manual; no acredita lectura física y está fuera de dev.",
+      "numero": 66
+    },
+    {
+      "hash": "15dc32170a5b8cb8a2e006fd7f9f552b0b4e9251",
+      "date": "2026-10-24T18:07:08-03:00",
+      "committer_date": "2026-10-24T18:07:08-03:00",
+      "author": "SPereda2005",
+      "parents": [
+        "bbc5b5f5df03fec2af2a65e75d11bc6dfc01b291"
+      ],
+      "message": "Actualizar cantidad pesable con recálculo. TI3-695\n\nPermite editar peso o cantidad sin quitar el producto del carrito.\nAplica reglas distintas para pesables y unitarios.\nConserva el precio guardado y recalcula mediante MS-2.\nLos cambios inválidos o fallos de catálogo/impuestos dejan el carrito intacto.",
+      "files": [
+        "docs/context/dominio/peso-variable.md",
+        "docs/context/estado-actual.md",
+        "docs/context/servicios/ms5-pos.md",
+        "docs/qa/S2-064/S2-064.trx",
+        "docs/qa/S2-064/reporte.md",
+        "docs/qa/S2-064/validacion-final.trx",
+        "src/POSCartService/Controllers/VentasController.cs",
+        "src/POSCartService/DTOs/AgregarItemDTOs.cs",
+        "src/POSCartService/Validators/ModificarCantidadItemRequestValidator.cs",
+        "tests/GlobalMart.IntegrationTests/ModificarPesoIntegrationTests.cs",
+        "tests/GlobalMart.IntegrationTests/VentaIntegrationTests.cs"
+      ],
+      "integrated": true,
+      "refs": [
+        "* dev",
+        "  remotes/origin/dev",
+        "  remotes/origin/local"
+      ],
+      "tipo": "Trabajo / Dev",
+      "observacion": "Edita peso con reglas y precio snapshot, recálculo fiscal y pruebas de ausencia de mutación ante error.",
+      "numero": 67
+    },
+    {
+      "hash": "7c6145fc9abff02e1da50d989db34d78a2fa23d0",
+      "date": "2026-10-24T21:18:20-03:00",
+      "committer_date": "2026-10-24T21:18:20-03:00",
+      "author": "nmartinez",
+      "parents": [
+        "15dc32170a5b8cb8a2e006fd7f9f552b0b4e9251"
+      ],
+      "message": "Definir interfaz de balanza. S2-066",
+      "files": [
+        "docs/context/estado-actual.md",
+        "docs/context/frontend/electron-ipc.md",
+        "docs/context/frontend/estructura.md",
+        "docs/context/integraciones/hardware.md",
+        "globalmart-frontend/src/hardware/scale-contract.ts",
+        "globalmart-frontend/tests/scale-contract.test.cjs"
+      ],
+      "integrated": true,
+      "refs": [
+        "* dev",
+        "  remotes/origin/dev",
+        "  remotes/origin/local"
+      ],
+      "tipo": "Trabajo / Dev",
+      "observacion": "Define ScaleAdapter/ScaleRendererApi y resultados discriminados; contrato sin driver físico.",
+      "numero": 68
+    },
+    {
+      "hash": "33891a1510182848eb9f99b1d02f695f669598b1",
+      "date": "2026-10-24T21:24:00-03:00",
+      "committer_date": "2026-10-24T21:24:00-03:00",
+      "author": "nmartinez",
+      "parents": [
+        "7c6145fc9abff02e1da50d989db34d78a2fa23d0"
+      ],
+      "message": "Implementar adaptador de balanza simulada. S2-067",
+      "files": [
+        "docs/context/dominio/peso-variable.md",
+        "docs/context/estado-actual.md",
+        "docs/context/frontend/electron-ipc.md",
+        "docs/context/frontend/estructura.md",
+        "docs/context/integraciones/hardware.md",
+        "globalmart-frontend/src/hardware/scale-adapter-factory.ts",
+        "globalmart-frontend/src/hardware/simulated-scale-adapter.ts",
+        "globalmart-frontend/tests/simulated-scale-adapter.test.cjs"
+      ],
+      "integrated": true,
+      "refs": [
+        "* dev",
+        "  remotes/origin/dev",
+        "  remotes/origin/local"
+      ],
+      "tipo": "Trabajo / Dev",
+      "observacion": "Simulador de balanza determinista y fábrica, normalización/estabilidad/errores con pruebas.",
+      "numero": 69
+    },
+    {
+      "hash": "0ff7e00a9de2596adf4f5f73f55ac4156c01dc9a",
+      "date": "2026-10-25T02:31:06-03:00",
+      "committer_date": "2026-10-25T02:31:06-03:00",
+      "author": "martinxoo",
+      "parents": [
+        "33891a1510182848eb9f99b1d02f695f669598b1"
+      ],
+      "message": "TI3-702 Definir contrato del terminal de pago\n\nDefine TerminalPort con inicio, consulta y cancelación de intentos, centraliza la máquina de estados del terminal e integra un adaptador MS-5 sin manejar datos sensibles de tarjeta. Incluye pruebas de transiciones y cancelación no soportada.",
+      "files": [
+        "docs/context/estado-actual.md",
+        "docs/context/frontend/pantallas.md",
+        "docs/context/integraciones/pasarela-pago.md",
+        "globalmart-frontend/src/components/pos/PaymentModal.tsx",
+        "globalmart-frontend/src/pages/Pos.tsx",
+        "globalmart-frontend/src/payments/Ms5TerminalAdapter.ts",
+        "globalmart-frontend/src/payments/TerminalPort.ts",
+        "globalmart-frontend/src/payments/terminalStateMachine.ts",
+        "globalmart-frontend/tests/terminal-port.test.cjs"
+      ],
+      "integrated": true,
+      "refs": [
+        "* dev",
+        "  remotes/origin/dev",
+        "  remotes/origin/local"
+      ],
+      "tipo": "Trabajo / Dev",
+      "observacion": "TerminalPort, máquina de estados y adaptador MS-5; cancelación explícitamente no soportada.",
+      "numero": 70
+    },
+    {
+      "hash": "71847b18c559111107436474461d18542688b7dc",
+      "date": "2026-10-25T12:25:00-03:00",
+      "committer_date": "2026-10-25T12:25:00-03:00",
+      "author": "nmartinez",
+      "parents": [
+        "0ff7e00a9de2596adf4f5f73f55ac4156c01dc9a"
+      ],
+      "message": "Exponer IPC mínimo de balanza. S2-068",
+      "files": [
+        "docs/context/estado-actual.md",
+        "docs/context/frontend/electron-ipc.md",
+        "docs/context/frontend/estructura.md",
+        "docs/context/integraciones/hardware.md",
+        "globalmart-frontend/src/hardware/scale-ipc.ts",
+        "globalmart-frontend/src/index.ts",
+        "globalmart-frontend/src/preload.ts",
+        "globalmart-frontend/src/types/global.d.ts",
+        "globalmart-frontend/tests/scale-ipc.test.cjs"
+      ],
+      "integrated": true,
+      "refs": [
+        "* dev",
+        "  remotes/origin/dev",
+        "  remotes/origin/local"
+      ],
+      "tipo": "Trabajo / Dev",
+      "observacion": "Cuatro canales IPC de balanza, validación acotada y contextBridge; evita configuración serial desde renderer.",
+      "numero": 71
+    },
+    {
+      "hash": "0afc855588582f8294644160dff4f418f40b2683",
+      "date": "2026-10-25T12:33:09-03:00",
+      "committer_date": "2026-10-25T12:33:09-03:00",
+      "author": "nmartinez",
+      "parents": [
+        "71847b18c559111107436474461d18542688b7dc"
+      ],
+      "message": "Preparar adaptador serial intercambiable. S2-069",
+      "files": [
+        "docs/context/dominio/peso-variable.md",
+        "docs/context/estado-actual.md",
+        "docs/context/frontend/electron-ipc.md",
+        "docs/context/frontend/estructura.md",
+        "docs/context/integraciones/hardware.md",
+        "globalmart-frontend/src/hardware/scale-adapter-factory.ts",
+        "globalmart-frontend/src/hardware/scale-contract.ts",
+        "globalmart-frontend/src/hardware/serial-scale-adapter.ts",
+        "globalmart-frontend/tests/serial-scale-adapter.test.cjs",
+        "globalmart-frontend/tests/simulated-scale-adapter.test.cjs"
+      ],
+      "integrated": true,
+      "refs": [
+        "* dev",
+        "  remotes/origin/dev",
+        "  remotes/origin/local"
+      ],
+      "tipo": "Trabajo / Dev",
+      "observacion": "SerialScaleAdapter con transporte/parser inyectados y pruebas; sin protocolo físico ni biblioteca serial concretos.",
+      "numero": 72
+    },
+    {
+      "hash": "352fe7fef4b5401ea6a2d7bb449c427c3616d91c",
+      "date": "2026-10-25T14:31:37-03:00",
+      "committer_date": "2026-10-25T14:31:37-03:00",
+      "author": "nmartinez",
+      "parents": [
+        "0afc855588582f8294644160dff4f418f40b2683"
+      ],
+      "message": "Probar IPC y estados simulados. S2-070",
+      "files": [
+        "docs/context/dominio/peso-variable.md",
+        "docs/context/estado-actual.md",
+        "docs/context/frontend/electron-ipc.md",
+        "docs/context/frontend/estructura.md",
+        "docs/context/frontend/pantallas.md",
+        "docs/context/integraciones/hardware.md",
+        "globalmart-frontend/src/api/client.ts",
+        "globalmart-frontend/src/components/pos/CartItem.tsx",
+        "globalmart-frontend/src/hardware/scale-cart.ts",
+        "globalmart-frontend/src/pages/Pos.tsx",
+        "globalmart-frontend/tests/scale-main-preload.integration.test.cjs"
+      ],
+      "integrated": true,
+      "refs": [
+        "* dev",
+        "  remotes/origin/dev",
+        "  remotes/origin/local"
+      ],
+      "tipo": "Trabajo / Dev",
+      "observacion": "Integra balanza main/preload con filtro de carrito y prueba de estados/corrupción/reconexión simulados.",
+      "numero": 73
+    },
+    {
+      "hash": "2c68eba442848ed1f6adf31ad15313f52716b851",
+      "date": "2026-10-25T14:37:20-03:00",
+      "committer_date": "2026-10-25T14:37:20-03:00",
+      "author": "Diego Leiva Caballero",
+      "parents": [
+        "0afc855588582f8294644160dff4f418f40b2683"
+      ],
+      "message": "feat(MS-5, frontend): implementar simuladores, logs de correlacion y seguridad IPC (S2-059..S2-089)\n\n- MS-5 (S2-059 / TI3-690): Agregar logs estructurados de correlacion [COBRO_CORRELATION] con identificadores opacos (CorrelationId, IntentoId, VentaId) sin exponer PAN, CVV ni secretos.\n- MS-5 (S2-060 / TI3-691): Integrar script reproducible scripts/smoke-tarjeta.sh y suite CobroTarjetaCorrelationIntegrationTests para verificar los 3 estados del simulador de pasarela (Aprobado -> COMPLETADA, Rechazado -> PENDIENTE, Timeout -> PENDIENTE).\n- Frontend (S2-086 / TI3-717): Documentar matriz de limites y capacidades del terminal simulado desacoplado en docs/context/integraciones/limites-terminal-simulado.md sin suposicion de hardware no probado.\n- Frontend (S2-087 / TI3-718): Implementar capa modular de dispositivos en Electron (DeviceManager, MockTerminalAdapter, MockScaleAdapter) con reserva segura de hardware real (RealTerminalAdapter).\n- Frontend (S2-088 / TI3-719): Endurecer IPC con contextIsolation, nodeIntegration deshabilitado, sandbox y validacion de tipos y rangos en index.ts y preload.ts.\n- Frontend (S2-089 / TI3-720): Integrar smoke test automatizado scripts/smoke-simuladores-frontend.sh para balanza y terminal sin periféricos fisicos, mas widget interactivo de balanza en Pos.tsx.\n- Docs: Actualizar grafo de conocimiento en estado-actual.md, ms5-pos.md, pasarela-pago.md, hardware.md y electron-ipc.md.",
+      "files": [
+        "docs/context/estado-actual.md",
+        "docs/context/frontend/electron-ipc.md",
+        "docs/context/integraciones/hardware.md",
+        "docs/context/integraciones/limites-terminal-simulado.md",
+        "docs/context/integraciones/pasarela-pago.md",
+        "docs/context/servicios/ms5-pos.md",
+        "docs/pautas/inspeccion-fallos-cobro.md",
+        "globalmart-frontend/package-lock.json",
+        "globalmart-frontend/package.json",
+        "globalmart-frontend/src/config/devices.config.ts",
+        "globalmart-frontend/src/devices/DeviceManager.ts",
+        "globalmart-frontend/src/devices/adapters/MockScaleAdapter.ts",
+        "globalmart-frontend/src/devices/adapters/MockTerminalAdapter.ts",
+        "globalmart-frontend/src/devices/adapters/RealTerminalAdapter.ts",
+        "globalmart-frontend/src/devices/types.ts",
+        "globalmart-frontend/src/index.ts",
+        "globalmart-frontend/src/pages/Pos.tsx",
+        "globalmart-frontend/src/preload.ts",
+        "globalmart-frontend/src/types/global.d.ts",
+        "globalmart-frontend/tests/smoke-simulators.ts",
+        "scripts/smoke-simuladores-frontend.sh",
+        "scripts/smoke-tarjeta.sh",
+        "src/POSCartService/Controllers/VentasController.cs",
+        "src/POSCartService/Services/PaymentGatewayClient.cs",
+        "src/POSCartService/tests/POSCartService.CobroCuadreTest/Program.cs",
+        "tests/GlobalMart.IntegrationTests/CobroTarjetaCorrelationIntegrationTests.cs"
+      ],
+      "integrated": true,
+      "refs": [
+        "* dev",
+        "  remotes/origin/dev",
+        "  remotes/origin/local"
+      ],
+      "tipo": "Trabajo / Dev",
+      "observacion": "Agrupa correlación, smoke con pasarela doblada, DeviceManager y seguridad IPC; RealTerminalAdapter es reserva sin soporte físico.",
+      "numero": 74
+    },
+    {
+      "hash": "22a5b50ab756fc0a9de9ec11d791d00485f8cd77",
+      "date": "2026-10-25T14:42:46-03:00",
+      "committer_date": "2026-10-25T14:42:46-03:00",
+      "author": "Diego Leiva Caballero",
+      "parents": [
+        "2c68eba442848ed1f6adf31ad15313f52716b851",
+        "352fe7fef4b5401ea6a2d7bb449c427c3616d91c"
+      ],
+      "message": "Merge branch 'dev' of https://github.com/rpedrazav/TallerIntegracion3 into dev",
+      "files": [
+        "docs/context/dominio/peso-variable.md",
+        "docs/context/frontend/estructura.md",
+        "docs/context/frontend/pantallas.md",
+        "globalmart-frontend/src/api/client.ts",
+        "globalmart-frontend/src/components/pos/CartItem.tsx",
+        "globalmart-frontend/src/hardware/scale-cart.ts",
+        "globalmart-frontend/src/pages/Pos.tsx",
+        "globalmart-frontend/tests/scale-main-preload.integration.test.cjs"
+      ],
+      "integrated": true,
+      "refs": [
+        "* dev",
+        "  remotes/origin/dev",
+        "  remotes/origin/local"
+      ],
+      "tipo": "Merge / Dev",
+      "observacion": "Merge de cambios de peso/IPC/carrito: revisar resolución; no atribuir todos los archivos entrantes a Diego.",
+      "numero": 75
+    },
+    {
+      "hash": "078bf67c9d7b4be8fe94498d2042e44799b1e187",
+      "date": "2026-10-25T15:17:31-03:00",
+      "committer_date": "2026-10-25T15:17:31-03:00",
+      "author": "Daniel Prado",
+      "parents": [
+        "8c20feeab5e9e08cd8df49a5e73e6a18a6cd7a98",
+        "22a5b50ab756fc0a9de9ec11d791d00485f8cd77"
+      ],
+      "message": "Merge remote-tracking branch 'origin/dev' into local\n\n# Conflicts:\n#\tdocs/context/estado-actual.md\n#\tdocs/context/integraciones/hardware.md\n#\tdocs/context/servicios/ms5-pos.md",
+      "files": [
+        "docs/context/dominio/peso-variable.md",
+        "docs/context/estado-actual.md",
+        "docs/context/frontend/electron-ipc.md",
+        "docs/context/frontend/estructura.md",
+        "docs/context/frontend/pantallas.md",
+        "docs/context/index.md",
+        "docs/context/integraciones/hardware.md",
+        "docs/context/integraciones/limites-terminal-simulado.md",
+        "docs/context/integraciones/pasarela-pago.md",
+        "docs/context/servicios/ms2-tax.md",
+        "docs/context/servicios/ms3-catalog.md",
+        "docs/context/servicios/ms5-pos.md",
+        "docs/pautas/inspeccion-fallos-cobro.md",
+        "docs/qa/S2-052/S2-052.trx",
+        "docs/qa/S2-052/reporte.md",
+        "docs/qa/S2-052/resultado.json",
+        "docs/qa/S2-053/S2-053.trx",
+        "docs/qa/S2-053/remoto.json",
+        "docs/qa/S2-053/reporte.md",
+        "docs/qa/S2-062/S2-062.trx",
+        "docs/qa/S2-062/reporte.md",
+        "docs/qa/S2-063/S2-063.trx",
+        "docs/qa/S2-063/reporte.md",
+        "docs/qa/S2-064/S2-064.trx",
+        "docs/qa/S2-064/reporte.md",
+        "docs/qa/S2-064/validacion-final.trx",
+        "globalmart-frontend/package-lock.json",
+        "globalmart-frontend/package.json",
+        "globalmart-frontend/src/api/client.ts",
+        "globalmart-frontend/src/components/pos/CartItem.tsx",
+        "globalmart-frontend/src/components/pos/PaymentModal.tsx",
+        "globalmart-frontend/src/config/devices.config.ts",
+        "globalmart-frontend/src/devices/DeviceManager.ts",
+        "globalmart-frontend/src/devices/adapters/MockScaleAdapter.ts",
+        "globalmart-frontend/src/devices/adapters/MockTerminalAdapter.ts",
+        "globalmart-frontend/src/devices/adapters/RealTerminalAdapter.ts",
+        "globalmart-frontend/src/devices/types.ts",
+        "globalmart-frontend/src/hardware/scale-adapter-factory.ts",
+        "globalmart-frontend/src/hardware/scale-cart.ts",
+        "globalmart-frontend/src/hardware/scale-contract.ts",
+        "globalmart-frontend/src/hardware/scale-ipc.ts",
+        "globalmart-frontend/src/hardware/serial-scale-adapter.ts",
+        "globalmart-frontend/src/hardware/simulated-scale-adapter.ts",
+        "globalmart-frontend/src/index.ts",
+        "globalmart-frontend/src/pages/Pos.tsx",
+        "globalmart-frontend/src/payments/Ms5TerminalAdapter.ts",
+        "globalmart-frontend/src/payments/TerminalPort.ts",
+        "globalmart-frontend/src/payments/terminalStateMachine.ts",
+        "globalmart-frontend/src/preload.ts",
+        "globalmart-frontend/src/types/global.d.ts",
+        "globalmart-frontend/tests/scale-contract.test.cjs",
+        "globalmart-frontend/tests/scale-ipc.test.cjs",
+        "globalmart-frontend/tests/scale-main-preload.integration.test.cjs",
+        "globalmart-frontend/tests/serial-scale-adapter.test.cjs",
+        "globalmart-frontend/tests/simulated-scale-adapter.test.cjs",
+        "globalmart-frontend/tests/smoke-simulators.ts",
+        "globalmart-frontend/tests/terminal-port.test.cjs",
+        "scripts/smoke-simuladores-frontend.sh",
+        "scripts/smoke-tarjeta.sh",
+        "scripts/test-s2-052.ps1",
+        "scripts/test-s2-053.ps1",
+        "src/POSCartService/Controllers/VentasController.cs",
+        "src/POSCartService/DTOs/AgregarItemDTOs.cs",
+        "src/POSCartService/Data/Migrations/20261024142752_PreserveItemPricePrecision.Designer.cs",
+        "src/POSCartService/Data/Migrations/20261024142752_PreserveItemPricePrecision.cs",
+        "src/POSCartService/Data/Migrations/PosCartDbContextModelSnapshot.cs",
+        "src/POSCartService/Data/PosCartDbContext.cs",
+        "src/POSCartService/Services/PaymentGatewayClient.cs",
+        "src/POSCartService/Validators/ModificarCantidadItemRequestValidator.cs",
+        "src/POSCartService/tests/POSCartService.CobroCuadreTest/Program.cs",
+        "src/TaxComplianceService/Services/TaxCalculatorService.cs",
+        "tests/GlobalMart.IntegrationTests/CobroSeguroIntegrationTests.cs",
+        "tests/GlobalMart.IntegrationTests/CobroTarjetaCorrelationIntegrationTests.cs",
+        "tests/GlobalMart.IntegrationTests/ModificarPesoIntegrationTests.cs",
+        "tests/GlobalMart.IntegrationTests/PaymentSimulatorIntegrationTests.cs",
+        "tests/GlobalMart.IntegrationTests/PesableTaxRoundingTests.cs",
+        "tests/GlobalMart.IntegrationTests/S2054.Build.props",
+        "tests/GlobalMart.IntegrationTests/VentaIntegrationTests.cs",
+        "tests/GlobalMart.IntegrationTests/qa/S2-054/README.md",
+        "tests/GlobalMart.IntegrationTests/qa/S2-054/S2-054-regression.trx",
+        "tests/GlobalMart.IntegrationTests/qa/S2-054/S2-054.trx"
+      ],
+      "integrated": false,
+      "refs": [
+        "remotes/origin/local"
+      ],
+      "tipo": "Merge / Rama",
+      "observacion": "Merge hacia rama local con conflictos de grafo declarados; incorpora cambios compartidos y no está en dev.",
+      "numero": 76
+    },
+    {
+      "hash": "ce542e946fc6da1d4f5c11b91acc56d22e141367",
+      "date": "2026-10-25T18:14:16-03:00",
+      "committer_date": "2026-10-25T18:14:16-03:00",
+      "author": "Daniel Prado",
+      "parents": [
+        "078bf67c9d7b4be8fe94498d2042e44799b1e187"
+      ],
+      "message": "Separar pruebas simuladas y físicas",
+      "files": [
+        "docs/qa/S2-081/plan-validacion.md",
+        "docs/qa/S2-081/verificacion.md",
+        "tests/GlobalMart.IntegrationTests/ScaleValidationPlanTests.cs"
+      ],
+      "integrated": false,
+      "refs": [
+        "remotes/origin/local"
+      ],
+      "tipo": "Trabajo / Rama",
+      "observacion": "Plan de validación simulada/física y tres tests documentales; no ejecuta balanza ni POS.",
+      "numero": 77
+    },
+    {
+      "hash": "5850d6111d0c5e9086bf6d156cc89fd7c9777dab",
+      "date": "2026-10-25T19:25:04-03:00",
+      "committer_date": "2026-10-25T19:25:04-03:00",
+      "author": "Daniel Prado",
+      "parents": [
+        "ce542e946fc6da1d4f5c11b91acc56d22e141367"
+      ],
+      "message": "Probar parser y redondeo de peso. Se corrigieron errores del reacho a infinity y de unidades distintas.",
+      "files": [
+        "docs/context/estado-actual.md",
+        "docs/context/integraciones/hardware.md",
+        "globalmart-frontend/src/devices/adapters/MockScaleAdapter.ts",
+        "globalmart-frontend/src/hardware/simulated-scale-adapter.ts",
+        "tests/GlobalMart.IntegrationTests/S2082.Build.props",
+        "tests/GlobalMart.IntegrationTests/ScaleParserRoundingIntegrationTests.cs",
+        "tests/GlobalMart.IntegrationTests/run-s2082.ps1",
+        "tests/GlobalMart.IntegrationTests/s2082-scale-tests.cjs"
+      ],
+      "integrated": false,
+      "refs": [
+        "remotes/origin/local"
+      ],
+      "tipo": "Trabajo / Rama",
+      "observacion": "Pruebas parser/redondeo y correcciones runtime de Infinity/unidad; cambios exclusivos de rama, pendientes de incorporar.",
+      "numero": 78
+    },
+    {
+      "hash": "ed508832009bce8ffd40f13dacc64a3baa40ef73",
+      "date": "2026-10-26T01:50:04-03:00",
+      "committer_date": "2026-10-26T01:50:04-03:00",
+      "author": "martinxoo",
+      "parents": [
+        "22a5b50ab756fc0a9de9ec11d791d00485f8cd77"
+      ],
+      "message": "TI3-703 Crear simulador de terminal POS\n\nImplementa un adaptador simulado de TerminalPort seleccionable por configuración, con escenarios deterministas de lectura/inicio, espera, aprobación, rechazo, cancelación y pérdida de conexión. Agrega fábrica mock/real, pruebas del simulador y documentación del flujo sin manejar datos sensibles de tarjeta.",
+      "files": [
+        "docs/context/estado-actual.md",
+        "docs/context/frontend/pantallas.md",
+        "docs/context/integraciones/pasarela-pago.md",
+        "globalmart-frontend/.env.example",
+        "globalmart-frontend/src/config/devices.config.ts",
+        "globalmart-frontend/src/devices/types.ts",
+        "globalmart-frontend/src/pages/Pos.tsx",
+        "globalmart-frontend/src/payments/SimulatedTerminalAdapter.ts",
+        "globalmart-frontend/src/payments/createTerminalPort.ts",
+        "globalmart-frontend/tests/terminal-port.test.cjs"
+      ],
+      "integrated": true,
+      "refs": [
+        "* dev",
+        "  remotes/origin/dev",
+        "  remotes/origin/local"
+      ],
+      "tipo": "Trabajo / Dev",
+      "observacion": "SimulatedTerminalAdapter y fábrica mock/real, escenarios deterministas y pruebas del contrato.",
+      "numero": 79
+    },
+    {
+      "hash": "96dc728f1adf215086f49f01f6271f38a43d9257",
+      "date": "2026-10-26T02:19:48-03:00",
+      "committer_date": "2026-10-26T02:19:48-03:00",
+      "author": "martinxoo",
+      "parents": [
+        "ed508832009bce8ffd40f13dacc64a3baa40ef73"
+      ],
+      "message": "TI3-704 Exponer IPC limitado del terminal\n\nExpone un contrato IPC seguro y tipado para iniciar y consultar intentos del TerminalPort desde Electron, usando contextBridge y handlers validados en el proceso main. Restringe los canales y payloads permitidos, evita comandos arbitrarios y datos sensibles, e integra el terminal simulado como instancia persistente en main.",
+      "files": [
+        "docs/context/estado-actual.md",
+        "docs/context/frontend/pantallas.md",
+        "docs/context/integraciones/pasarela-pago.md",
+        "globalmart-frontend/src/index.ts",
+        "globalmart-frontend/src/pages/Pos.tsx",
+        "globalmart-frontend/src/payments/terminal-ipc.ts",
+        "globalmart-frontend/src/preload.ts",
+        "globalmart-frontend/src/types/global.d.ts",
+        "globalmart-frontend/tests/terminal-ipc.test.cjs"
+      ],
+      "integrated": true,
+      "refs": [
+        "* dev",
+        "  remotes/origin/dev",
+        "  remotes/origin/local"
+      ],
+      "tipo": "Trabajo / Dev",
+      "observacion": "IPC limitado del terminal con validación de payload y resultados proyectados; instancia simulada persistente en main.",
+      "numero": 80
+    },
+    {
+      "hash": "7f85701bac4c9f94c95bd229410574ec37d2734f",
+      "date": "2026-10-26T11:31:18-03:00",
+      "committer_date": "2026-10-26T11:31:18-03:00",
+      "author": "Daniel Prado",
+      "parents": [
+        "5850d6111d0c5e9086bf6d156cc89fd7c9777dab"
+      ],
+      "message": "Probar cálculo pesable entre servicios",
+      "files": [
+        "tests/GlobalMart.IntegrationTests/PesableEntreServiciosIntegrationTests.cs",
+        "tests/GlobalMart.IntegrationTests/s2084-readme.md",
+        "tests/GlobalMart.IntegrationTests/s2084-renderer.cjs",
+        "tests/GlobalMart.IntegrationTests/s2084-run.ps1"
+      ],
+      "integrated": false,
+      "refs": [
+        "remotes/origin/local"
+      ],
+      "tipo": "Trabajo / Rama",
+      "observacion": "Prueba cálculo MS-3/MS-5 HTTP + calculador MS-2 y renderer parcial; 14 casos documentados, sin Electron ni HTTP MS-2.",
+      "numero": 81
+    },
+    {
+      "hash": "f787762c367100e6d7f5d85815d59e697f5330c6",
+      "date": "2026-10-26T11:42:27-03:00",
+      "committer_date": "2026-10-26T11:42:27-03:00",
+      "author": "Daniel Prado",
+      "parents": [
+        "7f85701bac4c9f94c95bd229410574ec37d2734f"
+      ],
+      "message": "Probar caída de balanza y modo manual",
+      "files": [
+        "tests/GlobalMart.IntegrationTests/ScaleFallbackIntegrationTests.cs",
+        "tests/GlobalMart.IntegrationTests/run-s2083.ps1",
+        "tests/GlobalMart.IntegrationTests/s2083-scale-tests.cjs"
+      ],
+      "integrated": false,
+      "refs": [
+        "remotes/origin/local"
+      ],
+      "tipo": "Trabajo / Rama",
+      "observacion": "Pruebas de caída/reconexión y guardia de aceptación manual incompleta usando callback extraído; no es E2E de UI y no está integrado.",
+      "numero": 82
+    },
+    {
+      "hash": "1b5c4979be1d204d6e476dff0b33d67f63aca40b",
+      "date": "2026-10-26T15:31:48-03:00",
+      "committer_date": "2026-10-26T15:31:48-03:00",
+      "author": "SPereda2005",
+      "parents": [
+        "15dc32170a5b8cb8a2e006fd7f9f552b0b4e9251"
+      ],
+      "message": "Probar fronteras de peso y tenant. TI3-696\n\nEn la tarea S2-065 se implementaron pruebas de integración para verificar las fronteras de peso y el aislamiento entre tenants al crear, agregar y modificar productos pesables. Se cubrio pesos cero, negativos, inferiores al mínimo, precisión inválida, redondeo de importes, peso incompatible con productos unitarios y acceso a productos de otro tenant, comprobando que los rechazos no alteren el carrito ni sus totales. Además, se corrigio la creación de ventas que permitía productos pesables sin peso y unificamos las reglas de validación. La ejecución local final aprobó 84 de 84 pruebas; la verificación en el clúster y desde la interfaz queda pendiente.",
+      "files": [
+        "docs/context/dominio/peso-variable.md",
+        "docs/context/estado-actual.md",
+        "docs/context/servicios/ms5-pos.md",
+        "docs/qa/S2-065/S2-065.trx",
+        "docs/qa/S2-065/diagnostico.trx",
+        "docs/qa/S2-065/reporte.md",
+        "src/POSCartService/Controllers/VentasController.cs",
+        "src/POSCartService/DTOs/CrearVentaRequest.cs",
+        "src/POSCartService/Services/ReglasCantidadItem.cs",
+        "tests/GlobalMart.IntegrationTests/PesoFronterasTenantTests.cs",
+        "tests/GlobalMart.IntegrationTests/VentaTenantIsolationTests.cs"
+      ],
+      "integrated": true,
+      "refs": [
+        "* dev",
+        "  remotes/origin/dev",
+        "  remotes/origin/local"
+      ],
+      "tipo": "Trabajo / Dev",
+      "observacion": "Encuentra creación sin peso, centraliza ReglasCantidadItem y prueba fronteras/tenant; reporte 84/84 local.",
+      "numero": 83
+    },
+    {
+      "hash": "9209029a02bd1de391065efd74f7d3bc482d7007",
+      "date": "2026-10-26T15:44:38-03:00",
+      "committer_date": "2026-10-26T15:44:38-03:00",
+      "author": "SPereda2005",
+      "parents": [
+        "1b5c4979be1d204d6e476dff0b33d67f63aca40b",
+        "96dc728f1adf215086f49f01f6271f38a43d9257"
+      ],
+      "message": "Merge remote-tracking branch 'origin/dev' into dev",
+      "files": [
+        "docs/context/dominio/peso-variable.md",
+        "docs/context/estado-actual.md",
+        "docs/context/frontend/electron-ipc.md",
+        "docs/context/frontend/estructura.md",
+        "docs/context/frontend/pantallas.md",
+        "docs/context/integraciones/hardware.md",
+        "docs/context/integraciones/limites-terminal-simulado.md",
+        "docs/context/integraciones/pasarela-pago.md",
+        "docs/context/servicios/ms5-pos.md",
+        "docs/pautas/inspeccion-fallos-cobro.md",
+        "globalmart-frontend/.env.example",
+        "globalmart-frontend/package-lock.json",
+        "globalmart-frontend/package.json",
+        "globalmart-frontend/src/api/client.ts",
+        "globalmart-frontend/src/components/pos/CartItem.tsx",
+        "globalmart-frontend/src/components/pos/PaymentModal.tsx",
+        "globalmart-frontend/src/config/devices.config.ts",
+        "globalmart-frontend/src/devices/DeviceManager.ts",
+        "globalmart-frontend/src/devices/adapters/MockScaleAdapter.ts",
+        "globalmart-frontend/src/devices/adapters/MockTerminalAdapter.ts",
+        "globalmart-frontend/src/devices/adapters/RealTerminalAdapter.ts",
+        "globalmart-frontend/src/devices/types.ts",
+        "globalmart-frontend/src/hardware/scale-adapter-factory.ts",
+        "globalmart-frontend/src/hardware/scale-cart.ts",
+        "globalmart-frontend/src/hardware/scale-contract.ts",
+        "globalmart-frontend/src/hardware/scale-ipc.ts",
+        "globalmart-frontend/src/hardware/serial-scale-adapter.ts",
+        "globalmart-frontend/src/hardware/simulated-scale-adapter.ts",
+        "globalmart-frontend/src/index.ts",
+        "globalmart-frontend/src/pages/Pos.tsx",
+        "globalmart-frontend/src/payments/Ms5TerminalAdapter.ts",
+        "globalmart-frontend/src/payments/SimulatedTerminalAdapter.ts",
+        "globalmart-frontend/src/payments/TerminalPort.ts",
+        "globalmart-frontend/src/payments/createTerminalPort.ts",
+        "globalmart-frontend/src/payments/terminal-ipc.ts",
+        "globalmart-frontend/src/payments/terminalStateMachine.ts",
+        "globalmart-frontend/src/preload.ts",
+        "globalmart-frontend/src/types/global.d.ts",
+        "globalmart-frontend/tests/scale-contract.test.cjs",
+        "globalmart-frontend/tests/scale-ipc.test.cjs",
+        "globalmart-frontend/tests/scale-main-preload.integration.test.cjs",
+        "globalmart-frontend/tests/serial-scale-adapter.test.cjs",
+        "globalmart-frontend/tests/simulated-scale-adapter.test.cjs",
+        "globalmart-frontend/tests/smoke-simulators.ts",
+        "globalmart-frontend/tests/terminal-ipc.test.cjs",
+        "globalmart-frontend/tests/terminal-port.test.cjs",
+        "scripts/smoke-simuladores-frontend.sh",
+        "scripts/smoke-tarjeta.sh",
+        "src/POSCartService/Controllers/VentasController.cs",
+        "src/POSCartService/Services/PaymentGatewayClient.cs",
+        "src/POSCartService/tests/POSCartService.CobroCuadreTest/Program.cs",
+        "tests/GlobalMart.IntegrationTests/CobroTarjetaCorrelationIntegrationTests.cs"
+      ],
+      "integrated": true,
+      "refs": [
+        "* dev",
+        "  remotes/origin/dev",
+        "  remotes/origin/local"
+      ],
+      "tipo": "Merge / Dev",
+      "observacion": "Merge de hardware/terminal/observabilidad sobre backend; delta incluye trabajo previo de varios autores.",
+      "numero": 84
+    },
+    {
+      "hash": "c5526296852d2cfaad1b3af16ded47ad77fbeceb",
+      "date": "2026-10-26T22:50:06-03:00",
+      "committer_date": "2026-10-26T22:50:06-03:00",
+      "author": "martinxoo",
+      "parents": [
+        "9209029a02bd1de391065efd74f7d3bc482d7007"
+      ],
+      "message": "TI3-705 Sincronizar estado con la pasarela\n\nSincroniza la aprobación preliminar del terminal con la confirmación autoritativa de MS-5 y la pasarela usando la misma clave de idempotencia. Agrega reconciliación de intentos ambiguos y evita mostrar una venta como cobrada sin confirmación de MS-5.",
+      "files": [
+        "docs/context/estado-actual.md",
+        "docs/context/frontend/pantallas.md",
+        "docs/context/integraciones/pasarela-pago.md",
+        "globalmart-frontend/src/pages/Pos.tsx",
+        "globalmart-frontend/src/payments/synchronizeCardPayment.ts",
+        "globalmart-frontend/tests/synchronized-card-payment.test.cjs"
+      ],
+      "integrated": true,
+      "refs": [
+        "* dev",
+        "  remotes/origin/dev",
+        "  remotes/origin/local"
+      ],
+      "tipo": "Trabajo / Dev",
+      "observacion": "Sincroniza terminal preliminar con confirmación MS-5 y misma clave; verifica correlación y reconciliación.",
+      "numero": 85
+    },
+    {
+      "hash": "dfa373e283140697936c707c9b961bd89a2c9448",
+      "date": "2026-10-26T23:25:17-03:00",
+      "committer_date": "2026-10-26T23:25:17-03:00",
+      "author": "martinxoo",
+      "parents": [
+        "f787762c367100e6d7f5d85815d59e697f5330c6",
+        "c5526296852d2cfaad1b3af16ded47ad77fbeceb"
+      ],
+      "message": "Merge branch 'dev' into local",
+      "files": [
+        "docs/context/dominio/peso-variable.md",
+        "docs/context/estado-actual.md",
+        "docs/context/frontend/pantallas.md",
+        "docs/context/integraciones/pasarela-pago.md",
+        "docs/context/servicios/ms5-pos.md",
+        "docs/qa/S2-065/S2-065.trx",
+        "docs/qa/S2-065/diagnostico.trx",
+        "docs/qa/S2-065/reporte.md",
+        "globalmart-frontend/.env.example",
+        "globalmart-frontend/src/config/devices.config.ts",
+        "globalmart-frontend/src/devices/types.ts",
+        "globalmart-frontend/src/index.ts",
+        "globalmart-frontend/src/pages/Pos.tsx",
+        "globalmart-frontend/src/payments/SimulatedTerminalAdapter.ts",
+        "globalmart-frontend/src/payments/createTerminalPort.ts",
+        "globalmart-frontend/src/payments/synchronizeCardPayment.ts",
+        "globalmart-frontend/src/payments/terminal-ipc.ts",
+        "globalmart-frontend/src/preload.ts",
+        "globalmart-frontend/src/types/global.d.ts",
+        "globalmart-frontend/tests/synchronized-card-payment.test.cjs",
+        "globalmart-frontend/tests/terminal-ipc.test.cjs",
+        "globalmart-frontend/tests/terminal-port.test.cjs",
+        "src/POSCartService/Controllers/VentasController.cs",
+        "src/POSCartService/DTOs/CrearVentaRequest.cs",
+        "src/POSCartService/Services/ReglasCantidadItem.cs",
+        "tests/GlobalMart.IntegrationTests/PesoFronterasTenantTests.cs",
+        "tests/GlobalMart.IntegrationTests/VentaTenantIsolationTests.cs"
+      ],
+      "integrated": false,
+      "refs": [
+        "remotes/origin/local"
+      ],
+      "tipo": "Merge / Rama",
+      "observacion": "Merge de dev hacia local con integración de terminal/peso; no pertenece al corte dev analizado.",
+      "numero": 86
+    },
+    {
+      "hash": "de5bf2760b1ebfd5613f6483cb594ee3bb02f461",
+      "date": "2026-10-26T23:47:00-03:00",
+      "committer_date": "2026-10-26T23:47:00-03:00",
+      "author": "martinxoo",
+      "parents": [
+        "c5526296852d2cfaad1b3af16ded47ad77fbeceb"
+      ],
+      "message": "Agregar escenario timeout al terminal simulado\n\nAgrega soporte determinista del escenario timeout en SimulatedTerminalAdapter, manteniendo el intento en processing hasta superar el delay configurado y finalizando en uncertain sin perder la referencia del intento ni crear una nueva operación. Incluye prueba unitaria y actualización de documentación.",
+      "files": [
+        "docs/context/estado-actual.md",
+        "docs/context/frontend/pantallas.md",
+        "docs/context/integraciones/pasarela-pago.md",
+        "globalmart-frontend/src/config/devices.config.ts",
+        "globalmart-frontend/src/devices/types.ts",
+        "globalmart-frontend/src/payments/SimulatedTerminalAdapter.ts",
+        "globalmart-frontend/tests/terminal-port.test.cjs"
+      ],
+      "integrated": true,
+      "refs": [
+        "* dev",
+        "  remotes/origin/dev",
+        "  remotes/origin/local"
+      ],
+      "tipo": "Trabajo / Dev",
+      "observacion": "Agrega timeout determinista con transición processing→uncertain y conservación de referencia.",
+      "numero": 87
+    },
+    {
+      "hash": "11abad6660d1e713b01044d55ea9b6ea90a61fb0",
+      "date": "2026-10-27T00:26:50-03:00",
+      "committer_date": "2026-10-27T00:26:50-03:00",
+      "author": "martinxoo",
+      "parents": [
+        "dfa373e283140697936c707c9b961bd89a2c9448",
+        "de5bf2760b1ebfd5613f6483cb594ee3bb02f461"
+      ],
+      "message": "Merge branch 'dev' into local",
+      "files": [
+        "docs/context/estado-actual.md",
+        "docs/context/frontend/pantallas.md",
+        "docs/context/integraciones/pasarela-pago.md",
+        "globalmart-frontend/src/config/devices.config.ts",
+        "globalmart-frontend/src/devices/types.ts",
+        "globalmart-frontend/src/payments/SimulatedTerminalAdapter.ts",
+        "globalmart-frontend/tests/terminal-port.test.cjs"
+      ],
+      "integrated": false,
+      "refs": [
+        "remotes/origin/local"
+      ],
+      "tipo": "Merge / Rama",
+      "observacion": "Merge hacia local de la evolución de timeout; no nueva implementación independiente del escenario.",
+      "numero": 88
+    },
+    {
+      "hash": "9b7cb4b9a84b7c685269906c515fa7ec3941d9c1",
+      "date": "2026-10-27T00:36:30-03:00",
+      "committer_date": "2026-10-27T00:36:30-03:00",
+      "author": "martinxoo",
+      "parents": [
+        "11abad6660d1e713b01044d55ea9b6ea90a61fb0"
+      ],
+      "message": "Probar estados del terminal simulado\n\nAgrega cobertura automatizada de los estados approved, declined, timeout y disconnected del terminal simulado, valida IPC y máquina de estados, y comprueba que el doble clic se protege mediante single-flight e idempotencia para evitar dos cargos lógicos.",
+      "files": [
+        "docs/context/estado-actual.md",
+        "docs/context/frontend/pantallas.md",
+        "docs/context/integraciones/pasarela-pago.md",
+        "globalmart-frontend/src/pages/Pos.tsx",
+        "globalmart-frontend/src/payments/synchronizeCardPayment.ts",
+        "globalmart-frontend/tests/synchronized-card-payment.test.cjs",
+        "globalmart-frontend/tests/terminal-ipc.test.cjs",
+        "globalmart-frontend/tests/terminal-port.test.cjs"
+      ],
+      "integrated": false,
+      "refs": [
+        "remotes/origin/local"
+      ],
+      "tipo": "Trabajo / Rama",
+      "observacion": "Amplía pruebas terminal/IPC/sincronización y helpers single-flight; contribución de rama no integrada.",
+      "numero": 89
+    },
+    {
+      "hash": "4f3c60432d01e7146f3957ac79f48d9b07654dc9",
+      "date": "2026-10-27T09:49:01-03:00",
+      "committer_date": "2026-10-27T09:55:41-03:00",
+      "author": "iignvcioo",
+      "parents": [
+        "de5bf2760b1ebfd5613f6483cb594ee3bb02f461"
+      ],
+      "message": "S2-076 Diseñar estado de captura de peso\n\nPresenta el producto pesable seleccionado con origen simulado, unidad kg y estados de lectura, peso estable y error. Mantiene los controles de balanza fuera de productos unitarios y actualiza el estado documentado del POS.",
+      "files": [
+        "docs/context/estado-actual.md",
+        "docs/context/frontend/pantallas.md",
+        "globalmart-frontend/src/components/pos/PesoProducto.tsx",
+        "globalmart-frontend/src/pages/Pos.tsx"
+      ],
+      "integrated": true,
+      "refs": [
+        "* dev",
+        "  remotes/origin/dev"
+      ],
+      "tipo": "Trabajo / Dev",
+      "observacion": "Panel PesoProducto y estado de captura con origen/unidad y tratamiento distinto para unitarios.",
+      "numero": 90
+    },
+    {
+      "hash": "39b5b2a08291ea2cf299e1a427a3165180ee3cb4",
+      "date": "2026-10-27T09:49:37-03:00",
+      "committer_date": "2026-10-27T09:55:52-03:00",
+      "author": "iignvcioo",
+      "parents": [
+        "4f3c60432d01e7146f3957ac79f48d9b07654dc9"
+      ],
+      "message": "S2-077 Conectar lectura simulada al carrito\n\nSolicita un peso estable al seleccionar un producto pesable y presenta la lectura antes del agregado. Solo confirmar peso crea o actualiza la línea del carrito; cancelar o recibir un error no envía ítems a MS-5.",
+      "files": [
+        "docs/context/estado-actual.md",
+        "docs/context/frontend/pantallas.md",
+        "globalmart-frontend/src/pages/Pos.tsx"
+      ],
+      "integrated": true,
+      "refs": [
+        "* dev",
+        "  remotes/origin/dev"
+      ],
+      "tipo": "Trabajo / Dev",
+      "observacion": "Separa lectura de confirmación; cancelar/error no muta carrito y confirmar agrega/actualiza peso.",
+      "numero": 91
+    },
+    {
+      "hash": "755ba275391164c675cbc95aaed0eb1fb9c83dbd",
+      "date": "2026-10-27T09:50:16-03:00",
+      "committer_date": "2026-10-27T09:55:52-03:00",
+      "author": "iignvcioo",
+      "parents": [
+        "39b5b2a08291ea2cf299e1a427a3165180ee3cb4"
+      ],
+      "message": "S2-078 Implementar ingreso manual de respaldo\n\nPermite capturar peso manual cuando falla la lectura de balanza y lo identifica en el POS. Aplica el mismo mínimo y precisión del flujo simulado; valores cero, negativos o no numéricos no habilitan el envío.",
+      "files": [
+        "docs/context/estado-actual.md",
+        "docs/context/frontend/pantallas.md",
+        "globalmart-frontend/src/components/pos/PesoProducto.tsx",
+        "globalmart-frontend/src/hardware/scale-cart.ts",
+        "globalmart-frontend/src/pages/Pos.tsx"
+      ],
+      "integrated": true,
+      "refs": [
+        "* dev",
+        "  remotes/origin/dev"
+      ],
+      "tipo": "Trabajo / Dev",
+      "observacion": "Respaldo manual identificado y validado con mínimo/resolución; no representa hardware físico.",
+      "numero": 92
+    },
+    {
+      "hash": "00fbb3981562a122d76fd6c61e2e3104c2f1bb42",
+      "date": "2026-10-27T09:50:50-03:00",
+      "committer_date": "2026-10-27T09:55:52-03:00",
+      "author": "iignvcioo",
+      "parents": [
+        "755ba275391164c675cbc95aaed0eb1fb9c83dbd"
+      ],
+      "message": "S2-079 Mostrar precio e IVA del servidor\n\nIdentifica cantidad en kg y precio por kg en cada línea pesable. El borrador muestra un subtotal estimado; impuestos y total aparecen únicamente con la respuesta autoritativa de MS-5, sin aplicar una tasa fija local de IVA.",
+      "files": [
+        "docs/context/estado-actual.md",
+        "docs/context/frontend/pantallas.md",
+        "globalmart-frontend/src/components/pos/CartItem.tsx",
+        "globalmart-frontend/src/pages/Pos.tsx"
+      ],
+      "integrated": true,
+      "refs": [
+        "* dev",
+        "  remotes/origin/dev"
+      ],
+      "tipo": "Trabajo / Dev",
+      "observacion": "Presenta kg/precio por kg y subtotal estimado, reservando impuestos y total a MS-5.",
+      "numero": 93
+    },
+    {
+      "hash": "4bde899fce12fc6d005100d7585ec27cfbda8024",
+      "date": "2026-10-27T09:54:39-03:00",
+      "committer_date": "2026-10-27T09:57:04-03:00",
+      "author": "iignvcioo",
+      "parents": [
+        "00fbb3981562a122d76fd6c61e2e3104c2f1bb42"
+      ],
+      "message": "S2-080 Probar UX de balanza y respaldo\n\nAgrega tres pruebas E2E del pesaje estable, confirmación, desconexión, ingreso manual, modificación y producto unitario. Comprueba una sola línea pesable, rechazo de pesos inválidos, ausencia de controles de balanza para unitarios e importes de MS-5 tras crear y recuperar la venta.",
+      "files": [
+        "docs/context/estado-actual.md",
+        "docs/context/frontend/pantallas.md",
+        "globalmart-frontend/e2e/weight-cart.spec.ts"
+      ],
+      "integrated": true,
+      "refs": [
+        "* dev",
+        "  remotes/origin/dev"
+      ],
+      "tipo": "Trabajo / Dev",
+      "observacion": "Tres casos de UI pesable con HTTP controlado: confirmación, respaldo y unitario; no prueba periférico.",
+      "numero": 94
+    },
+    {
+      "hash": "bfd46b015d69b2e52c84c22ebccc2b1197b8f0d1",
+      "date": "2026-10-27T10:15:48-03:00",
+      "committer_date": "2026-10-27T10:15:48-03:00",
+      "author": "iignvcioo",
+      "parents": [
+        "4bde899fce12fc6d005100d7585ec27cfbda8024"
+      ],
+      "message": "feat(admin): habilitar gestión de tenant y panel administrativo\n\nIncorpora aprovisionamiento explícito de tenant y cuenta ADMIN, alta y baja de usuarios en la tabla de autenticación, asignación de roles y sucursal inicial.\n\nSepara la navegación administrativa, habilita inventario por sucursal con ajustes validados y prepara el manifiesto de MS-4. Actualiza el grafo de contexto y añade pruebas de regresión.",
+      "files": [
+        "docs/context/dominio/rbac-multirol.md",
+        "docs/context/estado-actual.md",
+        "docs/context/frontend/auth-y-roles.md",
+        "docs/context/frontend/pantallas.md",
+        "docs/context/infraestructura/matriz-rutas.md",
+        "docs/context/servicios/ms1-identity.md",
+        "docs/context/servicios/ms4-inventory.md",
+        "globalmart-frontend/src/App.tsx",
+        "globalmart-frontend/src/components/AdminLayout.tsx",
+        "globalmart-frontend/src/components/AppLayout.tsx",
+        "globalmart-frontend/src/components/admin/CrearUsuarioModal.tsx",
+        "globalmart-frontend/src/config/api.ts",
+        "globalmart-frontend/src/pages/Admin.tsx",
+        "globalmart-frontend/src/pages/AdminDashboard.tsx",
+        "globalmart-frontend/src/pages/AdminInventario.tsx",
+        "globalmart-frontend/src/pages/AdminRoles.tsx",
+        "globalmart-frontend/src/pages/AdminSucursales.tsx",
+        "globalmart-frontend/src/pages/Login.tsx",
+        "k8s/manifests/warehouse-inventory.yaml",
+        "src/TenantIdentityService/Controllers/UsuarioController.cs",
+        "src/TenantIdentityService/DTOs/CrearUsuarioDto.cs",
+        "src/TenantIdentityService/Program.cs",
+        "src/TenantIdentityService/Repositories/UsuarioRepository.cs",
+        "src/TenantIdentityService/Services/AdminBootstrap.cs",
+        "src/TenantIdentityService/Services/AuthService.cs",
+        "src/WarehouseInventoryService/Controllers/StockController.cs",
+        "src/WarehouseInventoryService/Program.cs",
+        "src/WarehouseInventoryService/appsettings.json",
+        "tests/GlobalMart.IntegrationTests/StockConsumerIntegrationTests.cs",
+        "tests/GlobalMart.IntegrationTests/UsuarioIntegrationTests.cs"
+      ],
+      "integrated": true,
+      "refs": [
+        "* dev",
+        "  remotes/origin/dev"
+      ],
+      "tipo": "Trabajo / Dev",
+      "observacion": "Bootstrap ADMIN, unificación Usuarios, navegación administrativa e inventario validado por sucursal; preparación MS-4.",
+      "numero": 95
+    },
+    {
+      "hash": "dbd2b096d545cd5476821dd3a2baa4f420db2eca",
+      "date": "2026-10-27T22:16:18-03:00",
+      "committer_date": "2026-10-27T22:16:18-03:00",
+      "author": "iignvcioo",
+      "parents": [
+        "bfd46b015d69b2e52c84c22ebccc2b1197b8f0d1"
+      ],
+      "message": "feat(admin): desplegar inventario y verificar flujos\n\nDespliega MS-4 con una base warehouse_db independiente en la instancia PostgreSQL existente para respetar las cuotas del clúster. Fija las imágenes de MS-1 y MS-4, agrega MS-4 al workflow Docker y desactiva su consumidor Kafka donde no hay broker.\n\nCompleta la carga paginada del catálogo en inventario y agrega pruebas E2E y de integración PostgreSQL para administración, stock y aislamiento de tenant. Actualiza los nodos de contexto afectados.\n\nVerificado: 331/331 pruebas .NET, 3/3 E2E en Edge, typecheck, paquete Electron y pruebas remotas de login, usuarios, sucursales y ajuste de inventario.",
+      "files": [
+        ".github/workflows/docker-build.yml",
+        "docs/context/estado-actual.md",
+        "docs/context/frontend/pantallas.md",
+        "docs/context/infraestructura/ci-cd.md",
+        "docs/context/infraestructura/matriz-rutas.md",
+        "docs/context/servicios/ms1-identity.md",
+        "docs/context/servicios/ms4-inventory.md",
+        "globalmart-frontend/e2e/admin.spec.ts",
+        "globalmart-frontend/e2e/renderer.tsx",
+        "globalmart-frontend/src/pages/AdminInventario.tsx",
+        "k8s/manifests/all-services.yaml",
+        "k8s/manifests/warehouse-inventory.yaml",
+        "src/WarehouseInventoryService/Program.cs",
+        "tests/GlobalMart.IntegrationTests/ActualizarUsuarioIntegrationTests.cs",
+        "tests/GlobalMart.IntegrationTests/AdminStockIntegrationTests.cs",
+        "tests/GlobalMart.IntegrationTests/AdminUsersTestData.cs",
+        "tests/GlobalMart.IntegrationTests/DesactivarUsuarioIntegrationTests.cs",
+        "tests/GlobalMart.IntegrationTests/UsuarioIntegrationTests.cs"
+      ],
+      "integrated": true,
+      "refs": [
+        "* dev",
+        "  remotes/origin/dev"
+      ],
+      "tipo": "Trabajo / Dev",
+      "observacion": "Despliegue MS-4 con base lógica separada en instancia compartida por cuota, Kafka apagado; paginación y pruebas Admin/stock.",
+      "numero": 96
+    },
+    {
+      "hash": "f0e6f31e51068b971fcfb2018a76f19b53d41db7",
+      "date": "2026-10-27T22:31:56-03:00",
+      "committer_date": "2026-10-27T22:31:56-03:00",
+      "author": "iignvcioo",
+      "parents": [
+        "dbd2b096d545cd5476821dd3a2baa4f420db2eca"
+      ],
+      "message": "feat(admin): gestionar roles propios por tenant\n\nAgrega roles personalizados con permisos heredados de CAJERO, REPONEDOR o ADMIN, migración de MS-1 y endpoints ADMIN para crearlos y eliminarlos sin afectar otros tenants. El JWT y el login incluyen el rol base; la UI permite crear, asignar y eliminar roles propios y seleccionarlos al crear usuarios.\n\nVerificado: 334/334 pruebas .NET, 5/5 E2E en Edge, typecheck y empaquetado Electron. En el clúster se probó crear, asignar y quitar un rol temporal, el login del cajero y el rechazo 409 al intentar eliminar un rol asignado.",
+      "files": [
+        "docs/context/estado-actual.md",
+        "docs/context/frontend/auth-y-roles.md",
+        "docs/context/frontend/pantallas.md",
+        "docs/context/servicios/ms1-identity.md",
+        "globalmart-frontend/e2e/admin.spec.ts",
+        "globalmart-frontend/src/components/admin/CrearUsuarioModal.tsx",
+        "globalmart-frontend/src/pages/Admin.tsx",
+        "globalmart-frontend/src/pages/AdminRoles.tsx",
+        "k8s/manifests/all-services.yaml",
+        "src/TenantIdentityService/Controllers/AuthController.cs",
+        "src/TenantIdentityService/Controllers/UsuarioController.cs",
+        "src/TenantIdentityService/Data/Migrations/20261028011731_AddTenantCustomRoles.Designer.cs",
+        "src/TenantIdentityService/Data/Migrations/20261028011731_AddTenantCustomRoles.cs",
+        "src/TenantIdentityService/Data/Migrations/TenantDbContextModelSnapshot.cs",
+        "src/TenantIdentityService/Data/TenantDbContext.cs",
+        "src/TenantIdentityService/Models/Rol.cs",
+        "src/TenantIdentityService/Services/JwtService.cs",
+        "tests/GlobalMart.IntegrationTests/AdminCustomRolesIntegrationTests.cs",
+        "tests/GlobalMart.IntegrationTests/AdminUsersTestData.cs"
+      ],
+      "integrated": true,
+      "refs": [
+        "* dev",
+        "  remotes/origin/dev"
+      ],
+      "tipo": "Trabajo / Dev",
+      "observacion": "Roles propios por tenant con base heredada, migración/JWT/UI y tres pruebas backend nuevas; cierre reporta 334/334 y 5 E2E.",
+      "numero": 97
+    }
+  ]
+}

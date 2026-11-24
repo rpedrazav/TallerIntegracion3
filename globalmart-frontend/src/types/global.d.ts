@@ -1,4 +1,5 @@
 import type { ScaleRendererApi } from '../hardware/scale-contract';
+import type { TerminalRendererApi } from '../payments/terminal-ipc';
 import type {
   IniciarOperacionParams,
   OperacionTerminalResult,
@@ -18,6 +19,7 @@ declare global {
       setToken: (token: string) => Promise<void>;
       logout: () => Promise<void>;
       scale: ScaleRendererApi;
+      terminal: TerminalRendererApi;
       devices?: {
         terminal: {
           iniciar: (params: IniciarOperacionParams) => Promise<OperacionTerminalResult>;

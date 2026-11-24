@@ -3,9 +3,9 @@ id: estado-actual
 tipo: indice
 titulo: Estado Real de Implementación — GlobalMart OS
 estado: vigente
-fuentes: [docs/context/_reports/inventario.md, src/, globalmart-frontend/src/api/client.ts, globalmart-frontend/src/hardware/simulated-scale-adapter.ts, globalmart-frontend/src/hardware/serial-scale-adapter.ts, globalmart-frontend/src/hardware/scale-adapter-factory.ts, globalmart-frontend/src/hardware/scale-ipc.ts, globalmart-frontend/src/preload.ts, globalmart-frontend/tests/simulated-scale-adapter.test.cjs, globalmart-frontend/tests/serial-scale-adapter.test.cjs, globalmart-frontend/tests/scale-ipc.test.cjs, git log, docs/context/_reports/preguntas-abiertas.md, tests/GlobalMart.IntegrationTests/CobroSeguroIntegrationTests.cs, docs/qa/S2-035/reporte.md, new-ingresses.yaml]
+fuentes: [docs/context/_reports/inventario.md, src/, tests/GlobalMart.IntegrationTests/SucursalIntegrationTests.cs, tests/GlobalMart.IntegrationTests/SucursalOperativaIntegrationTests.cs, tests/GlobalMart.IntegrationTests/ReactivarUsuarioIntegrationTests.cs, globalmart-frontend/src/api/client.ts, globalmart-frontend/src/store/useTenantStore.ts, globalmart-frontend/src/pages/Admin.tsx, globalmart-frontend/src/pages/AdminRoles.tsx, globalmart-frontend/src/components/admin/UsuariosList.tsx, globalmart-frontend/src/components/admin/EditarUsuarioModal.tsx, globalmart-frontend/src/hardware/simulated-scale-adapter.ts, globalmart-frontend/src/hardware/serial-scale-adapter.ts, globalmart-frontend/src/hardware/scale-adapter-factory.ts, globalmart-frontend/src/hardware/scale-ipc.ts, globalmart-frontend/src/payments/terminal-ipc.ts, globalmart-frontend/src/payments/synchronizeCardPayment.ts, globalmart-frontend/src/preload.ts, globalmart-frontend/e2e/admin-flows.spec.ts, globalmart-frontend/e2e/admin.spec.ts, globalmart-frontend/e2e/weight-cart.spec.ts, globalmart-frontend/tests/admin-access.test.cjs, globalmart-frontend/tests/user-edit.test.cjs, globalmart-frontend/tests/user-deactivation.test.cjs, globalmart-frontend/tests/simulated-scale-adapter.test.cjs, globalmart-frontend/tests/serial-scale-adapter.test.cjs, globalmart-frontend/tests/scale-ipc.test.cjs, globalmart-frontend/tests/terminal-ipc.test.cjs, globalmart-frontend/tests/synchronized-card-payment.test.cjs, git log, docs/context/_reports/preguntas-abiertas.md, tests/GlobalMart.IntegrationTests/CobroSeguroIntegrationTests.cs, docs/qa/S2-035/reporte.md, docs/qa/TI3-773/reporte.md, docs/qa/TI3-799/reporte.md, docs/qa/TI3-800/reporte.md, new-ingresses.yaml]
 verificado_contra_codigo: true
-ultima_revision: 2026-10-25
+ultima_revision: 2026-11-23
 depende_de: []
 publica: []
 consume: []
@@ -13,10 +13,110 @@ reglas: []
 ---
 # Estado Real de Implementación — GlobalMart OS
 
-> Nodo más importante para cualquier IA nueva. Refleja el estado REAL del código al 29-09-2026, validado contra el repositorio y las aclaraciones del equipo de desarrollo.
+## S3-038 — Anulación desde la UI (2026-11-23)
+
+[PROBADO CON API SIMULADA] `e2e/ventas-turno.spec.ts` cubre ADMIN con anulación exitosa, CAJERO sin botón y rechazo 403 con una pantalla ADMIN desactualizada, y TARJETA con reversa rechazada. Comprueba estado e importe después de recargar. Los tres escenarios aprobaron dentro de una corrida de 25/25 pruebas, exit code 0; TypeScript aprobado. No certifica persistencia ni permisos reales del backend: HTTP y sesión están simulados. [Evidencia y límites](../qa/S3-038/reporte.md). Electron empaquetado y clúster [NO VERIFICADOS].
+
+## S3-013 — Mensajes de anulación (2026-11-23)
+
+[IMPLEMENTADO] `VentasTurnoPage` traduce los códigos S2-091/S2-093 a mensajes diferenciados; conserva motivo y error en el diálogo y consulta nuevamente las ventas sin mutación optimista. Rechazo e incertidumbre no se presentan como devolución confirmada. Una lectura fallida oculta las filas desactualizadas y avisa. El 404 no distingue venta ajena de inexistente y el 401 mantiene la redirección global al login. [Pruebas y límites](../qa/S3-013/reporte.md). Clúster [NO VERIFICADO].
+
+## TI3-800 — Botón Reactivar usuarios (2026-11-22)
+
+[IMPLEMENTADO Y PROBADO LOCALMENTE] En Administración, cada usuario inactivo muestra **Reactivar**. La acción usa el JWT existente en `POST /users/{id}/reactivate`; solo un 204 cambia la fila seleccionada a `activo=true` mediante estado local, sin recargar ni modificar otras filas. El progreso accesible **Reactivando…** y una guarda single-flight impiden solicitudes duplicadas. Al activarse la fila desaparece Reactivar y vuelven a estar disponibles Editar y Desactivar. Los errores 401, 403, 404 y de red mantienen el estado inactivo. Pruebas Node administrativas: 13/13 y TypeScript aprobados con exit code 0. Los 22 escenarios Playwright administrativos mostraron `ok`, pero el runner se interrumpió tras finalizar los casos porque su servidor local permaneció abierto; resultado PASS REPORTADO, sin exit code 0. [Evidencia](../qa/TI3-800/reporte.md).
+
+## TI3-799 — Reactivación de usuarios (2026-11-22)
+
+[IMPLEMENTADO Y PROBADO LOCALMENTE] MS-1 expone `POST /users/{id}/reactivate` con los alias `/api/users` y `/api/v1/users`. Exige rol ADMIN y confirma contra `Usuarios` que el solicitante siga activo, por lo que un ADMIN desactivado no puede reutilizar un JWT vigente para reactivar cuentas. La escritura cambia únicamente `Activo=true` con filtro por ID y tenant; usuario ya activo devuelve 204, inexistente/ajeno 404, sin JWT 401 y CAJERO o ADMIN inactivo 403. Roles, sucursal, credenciales e historial permanecen intactos. Integración PostgreSQL aislada: 8/8 pruebas nuevas y 33/33 de regresión aprobadas, incluido login 200 → baja → 401 → reactivación → login 200. La acción frontend fue implementada posteriormente en TI3-800; el despliegue remoto queda [NO VERIFICADO]. [Evidencia](../qa/TI3-799/reporte.md).
+
+## Consulta de lotes por vencer (2026-11-20)
+
+[IMPLEMENTADO Y PROBADO LOCALMENTE] MS-4 expone `GET /lotes?porVencer=&sucursal_id=` para ADMIN y REPONEDOR. Valida rango 0–365 y sucursal activa mediante MS-1, toma el tenant exclusivamente del JWT y devuelve solo lotes disponibles, no vencidos, de la sucursal solicitada y dentro del límite inclusivo, ordenados por vencimiento e ID. La respuesta no expone `TenantId`. Regresión MS-4: 44/44. Integración HTTP con PostgreSQL real y despliegue remoto [NO VERIFICADOS].
+
+## Comportamiento con lotes insuficientes (2026-11-20)
+
+[IMPLEMENTADO Y PROBADO LOCALMENTE] Si el stock agregado o la suma de lotes disponibles no alcanza para un ítem de `sale.completed`, MS-4 devuelve `TransientFailure`, no confirma el offset y deja el evento pendiente para una recepción posterior. El warning registra producto, sucursal, cantidad solicitada y `EventId`. No guarda descuentos, movimientos ni idempotencia. Una prueba con stock agregado 10, lotes por 5 y venta de 6 conservó todas las cantidades y verificó el log. Regresión MS-4: 40/40. Kafka y PostgreSQL reales para este caso [NO VERIFICADOS].
+
+## Descuento FEFO en ventas (2026-11-20)
+
+[IMPLEMENTADO Y PROBADO LOCALMENTE] Al procesar `sale.completed`, MS-4 carga los lotes disponibles del tenant, producto y sucursal, los ordena por `FechaVencimiento ASC` e `Id ASC`, y descuenta primero el de vencimiento más próximo. Los cambios de lotes, stock agregado, movimientos e idempotencia continúan bajo el único `SaveChanges` del evento; un fallo intermedio no persiste descuentos parciales. La prueba dirigida con dos lotes confirmó cantidades finales 0 y 2 al vender 8 de 10 unidades. Regresión MS-4: 39/39; proyecto de integración compila. Kafka y PostgreSQL reales para FEFO [NO VERIFICADOS].
+
+## TI3-773 — Baja lógica de sucursales (2026-11-20)
+
+[IMPLEMENTADO Y PROBADO LOCALMENTE] MS-1 implementa `DELETE /sucursales/{id}` y su alias `/api/sucursales/{id}` para ADMIN. La escritura usa id y tenant del JWT, devuelve 404 para inexistente/ajena, conserva la fila y relaciones históricas, y `GET /sucursales` expone solo activas. MS-5 reutiliza ese listado autorizado, propagando el JWT, antes de abrir un turno y antes de crear una venta. Sucursal inexistente, ajena o inactiva devuelve 404 sin revelar la causa; MS-1 no disponible o una respuesta inválida devuelve 503 y bloquea la operación. La revalidación de la venta cubre la desactivación posterior a la apertura del turno. Integración MS-1: 13/13; validación MS-5: 9/9; regresión de turnos/venta: 6/6, todas sobre PostgreSQL aislado y con exit code 0. La integración entre procesos desplegados MS-1 → MS-5 queda [NO VERIFICADA]. [Evidencia](../qa/TI3-773/reporte.md).
+
+## TI3-772 — Edición de sucursales en MS-1 (2026-11-20)
+
+[IMPLEMENTADO Y PROBADO LOCALMENTE] `PUT /sucursales/{id}` y su alias `/api/sucursales/{id}` permiten a ADMIN actualizar nombre y zona horaria IANA. El tenant proviene solo del JWT y la escritura se limita por id y tenant; una sucursal inexistente o ajena devuelve 404. El nombre es único por tenant sin distinguir mayúsculas, permite conservar el propio y repetirse en otro tenant; el conflicto devuelve 409. CAJERO recibe 403 y una zona inválida devuelve 400. Integración PostgreSQL aislada: 8/8 pruebas aprobadas; build MS-1 aprobado. La baja lógica fue implementada posteriormente por TI3-773.
+
+## TI3-736 / S2-105 — Regresión administrativa (2026-11-19)
+
+[IMPLEMENTADO; INTEGRACIÓN POSTGRESQL NO VERIFICADA] `POST /products` y `PUT /products/{id}` ahora exigen JWT con rol ADMIN en MS-3; CAJERO recibe 403 antes de ejecutar la operación, incluida una edición ordinaria que no cambia `IsActive`. Rutas, DTO, lecturas y aislamiento por tenant permanecen sin cambios. Las pruebas dirigidas comprueban rechazo CAJERO, control positivo ADMIN y conservación del otro tenant, pero no pudieron ejecutarse en este entorno porque no existe PostgreSQL de pruebas disponible ni está configurada `GLOBALMART_TEST_POSTGRES`. Build de MS-3, TypeScript y 20 pruebas Node aprobaron con exit code 0. La regresión Playwright administrativa aprobó 34/34 casos en 2.7 minutos con resumen final y exit code 0: 8 de acceso Admin (incluido `/admin/productos`), 17 de usuarios/configuración y 9 de productos. [Evidencia](../qa/TI3-736/reporte.md).
+
+## S3-016 — Validar recepciones en MS-4 (2026-11-18)
+
+[IMPLEMENTADO Y PROBADO LOCALMENTE] `POST /recepciones` valida antes de abrir la transacción: cantidad positiva con máximo cuatro decimales, vencimiento no pasado, IDs y ubicación válidos, producto activo visible en MS-3 y sucursal activa visible en MS-1 con el mismo JWT. Errores locales devuelven 400, referencias inexistentes/ajenas/inactivas devuelven 404 y dependencias no disponibles o inválidas devuelven 503. Producto inexistente, sucursal ajena, cantidad cero y vencimiento pasado no crearon stock, lote ni movimiento. Regresión MS-4: 38/38 aprobadas. Integración HTTP completa con servicios y PostgreSQL corresponde a S3-017; despliegue remoto [NO VERIFICADO].
+
+## S3-015 — Registrar recepciones en MS-4 (2026-11-18)
+
+[IMPLEMENTADO Y PROBADO LOCALMENTE] `POST /recepciones` exige JWT y rol ADMIN/REPONEDOR, toma el tenant exclusivamente del token y guarda lote, incremento de stock y movimiento `RECEPCION` en una transacción serializable. PostgreSQL real: HTTP 201 creó los tres registros; un fallo de persistencia forzado devolvió 500 y conservó stock, lote y movimiento sin cambios parciales; sin JWT devolvió 401. S3-016 completó las validaciones previas. Despliegue remoto [NO VERIFICADO].
+
+## S3-014 — Modelo Lote y migración de MS-4 (2026-11-18)
+
+[IMPLEMENTADO Y PROBADO LOCALMENTE] `Lote` conserva fecha de vencimiento, cantidad disponible y tenant, y agrega `SucursalId` obligatorio. La migración `AddSucursalToLote` se aplicó sobre una base limpia y sobre el esquema anterior con stock y lote existentes; ambos registros conservaron sus valores. Regresión dirigida de MS-4: 33/33 aprobadas. Base remota [NO VERIFICADA].
+
+## S3-002 — Contrato mínimo de recepciones y lotes FEFO (2026-11-17)
+
+[CONTRATO DEFINIDO; IMPLEMENTACIÓN PARCIAL] Se fijaron request, respuesta, errores y validaciones de `POST /recepciones` y `GET /lotes?porVencer=&sucursal_id=` reutilizando los campos reales de `Lote`. S3-014 agregó `SucursalId`, S3-015 implementó la recepción atómica y S3-016 completó sus validaciones; la consulta de lotes sigue pendiente. Mermas, transferencias, conteos, alertas Kafka y descuento FEFO quedan fuera de S3-002. [Contrato](dominio/fefo.md).
+
+## S2-100 — Duplicados y fallo intermedio con broker (2026-11-17)
+
+[IMPLEMENTADO Y PROBADO LOCALMENTE] Dos pruebas de integración con Kafka y PostgreSQL reales aprobaron 2/2: publicar dos veces el mismo `EventId` descuenta una sola vez, y un fallo por stock insuficiente en el segundo ítem no persiste el primer descuento, movimientos ni idempotencia. Tras reponer stock, el mismo evento se reprocesó y confirmó ambos descuentos juntos. La fixture usa un topic único por corrida. Clúster remoto [NO VERIFICADO]. [Evidencia](../qa/S2-100/reporte.md).
+
+## S2-099 — Commit y recuperación Kafka (2026-11-17)
+
+[IMPLEMENTADO Y PROBADO LOCALMENTE] El consumidor confirma offset solo para `Processed`, `Duplicate` o poison messages tratados explícitamente (`InvalidPayload`/`Unrecoverable` publicados en `sale.completed.error`). `TransientFailure` y cualquier estado desconocido vuelven al mismo offset sin confirmarlo. El loop registra cada reintento y cada confirmación con su resultado. Política dirigida y regresión MS-4: 33/33 aprobadas. La recuperación real ante caída de PostgreSQL fue verificada en S2-096; no se repitió contra el clúster sin broker.
+
+## S2-098 — Evitar stock negativo por evento (2026-11-17)
+
+[IMPLEMENTADO Y PROBADO LOCALMENTE] `StockRepository` valida existencia y disponibilidad antes de preparar cada descuento. Stock inexistente o insuficiente produce `TransientFailure`: el consumidor registra la incidencia, no confirma el offset y reintenta sin guardar descuentos, movimientos ni `EventId`. Se eliminó la creación de stock negativo. Prueba dirigida: una solicitud de 3 unidades con disponibilidad 2 conserva stock 2. Suite MS-4: 32/32 aprobadas. PostgreSQL y Kafka reales para este escenario [NO VERIFICADOS].
+
+## S2-097 — Descuento e idempotencia atómicos (2026-11-17)
+
+[IMPLEMENTADO Y PROBADO LOCALMENTE] MS-4 prepara todos los descuentos, movimientos y el registro de `EventId` en un mismo `WarehouseDbContext` y los persiste con un único `SaveChanges`, por lo que EF Core los agrupa en una transacción. Si falla cualquier ítem no se persiste ninguno ni se registra la idempotencia; el consumidor conserva el offset para reintentar según S2-096. Prueba dirigida: al fallar el segundo ítem, el primer stock permanece intacto y no existen movimiento ni `EventId`. Suite MS-4: 31/31 aprobadas. PostgreSQL y Kafka reales para este escenario [NO VERIFICADOS].
+
+## TI3-727 / S2-096 — Política de errores Kafka (2026-11-17)
+
+[IMPLEMENTADO Y PROBADO LOCALMENTE] MS-4 distingue eventos procesados, duplicados, payloads inválidos, eventos irrecuperables y fallos transitorios. Procesados y duplicados confirman offset; inválidos e irrecuperables se publican en `sale.completed.error` y solo se confirman tras esa entrega; un fallo transitorio vuelve al mismo offset sin confirmarlo. Pruebas unitarias MS-4: 30/30 aprobadas. Con Kafka y PostgreSQL locales reales se verificó el destino de error y que una caída de PostgreSQL mantuvo offset 1, log-end 2 y lag 1; tras recuperación avanzó a offset 2 y lag 0. Kafka en el clúster sigue [NO VERIFICADO] porque el namespace no tiene broker.
+
+## TI3-735 / S2-104 — Accesibilidad administrativa por teclado (2026-11-11)
+
+[IMPLEMENTADO; VALIDACIÓN E2E PARCIAL] Los modales de crear usuario, editar usuario y producto exponen semántica de diálogo, foco inicial, contención Tab/Shift+Tab, cierre con Escape y devolución del foco al invocador. Los errores de campos se asocian mediante `aria-invalid` y `aria-describedby`. Productos recupera foco visible, usa submit nativo con Enter y una guarda single-flight contra doble envío. Roles adopta tokens visuales y mensajes accesibles con icono, título y detalle, sin alterar las defensas TI3-733 para usuarios inactivos. Regresiones Node: 12/12, exit code 0; TypeScript: exit code 0. La primera corrida E2E informó 25 casos `ok` y un fallo del nuevo foco inicial de productos; tras corregirlo, el caso restante fue informado `ok` en ejecución dirigida. En ambas corridas el servidor local quedó abierto y se interrumpió el runner sin resumen final ni exit code 0; evidencia E2E clasificada como PASS REPORTADO, no cierre independiente completo.
+
+## TI3-734 / S2-103 — Administración de productos (2026-11-11)
+
+[IMPLEMENTADO; VALIDACIÓN E2E PARCIAL] La edición de MS-3 persiste ahora `CodigoBarras` junto con los demás datos del producto, conservando el lookup por ID y tenant y las validaciones existentes. `ProductosPage` exige precio mayor que cero, interpreta el arreglo real de errores de FluentValidation y presenta mensajes diferenciados para 400, 401, 403, 404, fallos de red y errores de desactivación. POST, PUT y DELETE mantienen el refresco automático de la tabla; los filtros de texto, categoría y solo activos continúan aplicándose sin recarga manual. TypeScript finalizó con exit code 0. Los ocho escenarios de `productos-admin.spec.ts` fueron informados como `ok`, pero el servidor local de Playwright quedó abierto y la ejecución debió interrumpirse sin resumen final ni exit code 0; resultado E2E clasificado como PASS REPORTADO. La prueba de integración MS-3 compiló, pero no se ejecutó porque el entorno no define `GLOBALMART_TEST_POSTGRES`. La pantalla continúa limitada a la primera página de 500 productos; ampliar paginación queda fuera de TI3-734.
+
+## TI3-733 / S2-102 — Estados de usuarios inactivos (2026-11-11)
+
+[IMPLEMENTADO; VALIDACIÓN E2E PARCIAL] La administración conserva usuarios activos e inactivos en la misma tabla con indicadores textuales y visuales. Las cuentas inactivas no pueden iniciar edición básica ni guardar cambios de roles desde la UI; tabla, handlers, modal y pantalla de roles aplican defensas para evitar PUT/POST, mientras los usuarios activos mantienen sus acciones. Después de DELETE 204 la fila permanece con `activo=false`, el bloqueo se aplica inmediatamente y una recarga controlada conserva la cuenta como Inactivo. MS-1 no fue modificado por TI3-733 y continúa aceptando PUT y asignación de roles sobre inactivos, por lo que esa restricción es solo de interfaz. La reactivación backend fue implementada posteriormente por TI3-799; su acción frontend sigue pendiente. Pruebas Node relacionadas y regresión TI3-732: 12/12, exit code 0. TypeScript y empaquetado Electron: exit code 0. Playwright informó 23/23 casos `ok`, pero el servidor local no cerró y el runner fue interrumpido sin resumen final ni exit code 0; E2E registrado como PASS REPORTADO.
+
+## TI3-732 / S2-101 — Protección Admin por rol activo (2026-11-11)
+
+[IMPLEMENTADO Y PROBADO] El frontend deriva `esAdmin` exclusivamente del claim JWT `active_role`: permite `ADMIN` y `SUPER_ADMIN`, y deniega CAJERO, valores desconocidos o ausencia del claim aunque `roles` contenga ADMIN. El `AdminRoute` existente protege `/admin` y sus rutas hijas, mientras `AppLayout` oculta el enlace administrativo con la misma decisión. La prueba unitaria real del store aprobó 9/9 y las 8 aserciones E2E de `admin.spec.ts` finalizaron correctamente, incluyendo el caso crítico `roles: [ADMIN, CAJERO]` con `active_role: CAJERO`, acceso directo a `/admin` y `/admin/usuarios`, ADMIN activo y sesión ausente. TypeScript y el empaquetado Electron aprobaron. El runner E2E requirió interrupción manual después de informar los 8 casos como aprobados porque su servidor local no terminó automáticamente. El frontend sigue sin validar criptográficamente ni comprobar la expiración del JWT antes de renderizar; la autorización backend continúa siendo la defensa de seguridad independiente.
+
+## S2-091 — Contrato de anulación total (2026-11-09)
+
+[CONTRATO S2-091; BACKEND IMPLEMENTADO EN S2-092] [Anulación total](dominio/anulacion-venta.md): POST `/ventas/{id}/anular` y alias `/api`, JWT + ADMIN del mismo tenant, motivo obligatorio, venta COMPLETADA en efectivo y turno original ABIERTO. Devolución parcial fuera de alcance. S2-093 amplía tarjeta con reversa simulada: solo una respuesta REVERSED validada permite anular; rechazo e incertidumbre permanecen visibles sin fingir devolución. S2-091 entregó contrato; S2-092 implementa endpoint, autorización en servicio y transición/auditoría atómicas. [Reporte y alcance de pruebas](../qa/S2-092/reporte.md). UI y despliegue remoto no verificados.
+
+## Avance administrativo del 2026-10-27
+
+[IMPLEMENTADO Y PROBADO] MS-1 permite aprovisionar un tenant y su administrador mediante `--bootstrap-admin` y variables de entorno explícitas; la creación de usuarios valida el tenant del JWT, acepta sucursal inicial del mismo tenant y entrega correo, contraseña inicial y tenant ID para copiar en la UI. Edición y baja lógica actúan sobre `Usuarios`, la tabla que consulta el login; las desactivaciones impiden nuevos inicios de sesión. La vista ADMIN tiene navegación propia para usuarios, gestión de roles base y propios, sucursales, inventario, catálogo y configuración. MS-4 agrega listado y ajuste de stock por sucursal con validación remota de producto y sucursal y registro de movimiento. La suite .NET aprobó 334/334 pruebas con PostgreSQL local; el flujo ADMIN aprobó 5/5 pruebas E2E en Edge, `npm run typecheck` y el empaquetado Electron aprobaron. En el clúster se aprovisionó el ADMIN demo; pasaron login, listado de usuarios/roles, creación, edición y baja de usuario, creación de sucursal, ajuste/listado de stock, creación/asignación/eliminación de rol propio y rechazos 401/403/400/409. MS-4 corre en `student-rpedraza` con `warehouse_db` independiente en la instancia PostgreSQL del POS porque la cuota global de PVC está completa. Kafka no está disponible en ese namespace y el consumidor de MS-4 se desactivó por configuración; la sincronización de stock vía eventos queda [NO VERIFICADO]. La revocación de JWT ya emitidos permanece pendiente.
+
+> Nodo más importante para cualquier IA nueva. Refleja el estado REAL del código al 27-10-2026, validado contra el repositorio y las aclaraciones del equipo de desarrollo.
 
 **Contexto del proyecto:** Proyecto académico de Ingeniería Civil Informática, Universidad Católica de Temuco (UCT). Las integraciones externas que no puedan obtenerse legalmente (certificados digitales reales del SII, terminales de pago bancario físicos) serán simuladas.  
-**Sprint en curso:** **Sprint 1** (penúltimo día de la Semana 3 de un ciclo de 4 semanas, de miércoles a miércoles).
+**Sprint en curso:** **Sprint 3** (Semanas 9–12, ciclos de miércoles a miércoles). La Semana 9 contiene las tareas de la Semana 8 del Sprint 2, no ejecutadas por exigencia del profesor. Ver [[sprint-actual]].
 
 **Revisión del DoD:** completada. Ver [dod-sprint1-revision.md](dod-sprint1-revision.md) para el veredicto de los siete criterios y sus hallazgos técnicos.
 
@@ -28,10 +128,10 @@ S2-052 — 2026-10-19: **2/2 pruebas de integración HTTP locales aprobadas** pa
 
 | Microservicio | Controllers | Kafka | Tests | Estado General |
 |---------------|-------------|-------|-------|----------------|
-| MS-1 Identity | ✅ 3 controllers | ❌ No Kafka | ❌ Solo seed | **PARCIAL** |
+| MS-1 Identity | ✅ 3 controllers | ❌ No Kafka | ✅ Integración PostgreSQL y prueba remota ADMIN | **PARCIAL** |
 | MS-2 Tax | ✅ 1 controller | ❌ No Kafka | ✅ ManualTest | **PARCIAL** |
 | MS-3 Catalog | ✅ 2 controllers | ❌ No Kafka | ✅ Manual .http + baja/PUT TI3-642 + 9 casos RN-01 S2-023 | **PARCIAL** |
-| MS-4 Warehouse | ✅ 1 controller | ✅ Consumer sale.completed | ❌ No tests | **PARCIAL** |
+| MS-4 Warehouse | ✅ 2 controllers | ✅ Consumer sale.completed (desactivado en clúster sin broker) | ✅ Integración PostgreSQL y prueba remota de ajuste | **PARCIAL** |
 | MS-5 POS | ✅ 2 controllers | ✅ OutboxPublisherWorker sale.completed | ✅ AgregarItemTest + CobroCuadreTest + S2-008/S2-009/S2-010/S2-037/S2-038/S2-039 + contrato S2-040 + 10 HTTP y 13 directos RN-01 S2-023 | **PARCIAL** |
 | MS-6 SupplyChain | ❌ Sin controllers | ❌ Sin Kafka | ❌ Sin tests | **PLANIFICADO** |
 | MS-7 Analytics | ❌ Sin controllers | ❌ Sin consumers | ❌ Sin tests | **PLANIFICADO** |
@@ -45,17 +145,19 @@ S2-052 — 2026-10-19: **2/2 pruebas de integración HTTP locales aprobadas** pa
 **Implementado:**
 - `POST /auth/login` — genera JWT con tenant_id, roles, active_role (expiración: 8 horas por defecto en appsettings.json) [IMPLEMENTADO]
 - `GET/POST/PUT/DELETE /users` (alias `/api/v1/users`, `/api/users`) — CRUD usuarios con RBAC [IMPLEMENTADO]
-- `DELETE /api/v1/users/{id}` (mismos alias) actualiza solo `users.is_active=false`, filtrando ID y tenant del JWT; retorna 204 también si ya estaba inactivo, 400 ante autodesactivación y 404 para ID inexistente/ajeno. Siete casos DELETE y tres de regresión PUT aprobados con PostgreSQL aislado en Release el 2026-10-06 [IMPLEMENTADO]. PUT/DELETE usan `users`; creación, listado y login aún usan `Usuarios`. Ver [MS-1](servicios/ms1-identity.md).
+- `DELETE /api/v1/users/{id}` (mismos alias) actualiza `Usuarios.Activo=false`, filtrando ID y tenant del JWT; retorna 204 también si ya estaba inactivo, 400 ante autodesactivación y 404 para ID inexistente/ajeno. Desde 2026-10-27 creación, listado, edición, baja y login usan `Usuarios`; el antiguo comportamiento sobre `users` quedó reemplazado. Flujo de integración PostgreSQL probado en la suite .NET. Ver [MS-1](servicios/ms1-identity.md).
 - `POST /users/{id}/roles` (alias `/api/v1/users/{id}/roles`) — asignar roles (sin SUPER_ADMIN). Actualización atómica de tabla intermedia mediante EF Core Change Tracker y 3 tests de integración validados (TI3-456) [IMPLEMENTADO]
+- `GET/POST /users/roles` y `DELETE /users/roles/{id}` — listar roles base y propios, crear un rol propio con permisos base y eliminarlo si no está asignado; tres pruebas de integración de roles propios y verificación remota [IMPLEMENTADO]
 - `GET/PUT /tenants/{id}/config` — config de tenant (país, moneda, IVA), validación con FluentValidation (TI3-459), tracking EF Core y rol ADMIN del mismo tenant (TI3-458) [IMPLEMENTADO]
-- `GET /sucursales` — lista sucursales del tenant del JWT, con zona horaria efectiva [IMPLEMENTADO]
+- `GET /sucursales` — lista solo sucursales activas del tenant del JWT, con zona horaria efectiva [IMPLEMENTADO]
 - `POST /sucursales` — crea sucursal (solo ADMIN), zona horaria IANA opcional y validada, nombre único por tenant sin distinguir mayúsculas (409) [IMPLEMENTADO]
+- `PUT /sucursales/{id}` — actualiza nombre y zona horaria (solo ADMIN), con aislamiento por tenant, 404 para inexistente/ajena y 409 para nombre duplicado [IMPLEMENTADO]
+- `DELETE /sucursales/{id}` — baja lógica ADMIN, con aislamiento por tenant; conserva fila/relaciones y devuelve 404 para inexistente/ajena [IMPLEMENTADO]
 - TenantMiddleware — extrae tenant_id del JWT e inyecta en DbContext [IMPLEMENTADO]
-- Seed de desarrollo: cajero@demo.cl (ver contraseña en [[como-ejecutar]]) [IMPLEMENTADO]
+- Seed de desarrollo: cajero@demo.cl y admin@demo.cl, idempotente por usuario (ver contraseña en [[como-ejecutar]]) [IMPLEMENTADO]
 
 **No implementado (PLANIFICADO):**
 - `POST /auth/refresh` — renovar token
-- `PUT`/`DELETE /sucursales/{id}` — editar y desactivar sucursales (solo existe crear y listar)
 - Asignación de usuarios a sucursales (`UsuarioSucursales` sin endpoint)
 - `GET /tenants/{id}/sucursales` — superseded por `GET /sucursales`
 - `GET /fx/rates` — tipos de cambio
@@ -89,9 +191,9 @@ S2-052 — 2026-10-19: **2/2 pruebas de integración HTTP locales aprobadas** pa
 ### MS-3 · Catalog & Pricing Service [PARCIAL]
 **Implementado:**
 - TI3-643 / S2-012: `GET /products/{id}`, consumido por el POS, solo expone productos propios activos mediante `GetActiveByIdAsync`; productos desactivados o de otro tenant retornan 404. PUT conserva `GetByIdAsync` sin filtro de estado para permitir reactivación ADMIN. Test específico aprobado 1/1 y build de MS-3 aprobado el 2026-10-14 [IMPLEMENTADO].
-- TI3-642 / S2-011: `DELETE /products/{id}` exige ADMIN y tenant del JWT; actualiza únicamente `IsActive=false` con filtro explícito por ID y tenant, preservando físicamente el producto. Retorna 204 sin body, también si ya estaba inactivo (sin nueva escritura), y el mismo 404 para inexistente/otro tenant; sin JWT 401 y sin ADMIN 403. PUT exige ADMIN solo si cambia `IsActive`, manteniendo permitidas las demás ediciones autenticadas. `DesactivarProductoIntegrationTests`: 11/11 casos aprobados con PostgreSQL 16 aislado el 2026-10-14; build de MS-3 aprobado [IMPLEMENTADO].
+- TI3-642 / S2-011: `DELETE /products/{id}` exige ADMIN y tenant del JWT; actualiza únicamente `IsActive=false` con filtro explícito por ID y tenant, preservando físicamente el producto. Retorna 204 sin body, también si ya estaba inactivo (sin nueva escritura), y el mismo 404 para inexistente/otro tenant; sin JWT 401 y sin ADMIN 403. TI3-736 amplía la autorización: todo PUT y POST de productos exige ADMIN. `DesactivarProductoIntegrationTests`: evidencia histórica 11/11 con PostgreSQL 16 aislado el 2026-10-14; regresión TI3-736 pendiente de PostgreSQL local [IMPLEMENTADO; PRUEBA ACTUAL NO VERIFICADA].
 - `ProductosPage` confirma DESACTIVACIÓN, mantiene `axios.delete` y recarga con `fetchDatos()` tras 204; el producto permanece como Inactivo salvo que el filtro solo activos lo oculte. Typecheck aprobado el 2026-10-14 [IMPLEMENTADO].
-- `GET/POST/PUT /products` — CRUD productos [IMPLEMENTADO]
+- `GET /products` exige JWT; `POST /products` y `PUT /products/{id}` exigen JWT + ADMIN — CRUD productos [IMPLEMENTADO]
 - `GET /products/search?q=` — búsqueda full-text con índice trigram `pg_trgm` [IMPLEMENTADO]
 - `GET /products/lookup?barcode=` — lookup por código de barras [IMPLEMENTADO]
 - `GET/POST /categories` — CRUD categorías con jerarquía (parentId) [IMPLEMENTADO]
@@ -108,6 +210,7 @@ S2-052 — 2026-10-19: **2/2 pruebas de integración HTTP locales aprobadas** pa
 ### MS-4 · Warehouse & Inventory Service [PARCIAL]
 **Implementado:**
 - `GET /stock/{productId}?sucursal_id=` — consulta stock [IMPLEMENTADO]
+- `POST /recepciones` — valida referencias y dominio, crea lote, suma stock y registra movimiento atómicamente [IMPLEMENTADO LOCALMENTE]
 - `KafkaConsumerService` — consume `sale.completed`, descuenta stock con idempotencia [IMPLEMENTADO]
 - Tabla `EventosKafkaProcesados` — garantiza exactly-once processing [IMPLEMENTADO]
 - TenantMiddleware [IMPLEMENTADO]
@@ -115,8 +218,7 @@ S2-052 — 2026-10-19: **2/2 pruebas de integración HTTP locales aprobadas** pa
 
 **No implementado (PLANIFICADO):**
 - `POST /stock/ajuste` — ajuste manual
-- `POST /recepciones` — recepción de mercancía (FEFO)
-- `GET /lotes` — gestión de lotes
+- `GET /lotes?porVencer=&sucursal_id=` — contrato S3-002 definido; endpoint pendiente
 - `POST /mermas`, `POST /transferencias`, `POST /conteos`
 - Generación de alertas Kafka (`stock.alert`, `expiry.alert`)
 - FEFO en selección de lotes para venta
@@ -127,6 +229,7 @@ S2-052 — 2026-10-19: **2/2 pruebas de integración HTTP locales aprobadas** pa
 **Implementado:**
 - `POST /turnos/abrir` — abre turno [IMPLEMENTADO]
 - `GET /turnos/activo` — turno activo del cajero [IMPLEMENTADO]
+- `GET /turnos/abiertos` — turnos ABIERTOS del tenant del JWT, solo ADMIN (TI3-763); prueba en `AnulacionVentaIntegrationTests` [IMPLEMENTADO]
 - `POST /turnos/cerrar` — cierra turno [IMPLEMENTADO]
 - `POST /ventas` — crear venta en estado PENDIENTE. Contratos fijados (S2-001, S2-002 y S2-003): el cliente aporta `producto_id`, `cantidad` y `peso_kg`; MS-5 valida y resuelve cada producto en MS-3 (rechaza 404 inexistentes y 400 inactivos sin persistir datos), usa precio y nombre autoritativos de catálogo, y calcula subtotal, impuestos (IVA real del tenant vía MS-2 en la creación inicial sin requerir edición posterior) y total [IMPLEMENTADO]
 - `POST /ventas/{id}/items` — agregar ítem (con tax via MS-2) [IMPLEMENTADO]
@@ -149,7 +252,7 @@ S2-052 — 2026-10-19: **2/2 pruebas de integración HTTP locales aprobadas** pa
 - tests de integración S2-005 en `VentaIntegrationTests` cubren los 4 escenarios de creación segura: precio falsificado ignorado (precio persistido viene de MS-3, no del request), IVA por tenant desde MS-2, producto inactivo (400 sin persistir) y ausencia de turno abierto (409 sin persistir venta) [IMPLEMENTADO]
 
 **No implementado / CRÍTICO:**
-- Endpoint HTTP `POST /ventas/{id}/anular` aún no está expuesto en `VentasController.cs`
+- `POST /ventas/{id}/anular` (ruta única `/api`) implementado en S2-092; UI para ADMIN en `VentasTurnoPage` (TI3-763, E2E con mocks `e2e/ventas-turno.spec.ts`); reversión de efectos externos pendiente; reversa simulada de tarjeta implementada en S2-093.
 - Integración con hardware (balanza, impresora, cajón de dinero)
 
 ---
@@ -179,9 +282,8 @@ S2-052 — 2026-10-19: **2/2 pruebas de integración HTTP locales aprobadas** pa
 
 | # | Funcionalidad | RN/RF afectado | Gravedad |
 |---|---------------|----------------|----------|
-| 1 | Exponer endpoint `POST /ventas/{id}/anular` en `VentasController.cs` | RF-22 | 🔴 Crítica |
+| 1 | Endpoint de anulación expuesto con contrato S2-091; UI pendiente; reversa simulada S2-093 implementada | RF-22 | Backend S2-092 implementado |
 | 2 | Emisión simulada de DTE (boleta/factura) en MS-2 | RN-03, RF-08, TC-08/09 | 🔴 Crítica |
-| 4 | FEFO en recepción e inventario en MS-4 | RN-05, RF-10, WI-04/05 | 🟠 Alta |
 | 5 | Integrar frontend `Pos.tsx` con backend real | RF-04, RF-05 | 🟠 Alta |
 | 6 | Endpoint POST /auth/refresh | RF-01 | 🟠 Alta |
 | 7 | Gestión de sucursales en backend | TI-11, RF-19 | 🟠 Alta |
@@ -193,6 +295,14 @@ S2-052 — 2026-10-19: **2/2 pruebas de integración HTTP locales aprobadas** pa
 S2-049 [IMPLEMENTADO en código]: MS-5 guarda el intento de tarjeta antes de autorizar y bloquea otra autorización de la misma venta mientras el resultado siga pendiente. `GET /ventas/{id}/intento-tarjeta` consulta el estado del mismo intento y reconcilia aprobación o rechazo sin repetir el POST. El POS muestra resultado incierto tras timeout, recupera el intento al recargar y solo ofrece reintento manual tras un rechazo definitivo. La prueba dirigida de interfaz y las pruebas del adaptador sin base pasaron el 2026-10-18; la integración HTTP con PostgreSQL temporal y simulador real fue verificada al resolver el merge (54/54 casos backend, incluida recuperación posterior sin otro POST).
 
 S2-071 / TI3-702 [IMPLEMENTADO]: el frontend define el puerto tipado `TerminalPort`, una máquina pura con estados `available`, `processing`, `approved`, `declined`, `uncertain` y `cancelled`, y `Ms5TerminalAdapter`. `Pos.tsx` inicia y consulta intentos mediante ese adaptador conservando la referencia de idempotencia del ciclo. El contrato contiene venta, monto, referencia del intento, estado y referencia opaca, sin PAN/CVV ni persistencia de tarjeta. MS-5 no tiene endpoint de cancelación: `cancelarIntento` responde de forma tipada `CANCELACION_NO_SOPORTADA` y no realiza HTTP. Pruebas enfocadas **4/4** y typecheck aprobados el 2026-10-25.
+
+S2-072 / TI3-703 [IMPLEMENTADO]: el frontend incorpora `SimulatedTerminalAdapter`, seleccionable mediante `createTerminalPort()` y `DEVICE_TERMINAL_MODE` (`mock` simulado, `real` MS-5). Los escenarios configurables `waiting`, `approved`, `declined`, `cancelled`, `timeout` y `disconnected` producen resultados deterministas; lectura/inicio significa que `iniciarCobro` recibe los datos del intento y pasa a `processing`. La aprobación usa una referencia opaca estable; desconexión y timeout terminan como `uncertain`. El timeout espera `MOCK_TERMINAL_DELAY_MS`, conserva venta, monto y `referenciaIntento`, no devuelve `declined` y no crea otro intento. `MOCK_TERMINAL_SCENARIO` tiene prioridad y `AUTO_APPROVE_MOCK` queda como fallback compatible. TI3-703 no añadió datos de tarjeta, IPC ni sincronización con backend; el IPC se incorporó posteriormente en TI3-704. Pruebas del terminal **12/12** y typecheck aprobados el 2026-10-26.
+
+S2-073 / TI3-704 [IMPLEMENTADO]: Electron expone al renderer una API `window.api.terminal` tipada y limitada a iniciar y consultar intentos mediante los canales fijos `devices:terminal:iniciarCobro` y `devices:terminal:consultarEstado`; no ofrece IPC genérico, cancelación ni comandos arbitrarios de hardware. Main mantiene un singleton `TerminalPort` en modo simulado, valida objetos planos mediante listas exactas de propiedades, UUID, monto positivo finito/acotado y referencias seguras/acotadas, y filtra las respuestas a cinco campos no sensibles. `Pos.tsx` ya consume esta API en vez de crear adaptadores. El modo `real` desde main permanece [PLANIFICADO] y falla explícitamente sin fallback. Se conservan `contextIsolation: true`, `nodeIntegration: false` y `sandbox: true`; PAN, CVV y vencimiento no cruzan el bridge. Los IPC heredados de `ITerminalAdapter` permanecen separados. Pruebas IPC puras **6/6** y typecheck aprobados el 2026-10-26.
+
+S2-074 / TI3-705 [IMPLEMENTADO]: el resultado `approved` del terminal se trata como preliminar. El POS conserva una sola clave como `claveIdempotencia` y `referenciaIntento`; tras aprobación del terminal entrega exactamente esa clave a `POST /ventas/{id}/cobrar-tarjeta`, desde donde MS-5 la propaga como `request_id` e `Idempotency-Key` a la pasarela. Solo una respuesta MS-5 `APPROVED` cuya venta esté `COMPLETADA` permite mostrar el cobro aprobado y su `gateway_reference`; una aprobación local sin confirmación de MS-5 queda en `uncertain` y no se presenta como venta cobrada.
+
+Ante error o respuesta ambigua, el frontend consulta `GET /ventas/{id}/intento-tarjeta` sin iniciar otra autorización. `request_id` debe coincidir con la referencia esperada y la venta debe estar `COMPLETADA`; una clave distinta o estado no definitivo nunca aprueba. La recuperación de pantalla y la verificación manual usan la misma reconciliación y mantienen a MS-5 como fuente de verdad. Pruebas enfocadas **6/6** y typecheck aprobados el 2026-10-26.
 
 El frontend usa `src/api/client.ts` para Login (MS-1), catálogo del POS (MS-3) y turnos y ventas (MS-5): URL por servicio, métodos tipados, JWT y timeout de 15 s centralizados, con cierre de sesión ante 401 en llamadas protegidas [IMPLEMENTADO]. POS consulta el turno activo al entrar, muestra carga y solo habilita el carrito tras confirmarlo; ante 404 redirige a apertura y ante otros errores ofrece reintentar [IMPLEMENTADO]. El borrador previo a la venta sigue local; al iniciar, POS envía solo producto y cantidad a `POST /ventas` y usa la respuesta de MS-5 para ID, ítems y totales. Al recargar, identifica la venta PENDIENTE con `GET /ventas/turno/{turnoId}` y recupera ítems y totales con `GET /ventas/{id}`, sin tomar el borrador local como autoridad [IMPLEMENTADO]. En esa venta, escaneo, búsqueda, cambio de cantidad y eliminación usan los endpoints de ítems de MS-5; después de cada operación, `GET /ventas/{id}` renueva ítems, subtotal, impuestos y total [IMPLEMENTADO]. El botón Cobrar abre `PaymentModal`; para efectivo llama `POST /ventas/{id}/cobrar`, muestra el vuelto devuelto por MS-5 o la diferencia del error 400 sin completar la venta, y bloquea reintentos automáticos ante resultado incierto [IMPLEMENTADO]. El POS permite elegir EFECTIVO o TARJETA al iniciar una venta; el modal llama al cobro simulado de MS-5 con clave UUID de idempotencia, muestra aprobación con referencia opaca o rechazo y permite cambiar el método de una venta pendiente mediante PATCH /ventas/{id}/metodo-pago. El resultado incierto exige verificar la venta antes de otro cobro [IMPLEMENTADO]. La búsqueda del POS consulta MS-3 por nombre/código activo y muestra errores de catálogo, mientras /admin/productos sigue reservado a ADMIN/SUPER_ADMIN [IMPLEMENTADO]. Pruebas Playwright dirigidas 4/4 aprobadas en Edge el 2026-10-18; E2E con pasarela desplegada [NO VERIFICADA].
 
@@ -208,9 +318,9 @@ Ver el nodo [[guia-estilo]] para el resumen y las reglas aplicables.
 |----------|--------|-----------------|
 | Login | [IMPLEMENTADO] | Llama directo a auth service con manejo de errores específicos por HTTP status/red, timeout de 15s y spinner de carga en botón (TI3-471) |
 | Abrir Turno (`AbrirTurnoPage`) | [IMPLEMENTADO] | Llama a MS-5 `/api/turnos/activo` y `POST /api/turnos/abrir` (spinner de carga en botón, redirección con confirmación a POS y manejo 409) (TI3-471) |
-| Cerrar Turno (`CerrarTurnoPage`) | [IMPLEMENTADO] | Tabla de denominaciones (billetes/monedas) con conteo y subtotales automáticos. Llama a MS-5 `POST /api/turnos/cuadre` para obtener efectivo esperado. Muestra resultado: efectivo esperado vs declarado, diferencia en **verde** si es $0, en **rojo** si hay discrepancia (sobrante o faltante). Botón `POST /api/turnos/cerrar` con confirmación. |
-| Productos Admin (`ProductosPage`) | [IMPLEMENTADO] | `GET /products?page=1&pageSize=500` + `GET /categories` en MS-3 (puerto 5203). Tabla con filtros, estado y acciones de catálogo. TI3-675 protege `/admin/productos` con la misma regla ADMIN/SUPER_ADMIN aplicada al resto de Administración; CAJERO recibe **Acceso denegado**. |
-| Admin | [PARCIAL] | TI3-675: `/admin/*` y `/admin/productos` comparten `AdminRoute`; ADMIN/SUPER_ADMIN acceden y CAJERO ve **Acceso denegado** una vez sincronizado el token [IMPLEMENTADO]. `TenantConfig` conserva edición exclusiva de administradores, estado de carga, controles bloqueados durante guardado y feedback de éxito/error; IVA numérico ya cubierto por TI3-645. Lista, creación, edición de email y baja lógica de usuarios disponibles. Persisten las dependencias de `sucursalId`, listado de inactivos y auditoría; sin reactivación UI. |
+| Cerrar Turno (`CerrarTurnoPage`) | [IMPLEMENTADO] | Tabla de denominaciones (billetes/monedas) con conteo y subtotales automáticos. Llama a MS-5 `POST /api/turnos/cuadre` para obtener efectivo esperado. Muestra resultado: efectivo esperado vs declarado, diferencia en **verde** si es $0, en **rojo** si hay discrepancia (sobrante o faltante). Botón `POST /api/turnos/cerrar` con confirmación en modal `<dialog>` (reemplazó `window.confirm`, S3-029); E2E integrado `cierre-turno.integrated.spec.ts`. |
+| Productos Admin (`ProductosPage`) | [IMPLEMENTADO] | `GET /products?page=1&pageSize=500` + `GET /categories` en MS-3 (puerto 5203). Tabla con filtros, estado y acciones de catálogo; POST, PUT y DELETE exitosos disparan refresco automático. TI3-734 alinea precio > 0, persistencia de código de barras y feedback para 400/401/403/404/red. TI3-675 protege `/admin/productos` con la misma regla ADMIN/SUPER_ADMIN aplicada al resto de Administración; CAJERO recibe **Acceso denegado**. Limitación: solo carga los primeros 500 productos. |
+| Admin | [PARCIAL] | `/admin/*` usa `AdminRoute` y un layout propio. ADMIN/SUPER_ADMIN acceden a usuarios, roles base y propios, sucursales, inventario, catálogo y configuración. La creación de usuarios permite correo, contraseña inicial, rol y sucursal; muestra datos copiables. Listado incluye inactivos. Se verificaron MS-1 y MS-4 remotamente; auditoría y reactivación UI siguen pendientes. |
 
 **Nota de integración Electron:** `preload.ts` expone únicamente funciones de autenticación y sesión (`ping`, `getToken`, `setToken`, `logout`). No expone hardware serial ni actualización automática por ahora.
 
@@ -310,7 +420,7 @@ Cumple criterio de aceptación: el rechazo no genera `sale.completed` ni un `Pag
 
 ## S2-027 / TI3-658 — Corrección de rutas Kong del flujo crítico y rutas duales
 
-[IMPLEMENTADO] Se resolvieron los errores 404 producidos por Kong (`strip_path: false`) mediante la incorporación de atributos duales `[Route("api/...")]` y `[Route("...")]` en los controladores de MS-1 (`AuthController`, `TenantConfigController`, `SucursalesController`), MS-3 (`ProductoController`, `CategoriaController`), MS-5 (`VentasController`), MS-2 (`TaxController`, `ComprobantesController`) y MS-4 (`StockController`). En MS-1 se actualizó `TenantMiddleware` para admitir `/api/auth/login` y `/api/tenants`. En Kong se agregó `categories-route` y `sucursales-route`, y en Docker Compose se configuró `extra_hosts` para resolución de host gateway. Suite de integración `RoutePrefixIntegrationTests` **10/10 aprobada** el 2026-10-16.
+[IMPLEMENTADO] Se resolvieron los errores 404 producidos por Kong (`strip_path: false`) mediante la incorporación de atributos duales `[Route("api/...")]` y `[Route("...")]` en los controladores de MS-1 (`AuthController`, `TenantConfigController`, `SucursalesController`), MS-3 (`ProductoController`, `CategoriaController`), MS-5 (`VentasController`), MS-2 (`TaxController`, `ComprobantesController`) y MS-4 (`StockController`). En MS-1 se actualizó `TenantMiddleware` para admitir `/api/auth/login` y `/api/tenants`. En Kong se agregó `categories-route` y `sucursales-route`, y en Docker Compose se configuró `extra_hosts` para resolución de host gateway. Suite de integración `RoutePrefixIntegrationTests` **10/10 aprobada** el 2026-10-16. Posteriormente, en MS-5 se retiraron los alias legacy sin prefijo (`turnos` y `ventas`), consolidando una ruta única canónica (`/api/turnos` y `/api/ventas`) alineada con el frontend y Kong.
 
 ## S2-028 / TI3-659 — Parametrización de destinos de APIs en el frontend
 
@@ -384,6 +494,12 @@ Validación S2-064 del 2026-10-24: **75/75 pruebas Release aprobadas**, incluida
 
 Verificación final S2-064: recompilación Release y **33/33 casos S2-064/S2-063 aprobados**, sin fallos ni omisiones; evidencia adicional en el reporte S2-064.
 
+## S2-065 — Probar fronteras de peso y tenant
+
+[IMPLEMENTADO — suite backend] Pruebas HTTP de creación, agregado y edición con MS-3 real, PostgreSQL aislado y calculador productivo MS-2 mediante handler. Se corrigió creación de pesable sin peso, que devolvía 201: las tres operaciones comparten reglas de peso/tipo/cantidad y crear devuelve 400 sin mutar ante entrada inválida. Las pruebas incluyen ataques entre tenants en ambos sentidos y controles propios. Al cerrar S2-065, la conversión del simulador estaba pendiente; se incorpora ahora con S2-067/S2-069/S2-070. La validación de `UomBaseId` y el E2E desplegado siguen [NO VERIFICADO]. [Reporte](../qa/S2-065/reporte.md).
+
+Validación del 2026-10-26: **84/84 pruebas Release aprobadas**, sin fallos ni omisiones (nueve nuevas con matrices, 75 de regresión). Diagnóstico previo: 7/8 aprobadas y fallo reproducido de creación sin peso. [Evidencia y límites](../qa/S2-065/reporte.md).
+
 ## S2-066 / TI3-697 — Definir interfaz de balanza
 
 [IMPLEMENTADO] Contrato TypeScript independiente del dispositivo en `globalmart-frontend/src/hardware/scale-contract.ts`: conectar, desconectar, consultar estado y leer peso estable; estados cerrados de conexión/lectura, errores tipados y lectura canónica en kg. `ScaleRendererApi` no contiene ruta serial, baud rate ni objetos Node. Typecheck y prueba estática aprobados el 2026-10-24; la prueba confirma que renderer y contrato no acceden a `serialport`, `navigator.serial` ni `SerialPort`. El IPC se implementó en S2-068 y la estructura serial intercambiable en S2-069; compatibilidad física [NO VERIFICADA]. [Detalle](integraciones/hardware.md).
@@ -411,6 +527,16 @@ Verificación final S2-064: recompilación Release y **33/33 casos S2-064/S2-063
 2. *Rechazado:* Retorna HTTP 422 y conserva la venta en estado `PENDIENTE`.
 3. *Timeout / No disponible:* Retorna HTTP 504 / 503 y conserva la venta en estado `PENDIENTE` sin registrar pagos no confirmados.
 
+S2-076 [IMPLEMENTADO — interfaz]: el POS presenta `PesoProducto` y controles del simulador solo al capturar productos pesables, con origen simulado, kg y estados de lectura estable/error.
+
+S2-077 [IMPLEMENTADO — flujo simulado]: al seleccionar un pesable se consulta lectura estable; solo la confirmación agrega o modifica la línea. Cancelar o una lectura fallida no envía ítems. Compatibilidad con balanza física [NO VERIFICADA].
+
+S2-078 [IMPLEMENTADO — respaldo manual]: si falla la lectura se puede ingresar un peso manual identificado. Se aplican mínimo 10 g y precisión de 1 g; entradas cero, negativas o no numéricas no se envían.
+
+S2-079 [IMPLEMENTADO — vista POS]: las líneas pesables muestran kg y precio por kg; IVA y total se presentan solo desde la venta retornada por MS-5. El borrador indica subtotal estimado y no calcula IVA con una tasa local.
+
+S2-080 [IMPLEMENTADO — pruebas E2E controladas]: tres escenarios de Playwright prueban lectura estable, desconexión, captura manual válida e inválida, modificación, producto unitario sin controles de balanza y recuperación tras recarga. Verifican una sola línea pesable, cantidad y total de la respuesta simulada de MS-5. Integración contra servicios desplegados y hardware físico [NO VERIFICADA].
+
 ## S2-086 / TI3-717 — Definir límites del terminal simulado
 
 [IMPLEMENTADO] Especificación documentada en `docs/context/integraciones/limites-terminal-simulado.md`. Establece la matriz de operaciones soportadas (`iniciar`, `cancelar`, `autorizar`, `obtenerEstado`), delimita el desacoplamiento estricto respecto a la pasarela bancaria y prohíbe declarar compatibilidad con hardware o marcas físicas sin validación empírica.
@@ -433,3 +559,22 @@ Verificación final S2-064: recompilación Release y **33/33 casos S2-064/S2-063
 
 [IMPLEMENTADO] Flujo de prueba automatizado mediante `scripts/smoke-simuladores-frontend.sh` y `globalmart-frontend/tests/smoke-simulators.ts`, ejecutable en CI o local sin periféricos conectados. Comprueba lecturas de balanza, pesaje, tara y el ciclo de vida del terminal (inicio, aprobación con token opaco, rechazo y cancelación). Incluye widget interactivo de balanza integrado en la interfaz POS (`Pos.tsx`).
 
+## S2-093 — Reversa tarjeta (2026-11-14)
+
+[IMPLEMENTADO backend] Reserva durable `ReversaPago`, reversa por referencia opaca, resultado validado y confirmación atómica de reversa/venta/auditoría. Rechazo y timeout no anulan. GET `/ventas/{id}/reversa-tarjeta` para ADMIN del tenant consulta y recupera pendientes sin otra solicitud de reversa. Simulador y rutas Kong actualizados; requiere migración `AddReversasPago`. No hay UI ni devolución bancaria real. Despliegue remoto [NO VERIFICADO]. [Contrato](dominio/anulacion-venta.md), [evidencia](../qa/S2-093/reporte.md).
+
+## S2-094 — sale.reversed por outbox (2026-11-14)
+
+[IMPLEMENTADO] Anulación en efectivo o reversa de tarjeta confirmada persisten venta, auditoría y evento `sale.reversed` en la misma transacción. Identidad estable = Anulacion.Id, relación a venta original por venta_id, snapshot de ítems/montos y publicación mediante worker existente. Rechazo/timeout no generan evento; reintentos conservan EventId y JSON. Sin migración adicional ni backfill de anulaciones históricas. Consumidor de reversas, reposición de stock y entrega Kafka/cluster [NO VERIFICADO]. [Contrato](eventos/sale-reversed-outbox.md), [reporte](../qa/S2-094/reporte.md).
+
+## S2-112 / TI3-743 — E2E de Admin y venta integrado (2026-11-15)
+
+[IMPLEMENTADO] `npm run test:e2e:integrado` (Electron real contra MS-1..MS-5 en localhost, sin mocks): ADMIN crea producto, CAJERO abre turno, vende en efectivo, cuadra y cierra. 2/2 aprobadas, exit 0. Corrige el puerto de MS-2 (`:5239`), el seed del ADMIN en BD ya sembradas y el cuadre, que ahora resta el vuelto. Además, en tenants CLP MS-2 redondea subtotales de línea e IVA a peso entero (,5 sube) y MS-5 guarda el subtotal de línea que entrega MS-2. No acredita Kong (503 hacia el host), Kafka ni stock. [Reporte](../qa/S2-112/reporte.md).
+
+## S2-113 / TI3-744 — E2E de tarjeta y pesaje integrado (2026-11-15)
+
+[IMPLEMENTADO] `npm run test:e2e:integrado` ahora suma 5 casos contra MS-1..MS-5 y el simulador de pasarela: tarjeta aprobada, rechazada con reintento, timeout, peso estable de la balanza simulada y entrada manual ante una falla de balanza. 5/5 (7/7 junto con S2-112), exit 0. Se verifica en `postgres-pos` que una falla no completa la venta ni deja más de un pago. Corrige la validación de UUID del simulador (rechazaba al tenant demo) y la URL de la pasarela en `run-apis`. Tras un timeout el intento queda PENDIENTE hasta que el cajero lo verifique o cancele. Terminal y balanza físicos siguen condicionados. [Reporte](../qa/S2-113/reporte.md).
+
+## S2-095 / TI3-726 — Pruebas de anulación y permisos (2026-11-15)
+
+[VERIFICADO LOCALMENTE] 62/62 pruebas: efectivo, tarjeta aprobada, rechazo, repetición, JWT/roles, tenant ajeno (reversa aprobada/rechazada/pendiente), concurrencia, rollback y reintento outbox. Comparaciones de snapshots verifican que rechazos y repeticiones conservan ventas, pagos, auditorías, reversas y eventos. Se compartieron auxiliares de pruebas; sin cambios productivos. PostgreSQL y simulador Node reales; transporte Kafka controlado. Broker real, UI, efectos MS-4 y cluster [NO VERIFICADO]. [Reporte y TRX](../qa/S2-095/reporte.md).

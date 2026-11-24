@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
@@ -10,12 +10,20 @@ var builder = WebApplication.CreateBuilder(args);
 // Inyección de Controladores y Auto-Validación
 builder.Services.AddControllers();
 builder.Services.AddFluentValidationAutoValidation();
+builder.Services.AddCors(options => options.AddPolicy("ElectronApp", policy =>
+    policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod()));
 
 // Inyección de Base de Datos PostgreSQL
 builder.Services.AddDbContext<WarehouseInventoryService.Data.WarehouseDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddScoped<IStockRepository, StockRepository>();
-builder.Services.AddHostedService<WarehouseInventoryService.Messaging.KafkaConsumerService>();
+builder.Services.AddScoped<WarehouseInventoryService.Services.RecepcionService>();
+builder.Services.AddScoped<WarehouseInventoryService.Services.RecepcionValidator>();
+builder.Services.AddScoped<WarehouseInventoryService.Services.LoteService>();
+builder.Services.AddScoped<WarehouseInventoryService.Messaging.ISaleEventProcessor, WarehouseInventoryService.Messaging.SaleEventProcessor>();
+builder.Services.AddHttpClient();
+if (builder.Configuration.GetValue("Kafka:Enabled", true))
+    builder.Services.AddHostedService<WarehouseInventoryService.Messaging.KafkaConsumerService>();
 
 // Inyección de Autenticación JWT Stateless
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -27,9 +35,9 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateAudience = true,
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
-            ValidIssuer = builder.Configuration["Jwt:Issuer"] ?? "GlobalMart",
-            ValidAudience = builder.Configuration["Jwt:Audience"] ?? "GlobalMartUsers",
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:SecretKey"] ?? "TuSuperSecretoDeDesarrollo1234567890!"))
+            ValidIssuer = builder.Configuration["Jwt:Issuer"] ?? "GlobalMartOS",
+            ValidAudience = builder.Configuration["Jwt:Audience"] ?? "GlobalMartOS_Clients",
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"] ?? throw new InvalidOperationException("Jwt:Key requerido")))
         };
     });
 builder.Services.AddAuthorization();
@@ -39,17 +47,32 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
+if (!app.Environment.IsEnvironment("Testing"))
+{
+    using var scope = app.Services.CreateScope();
+    scope.ServiceProvider.GetRequiredService<WarehouseInventoryService.Data.WarehouseDbContext>().Database.Migrate();
+}
+
 // Pipeline de Middlewares (Orden estricto)
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
+
+    using var scope = app.Services.CreateScope();
+    var db = scope.ServiceProvider.GetRequiredService<WarehouseInventoryService.Data.WarehouseDbContext>();
+    db.Database.Migrate();
+    WarehouseInventoryService.Data.SeedData.Initialize(db);
 }
 
+app.UseCors("ElectronApp");
 app.UseAuthentication(); // 1. Verifica la firma del token
 app.UseAuthorization();  // 2. Verifica los roles del usuario
 app.UseMiddleware<WarehouseInventoryService.Middleware.TenantMiddleware>();
+
+// TI3-258: Mapear controllers normales siempre
 app.MapControllers();
+app.MapGet("/health", () => Results.Ok(new { status = "ok" }));
 
 app.Run();
 

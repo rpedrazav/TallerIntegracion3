@@ -1,0 +1,602 @@
+import { expect, Page, test } from '@playwright/test';
+
+interface TestUser {
+  id: string;
+  nombre: string;
+  email: string;
+  activo: boolean;
+  creadoEn: string;
+  roles: string[];
+}
+
+const adminToken = [
+  Buffer.from(JSON.stringify({ alg: 'none', typ: 'JWT' })).toString('base64url'),
+  Buffer.from(JSON.stringify({ tenant_id: 'tenant-a', active_role: 'ADMIN', roles: ['ADMIN'] })).toString('base64url'),
+  '',
+].join('.');
+
+const usuarioInicial: TestUser = {
+  id: '11111111-1111-1111-1111-111111111111',
+  nombre: 'Ana Cajera',
+  email: 'ana@globalmart.cl',
+  activo: true,
+  creadoEn: '2026-10-18T12:00:00Z',
+  roles: ['CAJERO'],
+};
+
+const configInicial = {
+  pais: 'CL',
+  moneda: 'CLP',
+  idioma: 'es',
+  porcentajeIva: 19,
+  zonaHoraria: 'America/Santiago',
+};
+
+async function prepararSesion(page: Page) {
+  await page.addInitScript(token => {
+    window.api = {
+      ping: async () => 'pong',
+      getToken: async () => token,
+      setToken: async () => undefined,
+      logout: async () => undefined,
+    };
+  }, adminToken);
+}
+
+async function abrirAdmin(page: Page) {
+  await prepararSesion(page);
+  await page.goto('/?component=admin');
+  await expect(page.getByRole('heading', { name: 'Panel de Administración' })).toBeVisible();
+}
+
+async function completarAlta(page: Page) {
+  await page.getByRole('button', { name: 'Crear usuario' }).click();
+  const modal = page.getByRole('dialog', { name: 'Crear usuario' });
+  await modal.getByLabel('Nombre').fill('Carla Operadora');
+  await modal.getByLabel('Correo electrónico').fill('Carla@GlobalMart.cl');
+  await modal.getByLabel('Contraseña inicial', { exact: true }).fill('ClaveSegura1!');
+  await modal.getByLabel('Confirmar contraseña').fill('ClaveSegura1!');
+  await modal.getByLabel('Rol').selectOption('REPONEDOR');
+  return modal;
+}
+
+async function comprobarAltaConservada(page: Page) {
+  const modal = page.getByRole('dialog', { name: 'Crear usuario' });
+  await expect(modal).toBeVisible();
+  await expect(modal.getByLabel('Nombre')).toHaveValue('Carla Operadora');
+  await expect(modal.getByLabel('Correo electrónico')).toHaveValue('Carla@GlobalMart.cl');
+  await expect(modal.getByLabel('Contraseña inicial', { exact: true })).toHaveValue('ClaveSegura1!');
+  await expect(modal.getByLabel('Confirmar contraseña')).toHaveValue('ClaveSegura1!');
+  await expect(modal.getByLabel('Rol')).toHaveValue('REPONEDOR');
+}
+
+async function abrirEdicion(page: Page, email: string) {
+  await page.getByRole('button', { name: `Editar usuario ${usuarioInicial.nombre}` }).click();
+  const modal = page.getByRole('dialog', { name: 'Editar usuario' });
+  await expect(modal.getByLabel('Correo electrónico')).toHaveValue(usuarioInicial.email);
+  await modal.getByLabel('Correo electrónico').fill(email);
+  return modal;
+}
+
+async function abrirConfiguracion(page: Page) {
+  await page.getByRole('button', { name: 'Configuración del Tenant' }).click();
+  await expect(page.getByLabel('Porcentaje IVA (%)')).toHaveValue('19');
+}
+
+test('alta exitosa agrega el usuario a la lista', async ({ page }) => {
+  let usuarios = [usuarioInicial];
+  let postCount = 0;
+
+  await page.route('**/users**', async route => {
+    const request = route.request();
+    if (request.method() === 'GET') {
+      await route.fulfill({ json: { items: usuarios } });
+      return;
+    }
+
+    if (request.method() === 'POST' && new URL(request.url()).pathname.endsWith('/users')) {
+      postCount += 1;
+      expect(request.postDataJSON()).toMatchObject({
+        nombre: 'Carla Operadora',
+        email: 'carla@globalmart.cl',
+        password: 'ClaveSegura1!',
+        roles: ['REPONEDOR'],
+      });
+      const creado: TestUser = {
+        id: '22222222-2222-2222-2222-222222222222',
+        nombre: 'Carla Operadora',
+        email: 'carla@globalmart.cl',
+        activo: true,
+        creadoEn: '2026-10-18T12:30:00Z',
+        roles: ['REPONEDOR'],
+      };
+      usuarios = [...usuarios, creado];
+      await route.fulfill({ status: 201, json: creado });
+      return;
+    }
+
+    await route.abort();
+  });
+
+  await abrirAdmin(page);
+  const modal = await completarAlta(page);
+  await modal.getByRole('button', { name: 'Crear usuario' }).click();
+
+  await expect(page.getByLabel('Datos de acceso')).toBeVisible();
+  await expect(page.getByText('carla@globalmart.cl', { exact: true })).toBeVisible();
+  await expect(page.locator('tbody tr')).toHaveCount(2);
+  expect(postCount).toBe(1);
+});
+
+for (const caso of [
+  {
+    status: 400,
+    response: { errors: { Email: ['El correo informado no es válido.'] } },
+    mensaje: 'El correo informado no es válido.',
+  },
+  {
+    status: 403,
+    response: {},
+    mensaje: 'No tienes permisos para crear usuarios.',
+  },
+  {
+    status: 409,
+    response: { message: 'El email ya pertenece a otro usuario.' },
+    mensaje: 'El email ya pertenece a otro usuario.',
+  },
+]) {
+  test(`alta explica ${caso.status} y conserva todos los datos`, async ({ page }) => {
+    await page.route('**/users**', async route => {
+      const request = route.request();
+      if (request.method() === 'GET') {
+        await route.fulfill({ json: { items: [usuarioInicial] } });
+        return;
+      }
+      await route.fulfill({ status: caso.status, json: caso.response });
+    });
+
+    await abrirAdmin(page);
+    const modal = await completarAlta(page);
+    await modal.getByRole('button', { name: 'Crear usuario' }).click();
+
+    await expect(modal.getByRole('alert')).toContainText(caso.mensaje);
+    await comprobarAltaConservada(page);
+  });
+}
+
+test('modal crear usuario contiene el foco, cierra con Escape y devuelve el foco', async ({ page }) => {
+  await page.route('**/users**', route => route.fulfill({ json: { items: [usuarioInicial], totalPages: 1 } }));
+  await abrirAdmin(page);
+
+  const opener = page.getByRole('button', { name: 'Crear usuario' });
+  await opener.click();
+  const modal = page.getByRole('dialog', { name: 'Crear usuario' });
+  const first = modal.getByLabel('Nombre');
+  const last = modal.getByRole('button', { name: 'Crear usuario' });
+  await expect(first).toBeFocused();
+
+  await first.press('Shift+Tab');
+  await expect(last).toBeFocused();
+  await last.press('Tab');
+  await expect(first).toBeFocused();
+
+  await last.click();
+  await expect(first).toHaveAttribute('aria-invalid', 'true');
+  await expect(first).toHaveAttribute('aria-describedby', 'cu-nombre-error');
+  await expect(modal.locator('#cu-nombre-error')).toContainText('El nombre es obligatorio.');
+
+  await first.press('Escape');
+  await expect(modal).toBeHidden();
+  await expect(opener).toBeFocused();
+});
+
+test('modal editar usuario contiene el foco, cierra con Escape y devuelve el foco', async ({ page }) => {
+  await page.route('**/users**', route => route.fulfill({ json: { items: [usuarioInicial], totalPages: 1 } }));
+  await abrirAdmin(page);
+
+  const opener = page.getByRole('button', { name: `Editar usuario ${usuarioInicial.nombre}` });
+  await opener.click();
+  const modal = page.getByRole('dialog', { name: 'Editar usuario' });
+  const first = modal.getByLabel('Correo electrónico');
+  const last = modal.getByRole('button', { name: 'Guardar cambios' });
+  await expect(first).toBeFocused();
+
+  await first.press('Shift+Tab');
+  await expect(last).toBeFocused();
+  await last.press('Tab');
+  await expect(first).toBeFocused();
+
+  await first.fill('correo-invalido');
+  await last.click();
+  await expect(first).toHaveAttribute('aria-invalid', 'true');
+  await expect(first).toHaveAttribute('aria-describedby', 'eu-email-error');
+  await expect(modal.locator('#eu-email-error')).toContainText('Ingresa un correo válido.');
+
+  await first.press('Escape');
+  await expect(modal).toBeHidden();
+  await expect(opener).toBeFocused();
+});
+
+test('edición exitosa actualiza la misma fila sin crear otra', async ({ page }) => {
+  let usuarios = [usuarioInicial];
+  let putCount = 0;
+
+  await page.route('**/users**', async route => {
+    const request = route.request();
+    if (request.method() === 'GET') {
+      await route.fulfill({ json: { items: usuarios } });
+      return;
+    }
+    if (request.method() === 'PUT') {
+      putCount += 1;
+      expect(new URL(request.url()).pathname).toMatch(new RegExp(`/users/${usuarioInicial.id}$`));
+      expect(request.postDataJSON()).toEqual({ email: 'ana.editada@globalmart.cl' });
+      usuarios = [{ ...usuarioInicial, email: 'ana.editada@globalmart.cl' }];
+      await route.fulfill({ json: usuarios[0] });
+      return;
+    }
+    await route.abort();
+  });
+
+  await abrirAdmin(page);
+  const modal = await abrirEdicion(page, 'Ana.Editada@GlobalMart.cl');
+  await modal.getByRole('button', { name: 'Guardar cambios' }).click();
+
+  await expect(modal).toBeHidden();
+  await expect(page.getByText('ana.editada@globalmart.cl', { exact: true })).toBeVisible();
+  await expect(page.locator('tbody tr')).toHaveCount(1);
+  expect(putCount).toBe(1);
+});
+
+test('listado mixto conserva al inactivo y bloquea su edición sin enviar PUT', async ({ page }) => {
+  const usuarioInactivo: TestUser = {
+    ...usuarioInicial,
+    id: '22222222-2222-2222-2222-222222222222',
+    nombre: 'Beatriz Inactiva',
+    email: 'beatriz@globalmart.cl',
+    activo: false,
+  };
+  let putCount = 0;
+
+  await page.route('**/users**', async route => {
+    if (route.request().method() === 'GET') {
+      await route.fulfill({ json: { items: [usuarioInicial, usuarioInactivo], totalPages: 1 } });
+      return;
+    }
+    if (route.request().method() === 'PUT') putCount += 1;
+    await route.abort();
+  });
+
+  await abrirAdmin(page);
+  const filaActiva = page.locator('tbody tr').filter({ hasText: usuarioInicial.email });
+  const filaInactiva = page.locator('tbody tr').filter({ hasText: usuarioInactivo.email });
+  await expect(page.locator('tbody tr')).toHaveCount(2);
+  await expect(filaActiva.getByText('Activo', { exact: true })).toBeVisible();
+  await expect(filaInactiva.getByText('Inactivo', { exact: true })).toBeVisible();
+  await expect(filaActiva.getByRole('button', { name: `Editar usuario ${usuarioInicial.nombre}` })).toBeEnabled();
+  const editarInactivo = filaInactiva.getByRole('button', { name: `Editar usuario ${usuarioInactivo.nombre}` });
+  await expect(editarInactivo).toHaveAttribute('aria-disabled', 'true');
+  await expect(filaInactiva.getByText('Edición bloqueada: usuario inactivo.')).toBeVisible();
+
+  await editarInactivo.dispatchEvent('click');
+  await expect(page.getByRole('alert')).toContainText('No se puede editar un usuario inactivo.');
+  await expect(page.getByRole('dialog', { name: 'Editar usuario' })).toHaveCount(0);
+  expect(putCount).toBe(0);
+});
+
+for (const caso of [
+  {
+    status: 400,
+    response: { errors: { Email: ['El correo informado no es válido.'] } },
+    mensaje: 'El correo informado no es válido.',
+  },
+  {
+    status: 403,
+    response: {},
+    mensaje: 'No tienes permisos para editar usuarios.',
+  },
+  {
+    status: 409,
+    response: {},
+    mensaje: 'El email ya pertenece a otro usuario del tenant.',
+  },
+]) {
+  test(`edición explica ${caso.status} y conserva el email`, async ({ page }) => {
+    await page.route('**/users**', async route => {
+      const request = route.request();
+      if (request.method() === 'GET') {
+        await route.fulfill({ json: { items: [usuarioInicial] } });
+        return;
+      }
+      await route.fulfill({ status: caso.status, json: caso.response });
+    });
+
+    await abrirAdmin(page);
+    const modal = await abrirEdicion(page, 'Ana.Editada@GlobalMart.cl');
+    await modal.getByRole('button', { name: 'Guardar cambios' }).click();
+
+    await expect(modal.getByRole('alert')).toContainText(caso.mensaje);
+    await expect(modal).toBeVisible();
+    await expect(modal.getByLabel('Correo electrónico')).toHaveValue('Ana.Editada@GlobalMart.cl');
+  });
+}
+
+test('baja confirma, muestra progreso y conserva la fila como Inactivo tras 204', async ({ page }) => {
+  let deleteStarted = false;
+  let usuarios = [usuarioInicial];
+  let releaseDelete: (() => void) | undefined;
+  const continueDelete = new Promise<void>(resolve => { releaseDelete = resolve; });
+
+  await page.route('**/users**', async route => {
+    const request = route.request();
+    if (request.method() === 'GET') {
+      await route.fulfill({ json: { items: usuarios, totalPages: 1 } });
+      return;
+    }
+    if (request.method() === 'DELETE') {
+      expect(new URL(request.url()).pathname).toMatch(new RegExp(`/users/${usuarioInicial.id}$`));
+      deleteStarted = true;
+      await continueDelete;
+      usuarios = [{ ...usuarioInicial, activo: false }];
+      await route.fulfill({ status: 204 });
+      return;
+    }
+    await route.abort();
+  });
+
+  await abrirAdmin(page);
+  page.once('dialog', async dialog => {
+    expect(dialog.message()).toContain('desactivar a Ana Cajera');
+    await dialog.accept();
+  });
+  await page.getByRole('button', { name: `Desactivar usuario ${usuarioInicial.nombre}` }).click();
+
+  await expect.poll(() => deleteStarted).toBe(true);
+  await expect(page.getByRole('button', { name: `Desactivar usuario ${usuarioInicial.nombre}` })).toContainText('Desactivando');
+  releaseDelete?.();
+
+  const fila = page.locator('tbody tr').filter({ hasText: usuarioInicial.email });
+  await expect(fila).toHaveCount(1);
+  await expect(fila.getByText('Inactivo', { exact: true })).toBeVisible();
+  await expect(fila.getByRole('button', { name: `Editar usuario ${usuarioInicial.nombre}` })).toHaveAttribute('aria-disabled', 'true');
+  await expect(page.locator('tbody tr')).toHaveCount(1);
+
+  await page.getByRole('button', { name: 'Refrescar' }).click();
+  await expect(fila).toHaveCount(1);
+  await expect(fila.getByText('Inactivo', { exact: true })).toBeVisible();
+});
+
+test('reactivación usa el mismo ID y JWT, evita duplicados y rehabilita la fila sin recargar', async ({ page }) => {
+  const usuarioInactivo: TestUser = {
+    ...usuarioInicial,
+    id: '22222222-2222-2222-2222-222222222222',
+    nombre: 'Beatriz Inactiva',
+    email: 'beatriz@globalmart.cl',
+    activo: false,
+  };
+  let getCount = 0;
+  let postCount = 0;
+  let releasePost: (() => void) | undefined;
+  const continuePost = new Promise<void>(resolve => { releasePost = resolve; });
+
+  await page.route('**/users**', async route => {
+    const request = route.request();
+    if (request.method() === 'GET') {
+      getCount += 1;
+      await route.fulfill({ json: { items: [usuarioInicial, usuarioInactivo], totalPages: 1 } });
+      return;
+    }
+    if (request.method() === 'POST' && new URL(request.url()).pathname.endsWith(`/users/${usuarioInactivo.id}/reactivate`)) {
+      postCount += 1;
+      expect(request.headers().authorization).toBe(`Bearer ${adminToken}`);
+      await continuePost;
+      await route.fulfill({ status: 204 });
+      return;
+    }
+    await route.abort();
+  });
+
+  await abrirAdmin(page);
+  const filaInactiva = page.locator('tbody tr').filter({ hasText: usuarioInactivo.email });
+  const filaActiva = page.locator('tbody tr').filter({ hasText: usuarioInicial.email });
+  await expect(page.locator('tbody tr')).toHaveCount(2);
+  const getCountAntesDeReactivar = getCount;
+  await expect(filaActiva.getByRole('button', { name: /Reactivar/ })).toHaveCount(0);
+  const reactivar = filaInactiva.getByRole('button', { name: `Reactivar usuario ${usuarioInactivo.nombre}` });
+  await expect(reactivar).toBeVisible();
+
+  await reactivar.click();
+  await expect.poll(() => postCount).toBe(1);
+  await expect(reactivar).toBeDisabled();
+  await expect(reactivar).toContainText('Reactivando');
+  await reactivar.dispatchEvent('click');
+  expect(postCount).toBe(1);
+  releasePost?.();
+
+  await expect(filaInactiva.getByText('Activo', { exact: true })).toBeVisible();
+  await expect(filaInactiva.getByRole('button', { name: `Reactivar usuario ${usuarioInactivo.nombre}` })).toHaveCount(0);
+  await expect(filaInactiva.getByRole('button', { name: `Editar usuario ${usuarioInactivo.nombre}` })).not.toHaveAttribute('aria-disabled', 'true');
+  await expect(filaInactiva.getByRole('button', { name: `Desactivar usuario ${usuarioInactivo.nombre}` })).toBeVisible();
+  await expect(filaActiva.getByText('Activo', { exact: true })).toBeVisible();
+  await expect(page.locator('tbody tr')).toHaveCount(2);
+  expect(getCount).toBe(getCountAntesDeReactivar);
+  expect(postCount).toBe(1);
+});
+
+for (const caso of [
+  { status: 401, mensaje: 'La sesión no es válida. Vuelve a iniciar sesión.' },
+  { status: 403, mensaje: 'No tienes permisos para reactivar usuarios.' },
+  { status: 404, mensaje: 'El usuario no existe o pertenece a otro tenant.' },
+]) {
+  test(`reactivación fallida ${caso.status} conserva la fila Inactiva`, async ({ page }) => {
+    const usuarioInactivo = { ...usuarioInicial, activo: false };
+    await page.route('**/users**', async route => {
+      if (route.request().method() === 'GET') {
+        await route.fulfill({ json: { items: [usuarioInactivo], totalPages: 1 } });
+        return;
+      }
+      await route.fulfill({ status: caso.status });
+    });
+
+    await abrirAdmin(page);
+    const fila = page.locator('tbody tr').filter({ hasText: usuarioInactivo.email });
+    await fila.getByRole('button', { name: `Reactivar usuario ${usuarioInactivo.nombre}` }).click();
+
+    await expect(page.getByRole('alert')).toContainText(caso.mensaje);
+    await expect(fila.getByText('Inactivo', { exact: true })).toBeVisible();
+    await expect(fila.getByRole('button', { name: `Reactivar usuario ${usuarioInactivo.nombre}` })).toBeEnabled();
+    await expect(fila.getByRole('button', { name: `Desactivar usuario ${usuarioInactivo.nombre}` })).toHaveCount(0);
+  });
+}
+
+test('error de red al reactivar conserva la fila Inactiva', async ({ page }) => {
+  const usuarioInactivo = { ...usuarioInicial, activo: false };
+  await page.route('**/users**', async route => {
+    if (route.request().method() === 'GET') {
+      await route.fulfill({ json: { items: [usuarioInactivo], totalPages: 1 } });
+      return;
+    }
+    await route.abort('connectionfailed');
+  });
+
+  await abrirAdmin(page);
+  const fila = page.locator('tbody tr').filter({ hasText: usuarioInactivo.email });
+  await fila.getByRole('button', { name: `Reactivar usuario ${usuarioInactivo.nombre}` }).click();
+
+  await expect(page.getByRole('alert')).toContainText('No se pudo conectar con el servicio de usuarios.');
+  await expect(fila.getByText('Inactivo', { exact: true })).toBeVisible();
+  await expect(fila.getByRole('button', { name: `Reactivar usuario ${usuarioInactivo.nombre}` })).toBeEnabled();
+});
+
+test('roles conserva usuarios activos e inactivos y bloquea solicitudes para el inactivo', async ({ page }) => {
+  const usuarioInactivo: TestUser = {
+    ...usuarioInicial,
+    id: '22222222-2222-2222-2222-222222222222',
+    nombre: 'Beatriz Inactiva',
+    email: 'beatriz@globalmart.cl',
+    activo: false,
+  };
+  const roles = [
+    { id: 'role-cajero', nombre: 'CAJERO', descripcion: 'Caja', tenantId: null, rolBase: null },
+    { id: 'role-admin', nombre: 'ADMIN', descripcion: 'Admin', tenantId: null, rolBase: null },
+  ];
+  let postCount = 0;
+
+  await prepararSesion(page);
+  await page.route('**/users**', route => route.fulfill({ json: { items: [usuarioInicial, usuarioInactivo], totalPages: 1 } }));
+  await page.route('**/users/**/roles', async route => {
+    if (route.request().method() === 'POST') {
+      postCount += 1;
+      await route.fulfill({ json: { ...usuarioInicial, roles: ['CAJERO', 'ADMIN'] } });
+      return;
+    }
+    await route.abort();
+  });
+  await page.route('**/users/roles**', async route => {
+    if (route.request().method() === 'GET') {
+      await route.fulfill({ json: roles });
+      return;
+    }
+    await route.abort();
+  });
+
+  await page.goto('/?component=app#/admin/roles');
+  const activo = page.getByLabel(`Roles de ${usuarioInicial.nombre}`);
+  const inactivo = page.getByLabel(`Roles de ${usuarioInactivo.nombre}`);
+  await expect(activo.getByText('Activo', { exact: true })).toBeVisible();
+  await expect(inactivo.getByText('Inactivo', { exact: true })).toBeVisible();
+
+  await activo.getByLabel('ADMIN').check();
+  await activo.getByRole('button', { name: `Guardar roles de ${usuarioInicial.nombre}` }).click();
+  await expect(page.getByRole('status')).toContainText(`Roles de ${usuarioInicial.nombre} actualizados.`);
+  expect(postCount).toBe(1);
+
+  await expect(inactivo.getByLabel('CAJERO')).toBeDisabled();
+  await expect(inactivo.getByRole('button', { name: `Guardar roles de ${usuarioInactivo.nombre}` })).toHaveAttribute('aria-disabled', 'true');
+  await expect(inactivo.getByText('Modificación de roles bloqueada: usuario inactivo.')).toBeVisible();
+  const guardarInactivo = inactivo.getByRole('button', { name: `Guardar roles de ${usuarioInactivo.nombre}` });
+  await guardarInactivo.dispatchEvent('click');
+  await expect(page.getByRole('alert')).toContainText('No se pueden modificar los roles de un usuario inactivo.');
+  expect(postCount).toBe(1);
+});
+
+test('baja fallida explica la autodesactivación y conserva la fila activa', async ({ page }) => {
+  await page.route('**/users**', async route => {
+    if (route.request().method() === 'GET') {
+      await route.fulfill({ json: { items: [usuarioInicial] } });
+      return;
+    }
+    await route.fulfill({ status: 400, json: { message: 'Un administrador no puede desactivarse a sí mismo.' } });
+  });
+
+  await abrirAdmin(page);
+  page.once('dialog', dialog => dialog.accept());
+  await page.getByRole('button', { name: `Desactivar usuario ${usuarioInicial.nombre}` }).click();
+
+  await expect(page.getByRole('alert')).toContainText('Un administrador no puede desactivarse a sí mismo.');
+  const fila = page.locator('tbody tr').filter({ hasText: usuarioInicial.email });
+  await expect(fila).toHaveCount(1);
+  await expect(fila.getByText('Activo', { exact: true })).toBeVisible();
+});
+
+test('configuración guarda el IVA y muestra feedback de éxito', async ({ page }) => {
+  let updateBody: Record<string, unknown> | undefined;
+  await page.route('**/users**', route => route.fulfill({ json: { items: [usuarioInicial] } }));
+  await page.route('**/tenants/tenant-a/config', async route => {
+    if (route.request().method() === 'PUT') {
+      updateBody = route.request().postDataJSON();
+      await route.fulfill({ json: updateBody });
+      return;
+    }
+    await route.fulfill({ json: configInicial });
+  });
+
+  await abrirAdmin(page);
+  await abrirConfiguracion(page);
+  await page.getByLabel('Porcentaje IVA (%)').fill('18.5');
+  await page.getByRole('button', { name: 'Guardar Cambios' }).click();
+
+  await expect(page.getByRole('status')).toContainText('Configuración del tenant actualizada exitosamente.');
+  await expect.poll(() => updateBody?.porcentajeIva).toBe(18.5);
+  expect(typeof updateBody?.porcentajeIva).toBe('number');
+});
+
+for (const caso of [
+  {
+    status: 400,
+    response: { errors: { PorcentajeIva: ['El porcentaje de IVA no es válido para el tenant.'] } },
+    mensaje: 'El porcentaje de IVA no es válido para el tenant.',
+  },
+  {
+    status: 403,
+    response: {},
+    mensaje: 'No tienes permisos de Administrador para modificar la configuración.',
+  },
+]) {
+  test(`configuración explica ${caso.status} y conserva los valores`, async ({ page }) => {
+    await page.route('**/users**', route => route.fulfill({ json: { items: [usuarioInicial] } }));
+    await page.route('**/tenants/tenant-a/config', async route => {
+      if (route.request().method() === 'PUT') {
+        await route.fulfill({ status: caso.status, json: caso.response });
+        return;
+      }
+      await route.fulfill({ json: configInicial });
+    });
+
+    await abrirAdmin(page);
+    await abrirConfiguracion(page);
+    await page.getByLabel('País (código ISO)').fill('AR');
+    await page.getByLabel('Moneda Base (ISO)').fill('ARS');
+    await page.getByLabel('Idioma').fill('es-AR');
+    await page.getByLabel('Porcentaje IVA (%)').fill('18.5');
+    await page.getByLabel('Zona Horaria (IANA)').fill('America/Argentina/Buenos_Aires');
+    await page.getByRole('button', { name: 'Guardar Cambios' }).click();
+
+    await expect(page.getByRole('alert')).toContainText(caso.mensaje);
+    await expect(page.getByLabel('País (código ISO)')).toHaveValue('AR');
+    await expect(page.getByLabel('Moneda Base (ISO)')).toHaveValue('ARS');
+    await expect(page.getByLabel('Idioma')).toHaveValue('es-AR');
+    await expect(page.getByLabel('Porcentaje IVA (%)')).toHaveValue('18.5');
+    await expect(page.getByLabel('Zona Horaria (IANA)')).toHaveValue('America/Argentina/Buenos_Aires');
+  });
+}

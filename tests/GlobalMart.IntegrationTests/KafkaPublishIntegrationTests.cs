@@ -29,6 +29,7 @@ using Xunit;
 
 namespace GlobalMart.IntegrationTests;
 
+[Collection("POS integration tests")]
 public class KafkaPublishIntegrationTests : IClassFixture<Ms5WebApplicationFactory>
 {
     private static readonly Guid ProductOneId = Guid.Parse("11111111-1111-1111-1111-111111111111");
@@ -82,14 +83,14 @@ public class KafkaPublishIntegrationTests : IClassFixture<Ms5WebApplicationFacto
         using var client = configuredFactory.CreateClient();
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-        var abrirTurnoResponse = await client.PostAsJsonAsync("/turnos/abrir", new
+        var abrirTurnoResponse = await client.PostAsJsonAsync("/api/turnos/abrir", new
         {
             sucursal_id = sucursalId,
             monto_fondo_inicial = 50000m
         });
         Assert.Equal(HttpStatusCode.OK, abrirTurnoResponse.StatusCode);
 
-        var crearVentaResponse = await client.PostAsJsonAsync("/ventas", new
+        var crearVentaResponse = await client.PostAsJsonAsync("/api/ventas", new
         {
             items = new[]
             {
@@ -107,14 +108,14 @@ public class KafkaPublishIntegrationTests : IClassFixture<Ms5WebApplicationFacto
 
         var ventaId = await ReadGuidPropertyAsync(crearVentaResponse, "id");
 
-        var agregarItemResponse = await client.PostAsJsonAsync($"/ventas/{ventaId}/items", new
+        var agregarItemResponse = await client.PostAsJsonAsync($"/api/ventas/{ventaId}/items", new
         {
             producto_id = ProductTwoId,
             cantidad = 1m
         });
         Assert.Equal(HttpStatusCode.Created, agregarItemResponse.StatusCode);
 
-        var cobrarResponse = await client.PostAsJsonAsync($"/ventas/{ventaId}/cobrar", new
+        var cobrarResponse = await client.PostAsJsonAsync($"/api/ventas/{ventaId}/cobrar", new
         {
             monto_recibido = montoRecibido
         });

@@ -3,15 +3,21 @@ id: pantallas
 tipo: frontend
 titulo: Pantallas del Frontend — GlobalMart OS
 estado: parcial
-fuentes: [globalmart-frontend/src/pages/, globalmart-frontend/src/components/, globalmart-frontend/src/api/client.ts, globalmart-frontend/src/hardware/scale-cart.ts, globalmart-frontend/tests/scale-main-preload.integration.test.cjs]
+fuentes: [globalmart-frontend/src/pages/, globalmart-frontend/src/components/, globalmart-frontend/src/api/client.ts, globalmart-frontend/src/hardware/scale-cart.ts, globalmart-frontend/src/payments/SimulatedTerminalAdapter.ts, globalmart-frontend/src/payments/terminal-ipc.ts, globalmart-frontend/src/payments/synchronizeCardPayment.ts, globalmart-frontend/src/preload.ts, globalmart-frontend/tests/scale-main-preload.integration.test.cjs, globalmart-frontend/tests/user-edit.test.cjs, globalmart-frontend/tests/user-deactivation.test.cjs, globalmart-frontend/e2e/admin-flows.spec.ts, globalmart-frontend/e2e/productos-admin.spec.ts, globalmart-frontend/e2e/weight-cart.spec.ts, globalmart-frontend/tests/terminal-port.test.cjs, globalmart-frontend/tests/terminal-ipc.test.cjs, globalmart-frontend/tests/synchronized-card-payment.test.cjs]
 verificado_contra_codigo: true
-ultima_revision: 2026-10-25
+ultima_revision: 2026-11-23
 depende_de: [estructura, ms1-identity, ms5-pos, guia-estilo]
 publica: []
 consume: []
 reglas: []
 ---
 # Pantallas del Frontend — GlobalMart OS
+
+## Panel administrativo (2026-10-27)
+
+`AdminLayout` separa administración de caja. `/admin/usuarios` crea cuentas con correo, rol base o propio, sucursal opcional y contraseña inicial editable; tras crear ofrece los datos de acceso para copiar. `/admin/roles` crea y elimina roles propios con permisos heredados y modifica asignaciones; exige desasignar un rol antes de borrarlo. `/admin/sucursales` crea y lista sucursales. `/admin/inventario` carga todas las páginas del catálogo, consulta stock y registra ajustes con motivo contra MS-4. `/admin/productos` y `/admin/configuracion` reutilizan las funciones existentes. Los endpoints remotos de inventario fueron probados con el ADMIN demo; la pantalla fue probada con APIs simuladas en E2E.
+
+El flujo ADMIN, la creación de cajero con datos copiables, el ajuste de inventario, la carga de páginas posteriores del catálogo y la gestión de roles propios aprobaron 5/5 pruebas E2E en Edge (`globalmart-frontend/e2e/admin.spec.ts`); `npm run typecheck` y `npm run package` aprobaron.
 
 > Estado real de las pantallas implementadas en el frontend Electron + React.
 
@@ -44,7 +50,7 @@ La URL base de MS-1 está en `src/api/client.ts`.
 Carrito de compras con:
   - BarcodeInput (búsqueda con debounce)
   - Lista de CartItem (ítems del carrito)
-  - Totales locales antes de iniciar venta; luego subtotal, impuestos y total devueltos por MS-5
+  - Subtotal estimado antes de iniciar venta; luego subtotal, impuestos y total devueltos por MS-5
   - Botón "Iniciar venta" que envía producto_id y cantidad; después muestra "Cobrar" y abre el modal de efectivo
   - Botón "Cancelar borrador" antes de crear venta; en venta pendiente permite agregar, cambiar cantidad y eliminar ítems
 
@@ -62,7 +68,17 @@ NO abre turno desde esta pantalla; dirige a /abrir-turno cuando falta
 
 ### Balanza simulada — S2-070 / TI3-701 [IMPLEMENTADO CON SIMULADOR]
 
-Al seleccionar un producto con `esPesoVariable`, el POS llama exclusivamente a `readStableWeightForCart(window.api.scale)`. Mientras espera bloquea otra lectura y muestra estado; solo agrega la línea cuando recibe un peso estable, positivo, en kg, de al menos 10 g y con precisión de 1 g. Un dato corrupto, error o desconexión deja el carrito sin cambios y presenta un mensaje. El intento siguiente consulta el estado y reconecta antes de leer cuando corresponde.
+S2-076: `PesoProducto` muestra el producto pesable seleccionado, origen simulado, unidad kg y estados de lectura, peso estable y error. Los controles del simulador aparecen solo durante la captura de un pesable; los productos unitarios no presentan controles de balanza.
+
+S2-077: la selección de un pesable solicita lectura estable por preload y muestra el peso antes de agregar. Solo `Confirmar peso` envía la cantidad a MS-5 o al borrador; cancelar y errores no modifican el carrito. Reintentar vuelve a consultar el estado de la balanza.
+
+S2-078: ante fallo o desconexión se ofrece ingreso manual identificado. La misma validación exige al menos 0,010 kg y pasos de 0,001 kg; texto no numérico, cero o negativo no habilita confirmar ni envía ítems.
+
+S2-079: cada línea pesable identifica kg y precio por kg. Antes de iniciar venta se muestra solo un subtotal estimado; impuestos y total esperan la respuesta de MS-5. Después de crear o mutar la venta, subtotal de línea, subtotal general, impuestos y total se muestran desde `VentaPendiente`, sin tasa fija de IVA en la interfaz.
+
+S2-080: tres pruebas E2E controladas recorren lectura estable y confirmación, modificación acumulada en una sola línea, recuperación tras recarga, desconexión, respaldo manual y producto unitario. Verifican que valores inválidos no crean líneas ni peticiones, que los controles de balanza no aparecen para unitarios y que el total mostrado coincide con la respuesta simulada de MS-5 (IVA de prueba 20 %).
+
+Al seleccionar un producto con `esPesoVariable`, el POS llama exclusivamente a `readStableWeightForCart(window.api.scale)`. Mientras espera bloquea otra lectura y muestra estado; solo ofrece confirmar cuando recibe un peso estable, positivo, en kg, de al menos 10 g y con precisión de 1 g. Un dato corrupto, error o desconexión deja el carrito sin cambios y presenta un mensaje. El intento siguiente consulta el estado y reconecta antes de leer cuando corresponde.
 
 La cantidad de una línea pesable se muestra con tres decimales en kg y no puede editarse manualmente. Crear, agregar y modificar envían `cantidad = peso_kg` y `peso_kg`; los totales posteriores continúan proviniendo de MS-5. La prueba integrada de simulador/main/preload confirma la secuencia válida, corrupta, desconectada y recuperada; hardware real [NO VERIFICADO].
 
@@ -84,6 +100,18 @@ El botón **Cobrar** del POS abre el modal en estado Disponible. En una venta `E
 S2-049: ante timeout o error de tarjeta, el modal muestra Resultado incierto y solo ofrece verificar. `GET /ventas/{id}/intento-tarjeta` recupera el último intento al recargar POS y consulta la pasarela; `UNCERTAIN` mantiene el cobro bloqueado, `APPROVED` cierra la venta y `DECLINED` permite un nuevo intento manual con otra clave o cambiar método. No hay reenvío automático del POST. Prueba dirigida de interfaz con doble clic, timeout, recarga y recuperación aprobada el 2026-10-18; E2E con PostgreSQL y pasarela desplegada [NO VERIFICADA].
 
 S2-071 / TI3-702 [IMPLEMENTADO]: el flujo de tarjeta consume `TerminalPort` mediante `Ms5TerminalAdapter`. El puerto separa `iniciarCobro`, `consultarEstado` y `cancelarIntento`, usando solo `ventaId`, monto, clave/referencia del intento, estado y referencia opaca; no define PAN, número de tarjeta, CVV ni vencimiento. `terminalStateMachine` centraliza `available`, `processing`, `approved`, `declined`, `uncertain` y `cancelled` con transiciones explícitas. MS-5 respalda inicio y consulta con los endpoints existentes; como no expone cancelación, el adaptador devuelve `CANCELACION_NO_SOPORTADA` sin llamada HTTP. Pruebas puras **4/4** y TypeScript aprobados el 2026-10-25.
+
+S2-072 / TI3-703 [IMPLEMENTADO]: `createTerminalPort()` selecciona por `DEVICE_TERMINAL_MODE`: `mock` crea `SimulatedTerminalAdapter` y `real` conserva `Ms5TerminalAdapter`. El simulador implementa `TerminalPort` y reproduce de forma determinista `waiting`, `approved`, `declined`, `cancelled`, `timeout` y `disconnected`; lectura/inicio significa que `iniciarCobro` recibe los datos del intento y pasa a `processing`. `timeout` espera el `MOCK_TERMINAL_DELAY_MS` configurado y termina en el estado existente `uncertain`, conservando venta, monto y referencia del mismo intento; nunca se convierte en `declined` ni crea otro intento. El adaptador genera una referencia opaca estable sin `Math.random()` ni `Date.now()`. `Pos.tsx` desconoce los detalles del adaptador. No solicita ni almacena PAN/CVV y permanece separado del `MockTerminalAdapter`/`ITerminalAdapter` legado. TI3-703 no agregó IPC; el bridge incorporado después se documenta en TI3-704. Pruebas enfocadas **12/12** y TypeScript aprobados el 2026-10-26.
+
+S2-073 / TI3-704 [IMPLEMENTADO]: `Pos.tsx` inicia y consulta intentos exclusivamente mediante la API tipada `window.api.terminal`, expuesta por `contextBridge` con los canales fijos `devices:terminal:iniciarCobro` y `devices:terminal:consultarEstado`. El preload no expone `send`, `invoke`, selección libre de canal, cancelación ni comandos de hardware en esta API. Main conserva un único `TerminalPort` simulado por proceso y valida antes de invocarlo objetos planos con listas exactas de propiedades: inicio acepta solo `ventaId`, `monto` y `claveIdempotencia`; consulta acepta solo `ventaId`, `monto` y `referenciaIntento`. UUID, monto positivo finito dentro del máximo y referencias seguras/acotadas son obligatorios; propiedades adicionales se rechazan. La respuesta IPC se reduce a venta, monto, referencia del intento, estado y referencia opaca, sin PAN/CVV/vencimiento. En `DEVICE_TERMINAL_MODE=real`, main falla de forma controlada y explícita porque el transporte MS-5 desde main permanece no soportado; no aplica fallback a `mock`. Los IPC heredados de `ITerminalAdapter` permanecen separados. Pruebas IPC puras **6/6** y TypeScript aprobados el 2026-10-26.
+
+S2-074 / TI3-705 [IMPLEMENTADO]: la aprobación de `TerminalPort` es preliminar y nunca basta para mostrar la venta cobrada. `Pos.tsx` genera o reutiliza una sola clave por intento; `synchronizeCardPayment` la entrega al terminal como `claveIdempotencia`, exige conservarla como `referenciaIntento` y, solo si el terminal aprueba, llama `posApi.chargeCard` con esa misma clave. MS-5 la usa como `request_id` y `Idempotency-Key` ante la pasarela. La UI pasa a `approved` únicamente cuando MS-5 responde `APPROVED` con la misma venta en estado `COMPLETADA`; muestra exclusivamente el `gateway_reference` confirmado por MS-5, no la referencia opaca local del terminal.
+
+Si la respuesta de autorización es ambigua o falla, `cardAttemptStatus` consulta el intento existente sin generar otra clave. La reconciliación solo aprueba cuando `request_id` coincide con la referencia esperada, el estado es `APPROVED` y la venta está `COMPLETADA`; una referencia distinta o un resultado no definitivo deja la UI en `uncertain`. La recuperación inicial y `verifyPayment()` también consultan MS-5 como fuente final y no crean una autorización nueva. Pruebas puras del flujo sincronizado **6/6** y TypeScript aprobados el 2026-10-26.
+
+S2-075 / TI3-706 [IMPLEMENTADO]: pruebas puras cubren los escenarios deterministas `approved`, `declined`, `timeout` y `disconnected` desde `processing`, conservando en inicio y consulta la misma `referenciaIntento` y sin datos sensibles. Timeout y desconexión terminan en `uncertain`; los estados terminales rechazan transiciones inválidas. Los handlers IPC se ejercitan con `SimulatedTerminalAdapter` real para ambos canales permitidos, verificando estados, referencia y el conjunto exacto de cinco campos seguros.
+
+La protección de doble clic reutiliza una guarda single-flight extraída sin cambio funcional del `paymentInFlight` de POS. Dos invocaciones inmediatas producen una sola ejecución del terminal, una sola consulta, una sola llamada `chargeCard`, una sola clave generada y un único cargo lógico; `claveIdempotencia`, `referenciaIntento` y la clave entregada a MS-5 son idénticas. Evidencia dirigida: `terminal-port` **12/12**, `terminal-ipc` **7/7** y `synchronized-card-payment` **7/7**, total **26/26**, más TypeScript aprobado el 2026-10-27.
 
 La búsqueda del POS consulta `GET /products/search` por nombre o código parcial y `GET /products/lookup` por código exacto, sin depender de la primera página del catálogo. Muestra carga, ausencia de resultados y errores; Enter conserva el texto si no se agregó un producto. `/admin/productos` permanece reservado a ADMIN/SUPER_ADMIN para la gestión administrativa; el cajero usa la búsqueda del POS [IMPLEMENTADO].
 
@@ -114,22 +142,47 @@ La búsqueda del POS consulta `GET /products/search` por nombre o código parcia
 //   - Subtotales por categoría (Billetes / Monedas) y Total Declarado en gaveta
 //   - Botón "Limpiar Conteo"
 //   - Arqueo y Cuadre: posApi.balanceShift llama POST /api/turnos/cuadre
-//   - Cierre de turno: posApi.closeShift llama POST /api/turnos/cerrar
+//   - Cierre de turno: botón abre modal <dialog> (Cancelar / Confirmar cierre, Escape cancela) → posApi.closeShift llama POST /api/turnos/cerrar
+//   - E2E: e2e/electron/cierre-turno.integrated.spec.ts (S3-029, caso docs/qa/S3-006). S3-036 extiende este mismo <dialog>, no crea otro.
+```
+
+## VentasTurnoPage.tsx — TI3-763 [IMPLEMENTADO]
+
+```typescript
+// Ventas del turno con acción Anular solo para ADMIN. Ruta: /ventas-turno (AuthRoute, enlace en AppLayout y AdminDashboard)
+//   - CAJERO: posApi.activeShift → posApi.salesByShift; no ve botón Anular
+//   - ADMIN (active_role === 'ADMIN'): posApi.openShifts (GET /api/turnos/abiertos) elige turno → salesByShift
+//   - Botón Anular solo en ventas COMPLETADA → <dialog> con motivo obligatorio → posApi.anularVenta (POST /api/ventas/{id}/anular) → recarga la lista (venta ANULADA)
+//   - S3-013: errores por `codigo`, con mensajes distintos de rechazo, incertidumbre, turno cerrado y venta no encontrada/sin acceso. Se conservan en el diálogo y al cerrarlo.
+//   - Refresca el estado desde MS-5 tras cada intento; si falla la lectura, oculta filas desactualizadas y avisa. No infiere anulación ni reembolso.
+//   - 401 conserva la salida al login del interceptor compartido; se bloquean doble envío y cierre durante la solicitud.
+//   - E2E con mocks: e2e/ventas-turno.spec.ts. Evidencia: docs/qa/TI3-763/reporte.md
+//   - S3-038 refuerza ADMIN, CAJERO (incluido 403 con sesión cambiada) y TARJETA rechazada; estado e importe tras recargar. 25/25 con API simulada: docs/qa/S3-038/reporte.md
 ```
 
 ## Admin.tsx [PARCIAL]
 
 Ruta `/admin`. Panel de administración con pestañas ("Usuarios" y "Configuración del Tenant"):
-- **Usuarios:** Lista usuarios (`GET /users` en MS-1, con alias `/api/v1/users` y `/api/users`) mediante el componente `UsuariosList` (`components/admin/UsuariosList.tsx`, mostrando nombre, correo, roles con badges/chips y estado activo/inactivo), botón de refresco y formulario modal `CrearUsuarioModal` (`components/admin/CrearUsuarioModal.tsx`, nombre, correo, contraseña ≥ 8 con confirmación, rol CAJERO/REPONEDOR/ADMIN; validación en frontend alineada a `CrearUsuarioDto`). Al enviar llama `POST /users` y luego `POST /users/{id}/roles` con extracción de errores de validación/conflicto. TI3-673 agrega una acción **Editar** por fila y `EditarUsuarioModal`, precargado con el email disponible. Valida email requerido, formato y máximo 200 caracteres, ejecuta `PUT /users/{id}` con el mismo ID seleccionado, muestra estados de guardado/éxito/error y recarga la lista mediante `recargar()` sin crear otro usuario [IMPLEMENTADO]. TI3-674 agrega **Desactivar** solo para usuarios activos, exige confirmación y ejecuta `DELETE /users/{id}`. Maneja autodesactivación, sesión, permisos, inexistente/otro tenant y fallos de red [IMPLEMENTADO].
+- **Usuarios:** Lista usuarios (`GET /users` en MS-1, con alias `/api/v1/users` y `/api/users`) mediante el componente `UsuariosList` (`components/admin/UsuariosList.tsx`, mostrando nombre, correo, roles con badges/chips y estado textual Activo/Inactivo), botón de refresco y formulario modal `CrearUsuarioModal` (`components/admin/CrearUsuarioModal.tsx`, nombre, correo, contraseña ≥ 8 con confirmación, rol CAJERO/REPONEDOR/ADMIN; validación en frontend alineada a `CrearUsuarioDto`). Al enviar llama `POST /users` y luego `POST /users/{id}/roles` con extracción de errores de validación/conflicto. TI3-673 agrega una acción **Editar** por fila y `EditarUsuarioModal`, precargado con el email disponible. Valida email requerido, formato y máximo 200 caracteres, ejecuta `PUT /users/{id}` con el mismo ID seleccionado, muestra estados de guardado/éxito/error y recarga la lista mediante `recargar()` sin crear otro usuario [IMPLEMENTADO]. TI3-674 agrega **Desactivar** solo para usuarios activos, exige confirmación y ejecuta `DELETE /users/{id}`. Maneja autodesactivación, sesión, permisos, inexistente/otro tenant y fallos de red [IMPLEMENTADO]. TI3-733 conserva activos e inactivos en la misma tabla y bloquea en interfaz la edición básica y la modificación de roles de usuarios inactivos mediante indicadores accesibles y defensas en los handlers; los usuarios activos mantienen sus acciones [IMPLEMENTADO].
 - **Configuración del Tenant:** Componente `TenantConfig` (`components/admin/TenantConfig.tsx`) que conecta con `GET /tenants/{id}/config` y `PUT /tenants/{id}/config` en MS-1. Permite ver y actualizar parámetros regionales y fiscales: país, moneda, idioma, zona horaria IANA y porcentaje de IVA. TI3-645 alinea Zod 4, `zodResolver` y React Hook Form mediante tipos separados de entrada/salida; `z.coerce.number()` convierte el IVA y `onSubmit` recibe un `number`, sin casts inseguros. La prueba Playwright `TenantConfig convierte porcentajeIva a number antes de actualizar` verifica que un IVA introducido en el formulario se envía en el `PUT` como `number` y no como `string` [IMPLEMENTADO]. Maneja feedback de carga, éxito (`var(--color-success)`), advertencia en modo lectura para no administradores y errores. TI3-675 conserva sin cambios la edición ADMIN/SUPER_ADMIN, el bloqueo durante carga/guardado y el feedback de éxito/error existente.
+
+**Cobertura administrativa:** `e2e/admin-flows.spec.ts` monta la pantalla real de Administración y usa fixtures HTTP con `page.route()` para alta (`POST /users`), edición (`PUT /users/{id}`), baja (`DELETE /users/{id}`), roles (`POST /users/{id}/roles`), listado y configuración (`GET/PUT /tenants/{id}/config`). Sus 15 escenarios incluyen los flujos TI3-676 y, desde TI3-733, un listado mixto, bloqueo de PUT/roles para inactivos y persistencia visual tras DELETE y recarga. El 2026-11-11 se ejecutó junto con los 8 escenarios de `admin.spec.ts`: los 23 casos fueron informados como `ok`, pero el servidor local permaneció abierto y el runner se interrumpió sin resumen final ni exit code 0; resultado E2E clasificado como PASS REPORTADO, no cierre completo verificado. Las pruebas Node relacionadas aprobaron 12/12, el typecheck y el empaquetado Electron finalizaron con exit code 0.
 
 **Contrato de acceso TI3-672 / TI3-675 [IMPLEMENTADO]:** `AppLayout` y `AdminRoute` consumen `esAdmin` desde `useTenantStore`, que reconoce los claims `active_role`/`roles` con valor `ADMIN` o `SUPER_ADMIN`. La misma guarda protege `/admin/*` y `/admin/productos`. ADMIN/SUPER_ADMIN acceden a las funciones administrativas; CAJERO no recibe su contenido y ve el mensaje **Acceso denegado** después de resolver la sesión, sin falso rechazo durante la carga. MS-1 mantiene `403` como defensa. La prueba Node `ADMIN y SUPER_ADMIN acceden a Administración y CAJERO no` cubre la regla compartida, sin navegador.
 
-La UI expone edición de email y baja lógica; todavía no expone reactivación. MS-1 dispone de PUT y DELETE lógico. Su contrato actual contempla `400` por datos inválidos o autodesactivación según la operación, `401` sin autenticación, `403` para rol no autorizado, `404` para usuario inexistente o de otro tenant y `409` por email duplicado en edición.
+La UI expone edición de email, baja lógica y reactivación. MS-1 dispone de PUT, DELETE lógico y `POST /users/{id}/reactivate`. Su contrato actual contempla `400` por datos inválidos o autodesactivación según la operación, `401` sin autenticación, `403` para rol no autorizado, `404` para usuario inexistente o de otro tenant y `409` por email duplicado en edición.
 
-**Dependencia pendiente TI3-673:** `GET /users` no entrega `sucursalId` y no existe `GET /users/{id}`. Por ello el modal no muestra ni inventa ese campo y el payload frontend contiene solo `email`. El contrato actual de MS-1 interpreta `sucursalId` omitido como `null` y puede borrar una asignación existente; resolver la lectura/preservación segura de `sucursalId` requiere un cambio posterior del contrato backend [NO VERIFICADO en integración frontend-backend].
+**Edición de usuario:** `GET /users` aún no entrega `sucursalId` y el modal de edición muestra solo email. El backend conserva la asignación existente cuando se omite `sucursalId`; la creación sí admite sucursal inicial. Para usuarios inactivos, la tabla anuncia la edición como deshabilitada, `Admin.tsx` impide abrir/enviar el flujo y el modal no presenta controles editables. `/admin/roles` mantiene visibles esas cuentas, muestra su estado y bloquea controles y handler de guardado. Este bloqueo es solo frontend: MS-1 continúa aceptando PUT y asignación de roles sobre registros inactivos.
 
-**Dependencia pendiente TI3-674:** tras un DELETE 204, la pantalla no llama `recargar()`: actualiza la colección local y conserva la fila con `activo=false`, mostrando el badge **Inactivo**. Una recarga posterior ejecuta `GET /users`, que filtra `Activo=true`, por lo que no puede garantizar que el usuario inactivo siga visible. Tampoco existe una vista/API de auditoría consultable; solo está confirmada la conservación física de la fila en el backend.
+**Baja lógica:** tras un DELETE 204, la pantalla conserva la fila con `activo=false`, bloquea inmediatamente edición y roles, y `GET /users` vuelve a incluir el usuario inactivo al recargar. No existe vista/API de auditoría consultable.
+
+**TI3-800 — Reactivación:** los usuarios inactivos muestran **Reactivar**. La pantalla envía `POST /users/{id}/reactivate` con el JWT existente y, solo ante 204, cambia esa misma fila a `activo=true` sin recargar ni alterar las demás. Durante la solicitud muestra **Reactivando…**, bloquea envíos duplicados y, al terminar, vuelve a habilitar Editar y Desactivar. Los errores 401, 403, 404 y de red conservan la fila inactiva. Pruebas Node: 13/13 con exit code 0; Playwright administrativo: 22 escenarios mostraron `ok`, pero el runner fue interrumpido porque su servidor local no terminó, por lo que se clasifica como PASS REPORTADO. [Evidencia](../../qa/TI3-800/reporte.md).
+
+### TI3-735 / S2-104 — accesibilidad de formularios administrativos [IMPLEMENTADO]
+
+`CrearUsuarioModal` y `EditarUsuarioModal` conservan `role="dialog"`, `aria-modal` y títulos accesibles; ahora fijan foco inicial, contienen Tab/Shift+Tab, cierran con Escape cuando no guardan y devuelven el foco al control invocador. Los errores de nombre, correo, contraseña y rol se asocian al control correspondiente mediante `aria-invalid` y `aria-describedby`. `AdminRoles` mantiene las defensas de handlers para cuentas inactivas y aplica tokens aprobados a controles, botones y mensajes con icono, título y detalle.
+
+`ProductoModal` incorpora la misma gestión de foco y semántica, restaura el indicador de foco del navegador y usa un formulario para aceptar Enter. Una guarda single-flight evita duplicar POST/PUT mientras existe un guardado; los errores locales de nombre y precio quedan asociados a sus inputs. Validación 2026-11-11: Node administrativo 12/12 y TypeScript con exit code 0. Playwright informó 25 casos `ok` en la corrida conjunta; el caso nuevo de productos falló inicialmente, se corrigió y fue informado `ok` en una repetición dirigida. Ambos runners quedaron abiertos por su servidor local y fueron interrumpidos sin exit code 0: PASS REPORTADO.
 
 Usa los tokens de color de la [[guia-estilo]] definidos en `index.css`. No hay reactivación individual de usuarios en UI todavía.
 
@@ -142,6 +195,12 @@ Mantiene `axios.delete` a `DELETE /products/{id}` con Bearer y `fetchDatos()` pa
 El backend exige ADMIN, conserva físicamente la fila mediante `IsActive=false`, retorna 204 idempotente y el mismo 404 para inexistente/otro tenant. La pantalla no agrega una guarda de rol; la autorización se aplica en MS-3. PUT requiere ADMIN para cambiar el estado. TI3-642 no modificó `TenantConfig.tsx`.
 
 Validación 2026-10-14: TypeScript `--noEmit --incremental false --pretty false` aprobado. Contrato backend validado con 11 casos de [DesactivarProductoIntegrationTests.cs](../../../tests/GlobalMart.IntegrationTests/DesactivarProductoIntegrationTests.cs). Validación visual/E2E específica de la acción: [NO VERIFICADO].
+
+### TI3-734 / S2-103 — tabla, validación y errores [IMPLEMENTADO]
+
+Creación y edición conservan el modal ante error y muestran mensajes comprensibles para el arreglo de FluentValidation (400), sesión inválida (401), permisos (403), producto inexistente/ajeno (404) y fallos de red. La desactivación presenta el error en pantalla y no anuncia éxito ni altera la fila ante fallo. El precio debe ser mayor que cero, igual que en MS-3. Tras POST, PUT o DELETE exitoso, `fetchDatos()` recarga automáticamente la colección y los filtros actuales se recalculan; no se requiere pulsar **Recargar**.
+
+`e2e/productos-admin.spec.ts` cubre alta, edición del código de barras, baja lógica, filtros, precio cero y feedback 400/401/403/404/red. El 2026-11-11 Playwright informó 8/8 casos `ok`, pero el servidor local no finalizó y el runner fue interrumpido sin resumen ni exit code 0: PASS REPORTADO. TypeScript aprobó con exit code 0. La pantalla continúa solicitando solo `page=1&pageSize=500`; catálogos mayores quedan fuera del alcance de TI3-734.
 
 ## BarcodeInput.tsx [IMPLEMENTADO]
 
@@ -192,3 +251,7 @@ Pantallas no implementadas:
 ## S2-025 — Regresión de carrito
 
 [PARCIAL] Suite Playwright sobre el renderer real de POS, con catálogo y puente de sesión controlados. Ejecución 2026-10-12: 1 aprobado (agregar, cantidad, eliminar y recargar), 2 fallidos (sin respuesta de ventas MS-5 y persistencia del carrito al cambiar sesión de tenant). Pos usa `pos_cart` sin partición por tenant y calcula IVA local al 19%. Igualdad con totales de MS-5 y aislamiento HTTP de backend [NO VERIFICADO]. No acredita E2E completo ni venta funcional. Reporte y capturas: [S2-025](../../qa/S2-025/reporte.md).
+
+## Integración de ramas — 2026-11-01
+
+El borrador POS se persiste con clave `pos_cart:<tenant_id>:<sub>` solo con claims de tenant y usuario. Al cambiar sesión se carga la clave propia; no se reutiliza la clave global antigua. La recuperación de ventas sigue pasando por MS-5.

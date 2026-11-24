@@ -5,7 +5,7 @@ titulo: Reglas de Negocio (MoSCoW) — GlobalMart OS
 estado: parcial
 fuentes: [GlobalMart_ContextMaster.md#sec7, src/]
 verificado_contra_codigo: true
-ultima_revision: 2026-10-16
+ultima_revision: 2026-11-20
 depende_de: [vision]
 publica: []
 consume: []
@@ -22,8 +22,8 @@ reglas: []
 | RN-01 | Aislamiento completo entre tenants. Ningún query puede retornar datos de otro tenant. | [IMPLEMENTADO] — TenantMiddleware + HasQueryFilter |
 | RN-02 | Todo pago con tarjeta pasa OBLIGATORIAMENTE por pasarela de pago externa. Nunca localmente. | [PARCIAL] — adaptador seguro implementado; cobro con tarjeta aún no orquestado |
 | RN-03 | Toda venta completada genera documento tributario válido (boleta/factura) según normativa del país. | [PLANIFICADO] — MS-2 solo calcula IVA, sin DTE |
-| RN-04 | El stock se descuenta automáticamente al completar una venta exitosa. | [PARCIAL] — MS-4 consumer listo; MS-5 no produce evento |
-| RN-05 | Productos perecederos gestionados bajo FEFO: lote menor fecha de vencimiento se despacha primero. | [PLANIFICADO] — modelos de lote existen, sin lógica FEFO |
+| RN-04 | El stock se descuenta automáticamente al completar una venta exitosa. | [IMPLEMENTADO EN CÓDIGO] — MS-5 publica por outbox y MS-4 consume; broker del clúster no disponible |
+| RN-05 | Productos perecederos gestionados bajo FEFO: lote menor fecha de vencimiento se despacha primero. | [IMPLEMENTADO EN CÓDIGO] — el consumidor de ventas descuenta lotes por fecha e id; broker/PostgreSQL real pendiente |
 | RN-06 | Solo se procesan ventas si existe turno de caja abierto por el cajero en sesión activa. | [IMPLEMENTADO] — TurnoService.Abrir verifica turno activo |
 | RN-07 | Todo usuario autenticado mediante JWT válido para cualquier operación. | [IMPLEMENTADO] — [Authorize] en todos los controllers |
 | RN-08 | JWT debe incluir: user_id, tenant_id, roles[], active_role, sucursal_id, exp. | [PARCIAL] — falta sucursal_id en JWT real |
@@ -76,4 +76,5 @@ Antes de modificar código, verificar:
 ## Fuentes
 - `GlobalMart_ContextMaster.md` §7
 - `src/POSCartService/Services/VentaService.cs`
+- `src/WarehouseInventoryService/Repositories/StockRepository.cs`
 - `src/TenantIdentityService/Controllers/UsuarioController.cs`

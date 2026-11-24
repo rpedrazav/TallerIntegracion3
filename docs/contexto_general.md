@@ -1,4 +1,4 @@
-﻿---
+---
 title: "Contexto General del Proyecto — Visión Macro y Micro (.NET 8 Enterprise)"
 aliases:
   - Visión del Proyecto

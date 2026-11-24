@@ -7,7 +7,8 @@ dotnet run --project src/TenantIdentityService &
 dotnet run --project src/TaxComplianceService &
 dotnet run --project src/CatalogPricingService &
 dotnet run --project src/WarehouseInventoryService &
-dotnet run --project src/POSCartService &
+# MS-5 cobra con tarjeta contra el simulador local (appsettings apunta a un dominio de ejemplo).
+PasarelaPago__BaseUrl=http://localhost:5050 dotnet run --project src/POSCartService &
 
 # Iniciar Simulador de Pagos si no está corriendo ya en Docker
 if ! nc -z localhost 5050 2>/dev/null && ! curl -s http://localhost:5050/health >/dev/null 2>&1; then

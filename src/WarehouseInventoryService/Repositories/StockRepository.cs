@@ -25,14 +25,39 @@ public class StockRepository : IStockRepository
     public async Task<Stock?> Descontar(Guid productoId, decimal cantidad, Guid tenantId, Guid sucursalId)
     {
         var stock = await GetByProducto(productoId, sucursalId, tenantId);
-        if (stock is null)
+        if (stock is null || stock.CantidadActual < cantidad)
         {
             return null;
         }
 
-        stock.CantidadActual -= cantidad;
+        var lotes = await _context.Lotes
+            .Where(l => l.ProductoId == productoId
+                     && l.SucursalId == sucursalId
+                     && l.TenantId == tenantId
+                     && l.Cantidad > 0)
+            .OrderBy(l => l.FechaVencimiento)
+            .ThenBy(l => l.Id)
+            .ToListAsync();
 
-        await _context.SaveChangesAsync();
+        if (lotes.Sum(l => l.Cantidad) < cantidad)
+        {
+            return null;
+        }
+
+        var restante = cantidad;
+        foreach (var lote in lotes)
+        {
+            var descuento = Math.Min(lote.Cantidad, restante);
+            lote.Cantidad -= descuento;
+            restante -= descuento;
+
+            if (restante == 0)
+            {
+                break;
+            }
+        }
+
+        stock.CantidadActual -= cantidad;
         return stock;
     }
 }

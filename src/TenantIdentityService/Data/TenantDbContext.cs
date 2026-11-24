@@ -66,7 +66,9 @@ public class TenantDbContext : DbContext
         {
             e.HasKey(r => r.Id);
             e.Property(r => r.Nombre).IsRequired().HasMaxLength(50);
-            e.HasIndex(r => r.Nombre).IsUnique();
+            e.Property(r => r.RolBase).HasMaxLength(50);
+            e.HasIndex(r => new { r.TenantId, r.Nombre }).IsUnique();
+            e.HasQueryFilter(r => r.TenantId == null || r.TenantId == CurrentTenantId);
         });
 
         // ── Usuario ─────────────────────────────────────────────────────────

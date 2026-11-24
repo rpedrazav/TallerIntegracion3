@@ -7,7 +7,7 @@ namespace TenantIdentityService.Services;
 /// Implementación del servicio de autenticación.
 ///
 /// Responsabilidad única (SRP):
-///   - UserRepository  → "¿existe este usuario en la BD?"
+///   - UsuarioRepository  → "¿existe este usuario en la BD?"
 ///   - AuthService     → "¿puede este usuario ingresar?" (valida contraseña)
 ///   - JwtService      → "genera el token para este usuario"
 ///
@@ -18,12 +18,12 @@ namespace TenantIdentityService.Services;
 /// </summary>
 public class AuthService : IAuthService
 {
-    private readonly IUserRepository _userRepository;
+    private readonly IUsuarioRepository _usuarioRepository;
     private readonly ILogger<AuthService> _logger;
 
-    public AuthService(IUserRepository userRepository, ILogger<AuthService> logger)
+    public AuthService(IUsuarioRepository usuarioRepository, ILogger<AuthService> logger)
     {
-        _userRepository = userRepository;
+        _usuarioRepository = usuarioRepository;
         _logger         = logger;
     }
 
@@ -31,7 +31,7 @@ public class AuthService : IAuthService
     public async Task<Usuario?> ValidateCredentialsAsync(string email, string password, Guid tenantId)
     {
         // 1. Buscar el usuario en la base de datos (incluye roles y sucursales)
-        var usuario = await _userRepository.FindByEmailAsync(email, tenantId);
+        var usuario = await _usuarioRepository.FindByEmailAsync(email, tenantId);
 
         // 2. Si no existe o está inactivo → retornar null sin revelar el motivo
         if (usuario is null)
@@ -42,6 +42,8 @@ public class AuthService : IAuthService
                 email, tenantId);
             return null;
         }
+
+        if (!usuario.UsuarioRoles.Any()) return null;
 
         // 3. Verificar la contraseña con BCrypt
         //    BCrypt.Verify compara el texto plano contra el hash almacenado en la BD.

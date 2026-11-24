@@ -18,6 +18,16 @@ const isValidCartWeight = (weightKg: number): boolean => {
   return Math.abs(grams - Math.round(grams)) <= FLOATING_POINT_TOLERANCE;
 };
 
+/** Aplica al respaldo manual el mismo mínimo y la misma precisión que a la balanza. */
+export const manualWeightForCart = (input: string): ScaleCartWeightResult => {
+  const normalized = input.trim().replace(',', '.');
+  const weightKg = Number(normalized);
+  if (!/^\d+(?:\.\d{1,3})?$/.test(normalized) || !isValidCartWeight(weightKg)) {
+    return { ok: false, code: 'invalid_reading', message: 'Ingresa un peso de al menos 0,010 kg con precisión de 0,001 kg.' };
+  }
+  return { ok: true, weightKg };
+};
+
 /**
  * Único punto por el que una lectura de balanza puede transformarse en peso
  * del carrito. Reconecta cuando sea necesario y rechaza cualquier respuesta

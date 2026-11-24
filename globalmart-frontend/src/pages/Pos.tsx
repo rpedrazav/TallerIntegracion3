@@ -1,15 +1,27 @@
+import { useAuth } from '../hooks/useAuth';
+import { parseJwt } from '../utils/jwt';
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { catalogApi, CatalogProduct, posApi, VentaPendiente } from '../api/client';
 import BarcodeInput from '../components/pos/BarcodeInput';
 import CartItem from '../components/pos/CartItem';
+import PesoProducto, { PesoEstado } from '../components/pos/PesoProducto';
 import PaymentModal, { PaymentMethod, PaymentState } from '../components/pos/PaymentModal';
-import { readStableWeightForCart } from '../hardware/scale-cart';
-import { Ms5TerminalAdapter } from '../payments/Ms5TerminalAdapter';
-import type { TerminalPort } from '../payments/TerminalPort';
-
-const terminalPort: TerminalPort = new Ms5TerminalAdapter();
+import { manualWeightForCart, readStableWeightForCart } from '../hardware/scale-cart';
+import {
+  reconcileCardPayment,
+  releasePaymentSingleFlight,
+  synchronizeCardPayment,
+  tryAcquirePaymentSingleFlight,
+} from '../payments/synchronizeCardPayment';
+import {
+  cancelPaymentAttemptSafely,
+  clearRecoveryAttempt,
+  loadRecoveryAttempt,
+  recoverPosStateOnReload,
+  saveRecoveryAttempt,
+} from '../payments/posRecovery';
 
 export interface ProductItem {
   id: string;
@@ -56,12 +68,17 @@ export default function Pos() {
   const [paymentError, setPaymentError] = useState('');
   const [paymentShortfall, setPaymentShortfall] = useState<number | null>(null);
   const [paymentChange, setPaymentChange] = useState<number | null>(null);
+  const [paymentCashReceived, setPaymentCashReceived] = useState<number | null>(null);
   const [paymentReference, setPaymentReference] = useState<string | null>(null);
+  const [attemptReferenceView, setAttemptReferenceView] = useState<string | null>(null);
+  const [recoveryNotice, setRecoveryNotice] = useState<string | null>(null);
   const [draftPaymentMethod, setDraftPaymentMethod] = useState<'EFECTIVO' | 'TARJETA'>('EFECTIVO');
   const paymentInFlight = useRef(false);
+  const cancelInFlight = useRef(false);
   const paymentAttemptReference = useRef<string | null>(null);
   const scaleReadInFlight = useRef(false);
   const [isReadingScale, setIsReadingScale] = useState(false);
+  const [capturaPeso, setCapturaPeso] = useState<{ product: CatalogProduct; estado: PesoEstado; origen: 'simulado' | 'manual'; pesoKg?: number; error?: string; manualValue?: string } | null>(null);
   const [pendingMutations, setPendingMutations] = useState(0);
   const [saleNeedsRefresh, setSaleNeedsRefresh] = useState(false);
   const saleRef = useRef<VentaPendiente | null>(null);
@@ -106,43 +123,32 @@ export default function Pos() {
         shiftConfirmed = true;
         const ventas = await posApi.salesByShift(turno.id);
         if (!active) return;
-        const pendingId = ventas.filter((item) => item.estado === 'PENDIENTE').pop()?.id;
-        const recovered = pendingId ? await posApi.getSale(pendingId) : null;
-        let pendiente = recovered?.estado === 'PENDIENTE' ? recovered : null;
-        if (pendiente?.metodo_pago === 'TARJETA') {
-          try {
-            const intento = await terminalPort.consultarEstado({
-              ventaId: pendiente.id,
-              monto: pendiente.total,
-              referenciaIntento: paymentAttemptReference.current,
-            });
-            if (!active) return;
-            paymentAttemptReference.current = intento.referenciaIntento;
-            if (intento.estado === 'uncertain') {
-              setPaymentState('uncertain');
-              setPaymentError('El intento de tarjeta sigue sin resultado confirmado. Verifica su estado antes de cobrar.');
-              setIsPaymentOpen(true);
-            } else if (intento.estado === 'approved') {
-              setPaymentReference(intento.referenciaOpaca);
-              setPaymentState('approved');
-              setIsPaymentOpen(true);
-            } else if (intento.estado === 'declined') {
-              setPaymentState('declined');
-              setPaymentError('La pasarela rechazó el cobro.');
-              setIsPaymentOpen(true);
-            }
-          } catch {
-            if (!active) return;
-            setPaymentState('uncertain');
-            setPaymentError('No se pudo consultar el intento de tarjeta. Verifica el estado antes de otro cobro.');
-            setIsPaymentOpen(true);
-          }
-        }
+        const persistedAttempt = loadRecoveryAttempt(localStorage, turno.id);
+        const recovery = await recoverPosStateOnReload({
+          turnoId: turno.id,
+          ventas,
+          persistedAttempt,
+          ms5: posApi,
+          terminal: window.api?.terminal,
+        });
         if (!active) return;
+
+        if (recovery.shouldClearPersisted) {
+          clearRecoveryAttempt(localStorage, turno.id);
+        }
+
+        paymentAttemptReference.current = recovery.attemptReference;
+        setAttemptReferenceView(recovery.attemptReference);
+        setPaymentState(recovery.paymentState);
+        setPaymentReference(recovery.gatewayReference);
+        setPaymentError(recovery.errorMessage);
+        setRecoveryNotice(recovery.recoveryNotice);
+        setIsPaymentOpen(recovery.openModal);
+
         setTurnoId(turno.id);
-        saleRef.current = pendiente;
-        setVenta(pendiente);
-        if (pendingId) {
+        saleRef.current = recovery.venta;
+        setVenta(recovery.venta);
+        if (recovery.venta) {
           setDraftItems([]);
           setSearchResults([]);
         }
@@ -163,23 +169,27 @@ export default function Pos() {
     return () => { active = false; };
   }, [navigate, turnoRetry]);
 
-  // Inicializar leyendo de localStorage
-  const [draftItems, setDraftItems] = useState<ProductItem[]>(() => {
-    const saved = localStorage.getItem('pos_cart');
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch (e) {
-        console.error('Error al leer carrito:', e);
-      }
-    }
-    return [];
-  });
+  const { token } = useAuth();
+  const cartOwner = parseJwt(token);
+  const cartStorageKey = cartOwner?.tenant_id && cartOwner?.sub
+    ? `pos_cart:${cartOwner.tenant_id}:${cartOwner.sub}` : null;
 
-  // Guardar en localStorage cada vez que cambie
+  // Inicializar leyendo de localStorage
+  const [draftItems, setDraftItems] = useState<ProductItem[]>([]);
+  const [loadedCartKey, setLoadedCartKey] = useState<string | null>(null);
   useEffect(() => {
-    localStorage.setItem('pos_cart', JSON.stringify(draftItems));
-  }, [draftItems]);
+    let items: ProductItem[] = [];
+    try {
+      const saved = cartStorageKey ? localStorage.getItem(cartStorageKey) : null;
+      if (saved) { const parsed = JSON.parse(saved); if (Array.isArray(parsed)) items = parsed; }
+    } catch { /* Un borrador inválido se descarta. */ }
+    setDraftItems(items);
+    setLoadedCartKey(cartStorageKey);
+  }, [cartStorageKey]);
+  useEffect(() => {
+    if (cartStorageKey && loadedCartKey === cartStorageKey)
+      localStorage.setItem(cartStorageKey, JSON.stringify(draftItems));
+  }, [draftItems, cartStorageKey, loadedCartKey]);
 
   const cartItems: ProductItem[] = venta
     ? venta.items.map((item) => ({
@@ -259,28 +269,7 @@ export default function Pos() {
     }
   };
 
-  const addProductToCart = useCallback(async (product: CatalogProduct): Promise<boolean> => {
-    if (isStartingSale || saleNeedsRefresh || paymentState === 'uncertain' || paymentState === 'processing') return false;
-
-    let weightKg: number | undefined;
-    if (product.esPesoVariable) {
-      if (scaleReadInFlight.current) return false;
-      scaleReadInFlight.current = true;
-      setIsReadingScale(true);
-      setVentaError('');
-      try {
-        const reading = await readStableWeightForCart(window.api.scale);
-        if (!reading.ok) {
-          setVentaError(`No se agregó ${product.nombre}: ${reading.message}`);
-          return false;
-        }
-        weightKg = reading.weightKg;
-      } finally {
-        scaleReadInFlight.current = false;
-        setIsReadingScale(false);
-      }
-    }
-
+  const commitProductToCart = useCallback((product: CatalogProduct, weightKg?: number): boolean => {
     if (venta) {
       void queueSaleMutation(async (current) => {
         const existing = current.items.find((item) => item.producto_id === product.id);
@@ -335,7 +324,40 @@ export default function Pos() {
     setSearchResults([]);
     setClearSearchSignal((value) => value + 1);
     return true;
-  }, [venta, isStartingSale, saleNeedsRefresh, paymentState, queueSaleMutation]);
+  }, [venta, queueSaleMutation]);
+
+  const readProductWeight = useCallback(async (product: CatalogProduct): Promise<boolean> => {
+    if (scaleReadInFlight.current) return false;
+    scaleReadInFlight.current = true;
+    setIsReadingScale(true);
+    setCapturaPeso({ product, estado: 'leyendo', origen: 'simulado' });
+    setVentaError('');
+    try {
+      const reading = await readStableWeightForCart(window.api.scale);
+      if (!reading.ok) {
+        setCapturaPeso({ product, estado: 'error', origen: 'simulado', error: reading.message });
+        return false;
+      }
+      setCapturaPeso({ product, estado: 'estable', origen: 'simulado', pesoKg: reading.weightKg });
+      return true;
+    } finally {
+      scaleReadInFlight.current = false;
+      setIsReadingScale(false);
+    }
+  }, []);
+
+  const addProductToCart = useCallback(async (product: CatalogProduct): Promise<boolean> => {
+    if (isStartingSale || saleNeedsRefresh || capturaPeso || paymentState === 'uncertain' || paymentState === 'processing') return false;
+    if (product.esPesoVariable) return readProductWeight(product);
+    return commitProductToCart(product);
+  }, [isStartingSale, saleNeedsRefresh, capturaPeso, paymentState, readProductWeight, commitProductToCart]);
+
+  const confirmWeight = () => {
+    if (!capturaPeso || capturaPeso.estado !== 'estable' || capturaPeso.pesoKg === undefined
+      || isStartingSale || saleNeedsRefresh || paymentState === 'uncertain' || paymentState === 'processing') return;
+    commitProductToCart(capturaPeso.product, capturaPeso.pesoKg);
+    setCapturaPeso(null);
+  };
 
   const handleTypingSearch = useCallback(async (query: string) => {
     const request = ++searchRequest.current;
@@ -430,6 +452,7 @@ export default function Pos() {
         setPaymentError('');
         setPaymentShortfall(null);
         setPaymentChange(null);
+        setPaymentCashReceived(null);
       }
       setIsPaymentOpen(true);
       return;
@@ -492,35 +515,60 @@ export default function Pos() {
     }
   };
 
+  const persistRecovery = useCallback((
+    current: VentaPendiente,
+    estado: Exclude<PaymentState, 'available'>,
+    claveIdempotencia: string | null,
+  ) => {
+    const activeTurnoId = turnoId ?? current.turno_id;
+    if (!activeTurnoId) return;
+    saveRecoveryAttempt(localStorage, {
+      ventaId: current.id,
+      turnoId: activeTurnoId,
+      metodoPago: current.metodo_pago === 'TARJETA' ? 'TARJETA' : 'EFECTIVO',
+      claveIdempotencia,
+      estado,
+      updatedAt: new Date().toISOString(),
+    });
+  }, [turnoId]);
+
   const handleCashPayment = async (method: PaymentMethod, cashReceived?: number) => {
     const current = saleRef.current;
     if (paymentState !== 'available' || method !== 'cash' || !current || current.estado !== 'PENDIENTE' || current.metodo_pago !== 'EFECTIVO'
       || cashReceived === undefined || !Number.isFinite(cashReceived) || cashReceived <= 0 || paymentInFlight.current) return;
 
     paymentInFlight.current = true;
+    setPaymentCashReceived(cashReceived);
     setPaymentState('processing');
     setPaymentError('');
     setPaymentShortfall(null);
+    setRecoveryNotice(null);
+    persistRecovery(current, 'processing', null);
     try {
       const result = await posApi.chargeCash(current.id, cashReceived);
       if (result.venta?.id !== current.id || result.venta.estado !== 'COMPLETADA' || !Number.isFinite(result.vuelto)) {
         setPaymentState('uncertain');
         setPaymentError('MS-5 no devolvió una confirmación completa. Verifica la venta antes de otro intento.');
+        persistRecovery(current, 'uncertain', null);
         return;
       }
       saleRef.current = result.venta;
       setVenta(result.venta);
+      setPaymentCashReceived(Number.isFinite(result.montoRecibido) ? result.montoRecibido : cashReceived);
       setPaymentChange(result.vuelto);
       setPaymentState('approved');
+      persistRecovery(result.venta, 'approved', null);
     } catch (error: unknown) {
       if (axios.isAxiosError(error) && error.response?.status === 400) {
         const data = error.response.data as { error?: string; diferencia?: number } | undefined;
         setPaymentState('available');
         setPaymentError(data?.error || 'No se pudo cobrar la venta en efectivo.');
         setPaymentShortfall(data?.error === 'Monto insuficiente' && typeof data.diferencia === 'number' ? data.diferencia : null);
+        clearRecoveryAttempt(localStorage, turnoId ?? current.turno_id);
       } else {
         setPaymentState('uncertain');
         setPaymentError('No se pudo confirmar el resultado del cobro. Verifica la venta antes de otro intento.');
+        persistRecovery(current, 'uncertain', null);
       }
     } finally {
       paymentInFlight.current = false;
@@ -530,36 +578,64 @@ export default function Pos() {
   const handleCardPayment = async (method: PaymentMethod) => {
     const current = saleRef.current;
     if (paymentState !== 'available' || method !== 'card' || !current || current.estado !== 'PENDIENTE'
-      || current.metodo_pago !== 'TARJETA' || paymentInFlight.current) return;
-    paymentInFlight.current = true;
+      || current.metodo_pago !== 'TARJETA') return;
+    if (!tryAcquirePaymentSingleFlight(paymentInFlight)) return;
     setPaymentState('processing');
     setPaymentError('');
     setPaymentReference(null);
+    setRecoveryNotice(null);
+    const claveIdempotencia = paymentAttemptReference.current ?? crypto.randomUUID();
+    paymentAttemptReference.current = claveIdempotencia;
+    setAttemptReferenceView(claveIdempotencia);
+    persistRecovery(current, 'processing', claveIdempotencia);
     try {
-      const claveIdempotencia = paymentAttemptReference.current ?? crypto.randomUUID();
-      paymentAttemptReference.current = claveIdempotencia;
-      const result = await terminalPort.iniciarCobro({
+      const result = await synchronizeCardPayment({
+        terminal: window.api.terminal,
+        ms5: posApi,
         ventaId: current.id,
         monto: current.total,
         claveIdempotencia,
       });
+      paymentAttemptReference.current = result.referenciaIntento;
+      setAttemptReferenceView(result.referenciaIntento);
+      const effectiveVenta = result.venta ?? current;
+      if (result.venta) {
+        saleRef.current = result.venta;
+        setVenta(result.venta);
+      }
       if (result.estado === 'declined') {
         setPaymentState('declined');
         setPaymentError('La pasarela rechazó el cobro.');
+        persistRecovery(effectiveVenta, 'declined', result.referenciaIntento);
         return;
       }
-      if (result.estado !== 'approved') {
+      if (result.estado === 'cancelled') {
+        setPaymentState('cancelled');
+        clearRecoveryAttempt(localStorage, turnoId ?? effectiveVenta.turno_id);
+        return;
+      }
+      if (result.estado === 'processing') return;
+      if (result.estado === 'approved' && result.venta?.estado === 'COMPLETADA') {
+        setPaymentReference(result.gatewayReference);
+        setPaymentState('approved');
+        persistRecovery(result.venta, 'approved', result.referenciaIntento);
+        return;
+      }
+      if (result.estado === 'approved') {
         setPaymentState('uncertain');
-        setPaymentError('MS-5 no devolvió una confirmación completa. Verifica la venta antes de otro intento.');
+        setPaymentError('MS-5 no confirmó la venta como COMPLETADA. Verifica el estado antes de continuar.');
+        persistRecovery(effectiveVenta, 'uncertain', result.referenciaIntento ?? claveIdempotencia);
         return;
       }
-      setPaymentReference(result.referenciaOpaca);
-      setPaymentState('approved');
+      setPaymentState('uncertain');
+      setPaymentError('MS-5 no devolvió una confirmación completa. Verifica la venta antes de otro intento.');
+      persistRecovery(effectiveVenta, 'uncertain', result.referenciaIntento ?? claveIdempotencia);
     } catch {
       setPaymentState('uncertain');
       setPaymentError('No se pudo confirmar el resultado de la pasarela. Verifica la venta antes de otro cobro.');
+      persistRecovery(current, 'uncertain', claveIdempotencia);
     } finally {
-      paymentInFlight.current = false;
+      releasePaymentSingleFlight(paymentInFlight);
     }
   };
 
@@ -579,7 +655,10 @@ export default function Pos() {
       setVenta(updated);
       setPaymentState('available');
       setPaymentReference(null);
+      setRecoveryNotice(null);
       paymentAttemptReference.current = null;
+      setAttemptReferenceView(null);
+      clearRecoveryAttempt(localStorage, turnoId ?? updated.turno_id);
     } catch (error: unknown) {
       setPaymentError(saleErrorMessage(error));
     } finally {
@@ -595,21 +674,30 @@ export default function Pos() {
     setPaymentError('');
     try {
       if (current.metodo_pago === 'TARJETA') {
-        const intento = await terminalPort.consultarEstado({
+        const intento = await reconcileCardPayment({
+          ms5: posApi,
           ventaId: current.id,
-          monto: current.total,
-          referenciaIntento: paymentAttemptReference.current,
+          referenciaEsperada: paymentAttemptReference.current,
         });
         paymentAttemptReference.current = intento.referenciaIntento;
-        if (intento.estado === 'approved') {
-          setPaymentReference(intento.referenciaOpaca);
+        setAttemptReferenceView(intento.referenciaIntento);
+        const effectiveVenta = intento.venta ?? current;
+        if (intento.venta) {
+          saleRef.current = intento.venta;
+          setVenta(intento.venta);
+        }
+        if (intento.estado === 'approved' && intento.venta?.estado === 'COMPLETADA') {
+          setPaymentReference(intento.gatewayReference);
           setPaymentState('approved');
+          persistRecovery(intento.venta, 'approved', intento.referenciaIntento);
         } else if (intento.estado === 'declined') {
           setPaymentState('declined');
           setPaymentError('La pasarela rechazó el pago. Puedes elegir otro método o reintentar manualmente.');
+          persistRecovery(effectiveVenta, 'declined', intento.referenciaIntento);
         } else {
           setPaymentState('uncertain');
           setPaymentError('El intento aún no tiene un resultado definitivo. No se iniciará otra autorización.');
+          persistRecovery(effectiveVenta, 'uncertain', intento.referenciaIntento);
         }
         return;
       }
@@ -619,9 +707,11 @@ export default function Pos() {
       if (updated.estado === 'COMPLETADA') {
         setPaymentState('approved');
         setPaymentError('La venta está completada. El vuelto no está disponible en esta consulta.');
+        persistRecovery(updated, 'approved', null);
       } else {
         setPaymentState('uncertain');
         setPaymentError('La venta aún figura pendiente. Confirma el resultado antes de intentar otro cobro.');
+        persistRecovery(updated, 'uncertain', null);
       }
     } catch {
       setPaymentState('uncertain');
@@ -631,26 +721,92 @@ export default function Pos() {
     }
   };
 
-  const retryDeclinedCard = () => {
-    if (paymentState !== 'declined' || saleRef.current?.metodo_pago !== 'TARJETA' || paymentInFlight.current) return;
+  const cancelCardAttempt = async () => {
+    const current = saleRef.current;
+    if (!current || current.metodo_pago !== 'TARJETA' || cancelInFlight.current) return;
+    if (paymentState !== 'processing' && paymentState !== 'uncertain') return;
+    cancelInFlight.current = true;
+    try {
+      const result = await cancelPaymentAttemptSafely({
+        ventaId: current.id,
+        monto: current.total,
+        referenciaIntento: paymentAttemptReference.current,
+        ms5: posApi,
+        terminal: window.api?.terminal,
+      });
+      if (result.venta) {
+        saleRef.current = result.venta;
+        setVenta(result.venta);
+      }
+      if (result.outcome === 'already_approved') {
+        paymentAttemptReference.current = result.attemptReference;
+        setAttemptReferenceView(result.attemptReference);
+        setPaymentReference(result.gatewayReference);
+        setPaymentState('approved');
+        setPaymentError('');
+        setRecoveryNotice(result.message);
+        if (result.venta) persistRecovery(result.venta, 'approved', result.attemptReference);
+      } else if (result.outcome === 'cancelled') {
+        paymentAttemptReference.current = null;
+        setAttemptReferenceView(null);
+        setPaymentReference(null);
+        setPaymentState('cancelled');
+        setPaymentError(result.message);
+        clearRecoveryAttempt(localStorage, turnoId ?? current.turno_id);
+        releasePaymentSingleFlight(paymentInFlight);
+      } else {
+        paymentAttemptReference.current = result.attemptReference;
+        setAttemptReferenceView(result.attemptReference);
+        setPaymentState('uncertain');
+        setPaymentError(result.message);
+        persistRecovery(result.venta ?? current, 'uncertain', result.attemptReference);
+      }
+    } finally {
+      cancelInFlight.current = false;
+    }
+  };
+
+  const continueAfterCancel = () => {
+    const current = saleRef.current;
+    if (paymentState !== 'cancelled' || !current || current.estado !== 'PENDIENTE' || paymentInFlight.current) return;
     setPaymentState('available');
     setPaymentError('');
     setPaymentReference(null);
+    setRecoveryNotice(null);
     paymentAttemptReference.current = null;
+    setAttemptReferenceView(null);
+    clearRecoveryAttempt(localStorage, turnoId ?? current.turno_id);
+  };
+
+  const retryDeclinedCard = () => {
+    const current = saleRef.current;
+    if (paymentState !== 'declined' || current?.metodo_pago !== 'TARJETA' || paymentInFlight.current) return;
+    setPaymentState('available');
+    setPaymentError('');
+    setPaymentReference(null);
+    setRecoveryNotice(null);
+    paymentAttemptReference.current = null;
+    setAttemptReferenceView(null);
+    clearRecoveryAttempt(localStorage, turnoId ?? current.turno_id);
   };
 
   const closePayment = () => {
     if (paymentState === 'processing') return;
     setIsPaymentOpen(false);
     if (paymentState === 'approved') {
+      const current = saleRef.current;
+      clearRecoveryAttempt(localStorage, turnoId ?? current?.turno_id);
       saleRef.current = null;
       setVenta(null);
       setPaymentState('available');
       setPaymentChange(null);
+      setPaymentCashReceived(null);
       setPaymentError('');
       setPaymentShortfall(null);
       setPaymentReference(null);
+      setRecoveryNotice(null);
       paymentAttemptReference.current = null;
+      setAttemptReferenceView(null);
     }
   };
 
@@ -658,7 +814,7 @@ export default function Pos() {
     return cartItems.reduce(
       (acc, item) => {
         acc.subtotal += item.price * item.quantity;
-        acc.totalItems += item.quantity;
+        acc.totalItems += 1;
         return acc;
       },
       { subtotal: 0, totalItems: 0 }
@@ -666,9 +822,8 @@ export default function Pos() {
   }, [cartItems]);
 
   const subtotal = venta ? venta.subtotal : draftSubtotal;
-  const tasaIva = 0.19; 
-  const iva = venta ? venta.impuestos : Math.round(subtotal * tasaIva);
-  const total = venta ? venta.total : subtotal + iva;
+  const iva = venta?.impuestos;
+  const total = venta?.total;
   
   const isCartEmpty = cartItems.length === 0;
 
@@ -699,27 +854,53 @@ export default function Pos() {
         saleMethod={venta.metodo_pago === 'EFECTIVO' ? 'cash' : 'card'}
         state={paymentState}
         change={paymentChange}
+        cashReceived={paymentCashReceived}
         reference={paymentReference}
+        attemptReference={attemptReferenceView}
+        recoveryNotice={recoveryNotice}
         errorMessage={paymentError}
         shortfall={paymentShortfall}
+        terminalConnected={true}
+        venta={venta}
         onClose={closePayment}
         onConfirm={handlePayment}
         onChangeMethod={changePaymentMethod}
         onCashInputChange={() => { setPaymentError(''); setPaymentShortfall(null); }}
         onVerify={paymentState === 'uncertain' ? verifyPayment : undefined}
         onRetry={paymentState === 'declined' && venta.metodo_pago === 'TARJETA' ? retryDeclinedCard : undefined}
+        onCancelAttempt={venta.metodo_pago === 'TARJETA' && (paymentState === 'processing' || paymentState === 'uncertain') ? () => {
+          void cancelCardAttempt();
+        } : undefined}
+        onContinueAfterCancel={paymentState === 'cancelled' && venta.estado === 'PENDIENTE' ? continueAfterCancel : undefined}
       />}
       {ventaError && (
         <div role="alert" style={{ padding: '0.75rem 1rem', border: '1px solid var(--color-danger)', background: 'var(--color-danger-bg)', color: 'var(--color-danger)', borderRadius: '8px' }}>
           {ventaError} {saleNeedsRefresh && <button type="button" onClick={retrySaleRefresh} disabled={pendingMutations > 0}>Actualizar venta</button>}
         </div>
       )}
-      {paymentState === 'uncertain' && venta && <div role="alert" style={{ padding: '0.75rem 1rem', border: '1px solid var(--color-warning)', background: 'var(--color-warning-bg)', color: 'var(--color-warning-text)', borderRadius: '8px' }}>Resultado del cobro sin confirmar. Abre Cobrar y verifica la venta antes de continuar.</div>}
+      {paymentState === 'uncertain' && venta && (
+        <div role="alert" style={{ padding: '0.75rem 1rem', border: '1px solid var(--color-warning)', background: 'var(--color-warning-bg)', color: 'var(--color-warning-text)', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.75rem' }}>
+          <span>Resultado del cobro sin confirmar para venta #{venta.id.slice(0, 8)}. Verifica el estado antes de continuar.</span>
+          {!isPaymentOpen && (
+            <button type="button" onClick={() => setIsPaymentOpen(true)}>
+              Verificar estado del cobro
+            </button>
+          )}
+        </div>
+      )}
+      {paymentState === 'cancelled' && venta && !isPaymentOpen && (
+        <div role="status" style={{ padding: '0.75rem 1rem', border: '1px solid var(--color-line)', background: 'var(--color-bg)', color: 'var(--color-ink)', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.75rem' }}>
+          <span>Intento cancelado para venta #{venta.id.slice(0, 8)}. Puedes continuar el cobro sin perder el carrito.</span>
+          <button type="button" onClick={() => setIsPaymentOpen(true)}>
+            Continuar cobro
+          </button>
+        </div>
+      )}
       {pendingMutations > 0 && <div role="status">Sincronizando ítems con MS-5...</div>}
       {isReadingScale && <div role="status">Esperando un peso estable de la balanza...</div>}
       {venta && (
         <div role="status" style={{ padding: '0.75rem 1rem', border: '1px solid var(--color-success)', background: 'var(--color-success-bg)', color: 'var(--color-success)', borderRadius: '8px' }}>
-          Venta {venta.estado === 'COMPLETADA' ? 'completada' : 'pendiente'} #{venta.id.slice(0, 8)}. Los ítems y totales provienen de MS-5.
+          Venta {venta.estado === 'COMPLETADA' ? 'completada' : 'pendiente'} #{venta.id.slice(0, 8)}. Los ítems y totales provienen de MS-5.{recoveryNotice ? ` ${recoveryNotice}` : ''}
         </div>
       )}
       {mensajeConfirmacion && (
@@ -763,7 +944,7 @@ export default function Pos() {
         {/* Columna Izquierda: Búsqueda y Escaneo */}
         <div style={{ flex: '0 0 320px', display: 'flex', flexDirection: 'column', background: 'var(--color-surface)', padding: '1rem', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
                 <h3 style={{ marginTop: 0, color: 'var(--color-primary)', fontSize: '1.25rem' }}>Buscar Producto</h3>
-        {isStartingSale || isReadingScale || saleNeedsRefresh || paymentState === 'uncertain' || paymentState === 'processing' || (venta && venta.estado !== 'PENDIENTE') ? (
+        {isStartingSale || isReadingScale || capturaPeso || saleNeedsRefresh || paymentState === 'uncertain' || paymentState === 'processing' || (venta && venta.estado !== 'PENDIENTE') ? (
           <p style={{ color: 'var(--color-ink-soft)' }}>{isStartingSale ? 'Iniciando venta...' : isReadingScale ? 'Leyendo balanza...' : 'Actualiza la venta para seguir agregando productos.'}</p>
         ) : (
           <BarcodeInput onSearch={handleSearch} onTyping={handleTypingSearch} clearSignal={clearSearchSignal} />
@@ -812,8 +993,25 @@ export default function Pos() {
           )}
         </div>
 
-        {/* Simulador de Balanza Integrado (S2-087 / S2-089) */}
-        <div style={{ marginTop: '0.75rem', padding: '0.75rem', backgroundColor: 'var(--color-bg)', borderRadius: '8px', border: '1px solid var(--color-line)' }}>
+        {capturaPeso && <PesoProducto
+          nombre={capturaPeso.product.nombre}
+          estado={capturaPeso.estado}
+          origen={capturaPeso.origen}
+          pesoKg={capturaPeso.pesoKg}
+          error={capturaPeso.error}
+          manualValue={capturaPeso.manualValue}
+          onManualChange={(value) => {
+            const parsed = manualWeightForCart(value);
+            setCapturaPeso((current) => current ? { ...current, manualValue: value, estado: parsed.ok ? 'estable' : 'error', pesoKg: parsed.ok ? parsed.weightKg : undefined, error: parsed.ok || !value ? undefined : parsed.message } : null);
+          }}
+          onConfirmar={confirmWeight}
+          onReintentar={capturaPeso.origen === 'simulado' && capturaPeso.estado === 'error' ? () => { void readProductWeight(capturaPeso.product); } : undefined}
+          onManual={capturaPeso.origen === 'simulado' && capturaPeso.estado === 'error' ? () => setCapturaPeso({ product: capturaPeso.product, estado: 'error', origen: 'manual', manualValue: '' }) : undefined}
+          onCancelar={() => setCapturaPeso(null)}
+        />}
+
+        {/* Controles del simulador solo durante la captura de un pesable. */}
+        {capturaPeso && <div style={{ marginTop: '0.75rem', padding: '0.75rem', backgroundColor: 'var(--color-bg)', borderRadius: '8px', border: '1px solid var(--color-line)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
             <span style={{ fontWeight: 600, fontSize: '0.85rem', color: 'var(--color-ink)' }}>⚖️ Balanza Simulada</span>
             <span style={{ fontSize: '0.8rem', color: pesoEstable ? 'var(--color-success)' : 'var(--color-muted)' }}>
@@ -859,7 +1057,7 @@ export default function Pos() {
               </button>
             ))}
           </div>
-        </div>
+        </div>}
       </div>
 
       {/* Columna Central: Tabla del Carrito */}
@@ -928,13 +1126,13 @@ export default function Pos() {
         
         <div style={{ flex: 1 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem', color: 'var(--color-ink-soft)' }}>
-            <span>Subtotal:</span>
+            <span>{venta ? 'Subtotal:' : 'Subtotal estimado:'}</span>
             <span>$ {subtotal.toLocaleString('es-CL')}</span>
           </div>
           
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem', color: 'var(--color-ink-soft)' }}>
-            <span>{venta ? 'Impuestos:' : 'IVA (19%):'}</span>
-            <span>$ {iva.toLocaleString('es-CL')}</span>
+            <span>Impuestos:</span>
+            <span>{iva === undefined ? 'Se calculan en MS-5' : `$ ${iva.toLocaleString('es-CL')}`}</span>
           </div>
 
           <div style={{ borderTop: '2px dashed var(--color-line)', margin: '1.5rem 0' }}></div>
@@ -942,7 +1140,7 @@ export default function Pos() {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
             <span style={{ fontSize: '1.25rem', fontWeight: 600, color: 'var(--color-ink)' }}>TOTAL:</span>
             <span style={{ fontSize: '2rem', fontWeight: 700, color: 'var(--color-primary)' }}>
-              $ {total.toLocaleString('es-CL')}
+              {total === undefined ? 'Pendiente de MS-5' : `$ ${total.toLocaleString('es-CL')}`}
             </span>
           </div>
         </div>

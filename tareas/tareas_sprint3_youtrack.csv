@@ -1,0 +1,517 @@
+Summary,Description,Assignee,Priority,Sprints,Semana,AreaTrabajo,Tags,Estimation
+Inventariar código muerto en el flujo de caja de MS-5,"Objetivo: Recorrer VentasController, VentaService y TurnosController e identificar métodos, rutas y ramas sin uso.
+Entrega verificable: Lista breve de candidatos a eliminar con archivo y método.
+Aceptación: Cada candidato indica por qué no se usa (sin llamadas, ruta duplicada o rama inalcanzable).
+Simplificación: Los archivos tocados quedan sin código muerto ni duplicado, y el flujo se puede seguir desde el botón hasta la BD sin desvíos.
+Prioridad MoSCoW: Must. Dificultad: Baja. Meta: Funcionalidad de punta a punta.
+Hallazgo o necesidad: El profesor indicó que el código da muchas vueltas; el flujo de caja es candidato a defensa.",spereda2024,Facil,Sprint 3,Semana 9,Backend,Semana 9,30m
+Definir contrato mínimo de recepciones y lotes FEFO,"Objetivo: Fijar request y respuesta de POST /recepciones y GET /lotes?porVencer=, reutilizando el modelo Lote existente.
+Entrega verificable: Contrato con ejemplos y reglas de validación.
+Aceptación: El contrato no incluye mermas, transferencias ni alertas Kafka (fuera de alcance).
+Simplificación: Los archivos tocados quedan sin código muerto ni duplicado, y el flujo se puede seguir desde el botón hasta la BD sin desvíos.
+Prioridad MoSCoW: Must. Dificultad: Baja. Meta: Microservicios (FEFO y MS-1).
+Hallazgo o necesidad: MS-4 tiene el modelo Lote pero no expone recepción ni lotes.",nmartinez2024,Facil,Sprint 3,Semana 9,Backend,Semana 9,30m
+Inventariar repositorios duplicados de usuarios en MS-1,"Objetivo: Comparar IUserRepository/UserRepository con IUsuarioRepository/UsuarioRepository y sus consumidores.
+Entrega verificable: Lista de métodos equivalentes y de quién usa cada repositorio.
+Aceptación: Queda claro qué repositorio sobrevive y qué llamadas hay que migrar.
+Simplificación: Los archivos tocados quedan sin código muerto ni duplicado, y el flujo se puede seguir desde el botón hasta la BD sin desvíos.
+Prioridad MoSCoW: Must. Dificultad: Baja. Meta: Microservicios (FEFO y MS-1).
+Hallazgo o necesidad: MS-1 mantiene dos repositorios de usuarios en paralelo.",msanhueza2024,Facil,Sprint 3,Semana 9,Backend,Semana 9,30m
+Inventariar archivos basura del repositorio,"Objetivo: Listar archivos sueltos sin uso: fix*.js, test*.json, script.py, query.sql, kubelogin, tbody.txt y similares.
+Entrega verificable: Lista de archivos a eliminar con confirmación de que ningún script o CI los referencia.
+Aceptación: Ningún archivo de la lista aparece referenciado en código, CI ni documentación vigente.
+Prioridad MoSCoW: Must. Dificultad: Baja. Meta: Frontend simple y agradable.
+Hallazgo o necesidad: La raíz del repositorio acumula scripts y binarios temporales.",admin,Facil,Sprint 3,Semana 9,DevOps,Semana 9,30m
+Tomar línea base de pruebas antes de simplificar,"Objetivo: Ejecutar dotnet test, typecheck y E2E principales sobre dev para tener un punto de comparación.
+Entrega verificable: Registro con comandos, resultados y fallos preexistentes.
+Aceptación: Los fallos previos quedan anotados para no atribuirlos a la simplificación.
+Prioridad MoSCoW: Must. Dificultad: Media. Meta: Calidad y regresión.
+Hallazgo o necesidad: La simplificación tocará flujos críticos; se necesita comparar antes y después.",dprado2024,Medio,Sprint 3,Semana 9,Testing,Semana 9,45m
+Definir caso E2E de cierre de turno,"Objetivo: Especificar pasos y resultados esperados del cierre de turno: cuadre, confirmación, cierre y navegación posterior.
+Entrega verificable: Caso de prueba escrito y revisado con Diego.
+Aceptación: El caso cubre la confirmación con modal y verifica que la app sigue respondiendo tras cerrar.
+Prioridad MoSCoW: Must. Dificultad: Baja. Meta: Calidad y regresión.
+Hallazgo o necesidad: Se reportó que la app se congelaba al cerrar turno; en dev ya no ocurre, pero no hay prueba que lo cubra.",dprado2024,Facil,Sprint 3,Semana 9,Testing,Semana 9,30m
+Revisar manifiestos e imágenes del clúster,"Objetivo: Inventariar manifiestos k8s, tags de imagen y variables de cada MS desplegado para apoyar a Rodrigo.
+Entrega verificable: Tabla de MS, imagen actual, tag esperado y diferencias.
+Aceptación: Rodrigo puede actualizar los pods sin buscar la información en otros archivos.
+Prioridad MoSCoW: Must. Dificultad: Media. Meta: Entrega en clúster y .exe.
+Hallazgo o necesidad: Las imágenes del clúster usan tags mezclados (latest y fechados).",dleiva2024,Medio,Sprint 3,Semana 9,DevOps,Semana 9,1h
+Mapear responsabilidades de Pos.tsx y CerrarTurnoPage.tsx,"Objetivo: Identificar bloques de estado, efectos y vistas de ambos componentes para partirlos sin cambiar comportamiento.
+Entrega verificable: Esquema de componentes y hooks resultantes.
+Aceptación: Cada bloque propuesto tiene una sola responsabilidad clara.
+Simplificación: Los archivos tocados quedan sin código muerto ni duplicado, y el flujo se puede seguir desde el botón hasta la BD sin desvíos.
+Prioridad MoSCoW: Must. Dificultad: Baja. Meta: Frontend simple y agradable.
+Hallazgo o necesidad: Pos.tsx (~48 KB) y CerrarTurnoPage.tsx (~39 KB) son difíciles de recorrer en la defensa.",dleiva2024,Facil,Sprint 3,Semana 9,Frontend,Semana 9,45m
+Eliminar código muerto del flujo de caja en MS-5,"Objetivo: Quitar los candidatos inventariados en la Semana 9 que no rompan pruebas ni rutas usadas por el frontend.
+Entrega verificable: Cambios en VentasController, VentaService y TurnosController.
+Aceptación: dotnet test de MS-5 pasa igual que la línea base.
+Simplificación: Los archivos tocados quedan sin código muerto ni duplicado, y el flujo se puede seguir desde el botón hasta la BD sin desvíos.
+Prioridad MoSCoW: Must. Dificultad: Media. Meta: Funcionalidad de punta a punta.
+Hallazgo o necesidad: Hay métodos y ramas sin uso en el flujo de caja.",spereda2024,Medio,Sprint 3,Semana 10,Backend,Semana 10,1h
+Retirar alias de rutas no usados en MS-5,"Objetivo: Verificar qué rutas duales (/api, /api/v1) usa el frontend y el ingress, y dejar una sola por endpoint.
+Entrega verificable: Controllers con una ruta por acción y lista de rutas retiradas.
+Aceptación: Login, catálogo, turnos, ventas y cobros siguen respondiendo desde el frontend.
+Simplificación: Los archivos tocados quedan sin código muerto ni duplicado, y el flujo se puede seguir desde el botón hasta la BD sin desvíos.
+Prioridad MoSCoW: Must. Dificultad: Media. Meta: Funcionalidad de punta a punta.
+Hallazgo o necesidad: Las rutas duplicadas obligan a revisar varios caminos al explicar un flujo.",spereda2024,Medio,Sprint 3,Semana 10,Backend,Semana 10,1h
+Agregar anularVenta al cliente de API,"Objetivo: Exponer POST /ventas/{id}/anular en api/client.ts con su tipo de respuesta y errores.
+Entrega verificable: Función tipada en posApi.
+Aceptación: La función envía solo el motivo y propaga 400/403/404/409.
+Simplificación: Los archivos tocados quedan sin código muerto ni duplicado, y el flujo se puede seguir desde el botón hasta la BD sin desvíos.
+Prioridad MoSCoW: Must. Dificultad: Baja. Meta: Funcionalidad de punta a punta.
+Hallazgo o necesidad: La anulación existe en backend (S2-092) pero no en el frontend.",spereda2024,Facil,Sprint 3,Semana 10,Frontend,Semana 10,30m
+Agregar acción Anular venta para ADMIN,"Objetivo: Mostrar las ventas del turno con botón Anular visible solo para ADMIN y pedir motivo obligatorio.
+Entrega verificable: Vista de ventas del turno con acción de anulación.
+Aceptación: CAJERO no ve la acción; ADMIN anula una venta en efectivo y la lista refleja ANULADA.
+Simplificación: Los archivos tocados quedan sin código muerto ni duplicado, y el flujo se puede seguir desde el botón hasta la BD sin desvíos.
+Prioridad MoSCoW: Must. Dificultad: Media. Meta: Funcionalidad de punta a punta.
+Hallazgo o necesidad: No hay forma de anular desde la app.",spereda2024,Medio,Sprint 3,Semana 10,Frontend,Semana 10,1h30m
+Mostrar errores de anulación,"Objetivo: Traducir los códigos de error del backend a mensajes claros: tarjeta no reembolsable, turno cerrado, venta ajena.
+Entrega verificable: Mensajes en la vista de anulación.
+Aceptación: Cada error del contrato S2-091 muestra un mensaje distinto y no deja la venta en estado ambiguo.
+Simplificación: Los archivos tocados quedan sin código muerto ni duplicado, y el flujo se puede seguir desde el botón hasta la BD sin desvíos.
+Prioridad MoSCoW: Must. Dificultad: Media. Meta: Funcionalidad de punta a punta.
+Hallazgo o necesidad: La anulación rechaza tarjeta e intentos inciertos sin mutación.",spereda2024,Medio,Sprint 3,Semana 10,Frontend,Semana 10,1h
+Revisar modelo Lote y migración de MS-4,"Objetivo: Completar Lote con fecha de vencimiento, cantidad disponible, sucursal y tenant, y crear la migración necesaria.
+Entrega verificable: Modelo y migración aplicables sobre warehouse_db.
+Aceptación: La migración se aplica en una base limpia y sobre la existente sin perder stock.
+Simplificación: Los archivos tocados quedan sin código muerto ni duplicado, y el flujo se puede seguir desde el botón hasta la BD sin desvíos.
+Prioridad MoSCoW: Must. Dificultad: Media. Meta: Microservicios (FEFO y MS-1).
+Hallazgo o necesidad: El modelo Lote existe desde el diseño inicial pero no se usa.",nmartinez2024,Medio,Sprint 3,Semana 10,Backend,Semana 10,1h
+Implementar POST /recepciones,"Objetivo: Registrar una recepción que crea un lote con vencimiento y suma stock en una sola transacción.
+Entrega verificable: Endpoint con JWT, tenant del token y movimiento de stock registrado.
+Aceptación: Una recepción crea lote, aumenta stock y registra movimiento; si algo falla no queda nada a medias.
+Simplificación: Los archivos tocados quedan sin código muerto ni duplicado, y el flujo se puede seguir desde el botón hasta la BD sin desvíos.
+Prioridad MoSCoW: Must. Dificultad: Alta. Meta: Microservicios (FEFO y MS-1).
+Hallazgo o necesidad: No existe recepción de mercadería en MS-4.",nmartinez2024,Alta,Sprint 3,Semana 10,Backend,Semana 10,1h30m
+Validar recepciones,"Objetivo: Rechazar producto inexistente, sucursal ajena, cantidad no positiva y vencimiento pasado.
+Entrega verificable: Validador y respuestas 400/404.
+Aceptación: Ninguna recepción inválida modifica stock ni crea lote.
+Simplificación: Los archivos tocados quedan sin código muerto ni duplicado, y el flujo se puede seguir desde el botón hasta la BD sin desvíos.
+Prioridad MoSCoW: Must. Dificultad: Media. Meta: Microservicios (FEFO y MS-1).
+Hallazgo o necesidad: La recepción recibe datos del frontend y debe validarse en servidor.",nmartinez2024,Medio,Sprint 3,Semana 10,Backend,Semana 10,1h
+Probar recepciones con PostgreSQL,"Objetivo: Cubrir recepción válida, inválida y de otro tenant con pruebas de integración.
+Entrega verificable: Pruebas de integración de recepciones.
+Aceptación: Las pruebas pasan y una recepción de otro tenant no es visible ni modificable.
+Prioridad MoSCoW: Must. Dificultad: Media. Meta: Microservicios (FEFO y MS-1).
+Hallazgo o necesidad: RN-01 exige aislamiento por tenant en todo endpoint nuevo.",nmartinez2024,Medio,Sprint 3,Semana 10,Testing,Semana 10,1h
+Documentar contrato de recepciones en el grafo,"Objetivo: Actualizar el nodo de MS-4 con el endpoint, sus reglas y sus límites.
+Entrega verificable: Nodo ms4-inventory actualizado con ultima_revision.
+Aceptación: El nodo no declara FEFO como implementado hasta que exista el descuento por lote.
+Simplificación: Los archivos tocados quedan sin código muerto ni duplicado, y el flujo se puede seguir desde el botón hasta la BD sin desvíos.
+Prioridad MoSCoW: Should. Dificultad: Baja. Meta: Microservicios (FEFO y MS-1).
+Hallazgo o necesidad: El grafo debe reflejar el estado real.",nmartinez2024,Facil,Sprint 3,Semana 10,Backend,Semana 10,30m
+Unificar repositorios de usuarios en MS-1,"Objetivo: Dejar un único repositorio de usuarios y migrar las llamadas del repositorio eliminado.
+Entrega verificable: MS-1 con un solo repositorio de usuarios.
+Aceptación: Las pruebas de MS-1 pasan y no quedan referencias al repositorio eliminado.
+Simplificación: Los archivos tocados quedan sin código muerto ni duplicado, y el flujo se puede seguir desde el botón hasta la BD sin desvíos.
+Prioridad MoSCoW: Must. Dificultad: Alta. Meta: Microservicios (FEFO y MS-1).
+Hallazgo o necesidad: Dos repositorios paralelos duplican la lectura de usuarios.",msanhueza2024,Alta,Sprint 3,Semana 10,Backend,Semana 10,1h30m
+Ajustar AuthService al repositorio unificado,"Objetivo: Hacer que el login lea del repositorio unificado sin cambiar el contrato de /auth/login.
+Entrega verificable: AuthService simplificado.
+Aceptación: Login devuelve el mismo JWT y los mismos errores que antes.
+Simplificación: Los archivos tocados quedan sin código muerto ni duplicado, y el flujo se puede seguir desde el botón hasta la BD sin desvíos.
+Prioridad MoSCoW: Must. Dificultad: Media. Meta: Microservicios (FEFO y MS-1).
+Hallazgo o necesidad: El login es el flujo que el profesor recorrió en la defensa anterior.",msanhueza2024,Medio,Sprint 3,Semana 10,Backend,Semana 10,1h
+Implementar PUT /sucursales/{id},"Objetivo: Permitir editar nombre y zona horaria de una sucursal del tenant con rol ADMIN.
+Entrega verificable: Endpoint con validación y 409 por nombre duplicado.
+Aceptación: Una sucursal ajena retorna 404 y un nombre repetido 409.
+Simplificación: Los archivos tocados quedan sin código muerto ni duplicado, y el flujo se puede seguir desde el botón hasta la BD sin desvíos.
+Prioridad MoSCoW: Must. Dificultad: Media. Meta: Microservicios (FEFO y MS-1).
+Hallazgo o necesidad: MS-1 solo permite crear y listar sucursales.",msanhueza2024,Medio,Sprint 3,Semana 10,Backend,Semana 10,1h
+Implementar DELETE /sucursales/{id} como baja lógica,"Objetivo: Desactivar una sucursal sin borrarla, impidiendo nuevos turnos y ventas en ella.
+Entrega verificable: Endpoint de baja lógica y filtro de sucursales activas.
+Aceptación: Una sucursal desactivada no aparece para abrir turno y conserva su historial.
+Simplificación: Los archivos tocados quedan sin código muerto ni duplicado, y el flujo se puede seguir desde el botón hasta la BD sin desvíos.
+Prioridad MoSCoW: Must. Dificultad: Media. Meta: Microservicios (FEFO y MS-1).
+Hallazgo o necesidad: No existe forma de desactivar sucursales.",msanhueza2024,Medio,Sprint 3,Semana 10,Backend,Semana 10,1h
+Probar edición y baja de sucursales,"Objetivo: Agregar pruebas de integración para PUT y DELETE de sucursales.
+Entrega verificable: Pruebas de integración en MS-1.
+Aceptación: Los casos 200/204/400/404/409 quedan cubiertos.
+Prioridad MoSCoW: Must. Dificultad: Baja. Meta: Microservicios (FEFO y MS-1).
+Hallazgo o necesidad: Los endpoints nuevos necesitan pruebas antes de exponerse en la UI.",msanhueza2024,Facil,Sprint 3,Semana 10,Testing,Semana 10,30m
+Eliminar archivos basura de la raíz,"Objetivo: Borrar los archivos inventariados en la Semana 9 y ajustar .gitignore para que no vuelvan.
+Entrega verificable: Commit de limpieza y .gitignore actualizado.
+Aceptación: El build y el CI siguen pasando después de la limpieza.
+Prioridad MoSCoW: Must. Dificultad: Baja. Meta: Frontend simple y agradable.
+Hallazgo o necesidad: La raíz acumula scripts y binarios temporales.",admin,Facil,Sprint 3,Semana 10,DevOps,Semana 10,1h
+Eliminar scripts temporales del frontend,"Objetivo: Borrar fix_*.js, run_fix.js, tbody.txt, test_insert.js, poblar_bd.js y similares que no usa el build.
+Entrega verificable: Commit de limpieza en globalmart-frontend.
+Aceptación: npm run typecheck y el empaquetado siguen funcionando.
+Simplificación: Los archivos tocados quedan sin código muerto ni duplicado, y el flujo se puede seguir desde el botón hasta la BD sin desvíos.
+Prioridad MoSCoW: Must. Dificultad: Baja. Meta: Frontend simple y agradable.
+Hallazgo o necesidad: El frontend tiene scripts de arreglos puntuales mezclados con el código.",admin,Facil,Sprint 3,Semana 10,Frontend,Semana 10,30m
+Dejar solo modos remote y local en config/api.ts,"Objetivo: Reducir la configuración a dos modos: remote (ingress del clúster, por defecto) y local (docker compose vía Kong).
+Entrega verificable: config/api.ts simplificado con una sola variable de modo.
+Aceptación: El login y el POS funcionan en ambos modos sin cambiar código.
+Simplificación: Los archivos tocados quedan sin código muerto ni duplicado, y el flujo se puede seguir desde el botón hasta la BD sin desvíos.
+Prioridad MoSCoW: Must. Dificultad: Media. Meta: Frontend simple y agradable.
+Hallazgo o necesidad: Hoy existen tres modos, lectura de process.env y window.env, y overrides individuales.",admin,Medio,Sprint 3,Semana 10,Frontend,Semana 10,1h30m
+Eliminar config.ts y el interceptor de /api duplicado,"Objetivo: Quitar el archivo de configuración paralelo y la normalización de rutas una vez que las URLs base sean correctas.
+Entrega verificable: api/client.ts sin interceptor de normalización.
+Aceptación: Ninguna llamada queda con /api duplicado y no existen dos fuentes de configuración.
+Simplificación: Los archivos tocados quedan sin código muerto ni duplicado, y el flujo se puede seguir desde el botón hasta la BD sin desvíos.
+Prioridad MoSCoW: Must. Dificultad: Media. Meta: Frontend simple y agradable.
+Hallazgo o necesidad: El recorrido del login pasa por configuraciones que no participan en la llamada.",admin,Medio,Sprint 3,Semana 10,Frontend,Semana 10,1h
+Verificar login y POS en modos remote y local,"Objetivo: Probar a mano login, apertura de turno, venta y cobro en efectivo contra el clúster y contra docker compose.
+Entrega verificable: Registro de la verificación en ambos modos.
+Aceptación: Ambos modos completan el flujo sin errores de red ni de rutas.
+Prioridad MoSCoW: Must. Dificultad: Media. Meta: Frontend simple y agradable.
+Hallazgo o necesidad: La simplificación de configuración puede romper un modo sin que se note.",admin,Medio,Sprint 3,Semana 10,Testing,Semana 10,1h
+Automatizar E2E de cierre de turno,"Objetivo: Implementar el caso definido en la Semana 9 sobre el modal nuevo.
+Entrega verificable: Spec Playwright de cierre de turno.
+Aceptación: La prueba confirma, cierra y verifica que la app sigue respondiendo.
+Prioridad MoSCoW: Must. Dificultad: Media. Meta: Calidad y regresión.
+Hallazgo o necesidad: El cierre de turno no tenía cobertura automatizada.",dprado2024,Medio,Sprint 3,Semana 10,Testing,Semana 10,1h
+Regresión tras limpieza de archivos y configuración,"Objetivo: Repetir la línea base después de los cambios de Rodrigo.
+Entrega verificable: Comparación contra la línea base.
+Aceptación: Ningún fallo nuevo queda sin registrar.
+Prioridad MoSCoW: Must. Dificultad: Media. Meta: Calidad y regresión.
+Hallazgo o necesidad: La limpieza toca configuración usada por todo el frontend.",dprado2024,Medio,Sprint 3,Semana 10,Testing,Semana 10,1h
+Regresión de MS-1 tras unificar repositorios,"Objetivo: Verificar login, usuarios, roles y sucursales tras el cambio de Martín.
+Entrega verificable: Resultado de pruebas de MS-1 y prueba manual de login.
+Aceptación: Login y administración de usuarios funcionan igual que antes.
+Prioridad MoSCoW: Must. Dificultad: Media. Meta: Calidad y regresión.
+Hallazgo o necesidad: El login es el flujo más expuesto en la defensa.",dprado2024,Medio,Sprint 3,Semana 10,Testing,Semana 10,1h
+Regresión del POS tras partir Pos.tsx,"Objetivo: Ejecutar E2E de carrito, pesaje y tarjeta después de la extracción de componentes.
+Entrega verificable: Resultado E2E del POS.
+Aceptación: Los E2E del POS pasan sin cambios en los specs.
+Prioridad MoSCoW: Must. Dificultad: Media. Meta: Calidad y regresión.
+Hallazgo o necesidad: La partición de Pos.tsx es el cambio de mayor riesgo en el frontend.",dprado2024,Medio,Sprint 3,Semana 10,Testing,Semana 10,1h
+Registrar defectos de la semana en YouTrack,"Objetivo: Abrir una tarea por defecto encontrado con pasos, responsable y prioridad.
+Entrega verificable: Defectos registrados.
+Aceptación: Cada defecto Must tiene responsable antes del cierre de la semana.
+Prioridad MoSCoW: Should. Dificultad: Baja. Meta: Calidad y regresión.
+Hallazgo o necesidad: Los defectos deben corregirse antes del congelamiento del 29-nov.",dprado2024,Facil,Sprint 3,Semana 10,Testing,Semana 10,1h
+Extraer el carrito de Pos.tsx,"Objetivo: Mover la lista de ítems, cantidades y totales a componentes y un hook propios sin cambiar comportamiento.
+Entrega verificable: Componente de carrito y hook de venta.
+Aceptación: Las pruebas E2E del carrito pasan sin cambios.
+Simplificación: Los archivos tocados quedan sin código muerto ni duplicado, y el flujo se puede seguir desde el botón hasta la BD sin desvíos.
+Prioridad MoSCoW: Must. Dificultad: Alta. Meta: Frontend simple y agradable.
+Hallazgo o necesidad: Pos.tsx concentra carrito, búsqueda, cobro y recuperación en un solo archivo.",dleiva2024,Alta,Sprint 3,Semana 10,Frontend,Semana 10,1h30m
+Extraer cobro y recuperación de venta de Pos.tsx,"Objetivo: Separar la lógica de cobro, terminal y recuperación tras recarga en hooks dedicados.
+Entrega verificable: Hooks de cobro y recuperación.
+Aceptación: La recuperación tras recarga y el single-flight de tarjeta siguen funcionando.
+Simplificación: Los archivos tocados quedan sin código muerto ni duplicado, y el flujo se puede seguir desde el botón hasta la BD sin desvíos.
+Prioridad MoSCoW: Must. Dificultad: Alta. Meta: Frontend simple y agradable.
+Hallazgo o necesidad: La lógica de pagos está mezclada con la vista.",dleiva2024,Alta,Sprint 3,Semana 10,Frontend,Semana 10,1h30m
+Reemplazar window.confirm por modal en cierre de turno,"Objetivo: Usar un modal React accesible para confirmar el cierre, siguiendo el patrón de los modales de Admin.
+Entrega verificable: Modal de confirmación en CerrarTurnoPage.
+Aceptación: El cierre se confirma o cancela con mouse y teclado y la app sigue respondiendo después.
+Simplificación: Los archivos tocados quedan sin código muerto ni duplicado, y el flujo se puede seguir desde el botón hasta la BD sin desvíos.
+Prioridad MoSCoW: Must. Dificultad: Media. Meta: Funcionalidad de punta a punta.
+Hallazgo o necesidad: window.confirm es el único diálogo nativo del frontend y fue sospechoso del congelamiento.",dleiva2024,Medio,Sprint 3,Semana 10,Frontend,Semana 10,1h
+Partir CerrarTurnoPage en tabla de denominaciones y resultado,"Objetivo: Separar conteo de denominaciones, cuadre y resultado en componentes propios.
+Entrega verificable: CerrarTurnoPage reducido a la composición de sus partes.
+Aceptación: El cuadre y el cierre funcionan igual que antes.
+Simplificación: Los archivos tocados quedan sin código muerto ni duplicado, y el flujo se puede seguir desde el botón hasta la BD sin desvíos.
+Prioridad MoSCoW: Must. Dificultad: Media. Meta: Frontend simple y agradable.
+Hallazgo o necesidad: CerrarTurnoPage pesa ~39 KB con estilos inline.",dleiva2024,Medio,Sprint 3,Semana 10,Frontend,Semana 10,1h
+Probar anulación desde la UI,"Objetivo: Cubrir anulación por ADMIN, rechazo para CAJERO y rechazo de tarjeta con una prueba E2E.
+Entrega verificable: Spec de anulación.
+Aceptación: Los tres escenarios pasan y la venta conserva un estado coherente.
+Prioridad MoSCoW: Must. Dificultad: Media. Meta: Funcionalidad de punta a punta.
+Hallazgo o necesidad: La anulación UI es nueva en este sprint.",spereda2024,Medio,Sprint 3,Semana 11,Testing,Semana 11,1h
+Simplificar el cálculo de totales en VentaService,"Objetivo: Concentrar subtotal, impuestos y total en un único método usado por creación, agregado y edición de ítems.
+Entrega verificable: VentaService con un solo punto de cálculo.
+Aceptación: Las pruebas de venta, IVA y pesables pasan sin cambios.
+Simplificación: Los archivos tocados quedan sin código muerto ni duplicado, y el flujo se puede seguir desde el botón hasta la BD sin desvíos.
+Prioridad MoSCoW: Must. Dificultad: Alta. Meta: Funcionalidad de punta a punta.
+Hallazgo o necesidad: El cálculo de totales aparece repetido en varias operaciones.",spereda2024,Alta,Sprint 3,Semana 11,Backend,Semana 11,1h30m
+Revisar ramas muertas del outbox de MS-5,"Objetivo: Eliminar código del publicador outbox que no se ejecuta en ninguna configuración vigente.
+Entrega verificable: OutboxPublisher simplificado.
+Aceptación: Las pruebas S2-007 a S2-010 siguen pasando.
+Simplificación: Los archivos tocados quedan sin código muerto ni duplicado, y el flujo se puede seguir desde el botón hasta la BD sin desvíos.
+Prioridad MoSCoW: Should. Dificultad: Media. Meta: Funcionalidad de punta a punta.
+Hallazgo o necesidad: La documentación del outbox mezcla funciones implementadas y futuras.",spereda2024,Medio,Sprint 3,Semana 11,Backend,Semana 11,1h
+Mostrar ventas anuladas en historial y cuadre,"Objetivo: Distinguir ventas ANULADAS en la lista del turno y reflejarlas en el cuadre de cierre.
+Entrega verificable: Indicador de anulada y cuadre consistente.
+Aceptación: El efectivo esperado del cuadre excluye las ventas anuladas.
+Simplificación: Los archivos tocados quedan sin código muerto ni duplicado, y el flujo se puede seguir desde el botón hasta la BD sin desvíos.
+Prioridad MoSCoW: Must. Dificultad: Media. Meta: Funcionalidad de punta a punta.
+Hallazgo o necesidad: Una anulación debe verse en el cierre de turno.",spereda2024,Medio,Sprint 3,Semana 11,Frontend,Semana 11,1h
+Verificar cuadre con ventas anuladas,"Objetivo: Probar que el cuadre de turno excluye las ventas anuladas.
+Entrega verificable: Prueba de integración de cuadre.
+Aceptación: El cuadre coincide con el efectivo de ventas completadas no anuladas.
+Prioridad MoSCoW: Must. Dificultad: Baja. Meta: Funcionalidad de punta a punta.
+Hallazgo o necesidad: El cuadre y la anulación se implementaron por separado.",spereda2024,Facil,Sprint 3,Semana 11,Testing,Semana 11,30m
+Descontar stock por FEFO en el consumidor de ventas,"Objetivo: Al procesar sale.completed, descontar primero del lote con vencimiento más próximo, junto con el arreglo S2-097..S2-099.
+Entrega verificable: Consumidor que descuenta por lote dentro de la transacción del evento.
+Aceptación: Una venta con dos lotes disponibles consume primero el que vence antes.
+Simplificación: Los archivos tocados quedan sin código muerto ni duplicado, y el flujo se puede seguir desde el botón hasta la BD sin desvíos.
+Prioridad MoSCoW: Must. Dificultad: Alta. Meta: Microservicios (FEFO y MS-1).
+Hallazgo o necesidad: El consumidor descuenta stock agregado sin considerar lotes.",nmartinez2024,Alta,Sprint 3,Semana 11,Backend,Semana 11,1h30m
+Definir comportamiento con lotes insuficientes,"Objetivo: Decidir y aplicar qué ocurre cuando los lotes no alcanzan para la venta, sin dejar stock negativo silencioso.
+Entrega verificable: Regla implementada y registrada en log.
+Aceptación: Un evento sin lotes suficientes queda registrado y no deja descuentos parciales.
+Simplificación: Los archivos tocados quedan sin código muerto ni duplicado, y el flujo se puede seguir desde el botón hasta la BD sin desvíos.
+Prioridad MoSCoW: Must. Dificultad: Media. Meta: Microservicios (FEFO y MS-1).
+Hallazgo o necesidad: S2-098 exige que el stock no baje de cero por un mensaje inválido.",nmartinez2024,Medio,Sprint 3,Semana 11,Backend,Semana 11,1h
+Implementar GET /lotes?porVencer=,"Objetivo: Listar lotes del tenant que vencen dentro de los días indicados, por sucursal.
+Entrega verificable: Endpoint de consulta de lotes.
+Aceptación: Solo devuelve lotes con cantidad disponible y del tenant del JWT.
+Simplificación: Los archivos tocados quedan sin código muerto ni duplicado, y el flujo se puede seguir desde el botón hasta la BD sin desvíos.
+Prioridad MoSCoW: Must. Dificultad: Media. Meta: Microservicios (FEFO y MS-1).
+Hallazgo o necesidad: No hay forma de consultar lotes próximos a vencer.",nmartinez2024,Medio,Sprint 3,Semana 11,Backend,Semana 11,1h
+Probar descuento FEFO,"Objetivo: Cubrir orden de vencimiento, lotes insuficientes y evento duplicado.
+Entrega verificable: Pruebas de integración FEFO.
+Aceptación: Un evento duplicado no descuenta dos veces.
+Prioridad MoSCoW: Must. Dificultad: Media. Meta: Microservicios (FEFO y MS-1).
+Hallazgo o necesidad: FEFO toca el mismo consumidor que la idempotencia.",nmartinez2024,Medio,Sprint 3,Semana 11,Testing,Semana 11,1h
+Simplificar KafkaConsumerService,"Objetivo: Eliminar código heredado del consumidor que quedó sin uso tras FEFO.
+Entrega verificable: Consumidor reducido.
+Aceptación: Las pruebas del consumidor siguen pasando.
+Simplificación: Los archivos tocados quedan sin código muerto ni duplicado, y el flujo se puede seguir desde el botón hasta la BD sin desvíos.
+Prioridad MoSCoW: Should. Dificultad: Baja. Meta: Microservicios (FEFO y MS-1).
+Hallazgo o necesidad: El consumidor acumuló casos borde de versiones anteriores.",nmartinez2024,Facil,Sprint 3,Semana 11,Backend,Semana 11,30m
+Implementar reactivación de usuarios,"Objetivo: Agregar endpoint para volver a activar un usuario del tenant con rol ADMIN.
+Entrega verificable: Endpoint de reactivación con pruebas.
+Aceptación: Un usuario reactivado puede iniciar sesión de nuevo.
+Simplificación: Los archivos tocados quedan sin código muerto ni duplicado, y el flujo se puede seguir desde el botón hasta la BD sin desvíos.
+Prioridad MoSCoW: Must. Dificultad: Media. Meta: Microservicios (FEFO y MS-1).
+Hallazgo o necesidad: Hoy solo se puede desactivar usuarios.",msanhueza2024,Medio,Sprint 3,Semana 11,Backend,Semana 11,1h
+Agregar botón Reactivar en la lista de usuarios,"Objetivo: Mostrar Reactivar en usuarios inactivos y refrescar la fila al completar.
+Entrega verificable: Acción en UsuariosList.
+Aceptación: La fila cambia a Activo sin recargar y se habilitan sus acciones.
+Simplificación: Los archivos tocados quedan sin código muerto ni duplicado, y el flujo se puede seguir desde el botón hasta la BD sin desvíos.
+Prioridad MoSCoW: Must. Dificultad: Media. Meta: Funcionalidad de punta a punta.
+Hallazgo o necesidad: La UI distingue inactivos pero no permite reactivarlos.",msanhueza2024,Medio,Sprint 3,Semana 11,Frontend,Semana 11,1h
+"Partir ProductosPage en tabla, filtros y modal","Objetivo: Separar la página de productos en componentes con responsabilidad única.
+Entrega verificable: ProductosPage reducido a la composición de sus partes.
+Aceptación: Los E2E de productos-admin pasan sin cambios.
+Simplificación: Los archivos tocados quedan sin código muerto ni duplicado, y el flujo se puede seguir desde el botón hasta la BD sin desvíos.
+Prioridad MoSCoW: Must. Dificultad: Alta. Meta: Frontend simple y agradable.
+Hallazgo o necesidad: ProductosPage pesa ~48 KB.",msanhueza2024,Alta,Sprint 3,Semana 11,Frontend,Semana 11,1h30m
+Crear pantalla de recepción de mercadería en Admin,"Objetivo: Formulario para registrar recepción con producto, sucursal, cantidad y vencimiento usando POST /recepciones.
+Entrega verificable: Pantalla de recepción en Admin.
+Aceptación: Una recepción válida aparece en stock y los errores del backend se muestran claramente.
+Simplificación: Los archivos tocados quedan sin código muerto ni duplicado, y el flujo se puede seguir desde el botón hasta la BD sin desvíos.
+Prioridad MoSCoW: Must. Dificultad: Alta. Meta: Funcionalidad de punta a punta.
+Hallazgo o necesidad: FEFO no es visible sin una pantalla de recepción.",msanhueza2024,Alta,Sprint 3,Semana 11,Frontend,Semana 11,1h30m
+Actualizar imágenes de MS-1 a MS-5 en el clúster,"Objetivo: Publicar y desplegar las imágenes con los cambios de las Semanas 9 y 10 usando los manifiestos preparados por Diego.
+Entrega verificable: Pods actualizados con tags explícitos.
+Aceptación: Cada MS responde /health y el login funciona contra el clúster.
+Prioridad MoSCoW: Must. Dificultad: Alta. Meta: Entrega en clúster y .exe.
+Hallazgo o necesidad: El clúster tiene imágenes de octubre.",admin,Alta,Sprint 3,Semana 11,DevOps,Semana 11,1h30m
+Desplegar MS-4 con recepciones y lotes,"Objetivo: Aplicar migraciones y desplegar MS-4 con los endpoints nuevos en warehouse_db.
+Entrega verificable: MS-4 actualizado en el clúster.
+Aceptación: Recepción y consulta de lotes responden en el clúster.
+Prioridad MoSCoW: Must. Dificultad: Media. Meta: Entrega en clúster y .exe.
+Hallazgo o necesidad: MS-4 corre con base propia dentro de la instancia del POS por la cuota de PVC.",admin,Medio,Sprint 3,Semana 11,DevOps,Semana 11,1h
+Configurar build Setup.exe con Electron Forge,"Objetivo: Generar el instalador de Windows con el modo remote por defecto.
+Entrega verificable: Setup.exe reproducible con un comando documentado.
+Aceptación: El instalador se genera desde una copia limpia del repositorio.
+Prioridad MoSCoW: Must. Dificultad: Alta. Meta: Entrega en clúster y .exe.
+Hallazgo o necesidad: La defensa exige llegar con la app como ejecutable.",admin,Alta,Sprint 3,Semana 11,DevOps,Semana 11,1h30m
+Probar el primer .exe contra el clúster,"Objetivo: Instalar el ejecutable y recorrer login, turno, venta, cobro y cierre contra el clúster.
+Entrega verificable: Registro de la prueba con defectos encontrados.
+Aceptación: El flujo de caja completo funciona desde el .exe instalado.
+Prioridad MoSCoW: Must. Dificultad: Media. Meta: Entrega en clúster y .exe.
+Hallazgo o necesidad: El .exe puede comportarse distinto que npm start.",admin,Medio,Sprint 3,Semana 11,Testing,Semana 11,1h
+E2E de recepción y FEFO en docker compose,"Objetivo: Recepción de dos lotes, venta y verificación de qué lote se descontó, con Kafka local.
+Entrega verificable: Prueba de punta a punta de FEFO.
+Aceptación: El lote con vencimiento más próximo baja primero.
+Prioridad MoSCoW: Must. Dificultad: Alta. Meta: Calidad y regresión.
+Hallazgo o necesidad: FEFO solo se puede demostrar completo en local por la limitación de Kafka.",dprado2024,Alta,Sprint 3,Semana 11,Testing,Semana 11,1h30m
+Regresión tras simplificar VentaService,"Objetivo: Verificar venta, IVA, pesables, cobro y cuadre tras el cambio de cálculo de totales.
+Entrega verificable: Resultado de pruebas de MS-5 y E2E del POS.
+Aceptación: Ningún total cambia respecto de la línea base.
+Prioridad MoSCoW: Must. Dificultad: Media. Meta: Calidad y regresión.
+Hallazgo o necesidad: El cálculo de totales es central en el flujo de caja.",dprado2024,Medio,Sprint 3,Semana 11,Testing,Semana 11,1h
+Regresión de Admin tras partir ProductosPage,"Objetivo: Ejecutar E2E de Admin y productos después de la partición.
+Entrega verificable: Resultado E2E de Admin.
+Aceptación: Los E2E de Admin pasan sin cambios en los specs.
+Prioridad MoSCoW: Must. Dificultad: Media. Meta: Calidad y regresión.
+Hallazgo o necesidad: La partición puede romper refrescos y filtros.",dprado2024,Medio,Sprint 3,Semana 11,Testing,Semana 11,1h
+Probar el primer .exe en un segundo equipo,"Objetivo: Instalar el ejecutable en un equipo distinto al de build y repetir el flujo de caja.
+Entrega verificable: Registro de prueba en equipo limpio.
+Aceptación: El .exe funciona sin herramientas de desarrollo instaladas.
+Prioridad MoSCoW: Must. Dificultad: Media. Meta: Calidad y regresión.
+Hallazgo o necesidad: El build puede depender de archivos locales.",dprado2024,Medio,Sprint 3,Semana 11,Testing,Semana 11,1h
+Auditar aislamiento por tenant en endpoints nuevos,"Objetivo: Probar recepciones, lotes, sucursales y reactivación con JWT de otro tenant.
+Entrega verificable: Resultado de la auditoría.
+Aceptación: Ningún endpoint nuevo expone ni modifica datos de otro tenant.
+Prioridad MoSCoW: Must. Dificultad: Baja. Meta: Calidad y regresión.
+Hallazgo o necesidad: RN-01 aplica a todos los endpoints nuevos.",dprado2024,Facil,Sprint 3,Semana 11,Testing,Semana 11,30m
+Preparar Dockerfiles y manifiestos para el despliegue,"Objetivo: Actualizar Dockerfiles y manifiestos con tags explícitos y variables vigentes para que Rodrigo solo aplique.
+Entrega verificable: Manifiestos listos para aplicar.
+Aceptación: Ningún manifiesto usa latest y todos apuntan a la imagen de la semana.
+Prioridad MoSCoW: Must. Dificultad: Media. Meta: Entrega en clúster y .exe.
+Hallazgo o necesidad: Los manifiestos mezclan tags latest y fechados.",dleiva2024,Medio,Sprint 3,Semana 11,DevOps,Semana 11,1h30m
+Documentar la limitación de Kafka en el clúster,"Objetivo: Explicar que en el clúster la venta no descuenta stock porque el namespace no tiene broker, y cómo verlo en local.
+Entrega verificable: Nota en el nodo de infraestructura.
+Aceptación: La nota distingue qué se demuestra en el clúster y qué en docker compose.
+Prioridad MoSCoW: Must. Dificultad: Baja. Meta: Entrega en clúster y .exe.
+Hallazgo o necesidad: El equipo decidió aceptar esta limitación.",dleiva2024,Facil,Sprint 3,Semana 11,DevOps,Semana 11,30m
+"Aplicar la guía de estilo en POS, apertura y cierre de turno","Objetivo: Usar los tokens de la guía aprobada en las pantallas del cajero.
+Entrega verificable: Pantallas del cajero con tokens de la guía.
+Aceptación: Las pantallas cumplen contraste y estados de la guía.
+Simplificación: Los archivos tocados quedan sin código muerto ni duplicado, y el flujo se puede seguir desde el botón hasta la BD sin desvíos.
+Prioridad MoSCoW: Must. Dificultad: Media. Meta: Frontend simple y agradable.
+Hallazgo o necesidad: La guía está aprobada desde octubre pero no se aplica en todas las pantallas.",dleiva2024,Medio,Sprint 3,Semana 11,Frontend,Semana 11,1h30m
+Quitar estilos inline de apertura y cierre de turno,"Objetivo: Mover estilos inline a CSS del componente usando los tokens de la guía.
+Entrega verificable: AbrirTurnoPage y CerrarTurnoPage sin estilos inline.
+Aceptación: Las pantallas se ven igual o mejor y el archivo queda más corto.
+Simplificación: Los archivos tocados quedan sin código muerto ni duplicado, y el flujo se puede seguir desde el botón hasta la BD sin desvíos.
+Prioridad MoSCoW: Must. Dificultad: Media. Meta: Frontend simple y agradable.
+Hallazgo o necesidad: Los estilos inline alargan los componentes.",dleiva2024,Medio,Sprint 3,Semana 11,Frontend,Semana 11,1h30m
+Corregir defectos de regresión en MS-5,"Objetivo: Resolver los defectos de MS-5 registrados en YouTrack antes del congelamiento.
+Entrega verificable: Defectos de MS-5 cerrados.
+Aceptación: No queda defecto Must abierto de MS-5 al 29-nov.
+Simplificación: Los archivos tocados quedan sin código muerto ni duplicado, y el flujo se puede seguir desde el botón hasta la BD sin desvíos.
+Prioridad MoSCoW: Must. Dificultad: Media. Meta: Calidad y regresión.
+Hallazgo o necesidad: La regresión de la Semana 11 puede dejar defectos.",spereda2024,Medio,Sprint 3,Semana 12,Backend,Semana 12,1h30m
+Validar el flujo de caja contra el clúster,"Objetivo: Recorrer turno, venta, cobro efectivo y tarjeta, anulación y cierre en el despliegue final.
+Entrega verificable: Registro de validación en el clúster.
+Aceptación: El flujo completo funciona sin errores de API.
+Prioridad MoSCoW: Must. Dificultad: Media. Meta: Entrega en clúster y .exe.
+Hallazgo o necesidad: La defensa se hace con los MS en el clúster.",spereda2024,Medio,Sprint 3,Semana 12,Testing,Semana 12,1h
+Revisar mensajes de error y logs de MS-5,"Objetivo: Unificar mensajes de error visibles y quitar logs de depuración sobrantes.
+Entrega verificable: Mensajes y logs revisados.
+Aceptación: Los errores muestran código estable y no exponen detalles internos.
+Simplificación: Los archivos tocados quedan sin código muerto ni duplicado, y el flujo se puede seguir desde el botón hasta la BD sin desvíos.
+Prioridad MoSCoW: Should. Dificultad: Media. Meta: Funcionalidad de punta a punta.
+Hallazgo o necesidad: Los mensajes de error llegan al cajero.",spereda2024,Medio,Sprint 3,Semana 12,Backend,Semana 12,1h
+Ejecutar pruebas de integración de MS-5 tras la simplificación,"Objetivo: Correr la suite completa de MS-5 sobre la versión congelada.
+Entrega verificable: Resultado de la suite.
+Aceptación: La suite pasa o los fallos quedan registrados con responsable.
+Prioridad MoSCoW: Must. Dificultad: Media. Meta: Calidad y regresión.
+Hallazgo o necesidad: La simplificación tocó controller, servicio y outbox.",spereda2024,Medio,Sprint 3,Semana 12,Testing,Semana 12,1h
+Actualizar nodo ms5-pos,"Objetivo: Reflejar anulación UI, rutas retiradas y simplificaciones en el grafo.
+Entrega verificable: Nodo ms5-pos con ultima_revision.
+Aceptación: Los endpoints del nodo coinciden con el código.
+Simplificación: Los archivos tocados quedan sin código muerto ni duplicado, y el flujo se puede seguir desde el botón hasta la BD sin desvíos.
+Prioridad MoSCoW: Should. Dificultad: Baja. Meta: Calidad y regresión.
+Hallazgo o necesidad: El grafo debe reflejar el estado real.",spereda2024,Facil,Sprint 3,Semana 12,Backend,Semana 12,30m
+Mantener coherente el stock agregado con los lotes,"Objetivo: Asegurar que la consulta de stock refleja la suma de lotes disponibles tras recepciones y ventas.
+Entrega verificable: Consulta de stock coherente con lotes.
+Aceptación: El stock mostrado coincide con la suma de lotes.
+Simplificación: Los archivos tocados quedan sin código muerto ni duplicado, y el flujo se puede seguir desde el botón hasta la BD sin desvíos.
+Prioridad MoSCoW: Must. Dificultad: Media. Meta: Microservicios (FEFO y MS-1).
+Hallazgo o necesidad: Stock agregado y lotes pueden divergir.",nmartinez2024,Medio,Sprint 3,Semana 12,Backend,Semana 12,1h
+Corregir defectos de regresión en MS-4,"Objetivo: Resolver los defectos de MS-4 registrados antes del congelamiento.
+Entrega verificable: Defectos de MS-4 cerrados.
+Aceptación: No queda defecto Must abierto de MS-4 al 29-nov.
+Simplificación: Los archivos tocados quedan sin código muerto ni duplicado, y el flujo se puede seguir desde el botón hasta la BD sin desvíos.
+Prioridad MoSCoW: Must. Dificultad: Media. Meta: Calidad y regresión.
+Hallazgo o necesidad: FEFO y el consumidor cambiaron en este sprint.",nmartinez2024,Medio,Sprint 3,Semana 12,Backend,Semana 12,1h30m
+Probar venta a FEFO en docker compose con Kafka,"Objetivo: Verificar el recorrido completo venta → evento → descuento por lote en el entorno local.
+Entrega verificable: Registro de prueba local.
+Aceptación: La venta descuenta del lote correcto una sola vez.
+Prioridad MoSCoW: Must. Dificultad: Media. Meta: Calidad y regresión.
+Hallazgo o necesidad: Es la única forma de demostrar eventos entre servicios.",nmartinez2024,Medio,Sprint 3,Semana 12,Testing,Semana 12,1h
+Agregar lotes de demostración al seed,"Objetivo: Incluir lotes con distintos vencimientos para la demo.
+Entrega verificable: Seed con lotes.
+Aceptación: El seed es idempotente y solo corre en Development.
+Simplificación: Los archivos tocados quedan sin código muerto ni duplicado, y el flujo se puede seguir desde el botón hasta la BD sin desvíos.
+Prioridad MoSCoW: Should. Dificultad: Baja. Meta: Microservicios (FEFO y MS-1).
+Hallazgo o necesidad: La demo necesita datos de lotes.",nmartinez2024,Facil,Sprint 3,Semana 12,Backend,Semana 12,1h
+Actualizar nodos ms4-inventory y fefo,"Objetivo: Reflejar recepciones, lotes y FEFO en el grafo.
+Entrega verificable: Nodos actualizados con ultima_revision.
+Aceptación: FEFO figura como implementado solo con evidencia de pruebas.
+Simplificación: Los archivos tocados quedan sin código muerto ni duplicado, y el flujo se puede seguir desde el botón hasta la BD sin desvíos.
+Prioridad MoSCoW: Should. Dificultad: Baja. Meta: Calidad y regresión.
+Hallazgo o necesidad: El grafo debe reflejar el estado real.",nmartinez2024,Facil,Sprint 3,Semana 12,Backend,Semana 12,30m
+Mostrar lotes por vencer en Admin Inventario,"Objetivo: Agregar vista de lotes próximos a vencer usando GET /lotes?porVencer=.
+Entrega verificable: Sección de lotes por vencer en AdminInventario.
+Aceptación: La vista muestra producto, lote, vencimiento y cantidad.
+Simplificación: Los archivos tocados quedan sin código muerto ni duplicado, y el flujo se puede seguir desde el botón hasta la BD sin desvíos.
+Prioridad MoSCoW: Must. Dificultad: Media. Meta: Funcionalidad de punta a punta.
+Hallazgo o necesidad: FEFO debe verse en la app.",msanhueza2024,Medio,Sprint 3,Semana 12,Frontend,Semana 12,1h
+Editar y desactivar sucursales en Admin,"Objetivo: Agregar edición y baja lógica en AdminSucursales usando los endpoints nuevos.
+Entrega verificable: Acciones de editar y desactivar.
+Aceptación: Los cambios se reflejan sin recargar y los errores 404/409 se muestran.
+Simplificación: Los archivos tocados quedan sin código muerto ni duplicado, y el flujo se puede seguir desde el botón hasta la BD sin desvíos.
+Prioridad MoSCoW: Must. Dificultad: Media. Meta: Funcionalidad de punta a punta.
+Hallazgo o necesidad: La UI de sucursales solo permite crear.",msanhueza2024,Medio,Sprint 3,Semana 12,Frontend,Semana 12,1h30m
+Aplicar la guía de estilo en pantallas de Admin,"Objetivo: Usar los tokens de la guía en usuarios, roles, sucursales, inventario y configuración.
+Entrega verificable: Pantallas Admin con tokens de la guía.
+Aceptación: Contraste y estados cumplen la guía aprobada.
+Simplificación: Los archivos tocados quedan sin código muerto ni duplicado, y el flujo se puede seguir desde el botón hasta la BD sin desvíos.
+Prioridad MoSCoW: Must. Dificultad: Media. Meta: Frontend simple y agradable.
+Hallazgo o necesidad: Admin mezcla estilos propios con los de la guía.",msanhueza2024,Medio,Sprint 3,Semana 12,Frontend,Semana 12,1h
+Reducir Program.cs de MS-1,"Objetivo: Mover registros de servicios y configuración repetida a métodos de extensión claros.
+Entrega verificable: Program.cs más corto.
+Aceptación: MS-1 arranca igual y sus pruebas pasan.
+Simplificación: Los archivos tocados quedan sin código muerto ni duplicado, y el flujo se puede seguir desde el botón hasta la BD sin desvíos.
+Prioridad MoSCoW: Should. Dificultad: Media. Meta: Microservicios (FEFO y MS-1).
+Hallazgo o necesidad: Program.cs de MS-1 tiene casi 15 KB.",msanhueza2024,Medio,Sprint 3,Semana 12,Backend,Semana 12,1h
+Regresión rápida de Admin,"Objetivo: Ejecutar los E2E de Admin sobre la versión congelada.
+Entrega verificable: Resultado E2E de Admin.
+Aceptación: Los E2E de Admin pasan antes de la entrega.
+Prioridad MoSCoW: Must. Dificultad: Baja. Meta: Calidad y regresión.
+Hallazgo o necesidad: Admin recibió varias pantallas nuevas.",msanhueza2024,Facil,Sprint 3,Semana 12,Testing,Semana 12,30m
+Desplegar la versión congelada en el clúster,"Objetivo: Publicar y desplegar todas las imágenes del congelamiento del 29-nov.
+Entrega verificable: Clúster con la versión final.
+Aceptación: Todos los MS responden /health y el flujo de caja funciona.
+Prioridad MoSCoW: Must. Dificultad: Alta. Meta: Entrega en clúster y .exe.
+Hallazgo o necesidad: La defensa del 2-dic usa el clúster.",admin,Alta,Sprint 3,Semana 12,DevOps,Semana 12,1h30m
+Generar el .exe final,"Objetivo: Construir el instalador desde la versión congelada con modo remote.
+Entrega verificable: Setup.exe final.
+Aceptación: El instalador corresponde al commit congelado.
+Prioridad MoSCoW: Must. Dificultad: Media. Meta: Entrega en clúster y .exe.
+Hallazgo o necesidad: Se debe llegar a la defensa con el ejecutable.",admin,Medio,Sprint 3,Semana 12,DevOps,Semana 12,1h
+Smoke del .exe final en equipo limpio,"Objetivo: Instalar el .exe final y recorrer login, caja y Admin contra el clúster.
+Entrega verificable: Registro del smoke final.
+Aceptación: El recorrido termina sin errores visibles.
+Prioridad MoSCoW: Must. Dificultad: Media. Meta: Entrega en clúster y .exe.
+Hallazgo o necesidad: Última verificación antes de la defensa.",admin,Medio,Sprint 3,Semana 12,Testing,Semana 12,1h
+Cerrar el sprint en YouTrack,"Objetivo: Revisar estados de todas las tareas del sprint y mover lo no terminado al backlog.
+Entrega verificable: Tablero actualizado.
+Aceptación: Ninguna tarea queda en curso sin dueño ni estado.
+Prioridad MoSCoW: Must. Dificultad: Baja. Meta: Calidad y regresión.
+Hallazgo o necesidad: El tablero debe reflejar lo entregado.",admin,Facil,Sprint 3,Semana 12,DevOps,Semana 12,30m
+Escribir notas de versión del Sprint 3,"Objetivo: Resumir qué se entrega, qué se simplificó y qué límites quedan (Kafka en clúster).
+Entrega verificable: Notas de versión.
+Aceptación: Las notas distinguen lo demostrable en clúster y en local.
+Prioridad MoSCoW: Should. Dificultad: Baja. Meta: Entrega en clúster y .exe.
+Hallazgo o necesidad: El profesor pregunta por lo entregado.",admin,Facil,Sprint 3,Semana 12,DevOps,Semana 12,1h
+Regresión completa antes del congelamiento,"Objetivo: Ejecutar .NET, typecheck y E2E completos el 28-nov sobre dev.
+Entrega verificable: Reporte de regresión pre-congelamiento.
+Aceptación: Todo fallo Must queda registrado con responsable.
+Prioridad MoSCoW: Must. Dificultad: Alta. Meta: Calidad y regresión.
+Hallazgo o necesidad: El congelamiento es el domingo 29-nov.",dprado2024,Alta,Sprint 3,Semana 12,Testing,Semana 12,1h30m
+Regresión posterior al despliegue final,"Objetivo: Repetir el flujo de caja y Admin contra el clúster tras el despliegue final.
+Entrega verificable: Reporte post-despliegue.
+Aceptación: El flujo funciona en el clúster con la versión congelada.
+Prioridad MoSCoW: Must. Dificultad: Media. Meta: Calidad y regresión.
+Hallazgo o necesidad: El clúster puede diferir del entorno local.",dprado2024,Medio,Sprint 3,Semana 12,Testing,Semana 12,1h
+Verificar el checklist de salida del sprint,"Objetivo: Comprobar .exe, MS en clúster, sin errores visibles y UI con la guía de estilo.
+Entrega verificable: Checklist de salida completado.
+Aceptación: Cada punto tiene evidencia o queda marcado como pendiente.
+Prioridad MoSCoW: Must. Dificultad: Media. Meta: Calidad y regresión.
+Hallazgo o necesidad: La meta del sprint es llegar con todo funcionando.",dprado2024,Medio,Sprint 3,Semana 12,Testing,Semana 12,1h
+Reporte de pruebas del Sprint 3,"Objetivo: Resumir pruebas ejecutadas, resultados y límites conocidos.
+Entrega verificable: Reporte en docs/qa.
+Aceptación: No se declara cobertura que el reporte no pruebe.
+Prioridad MoSCoW: Must. Dificultad: Media. Meta: Calidad y regresión.
+Hallazgo o necesidad: La defensa puede preguntar por la evidencia de pruebas.",dprado2024,Medio,Sprint 3,Semana 12,Testing,Semana 12,1h
+Verificar el criterio de simplificación en archivos tocados,"Objetivo: Revisar que los archivos modificados en el sprint cumplan el criterio de simplificación.
+Entrega verificable: Lista de archivos que aún no cumplen.
+Aceptación: La lista sirve de entrada para la pasada final de simplificación.
+Prioridad MoSCoW: Should. Dificultad: Baja. Meta: Calidad y regresión.
+Hallazgo o necesidad: La simplificación se hizo de paso en cada tarea.",dprado2024,Facil,Sprint 3,Semana 12,Testing,Semana 12,30m
+Pulir mensajes vacíos y de error en el POS,"Objetivo: Revisar estados vacíos, cargas y errores del POS para que el cajero entienda qué pasa.
+Entrega verificable: Estados del POS revisados.
+Aceptación: Cada estado tiene un mensaje claro y una acción posible.
+Simplificación: Los archivos tocados quedan sin código muerto ni duplicado, y el flujo se puede seguir desde el botón hasta la BD sin desvíos.
+Prioridad MoSCoW: Must. Dificultad: Media. Meta: Frontend simple y agradable.
+Hallazgo o necesidad: La app debe ser intuitiva en la defensa.",dleiva2024,Medio,Sprint 3,Semana 12,Frontend,Semana 12,1h30m
+Apoyar el despliegue final y verificar salud,"Objetivo: Acompañar a Rodrigo en el despliegue final y verificar /health e ingress de cada MS.
+Entrega verificable: Checklist de salud del clúster.
+Aceptación: Todos los MS responden y los certificados son válidos.
+Prioridad MoSCoW: Must. Dificultad: Media. Meta: Entrega en clúster y .exe.
+Hallazgo o necesidad: El despliegue final concentra riesgo.",dleiva2024,Medio,Sprint 3,Semana 12,DevOps,Semana 12,1h
+Corregir defectos visuales de regresión,"Objetivo: Resolver los defectos visuales registrados antes del congelamiento.
+Entrega verificable: Defectos visuales cerrados.
+Aceptación: No queda defecto visual Must abierto al 29-nov.
+Simplificación: Los archivos tocados quedan sin código muerto ni duplicado, y el flujo se puede seguir desde el botón hasta la BD sin desvíos.
+Prioridad MoSCoW: Must. Dificultad: Media. Meta: Calidad y regresión.
+Hallazgo o necesidad: La guía de estilo se aplicó en varias pantallas.",dleiva2024,Medio,Sprint 3,Semana 12,Frontend,Semana 12,1h30m
+Revisar navegación por teclado en el POS,"Objetivo: Verificar foco, atajos y orden de tabulación en las pantallas del cajero.
+Entrega verificable: Ajustes de accesibilidad del POS.
+Aceptación: El flujo de venta se completa solo con teclado.
+Simplificación: Los archivos tocados quedan sin código muerto ni duplicado, y el flujo se puede seguir desde el botón hasta la BD sin desvíos.
+Prioridad MoSCoW: Should. Dificultad: Media. Meta: Frontend simple y agradable.
+Hallazgo o necesidad: El cajero trabaja con lector de códigos y teclado.",dleiva2024,Medio,Sprint 3,Semana 12,Frontend,Semana 12,1h

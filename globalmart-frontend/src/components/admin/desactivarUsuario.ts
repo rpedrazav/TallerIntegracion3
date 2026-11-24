@@ -9,6 +9,11 @@ export interface SolicitudDesactivacionUsuario {
   path: string;
 }
 
+export interface SolicitudReactivacionUsuario {
+  method: 'post';
+  path: string;
+}
+
 type Confirmar = (mensaje: string) => boolean;
 
 export function confirmarDesactivacionUsuario(
@@ -34,7 +39,31 @@ export function marcarUsuarioInactivo<T extends UsuarioDesactivable>(
   usuarios: readonly T[],
   usuarioId: string,
 ): T[] {
+  return marcarEstadoUsuario(usuarios, usuarioId, false);
+}
+
+export function crearSolicitudReactivacionUsuario(
+  usuario: UsuarioDesactivable,
+): SolicitudReactivacionUsuario {
+  return {
+    method: 'post',
+    path: `/users/${usuario.id}/reactivate`,
+  };
+}
+
+export function marcarUsuarioActivo<T extends UsuarioDesactivable>(
+  usuarios: readonly T[],
+  usuarioId: string,
+): T[] {
+  return marcarEstadoUsuario(usuarios, usuarioId, true);
+}
+
+function marcarEstadoUsuario<T extends UsuarioDesactivable>(
+  usuarios: readonly T[],
+  usuarioId: string,
+  activo: boolean,
+): T[] {
   return usuarios.map(usuario =>
-    usuario.id === usuarioId ? { ...usuario, activo: false } : usuario,
+    usuario.id === usuarioId ? { ...usuario, activo } : usuario,
   );
 }

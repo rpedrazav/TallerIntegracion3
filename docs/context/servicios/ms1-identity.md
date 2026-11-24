@@ -3,15 +3,23 @@ id: ms1-identity
 tipo: microservicio
 titulo: MS-1 · Tenant & Identity Service
 estado: parcial
-fuentes: [src/TenantIdentityService/, Docker/config/kong.yaml]
+fuentes: [src/TenantIdentityService/, tests/GlobalMart.IntegrationTests/SucursalIntegrationTests.cs, tests/GlobalMart.IntegrationTests/ReactivarUsuarioIntegrationTests.cs, docs/qa/TI3-799/reporte.md, globalmart-frontend/src/pages/Admin.tsx, globalmart-frontend/src/pages/AdminRoles.tsx, globalmart-frontend/src/components/admin/UsuariosList.tsx, Docker/config/kong.yaml]
 verificado_contra_codigo: true
-ultima_revision: 2026-10-16
+ultima_revision: 2026-11-22
 depende_de: []
 publica: []
 consume: []
 reglas: [RN-01, RN-07, RN-08, RN-12]
 ---
 # MS-1 · Tenant & Identity Service
+
+## Administración del tenant (2026-10-27)
+
+`--bootstrap-admin` aprovisiona explícitamente un tenant y su cuenta ADMIN con `GLOBALMART_BOOTSTRAP_TENANT_ID`, `GLOBALMART_BOOTSTRAP_TENANT_NAME`, `GLOBALMART_BOOTSTRAP_ADMIN_EMAIL` y `GLOBALMART_BOOTSTRAP_ADMIN_PASSWORD`. Ejecución: `dotnet run --project src/TenantIdentityService -- --bootstrap-admin` contra la base de MS-1. Aplica migraciones y guarda la contraseña con BCrypt; no hay endpoint público de aprovisionamiento.
+
+`POST /users` acepta `tenantId` solo si coincide con el JWT y `sucursalId` opcional del tenant. `PUT /users/{id}` y `DELETE /users/{id}` modifican la tabla `Usuarios` usada por login; el listado incluye inactivos. MS-1 permite actualmente `PUT /users/{id}` y `POST /users/{id}/roles` sobre usuarios inactivos: TI3-733 no cambia ese contrato y agrega únicamente un bloqueo de interfaz. `GET /users/roles` enumera los roles base y los propios del tenant. `POST /users/roles` crea un rol con permisos heredados de CAJERO, REPONEDOR o ADMIN; `DELETE /users/roles/{id}` elimina solo roles propios no asignados. La migración `AddTenantCustomRoles` añade `TenantId` y `RolBase` a `Roles`; el filtro de EF evita consultar roles de otros tenants. `POST /users/{id}/roles` evita quitarse todos los roles con permisos ADMIN. El JWT incluye nombre y rol base, de modo que las políticas existentes funcionen con el rol propio. La revocación inmediata de JWT ya emitidos no está implementada.
+
+Las pruebas de integración de creación, edición y baja usan `Usuarios` sobre PostgreSQL y aprobaron junto con el resto de la suite (334/334). Un ADMIN fue aprovisionado en el tenant demo del clúster y su login fue validado por port-forward y por el Ingress. La creación, asignación y eliminación de un rol propio se verificaron por el Ingress; las tres pruebas nuevas de roles propios cubren permisos heredados, aislamiento entre tenants y bloqueo de eliminación mientras está asignado.
 
 > Responsable de autenticación, gestión de usuarios/roles, configuración del tenant y (en diseño) tipos de cambio FX. Es el único microservicio que no requiere JWT para su endpoint de login. Todos los demás microservicios dependen de él para obtener config de tenant. Ver [[matriz-rutas]] para el inventario de puertos y prefijos.
 
@@ -23,13 +31,13 @@ src/TenantIdentityService/
 │   ├── AuthController.cs          POST /auth/login + /api/auth/login
 │   ├── UsuarioController.cs       CRUD /api/v1/users + /api/users + /users
 │   ├── TenantConfigController.cs  GET+PUT /tenants/{id}/config + /api/tenants + /api/v1/tenants
-│   └── SucursalesController.cs    GET+POST /sucursales + /api/sucursales
+│   └── SucursalesController.cs    GET+POST+PUT+DELETE /sucursales + /api/sucursales
 ├── Data/  TenantDbContext.cs + Migrations/
 ├── Models/  Tenant · Usuario · UsuarioRol · Rol
 ├── Repositories/  IUsuarioRepository · UsuarioRepository · ITenantRepository · TenantRepository
 ├── Services/  IAuthService · AuthService · IJwtService · JwtService
 ├── Middleware/  TenantMiddleware.cs
-└── Validators/  LoginRequestValidator.cs · CrearSucursalRequestValidator.cs · CrearUsuarioDtoValidator.cs · ActualizarTenantConfigDtoValidator.cs
+└── Validators/  LoginRequestValidator.cs · Crear/ActualizarSucursalRequestValidator.cs · CrearUsuarioDtoValidator.cs · ActualizarTenantConfigDtoValidator.cs
 ```
 
 ## Endpoints reales
@@ -41,11 +49,16 @@ src/TenantIdentityService/
 | POST | `/users` (alias `/api/v1/users`, `/api/users`) | JWT + ADMIN | [IMPLEMENTADO] (soporta `roles?: string[]` en el body) |
 | PUT | `/users/{id}` (alias `/api/v1/users/{id}`, `/api/users/{id}`) | JWT + ADMIN | [IMPLEMENTADO] |
 | DELETE | `/users/{id}` (alias `/api/v1/users/{id}`, `/api/users/{id}`) | JWT + ADMIN | [IMPLEMENTADO] |
+| POST | `/users/{id}/reactivate` (alias `/api/v1/users/{id}/reactivate`, `/api/users/{id}/reactivate`) | JWT + ADMIN activo | [IMPLEMENTADO] |
 | POST | `/users/{id}/roles` (alias `/api/v1/users/{id}/roles`) | JWT + ADMIN | [IMPLEMENTADO] |
+| GET/POST | `/users/roles` (mismos alias) | JWT + ADMIN | [IMPLEMENTADO] |
+| DELETE | `/users/roles/{id}` (mismos alias) | JWT + ADMIN | [IMPLEMENTADO] |
 | GET | `/tenants/{id}/config` (alias `/api/tenants`, `/api/v1/tenants`) | JWT | [IMPLEMENTADO] |
 | PUT | `/tenants/{id}/config` (alias `/api/tenants`, `/api/v1/tenants`) | JWT + ADMIN | [IMPLEMENTADO] |
 | GET | `/sucursales` (alias `/api/sucursales`) | JWT | [IMPLEMENTADO] |
 | POST | `/sucursales` (alias `/api/sucursales`) | JWT + ADMIN | [IMPLEMENTADO] |
+| PUT | `/sucursales/{id}` (alias `/api/sucursales/{id}`) | JWT + ADMIN | [IMPLEMENTADO] |
+| DELETE | `/sucursales/{id}` (alias `/api/sucursales/{id}`) | JWT + ADMIN | [IMPLEMENTADO] |
 | GET | `/health` | Público | [IMPLEMENTADO] |
 
 ### PUT /api/v1/users/{id}
@@ -54,8 +67,8 @@ src/TenantIdentityService/
 - Request `ActualizarUsuarioDto`: `Email` obligatorio, formato email y máximo 200 caracteres; `SucursalId` nullable. Omitirlo o enviar `null` borra la asignación. No acepta `Nombre` como campo editable.
 - `200`: devuelve `id`, `tenantId`, `email`, `sucursalId` tras persistir. `404`: ID inexistente o de otro tenant. `409`: violación PostgreSQL `23505` del índice/restricción `uq_users_tenant_email`. Otros errores de base no se convierten en duplicados.
 - `UsuarioRepository.UpdateBasicAsync` filtra lectura y UPDATE por ID y tenant. La restricción de base garantiza unicidad incluso bajo concurrencia; conservar el email propio está permitido.
-- El PUT usa `UsuarioCuenta`, una proyección EF de `users` con `id`, `tenant_id`, `email`, `sucursal_id` e `is_active`, excluida de migraciones. Solo actualiza email y sucursal; no toca contraseña, rol, estado ni fechas.
-- **Discrepancia de esquemas:** PUT y DELETE usan `users`; creación, listado y autenticación conservan el modelo anterior `Usuario` / `Usuarios` con `Nombre` y relaciones de roles/sucursales. `users` y `uq_users_tenant_email` deben existir en la base de destino; las migraciones actuales no los crean. El esquema fue proporcionado por el usuario y reproducido en PostgreSQL aislado; su presencia y FKs en `postgres-tenant` siguen [NO VERIFICADO]. La pertenencia de `SucursalId` a un tenant no se valida en este cambio.
+- El PUT usa `Usuario`/`Usuarios` y conserva la sucursal cuando se omite `sucursalId`; si se especifica, valida que sea una sucursal activa del tenant. No toca contraseña, rol, estado ni fechas.
+- **Discrepancia resuelta en código el 2026-10-27:** PUT y DELETE usan `Usuarios` como creación/listado/login. La proyección legacy `UsuarioCuenta` permanece en el modelo pero no participa en esas operaciones. Integración de este cambio con PostgreSQL [NO VERIFICADA].
 - [ActualizarUsuarioIntegrationTests](../../../tests/GlobalMart.IntegrationTests/ActualizarUsuarioIntegrationTests.cs): exactamente tres tests con `Ms1WebApplicationFactory`, JWT real y PostgreSQL: 200 con persistencia, 409 duplicado sin cambios, 404 otro tenant sin cambios. Los tres pasaron el 2026-10-06. El caso 200 cubre email repetido entre tenants, conservación del email propio y sucursal nullable.
 - Ejecución: usa `DefaultConnection` desde `Ms1WebApplicationFactory`, sin variables específicas del test. Cada prueba crea y elimina su propio esquema; el host derivado usa entorno `Testing` para evitar migraciones/seed sobre ese esquema.
 
@@ -63,17 +76,25 @@ src/TenantIdentityService/
 
 - Alias existentes: `/users/{id}` y `/api/users/{id}`. Requiere JWT válido y rol `ADMIN`.
 - `tenant_id` y la identidad (`NameIdentifier`/`sub`) proceden del JWT. Si el ID coincide con el administrador autenticado devuelve `400` antes de escribir; claims ausentes o inválidos devuelven `401`.
-- `UsuarioRepository.DeactivateAsync` ejecuta un UPDATE de `users.is_active = false` filtrado por `tenant_id` e `id`, manteniendo el filtro global. No elimina filas ni altera otros campos.
+- `UsuarioRepository.DeactivateAsync` ejecuta un UPDATE de `Usuarios.Activo = false` filtrado por tenant e ID. No elimina filas ni altera otros campos.
 - `204` para usuario existente, incluso ya inactivo; `404` para ID inexistente o de otro tenant; `401` sin JWT y `403` sin rol ADMIN.
 - [DesactivarUsuarioIntegrationTests](../../../tests/GlobalMart.IntegrationTests/DesactivarUsuarioIntegrationTests.cs): seis métodos, siete casos (la teoría 404 distingue otro tenant e ID inexistente). Verifican fila conservada, otros campos intactos, autodesactivación rechazada, idempotencia y autorización. Conexión estándar de la factoría y esquema PostgreSQL aislado por caso.
-- Verificado el 2026-10-06 en .NET 8 / Release: siete casos DELETE y tres de regresión PUT aprobados. No implica que login/listado legacy consulten `users.is_active`.
+- La regresión TI3-799 ejecutó el flujo unificado sobre PostgreSQL 16 real: 33/33 pruebas de desactivación, usuarios y autenticación aprobadas.
 
-### Contrato de Administración TI3-672
+### POST /api/v1/users/{id}/reactivate — TI3-799
+
+- Alias existentes por controlador: `/users/{id}/reactivate` y `/api/users/{id}/reactivate`. Requiere JWT con rol `ADMIN`.
+- Antes de escribir, obtiene `tenant_id` y `sub`/`NameIdentifier` del JWT y consulta `Usuarios` para confirmar que el ADMIN solicitante continúa activo. Un ADMIN desactivado con JWT todavía vigente recibe 403.
+- `UsuarioRepository.ReactivateAsync` actualiza únicamente `Usuarios.Activo=true` con filtro simultáneo por ID y tenant. No modifica contraseña, roles, sucursales, fechas ni historial.
+- `204` para usuario reactivado o ya activo; `404` para inexistente o ajeno; `401` sin autenticación/claims válidos y `403` para rol no autorizado o ADMIN inactivo.
+- `ReactivarUsuarioIntegrationTests` aprobó 8/8 casos con PostgreSQL 16 aislado, incluido el ciclo login 200 → baja → login 401 → reactivación → login 200 y preservación de relaciones.
+
+### Contrato de Administración TI3-672 / TI3-733
 
 - La pantalla `/admin/*` queda disponible solo para claims `ADMIN` o `SUPER_ADMIN`. CAJERO no ve su acceso y es redirigido a `/pos`; la autorización del controlador conserva `403` como defensa independiente del frontend [IMPLEMENTADO].
-- La UI permite listar y crear usuarios. `PUT /users/{id}` y la baja lógica `DELETE /users/{id}` existen en MS-1, pero edición, desactivación y reactivación todavía no se exponen en la pantalla.
+- La UI permite listar, crear, editar y desactivar usuarios. Activos e inactivos permanecen visibles con indicador textual; para inactivos, TI3-733 bloquea en frontend la edición de email y la modificación de roles, sin atribuir ese bloqueo a MS-1. MS-1 expone reactivación desde TI3-799; la acción frontend sigue fuera de alcance.
 - Errores vigentes: `400` para datos inválidos o autodesactivación según la operación; `401` sin autenticación o claims requeridos; `403` sin rol autorizado; `404` para ID inexistente o perteneciente a otro tenant; `409` para email duplicado al editar.
-- `UserRepository.FindByEmailAsync` exige `Usuario.Activo=true`; un usuario inactivo en el modelo legacy recibe el mismo `401 Credenciales incorrectas` que otras credenciales inválidas. DELETE actualiza `UsuarioCuenta.Activo` en `users.is_active`, mientras login/listado usan `Usuario`/`Usuarios`; la sincronización entre ambos estados permanece [NO VERIFICADO]. No se implementó revocación de JWT emitidos.
+- `UsuarioRepository.FindByEmailAsync` exige el tenant indicado y `Usuario.Activo=true`, y carga roles y sucursales para autenticar. DELETE marca inactivo ese mismo registro, de modo que el siguiente login falla con el mismo 401 genérico. `IUsuarioRepository` es el único repositorio de usuarios desde S3-003; no se implementó revocación de JWT emitidos.
 
 ### PUT /tenants/{id}/config — TI3-458 / TI3-459
 
@@ -99,9 +120,9 @@ Auth: Bearer <JWT con tenant_id>
 
 El tenant se obtiene **solo** del claim `tenant_id` del JWT: no se recibe como parámetro de ruta ni
 de query, para que no se puedan pedir sucursales de otro tenant. El aislamiento lo aplica el
-`HasQueryFilter` global de `TenantDbContext` alimentado por `TenantMiddleware` (`SucursalRepository`
-no filtra manualmente). Devuelve las sucursales **inactivas también**, ordenadas por nombre, sin
-paginación; la lista puede estar vacía.
+`HasQueryFilter` global de `TenantDbContext` alimentado por `TenantMiddleware`. `SucursalRepository`
+agrega `Activa=true` para que el selector operativo no ofrezca sucursales desactivadas. Las ordena
+por nombre, sin paginación; la lista puede estar vacía.
 
 `zonaHoraria` en la respuesta es la **efectiva**: `Sucursal.ZonaHoraria ?? Tenant.ZonaHoraria`.
 Para resolverla el repository hace `Include(s => s.Tenant)`. Así queda ejecutada la regla de negocio
@@ -165,12 +186,56 @@ viaje de ida y vuelta) y además captura la violación de índice único (SQLSTA
 traducir la carrera de dos POST simultáneos. Verificado: 8 POST concurrentes con el mismo nombre
 → 1 `201`, 7 `409`, 1 fila en la base.
 
+### PUT /sucursales/{id} — TI3-772
+
+```
+PUT /sucursales/{id}
+Auth: Bearer <JWT con tenant_id y rol ADMIN>
+Body: { "nombre": "...", "zonaHoraria": "America/Santiago" | "" | null }
+
+200 → { id, tenantId, nombre, direccion, activa, zonaHoraria }
+400 → nombre inválido o zona horaria que no es un id IANA real
+401 → sin JWT, JWT inválido o sin claim tenant_id
+403 → el usuario no tiene el rol ADMIN
+404 → id inexistente o perteneciente a otro tenant
+409 → otra sucursal del tenant ya usa ese nombre, sin distinguir mayúsculas
+```
+
+El tenant procede exclusivamente del JWT y el repositorio restringe la escritura por `id + tenantId`.
+El request no contiene tenant ni modifica dirección o estado. POST y PUT comparten las mismas reglas
+de nombre y zona IANA. El control de duplicados excluye el propio id, permite el mismo nombre en otro
+tenant y conserva el índice único como defensa ante concurrencia. `SucursalIntegrationTests` verificó
+8/8 casos contra PostgreSQL aislado: ADMIN, CAJERO 403, sucursal ajena 404, duplicado 409, nombre propio,
+coincidencia en otro tenant, zona inválida y regresión de creación/listado.
+
+### DELETE /sucursales/{id} — TI3-773
+
+```
+DELETE /sucursales/{id}
+Auth: Bearer <JWT con tenant_id y rol ADMIN>
+
+204 → Activa=false; la fila y sus relaciones se conservan
+401 → sin JWT válido o sin tenant_id
+403 → el usuario no tiene rol ADMIN
+404 → id inexistente o perteneciente a otro tenant
+```
+
+`SucursalRepository.DeactivateAsync` busca por `id + tenantId`, actualiza solo `Activa=false` y no
+elimina filas. Una segunda baja conserva 204. `GET /sucursales` lista solo activas; la fila inactiva
+y su relación `UsuarioSucursal` permanecen para referencias históricas. `SucursalIntegrationTests`
+aprobó 13/13 casos sobre PostgreSQL aislado, incluidos ADMIN, CAJERO, inexistente, otro tenant,
+listado activo y relación histórica conservada.
+
+**Dependencia completada en MS-5:** antes de abrir un turno y antes de crear una venta, MS-5 consulta
+el listado autorizado `GET /sucursales` con el JWT original y exige que la sucursal esté presente y
+activa para ese tenant. Ausente, ajena o inactiva se tratan igual; una indisponibilidad de MS-1
+bloquea la operación. La integración entre procesos desplegados queda [NO VERIFICADA].
+
 ### Endpoints diseñados pero NO implementados
 - `POST /auth/refresh` — renovar JWT [PLANIFICADO]
 - `GET /tenants/{id}/sucursales` — ruta con `{id}`; superseded por `GET /sucursales` [PLANIFICADO]
 - `GET /fx/rates` — tipos de cambio actuales [PLANIFICADO]
 - `POST /fx/convert` — conversión entre monedas [PLANIFICADO]
-- `PUT`/`DELETE /sucursales/{id}` — desactivar y eliminar sucursales [PLANIFICADO]
 
 ## Modelo de datos
 
@@ -219,10 +284,10 @@ la del tenant, lo que evita hardcodear una zona por sucursal y permite que un te
 en zonas horarias distintas. La columna es nullable a propósito y no tiene valor por defecto.
 
 **Alcance actual:** la columna nullable y la resolución de la zona horaria efectiva están
-implementadas, y ambas rutas de creación están cerradas: `GET /sucursales` ejecuta el fallback en
-lectura y `POST /sucursales` decide si una sucursal nueva nace con zona propia o heredada, validando
-que el id sea IANA real. Lo que sigue pendiente es la parte destructiva del CRUD: no hay `PUT` ni
-`DELETE /sucursales/{id}`, así que no se puede **editar ni desactivar** una sucursal creada.
+implementadas: `GET /sucursales` lista solo activas y ejecuta el fallback en lectura, `POST` crea,
+`PUT /sucursales/{id}` cambia nombre/zona y `DELETE /sucursales/{id}` aplica baja lógica. Las
+escrituras validan que el id sea IANA real. La integración operativa sigue parcial porque MS-5 no
+valida el estado de la sucursal al abrir un turno.
 
 Consumidores actuales de `SucursalId` (como `Guid`, sin FK por ser otro microservicio):
 - MS-4 `WarehouseDbContext` lo usa como parte de la clave primaria de `Stock`
@@ -273,9 +338,9 @@ GET/POST/PUT/DELETE /api/tenants
 
 ## Tests
 
-- **Seed de desarrollo:** crea tenant y cajero demo al iniciar [IMPLEMENTADO]
+- **Seed de desarrollo:** crea el tenant, `cajero@demo.cl` (CAJERO) y `admin@demo.cl` (ADMIN) si faltan, también en BD ya sembradas (S2-112) [IMPLEMENTADO]
 - **Tests unitarios:** `CrearUsuarioDtoValidatorTests` (16 casos cubriendo nombre, email y contraseña fuerte) [IMPLEMENTADO]
-- **Tests de integración:** `AuthIntegrationTests` (login y emisión de JWT), `UserIntegrationTests` (POST /users, hasheo BCrypt, asignación tenant_id, validación y control de duplicados) [IMPLEMENTADO]
+- **Tests de integración:** `AuthIntegrationTests` (login y emisión de JWT), `UserIntegrationTests` (POST /users, hasheo BCrypt, asignación tenant_id, validación y control de duplicados) y `SucursalIntegrationTests` (PUT/DELETE, autorización, aislamiento, baja lógica, historial y regresión POST/GET) [IMPLEMENTADO]
 - **Tests manuales:** vía Swagger UI en `/swagger`
 
 ## Brechas respecto al diseño
@@ -283,8 +348,7 @@ GET/POST/PUT/DELETE /api/tenants
 | Brecha | Impacto |
 |--------|---------|
 | Sin endpoint `/auth/refresh` | Sesiones no renovables |
-| No hay `PUT`/`DELETE /sucursales/{id}` | No se puede editar ni desactivar una sucursal ya creada. `Activa` solo se puede leer |
-| Sin asignación de usuarios a sucursales | No existe `POST /sucursales/{id}/usuarios`; la tabla `UsuarioSucursales` no tiene endpoint |
+| Asignación de usuarios a sucursales parcial | POST y PUT de usuarios admiten una sucursal inicial/seleccionada del mismo tenant; no hay pantalla de reasignación ni endpoint dedicado multi-sucursal |
 | `sucursal_id` en JWT es campo libre | No lo emite el token (D-04). Un cajero no puede indicar su sucursal al autenticar |
 | Sin integración FX (Fixer.io) | TI-15..19 no implementados |
 | `sucursal_id` falta en JWT | RN-08 no cumplido al 100% |
@@ -304,7 +368,7 @@ GET/POST/PUT/DELETE /api/tenants
 | TI-08 | Definir Idioma del Sistema | [IMPLEMENTADO via TenantConfig] |
 | TI-09 | Configurar Moneda Base | [IMPLEMENTADO via TenantConfig] |
 | TI-10 | Configurar País y Zona Horaria | [IMPLEMENTADO via TenantConfig] |
-| TI-11 | Gestionar Sucursales | [PARCIAL — GET y POST /sucursales; sin PUT/DELETE] |
+| TI-11 | Gestionar Sucursales | [IMPLEMENTADO — CRUD MS-1 con baja lógica y validación operativa en MS-5] |
 | TI-14 | Auditar Log de Accesos | [PLANIFICADO] |
 | TI-15 | Obtener Tipo de Cambio en Tiempo Real | [PLANIFICADO] |
 | TI-16 | Actualizar Tabla de Tipos de Cambio | [PLANIFICADO] |

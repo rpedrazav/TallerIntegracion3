@@ -52,7 +52,7 @@ public class TurnoIntegrationTests : IClassFixture<Ms5WebApplicationFactory>
             monto_fondo_inicial = montoFondoInicial
         };
 
-        var response = await _client.PostAsJsonAsync("/turnos/abrir", request);
+        var response = await _client.PostAsJsonAsync("/api/turnos/abrir", request);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 

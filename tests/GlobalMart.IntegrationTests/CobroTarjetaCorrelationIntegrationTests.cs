@@ -111,7 +111,7 @@ public sealed class CobroTarjetaCorrelationIntegrationTests : IClassFixture<Ms5W
         using var client = configuredFactory.CreateClient();
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-        var response = await client.PostAsJsonAsync($"/ventas/{ventaId}/cobrar-tarjeta", new
+        var response = await client.PostAsJsonAsync($"/api/ventas/{ventaId}/cobrar-tarjeta", new
         {
             idempotency_key = customKey,
             scenario_id = "sim-approved-v1"
@@ -223,7 +223,7 @@ public sealed class CobroTarjetaCorrelationIntegrationTests : IClassFixture<Ms5W
             ProcessedAt = DateTimeOffset.UtcNow
         };
 
-        var resAprob = await client.PostAsJsonAsync($"/ventas/{ventaAprobId}/cobrar-tarjeta", new
+        var resAprob = await client.PostAsJsonAsync($"/api/ventas/{ventaAprobId}/cobrar-tarjeta", new
         {
             scenario_id = "sim-approved-v1"
         });
@@ -269,7 +269,7 @@ public sealed class CobroTarjetaCorrelationIntegrationTests : IClassFixture<Ms5W
             ProcessedAt = DateTimeOffset.UtcNow
         };
 
-        var resRech = await client.PostAsJsonAsync($"/ventas/{ventaRechId}/cobrar-tarjeta", new
+        var resRech = await client.PostAsJsonAsync($"/api/ventas/{ventaRechId}/cobrar-tarjeta", new
         {
             scenario_id = "sim-declined-v1"
         });
@@ -307,7 +307,7 @@ public sealed class CobroTarjetaCorrelationIntegrationTests : IClassFixture<Ms5W
 
         gatewayMock.ResponseFunc = _ => throw new TimeoutException("Gateway timeout simulado");
 
-        var resTimeout = await client.PostAsJsonAsync($"/ventas/{ventaTimeoutId}/cobrar-tarjeta", new
+        var resTimeout = await client.PostAsJsonAsync($"/api/ventas/{ventaTimeoutId}/cobrar-tarjeta", new
         {
             scenario_id = "sim-timeout-v1"
         });

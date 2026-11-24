@@ -58,7 +58,7 @@ public class ComprobanteService : IComprobanteService
         }
 
         // 2. Calcular subtotal, IVA y total en el servidor
-        var breakdown = _taxCalculatorService.Calculate(request.Items, tenantConfig.PorcentajeIva);
+        var breakdown = _taxCalculatorService.Calculate(request.Items, tenantConfig.PorcentajeIva, tenantConfig.Moneda);
 
         // 3. Obtener el correlativo atómico del tenant desde la secuencia de PostgreSQL
         var correlativo = await ObtenerCorrelativoAsync(tenantId, cancellationToken);

@@ -16,7 +16,9 @@ interface UsuariosListProps {
   error?: string;
   onEdit: (usuario: Usuario) => void;
   onDeactivate: (usuario: Usuario) => void;
+  onReactivate: (usuario: Usuario) => void;
   deactivatingUserId?: string | null;
+  reactivatingUserId?: string | null;
 }
 
 const th: React.CSSProperties = {
@@ -44,7 +46,9 @@ export default function UsuariosList({
   error = '',
   onEdit,
   onDeactivate,
+  onReactivate,
   deactivatingUserId = null,
+  reactivatingUserId = null,
 }: UsuariosListProps) {
   return (
     <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-line)', borderRadius: '12px', overflow: 'hidden' }}>
@@ -77,7 +81,9 @@ export default function UsuariosList({
                 <button
                   type="button"
                   onClick={() => onEdit(u)}
+                  aria-disabled={!u.activo}
                   aria-label={`Editar usuario ${u.nombre}`}
+                  aria-describedby={!u.activo ? `edicion-inactiva-${u.id}` : undefined}
                   style={{
                     background: 'transparent',
                     color: 'var(--color-primary)',
@@ -85,11 +91,40 @@ export default function UsuariosList({
                     borderRadius: '6px',
                     padding: '0.35rem 0.7rem',
                     fontWeight: 600,
-                    cursor: 'pointer',
+                    cursor: u.activo ? 'pointer' : 'not-allowed',
+                    opacity: u.activo ? 1 : 0.6,
                   }}
                 >
                   Editar
                 </button>
+                {!u.activo && (
+                  <>
+                    <span id={`edicion-inactiva-${u.id}`} style={{ color: 'var(--color-ink-soft)', fontSize: '0.8125rem' }}>
+                      Edición bloqueada: usuario inactivo.
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => onReactivate(u)}
+                      disabled={reactivatingUserId !== null}
+                      aria-busy={reactivatingUserId === u.id}
+                      aria-label={`Reactivar usuario ${u.nombre}`}
+                      style={{
+                        background: 'transparent',
+                        color: 'var(--color-success-text)',
+                        border: '1px solid var(--color-success)',
+                        borderRadius: '6px',
+                        padding: '0.35rem 0.7rem',
+                        fontWeight: 600,
+                        cursor: reactivatingUserId === null ? 'pointer' : 'not-allowed',
+                        opacity: reactivatingUserId === null ? 1 : 0.6,
+                      }}
+                    >
+                      <span aria-live="polite">
+                        {reactivatingUserId === u.id ? 'Reactivando…' : 'Reactivar'}
+                      </span>
+                    </button>
+                  </>
+                )}
                 {u.activo && (
                   <button
                     type="button"

@@ -21,6 +21,8 @@ public class PosCartDbContext : DbContext
 
     public PosCartDbContext(DbContextOptions<PosCartDbContext> options) : base(options) { }
 
+    public DbSet<ReversaPago> ReversasPago => Set<ReversaPago>();
+
     // DbSets (tablas)
     public DbSet<Turno> Turnos => Set<Turno>();
     public DbSet<Venta> Ventas => Set<Venta>();
@@ -33,6 +35,20 @@ public class PosCartDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        modelBuilder.Entity<ReversaPago>(e =>
+        {
+            e.HasKey(r => r.Id);
+            e.Property(r => r.Monto).HasPrecision(18, 2);
+            e.Property(r => r.Moneda).IsRequired().HasMaxLength(3);
+            e.Property(r => r.ReferenciaPago).IsRequired().HasMaxLength(200);
+            e.Property(r => r.ReferenciaReversa).HasMaxLength(200);
+            e.Property(r => r.CodigoRechazo).HasMaxLength(100);
+            e.Property(r => r.Motivo).IsRequired().HasMaxLength(500);
+            e.HasIndex(r => new { r.TenantId, r.VentaId }).IsUnique();
+            e.HasOne(r => r.Venta).WithMany().HasForeignKey(r => r.VentaId).OnDelete(DeleteBehavior.Restrict);
+            e.HasQueryFilter(r => CurrentTenantId.HasValue && r.TenantId == CurrentTenantId);
+        });
 
         // S2-007: almacenamiento local del outbox; no publica ni modifica el cobro.
         modelBuilder.Entity<OutboxMessage>(e =>

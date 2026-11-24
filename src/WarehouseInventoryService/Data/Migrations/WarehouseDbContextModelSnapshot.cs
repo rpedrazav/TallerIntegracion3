@@ -57,6 +57,10 @@ namespace WarehouseInventoryService.Data.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("producto_id");
 
+                    b.Property<Guid>("SucursalId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("sucursal_id");
+
                     b.Property<Guid>("TenantId")
                         .HasColumnType("uuid")
                         .HasColumnName("tenant_id");

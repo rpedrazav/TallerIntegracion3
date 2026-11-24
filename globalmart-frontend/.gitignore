@@ -90,3 +90,11 @@ typings/
 
 # Electron-Forge
 out/
+
+# Scripts temporales sueltos (S3-025)
+/fix_*.js
+/run_fix.js
+/tbody.txt
+/test.js
+/test_insert.js
+/poblar_bd.js

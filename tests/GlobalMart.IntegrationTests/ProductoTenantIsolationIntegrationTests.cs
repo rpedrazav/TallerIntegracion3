@@ -116,6 +116,7 @@ public sealed class ProductoTenantIsolationIntegrationTests : IAsyncLifetime
         await using var verify = _fixture.CatalogDb(_fixture.TenantA);
         var own = await verify.Productos.SingleAsync();
         Assert.Equal("Intento de edición", own.Nombre);
+        Assert.Equal("nuevo-edicion", own.CodigoBarras);
         Assert.Equal(999m, own.PrecioBase);
         Assert.False(own.IsActive);
         Assert.Equal(before, await SnapshotB());
@@ -160,9 +161,21 @@ public sealed class ProductoTenantIsolationIntegrationTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task Post_TenantBEnBodyYHeader_PersisteExclusivamenteEnTenantDelJwt()
+    public async Task Post_Cajero403_AdminPersisteExclusivamenteEnTenantDelJwt()
     {
+        var beforeA = await SnapshotProducts(_fixture.TenantA.TenantId);
         var before = await SnapshotB();
+        Rn01HttpSupport.Authenticate(_client, _fixture.TenantA, "CAJERO");
+        using var forbidden = await _client.PostAsJsonAsync("/products", new
+        {
+            nombre = "Producto rechazado", codigoBarras = "alta-rechazada", precioBase = 321m,
+            isActive = true, tenantId = _fixture.TenantB.TenantId, uomBaseId = Guid.NewGuid()
+        });
+        Assert.Equal(HttpStatusCode.Forbidden, forbidden.StatusCode);
+        Assert.Equal(beforeA, await SnapshotProducts(_fixture.TenantA.TenantId));
+        Assert.Equal(before, await SnapshotB());
+
+        Rn01HttpSupport.Authenticate(_client, _fixture.TenantA, "ADMIN");
         using var response = await _client.PostAsJsonAsync("/products", new
         {
             nombre = "Producto nuevo A", codigoBarras = "nuevo-alta", precioBase = 321m,

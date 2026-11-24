@@ -5,7 +5,7 @@ titulo: Guía de Estilo Visual — GlobalMart OS
 estado: aprobada
 fuentes: [docs/GlobalMart OS — Guía de estilo.html]
 verificado_contra_codigo: false
-ultima_revision: 2026-10-06
+ultima_revision: 2026-11-11
 depende_de: [estructura, pantallas, 005-electron-frontend]
 publica: []
 consume: []
@@ -53,6 +53,8 @@ La guía muestra una venta en curso con lectura de código de barras, productos 
 Esta guía está aprobada como contexto de diseño. Su adopción en cada pantalla debe hacerse al implementar o modificar componentes, sin cambiar por ello el estado funcional documentado en [[pantallas]].
 
 **Adopción (2026-10-06):** los colores de Login, POS (`Pos`, `BarcodeInput`, `CartItem`), Abrir/Cerrar Turno, Productos, Admin, `CrearUsuarioModal` y la barra de navegación usan los tokens CSS de `globalmart-frontend/src/index.css` (importado en `renderer.tsx`). Tipografía, tamaños y fuentes empaquetadas aún no se adoptaron. No se verificó visualmente.
+
+**Accesibilidad administrativa (TI3-735, 2026-11-11):** los modales administrativos de usuarios y productos aplican semántica de diálogo, foco inicial y contenido, Escape, retorno de foco, submit por teclado y asociaciones de error. La gestión de roles usa los tokens de controles/estados y mensajes con icono, título y detalle. Esta adopción no modifica la estructura ni los contratos funcionales de las pantallas.
 
 ## Conexiones
 

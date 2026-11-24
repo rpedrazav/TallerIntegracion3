@@ -21,11 +21,6 @@ public interface IVentaRepository
     Task<IReadOnlyList<Venta>> GetByTurnoAsync(Guid turnoId);
 
     /// <summary>
-    /// Obtiene todas las ventas de un cajero para un rango de fechas dado.
-    /// </summary>
-    Task<IReadOnlyList<Venta>> GetByCajeroAsync(Guid cajeroId, DateTime desde, DateTime hasta);
-
-    /// <summary>
     /// Persiste una nueva venta (con sus items incluidos) en la base de datos.
     /// </summary>
     Task<Venta> CrearAsync(Venta venta);
@@ -34,6 +29,9 @@ public interface IVentaRepository
     /// Actualiza el estado y los totales de una venta existente.
     /// </summary>
     Task<Venta> ActualizarAsync(Venta venta);
+
+    /// <summary>Anula efectivo completado y registra auditoría dentro de una transacción.</summary>
+    Task<Venta> AnularTotalAsync(Guid ventaId, Guid tenantId, Guid autorizadoPor, string motivo);
 
     Task<Venta> CambiarMetodoPagoPendienteAsync(Guid ventaId, MetodoPagoVenta metodoPago);
 
@@ -60,12 +58,6 @@ public interface IVentaRepository
     /// si la clave ya existe o la venta tiene un cobro aprobado/en curso/incierto.
     /// </summary>
     Task<bool> ReservarIntentoPagoAsync(IntentoPago intentoPago);
-
-    /// <summary>
-    /// Actualiza un intento previamente reservado sin modificar el estado de la venta.
-    /// Se usa ante rechazo o timeout de la pasarela.
-    /// </summary>
-    Task RegistrarIntentoPagoAsync(IntentoPago intentoPago);
 
     Task<IntentoPago> IniciarIntentoPagoAsync(Guid ventaId, Guid requestId);
     Task<IntentoPago?> GetUltimoIntentoPagoAsync(Guid ventaId);

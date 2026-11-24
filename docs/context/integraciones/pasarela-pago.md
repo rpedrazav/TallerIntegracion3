@@ -3,9 +3,9 @@ id: pasarela-pago
 tipo: integracion
 titulo: Integración con Pasarela de Pago
 estado: parcial
-fuentes: [GlobalMart_ContextMaster.md#sec12, src/POSCartService/Services/IPaymentGatewayClient.cs, src/POSCartService/Services/PaymentGatewayClient.cs, src/POSCartService/Exceptions/PaymentAuthorizationUncertainException.cs, src/POSCartService/DTOs/PaymentGatewayDtos.cs, src/POSCartService/Program.cs, Docker/simulator/server.js, tests/GlobalMart.IntegrationTests/PaymentGatewayClientTests.cs, tests/GlobalMart.IntegrationTests/PaymentSimulatorIntegrationTests.cs, tests/GlobalMart.IntegrationTests/PaymentRetrySafetyTests.cs, tareas/sprint2_youtrack_resultado.json, Docker/env.example, .env.example, src/POSCartService/appsettings.json, tests/GlobalMart.IntegrationTests/CobroSeguroIntegrationTests.cs, docs/qa/S2-035/reporte.md, src/POSCartService/Services/VentaService.cs, src/POSCartService/Repositories/VentaRepository.cs, src/POSCartService/Controllers/VentasController.cs, src/POSCartService/Models/Pago.cs, src/POSCartService/DTOs/CobrarTarjetaDTOs.cs, tests/GlobalMart.IntegrationTests/CobrarTarjetaIntegrationTests.cs, tests/GlobalMart.IntegrationTests/PaymentEventSequenceContractTests.cs]
+fuentes: [GlobalMart_ContextMaster.md#sec12, src/POSCartService/Services/IPaymentGatewayClient.cs, src/POSCartService/Services/PaymentGatewayClient.cs, src/POSCartService/Exceptions/PaymentAuthorizationUncertainException.cs, src/POSCartService/DTOs/PaymentGatewayDtos.cs, src/POSCartService/Program.cs, Docker/simulator/server.js, tests/GlobalMart.IntegrationTests/PaymentGatewayClientTests.cs, tests/GlobalMart.IntegrationTests/PaymentSimulatorIntegrationTests.cs, tests/GlobalMart.IntegrationTests/PaymentRetrySafetyTests.cs, tareas/sprint2_youtrack_resultado.json, Docker/env.example, .env.example, src/POSCartService/appsettings.json, tests/GlobalMart.IntegrationTests/CobroSeguroIntegrationTests.cs, docs/qa/S2-035/reporte.md, src/POSCartService/Services/VentaService.cs, src/POSCartService/Repositories/VentaRepository.cs, src/POSCartService/Controllers/VentasController.cs, src/POSCartService/Models/Pago.cs, src/POSCartService/DTOs/CobrarTarjetaDTOs.cs, tests/GlobalMart.IntegrationTests/CobrarTarjetaIntegrationTests.cs, tests/GlobalMart.IntegrationTests/PaymentEventSequenceContractTests.cs, globalmart-frontend/src/payments/terminal-ipc.ts, globalmart-frontend/src/payments/synchronizeCardPayment.ts, globalmart-frontend/src/preload.ts, globalmart-frontend/tests/terminal-ipc.test.cjs, globalmart-frontend/tests/synchronized-card-payment.test.cjs]
 verificado_contra_codigo: true
-ultima_revision: 2026-10-25
+ultima_revision: 2026-11-15
 depende_de: [ms5-pos]
 publica: []
 consume: []
@@ -217,6 +217,30 @@ El frontend define `TerminalPort` con operaciones separadas `iniciarCobro`, `con
 
 MS-5 no expone un endpoint de cancelación de intento. Por ello `cancelarIntento` devuelve `CANCELACION_NO_SOPORTADA` sin realizar una llamada HTTP; el estado `cancelled` forma parte del contrato para transportes futuros, pero la cancelación remota mediante MS-5 permanece [PLANIFICADA]. No se agregó IPC ni simulador de terminal. Pruebas unitarias enfocadas **4/4** y typecheck aprobados el 2026-10-25.
 
+## S2-072 / TI3-703 — Simulador frontend de terminal [IMPLEMENTADO]
+
+`SimulatedTerminalAdapter` implementa el mismo `TerminalPort` que el transporte MS-5. `createTerminalPort()` selecciona `mock` o `real` mediante `DEVICE_TERMINAL_MODE`; el modo `real` conserva `Ms5TerminalAdapter` y el modo `mock` no requiere equipo físico ni llamadas HTTP. `MOCK_TERMINAL_SCENARIO` admite `waiting`, `approved`, `declined`, `cancelled`, `timeout` y `disconnected`, mientras `MOCK_TERMINAL_DELAY_MS` controla la espera antes de resolver los escenarios finales. Lectura/inicio significa que `iniciarCobro` recibe los datos del intento y pasa a `processing`. El escenario `timeout` termina determinísticamente en `uncertain` después de la demora configurada, conserva la misma referencia y no crea otro intento ni se interpreta como rechazo.
+
+Cada combinación de escenario e intento produce el mismo resultado. La referencia aprobada se deriva de forma estable de la clave del intento y no expone esa clave; rechazo y desconexión no inventan referencias de aprobación. `disconnected` se representa como `uncertain` para permitir reconciliación posterior y la cancelación simulada termina en `cancelled`. El adaptador no contiene PAN, número de tarjeta, CVV ni vencimiento y no persiste datos sensibles.
+
+Esta implementación pertenece a la capa `payments` y no modifica ni mezcla el `MockTerminalAdapter` legado basado en `ITerminalAdapter`. TI3-703 no agregó IPC/contextBridge ni sincronización adicional con MS-5/pasarela; el IPC se incorporó posteriormente en TI3-704. Pruebas puras del terminal y simulador **12/12** y typecheck aprobados el 2026-10-26.
+
+## S2-073 / TI3-704 — IPC limitado del terminal [IMPLEMENTADO]
+
+El renderer usa `window.api.terminal`, una API `contextBridge` tipada que solo expone `iniciarCobro` y `consultarEstado`. Cada método invoca un canal constante: `devices:terminal:iniciarCobro` o `devices:terminal:consultarEstado`. No se expone `ipcRenderer`, `send`, `invoke`, selección de canales, cancelación ni control arbitrario de hardware.
+
+Main conserva una instancia `TerminalPort` simulada durante la vida del proceso. Antes de llegar al puerto, los handlers exigen un objeto plano y una lista exacta de propiedades. Inicio admite exclusivamente `ventaId`, `monto` y `claveIdempotencia`; consulta admite `ventaId`, `monto` y `referenciaIntento`. Se valida UUID, monto finito mayor que cero y no superior a 100.000.000, y referencias de 1 a 128 caracteres alfanuméricos, guion o guion bajo. Cualquier propiedad adicional —incluidos PAN, CVV o vencimiento— se rechaza. La respuesta se reconstruye con solo `ventaId`, `monto`, `referenciaIntento`, `estado` y `referenciaOpaca`.
+
+El modo `mock` funciona desde main sin equipo físico. En `DEVICE_TERMINAL_MODE=real`, el handler produce un error controlado porque el transporte real/MS-5 desde main permanece no soportado; no cambia silenciosamente a simulación. Los canales heredados de `ITerminalAdapter` continúan separados y no forman parte de este contrato. Pruebas IPC puras **6/6** y TypeScript aprobados el 2026-10-26.
+
+## S2-074 / TI3-705 — Sincronización terminal, MS-5 y pasarela [IMPLEMENTADO]
+
+La aprobación del terminal es una condición preliminar, no la confirmación del cobro. El POS crea o reutiliza una única clave UUID y mantiene la equivalencia `claveIdempotencia` del POS = `referenciaIntento` del terminal = `request_id` de MS-5 = header `Idempotency-Key` de la pasarela. Solo después de que el terminal aprueba se llama `POST /ventas/{id}/cobrar-tarjeta` con esa misma clave; no se reemplaza durante el ciclo.
+
+MS-5 continúa como fuente de verdad: la UI muestra `approved` únicamente cuando recibe `status=APPROVED` y la venta está `COMPLETADA`, evidencia de que MS-5 confirmó la respuesta correlacionada de la pasarela y persistió el pago. `gateway_reference` es la referencia opaca emitida por la pasarela y mostrada tras esa confirmación; no sustituye la clave idempotente ni se confunde con la referencia opaca local del simulador de terminal.
+
+Ante una respuesta perdida, error o resultado no definitivo, el frontend consulta `GET /ventas/{id}/intento-tarjeta`. La reconciliación exige que `request_id` coincida con la referencia esperada y que MS-5 informe `APPROVED` con venta `COMPLETADA`; en cualquier otro caso conserva `uncertain` y no presenta la venta como cobrada. Recuperación y verificación solo consultan el intento existente, sin crear otro intento ni otra clave. Pruebas puras de coordinación **6/6** y TypeScript aprobados el 2026-10-26.
+
 ## S2-056 / TI3-687 — Configuración segura del simulador [IMPLEMENTADO]
 
 Para garantizar entornos reproducibles y proteger credenciales de producción (RN-02 / PCI DSS), la configuración de la pasarela y simulador separa estrictamente endpoints, llaves y timeouts entre desarrollo y producción.
@@ -293,9 +317,9 @@ GlobalMart OS solo recibe la referencia de la transacción (RRN/código de autor
 
 ## Reembolsos (anulaciones)
 
-Al anular una venta cobrada con tarjeta:
-- MS-5 debe llamar a la pasarela con el código de autorización para revertir el cargo
-- Actualmente `VentaService.AnularAsync` no llama a ninguna pasarela [DISCREPANCIA]
+[CONTRATO S2-091; GUARDIAS IMPLEMENTADAS S2-092] Ver [anulación total](../dominio/anulacion-venta.md). El simulador y `IPaymentGatewayClient` solo autorizan/consultan pagos; no ofrecen refund/reversal. El endpoint rechaza tarjeta aprobada con 409 `REEMBOLSO_NO_DISPONIBLE` sin cambiar la venta, e intentos inciertos con 409 `PAGO_INCIERTO`. No usar la respuesta APPROVED de autorización como confirmación de devolución.
+
+`VentaService.AnularAsync` exige ADMIN y delega las guardias transaccionales; no consulta la pasarela. Un futuro soporte de reembolsos necesitará una operación específica del simulador y respuesta definitiva verificable; enviar un código de autorización por sí solo no revierte el cargo. Devoluciones parciales se difieren a otro sprint.
 
 ## Casos de uso afectados
 
@@ -376,3 +400,25 @@ Flujo de verificación automatizado para validar el ciclo mínimo de cobro con t
 2. **Rechazo:** Escenario de rechazo por fondos insuficientes o declinación retorna HTTP 422 y conserva la venta en estado `PENDIENTE` sin registrar pagos ni outbox espurios.
 3. **Pérdida temporal / Timeout:** Timeout de la pasarela responde adecuadamente (HTTP 504 / 503) y conserva la venta en estado `PENDIENTE` sin corrupción de saldos.
 
+
+## S2-093 — Contrato de reversa simulada [IMPLEMENTADO]
+
+`IReversalGatewayClient` y `ReversalGatewayClient` usan el mismo cliente HTTP configurado para la pasarela. `ReverseAsync` hace POST `/simulator/reversals`; `GetStatusAsync` hace GET `/simulator/reversals/{request_id}?tenant_id=...`. Ambos llevan `Idempotency-Key`; aliases `/api` disponibles. La consulta es validada contra la reserva persistida por `ReversaTarjetaService`.
+
+DTO de solicitud: `request_id`, `tenant_id`, `sale_id`, `gateway_reference`, `amount`, `currency`, `scenario_id`. DTO de respuesta: las mismas identidades, referencia, monto/moneda, `status` REVERSED o DECLINED, `reversal_reference`, `decline_code`. Sin PAN/CVV/PIN. El simulador exige una autorización APPROVED del mismo tenant y venta, con igual referencia/monto/moneda. Repetición de clave con otro contenido: 409. Otra clave para el mismo pago ya solicitado: 409.
+
+Escenarios controlados por configuración **del backend** `PasarelaPago:ReversalScenarioId`: `sim-reversal-approved-v1` (predeterminado), `sim-reversal-declined-v1`, `sim-reversal-timeout-v1`. El último guarda aprobación externa y demora 35 segundos la respuesta POST; el timeout del cliente debe ser menor (predeterminado 30 s). GET recupera el resultado. El renderer no selecciona escenario.
+
+`ReversaPago` persiste PENDIENTE/APROBADA/RECHAZADA en PostgreSQL. La venta solo se anula ante REVERSED validado y confirmado localmente con la auditoría. Rechazo queda visible en GET `/ventas/{id}/reversa-tarjeta`; incertidumbre no genera otro POST externo. [Contrato completo](../dominio/anulacion-venta.md) y [pruebas S2-093](../../qa/S2-093/reporte.md).
+
+**Límite:** autorizaciones y reversas del simulador viven en memoria del proceso. Reiniciarlo pierde sus respuestas e idempotencia; la reserva durable de MS-5 impide reenviar automáticamente, pero un resultado perdido requiere revisión manual. No se promete devolución bancaria real ni entrega/efecto exactamente una vez entre servicios. Los endpoints del simulador continúan siendo infraestructura de pruebas sin JWT, no una API bancaria pública.
+
+## S2-094 — Evento posterior a reversa confirmada
+
+La confirmación local de REVERSED guarda también `sale.reversed` en outbox, junto con reversa APROBADA, venta ANULADA y auditoría. Rechazo o incertidumbre no lo generan. No cambia el contrato HTTP del simulador. [Contrato del evento](../eventos/sale-reversed-outbox.md).
+
+## S2-113 — Simulador y entorno local (2026-11-15)
+
+- [IMPLEMENTADO] El simulador (`Docker/simulator/server.js`, `reversals.js`) acepta cualquier GUID hexadecimal en `tenant_id`, `request_id` y `sale_id`, como MS-5. Antes exigía UUID RFC v1–v5 y rechazaba al tenant demo `aaaaaaaa-0000-0000-0000-000000000001` con `VALIDATION_ERROR`.
+- [IMPLEMENTADO] En local, `run-apis.sh`/`.bat` lanzan MS-5 con `PasarelaPago__BaseUrl=http://localhost:5050`. `appsettings.json` sigue apuntando al dominio de ejemplo; el clúster define su propio valor [NO VERIFICADO].
+- E2E integrado aprobado, rechazado y timeout: [docs/qa/S2-113](../../qa/S2-113/reporte.md).
