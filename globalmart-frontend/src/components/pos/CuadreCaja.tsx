@@ -95,7 +95,7 @@ export default function CuadreCaja({
                 ${efectivoEsperado.toLocaleString('es-CL')}
               </div>
               <div style={{ fontSize: '0.75rem', color: 'var(--color-ink-soft)', marginTop: '0.25rem' }}>
-                Vía MS-5 (pagos efectivo completados)
+                Vía MS-5 (pagos efectivo completados; excluye ventas anuladas)
               </div>
             </div>
 

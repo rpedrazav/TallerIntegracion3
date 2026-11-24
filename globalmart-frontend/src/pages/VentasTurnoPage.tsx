@@ -84,7 +84,28 @@ export default function VentasTurnoPage() {
               <td>{v.id.slice(0, 8)}</td>
               <td>{v.metodo_pago}</td>
               <td align="right">$ {v.total.toLocaleString('es-CL')}</td>
-              <td>{v.estado}</td>
+              <td>
+                {v.estado === 'ANULADA' ? (
+                  <span
+                    data-testid="estado-anulada"
+                    style={{
+                      background: 'var(--color-danger-bg)',
+                      color: 'var(--color-danger-text)',
+                      padding: '0.22rem 0.65rem',
+                      borderRadius: '9999px',
+                      fontSize: '0.78rem',
+                      fontWeight: 700,
+                      whiteSpace: 'nowrap',
+                      border: '1px solid var(--color-danger)',
+                      display: 'inline-block',
+                    }}
+                  >
+                    ANULADA
+                  </span>
+                ) : (
+                  v.estado
+                )}
+              </td>
               {isAdmin && <td align="right">{v.estado === 'COMPLETADA' && <button type="button" style={buttonStyle} onClick={() => abrirAnulacion(v)}>Anular</button>}</td>}
             </tr>
           ))}
