@@ -1,60 +1,73 @@
-# ==============================================================================
-# CI Workflow — GlobalMart OS (INTEGRA3)
-# Trigger: push a las ramas main y develop
-# Pasos:
-#   1. checkout
-#   2. dotnet build (cada proyecto)
-#   3. docker compose up (infraestructura) + health check
-#   4. dotnet test (unit + integración)
-#   5. docker compose down (limpieza)
-# ==============================================================================
-
-name: CI
+name: CI Pipeline (Fail-Fast Multi-Stage Gates)
 
 on:
   push:
-    branches:
-      - main
-      - dev
+    branches: [main, dev]
   pull_request:
-    branches:
-      - main
-      - dev
+    branches: [main, dev]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  frontend-typecheck:
-    name: Frontend TypeScript Gate (S2-029)
+  # ==============================================================================
+  # GATE 1: Frontend (Fast Fail) — Tipos TypeScript, Unit/IPC, Smoke y E2E
+  # ==============================================================================
+  frontend-gate:
+    name: "Etapa 1 · Frontend (TypeScript + Unit + Simuladores + E2E)"
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+
     steps:
-      - name: Checkout
+      - name: "[1/6] Checkout del repositorio"
         uses: actions/checkout@v4
 
-      - name: Setup Node.js 20
+      - name: "[2/6] Configurar Node.js 22"
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "22"
           cache: "npm"
           cache-dependency-path: globalmart-frontend/package-lock.json
 
-      - name: Install dependencies (npm ci)
+      - name: "[3/6] Instalar dependencias (npm ci)"
         working-directory: globalmart-frontend
-        run: npm ci
+        run: |
+          echo "::group::Instalación limpia de dependencias frontend"
+          npm ci
+          echo "::endgroup::"
 
-      - name: TypeScript typecheck (tsc --noEmit)
+      - name: "[4/6] Gate de tipos TypeScript (tsc --noEmit)"
         working-directory: globalmart-frontend
-        run: npm run typecheck
+        run: |
+          echo "::group::Validación estricta TypeScript"
+          npm run typecheck
+          echo "::endgroup::"
+          echo "- ✅ **TypeScript (`tsc --noEmit`)**: Aprobado sin errores" >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Frontend module tests
+      - name: "[5/6] Pruebas unitarias y smoke de simuladores"
         working-directory: globalmart-frontend
-        run: node --test tests/*.test.cjs
+        run: |
+          echo "::group::Pruebas unitarias frontend (node --test)"
+          npm run test:unit
+          echo "::endgroup::"
+          echo "- ✅ **Tests unitarios frontend (`tests/*.test.cjs`)**: Aprobados" >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Install Chromium
-        working-directory: globalmart-frontend
-        run: npx playwright install --with-deps chromium
+          echo "::group::Smoke de simuladores sin hardware"
+          npm run smoke:simulators
+          echo "::endgroup::"
+          echo "- ✅ **Smoke simuladores (`smoke:simulators`)**: Aprobado" >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Renderer regression tests (HTTP fixtures)
+      - name: "[6/6] Instalar Chromium y ejecutar regresión E2E (Renderer)"
         working-directory: globalmart-frontend
-        run: npm run test:e2e
+        run: |
+          echo "::group::Playwright Chromium install"
+          npx playwright install --with-deps chromium
+          echo "::endgroup::"
+          echo "::group::Playwright tests"
+          npm run test:e2e
+          echo "::endgroup::"
+          echo "- ✅ **Regresión E2E Playwright**: Aprobada" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload frontend failure evidence
         if: failure()
@@ -67,103 +80,89 @@ jobs:
           if-no-files-found: ignore
           retention-days: 7
 
-  build-and-test:
-    name: Build & Test (.NET 8)
+  # ==============================================================================
+  # GATE 2: Backend (.NET 8 Build + Unit + Integración con Docker Compose)
+  # ==============================================================================
+  backend-build-and-test:
+    name: "Etapa 2 · Backend (.NET 8 Build + Unit + Integración)"
+    needs: [frontend-gate]
     runs-on: ubuntu-latest
+    timeout-minutes: 25
 
     env:
-      # Variables mínimas para que docker compose arranque en CI
       DB_USER: admin
       DB_PASSWORD: admin_password
       COMPOSE_FILE: Docker/docker-compose.yml
 
     steps:
-      # ------------------------------------------------------------------
-      # 1. Checkout del repositorio
-      # ------------------------------------------------------------------
-      - name: Checkout
+      - name: "[1/7] Checkout del repositorio"
         uses: actions/checkout@v4
 
-      # ------------------------------------------------------------------
-      # 2. Configurar .NET 8 SDK
-      # ------------------------------------------------------------------
-      # S2-082/083/084 run production TypeScript/React modules from the .NET suite.
-      # Jobs have separate filesystems; the frontend gate's node_modules is not shared.
-      - name: Setup Node.js for cross-service tests
+      - name: "[2/7] Configurar Node.js 22 (requerido por suites de simulador y frontend)"
         uses: actions/setup-node@v4
         with:
           node-version: "22"
           cache: "npm"
           cache-dependency-path: globalmart-frontend/package-lock.json
 
-      - name: Install renderer dependencies for backend integration tests
+      - name: "[2/7] Instalar dependencias de renderer para tests de integración cruzados"
         working-directory: globalmart-frontend
         run: npm ci --ignore-scripts
 
-      - name: Setup .NET 8
+      - name: "[2/7] Configurar .NET 8 SDK"
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: "8.0.x"
 
-      # ------------------------------------------------------------------
-      # 3. Restaurar dependencias NuGet (solución completa)
-      # ------------------------------------------------------------------
-      - name: Restore dependencies
-        run: dotnet restore GlobalMartOS.sln
-
-      # ------------------------------------------------------------------
-      # 4. Build — cada microservicio
-      # ------------------------------------------------------------------
-      - name: Build TenantIdentityService
-        run: dotnet build src/TenantIdentityService/TenantIdentityService.csproj --no-restore --configuration Release
-
-      - name: Build CatalogPricingService
-        run: dotnet build src/CatalogPricingService/CatalogPricingService.csproj --no-restore --configuration Release
-
-      - name: Build POSCartService
-        run: dotnet build src/POSCartService/POSCartService.csproj --no-restore --configuration Release
-
-      - name: Build WarehouseInventoryService
-        run: dotnet build src/WarehouseInventoryService/WarehouseInventoryService.csproj --no-restore --configuration Release
-
-      - name: Build SupplyChainService
-        run: dotnet build src/SupplyChainService/SupplyChainService.csproj --no-restore --configuration Release
-
-      - name: Build LoyaltyCustomerService
-        run: dotnet build src/LoyaltyCustomerService/LoyaltyCustomerService.csproj --no-restore --configuration Release
-
-      - name: Build AnalyticsNotificationService
-        run: dotnet build src/AnalyticsNotificationService/AnalyticsNotificationService.csproj --no-restore --configuration Release
-
-      - name: Build TaxComplianceService
-        run: dotnet build src/TaxComplianceService/TaxComplianceService.csproj --no-restore --configuration Release
-
-      - name: Build unit tests
-        run: dotnet build tests/GlobalMart.Tests/GlobalMart.Tests.csproj --no-restore --configuration Release
-
-      - name: Build IntegrationTests
-        run: dotnet build tests/GlobalMart.IntegrationTests/GlobalMart.IntegrationTests.csproj --no-restore --configuration Release
-
-      # ------------------------------------------------------------------
-      # 5. Levantar infraestructura con Docker Compose
-      #    Se excluye 'frontend' (requiere Electron/display) y servicios
-      #    de monitoreo (Prometheus/Grafana) no necesarios para los tests.
-      # ------------------------------------------------------------------
-      - name: Start infrastructure (Docker Compose)
+      - name: "[3/7] Restaurar y compilar solución .NET 8 (Release)"
         run: |
-          docker compose -f $COMPOSE_FILE up -d \
+          set -euo pipefail
+          echo "::group::dotnet restore GlobalMartOS.sln"
+          dotnet restore GlobalMartOS.sln
+          echo "::endgroup::"
+
+          SERVICES=(
+            "src/TenantIdentityService/TenantIdentityService.csproj"
+            "src/TaxComplianceService/TaxComplianceService.csproj"
+            "src/CatalogPricingService/CatalogPricingService.csproj"
+            "src/WarehouseInventoryService/WarehouseInventoryService.csproj"
+            "src/POSCartService/POSCartService.csproj"
+            "src/SupplyChainService/SupplyChainService.csproj"
+            "src/AnalyticsNotificationService/AnalyticsNotificationService.csproj"
+            "src/LoyaltyCustomerService/LoyaltyCustomerService.csproj"
+            "tests/GlobalMart.Tests/GlobalMart.Tests.csproj"
+            "tests/GlobalMart.IntegrationTests/GlobalMart.IntegrationTests.csproj"
+          )
+
+          for PROJ in "${SERVICES[@]}"; do
+            echo "::group::Build Release — $PROJ"
+            dotnet build "$PROJ" --no-restore --configuration Release
+            echo "::endgroup::"
+          done
+
+          echo "### Etapa 2 · Resumen Backend (.NET 8)" >> "$GITHUB_STEP_SUMMARY"
+          echo "- ✅ **Build Release (8 microservicios + Test suites)**: Aprobado" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: "[4/7] Validar configuración declarativa de Kong Gateway"
+        run: |
+          echo "::group::Validar Docker/config/kong.yaml"
+          docker run --rm -e KONG_DATABASE=off -v "$PWD/Docker/config/kong.yaml:/etc/kong/kong.yaml:ro" kong:3.6 kong config parse /etc/kong/kong.yaml
+          echo "::endgroup::"
+          echo "- ✅ **Kong Declarative Config (`kong.yaml`)**: Sintaxis y esquema válidos" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: "[5/7] Levantar infraestructura crítica (Docker Compose)"
+        run: |
+          echo "::group::Iniciar PostgreSQL x8, Zookeeper, Kafka, Kong y Payment Simulator"
+          docker compose -f "$COMPOSE_FILE" up -d \
             postgres-tenant postgres-supply postgres-catalog \
             postgres-pos postgres-tax postgres-warehouse \
             postgres-analytics postgres-loyalty \
-            zookeeper kafka kong payment-simulator
+            zookeeper kafka kafka-init-topics kong payment-simulator
+          echo "::endgroup::"
 
-      # ------------------------------------------------------------------
-      # 6. Verificar que todos los contenedores están saludables
-      #    Espera hasta 120 s por servicio; falla si alguno no pasa
-      #    el healthcheck definido en docker-compose.yml.
-      # ------------------------------------------------------------------
-      - name: Wait for containers to be healthy
+      - name: "[5/7] Esperar healthchecks de infraestructura"
         run: |
+          set -euo pipefail
           SERVICES=(
             postgres-tenant
             postgres-supply
@@ -182,44 +181,72 @@ jobs:
           MAX_WAIT=120
           INTERVAL=5
 
-          echo "Esperando que los contenedores esten healthy (timeout: ${MAX_WAIT}s cada uno)..."
-
+          echo "::group::Verificación de healthchecks (${MAX_WAIT}s máx por servicio)"
           for SERVICE in "${SERVICES[@]}"; do
             echo "  -> Verificando: $SERVICE"
             ELAPSED=0
             while true; do
               STATUS=$(docker inspect --format='{{.State.Health.Status}}' "$SERVICE" 2>/dev/null || echo "missing")
-
               if [ "$STATUS" = "healthy" ]; then
                 echo "  OK $SERVICE — healthy"
                 break
               fi
-
-              if [ $ELAPSED -ge $MAX_WAIT ]; then
-                echo "  FAIL $SERVICE sigue en estado '$STATUS' despues de ${MAX_WAIT}s"
-                docker compose -f $COMPOSE_FILE logs "$SERVICE" --tail=30
+              if [ "$ELAPSED" -ge "$MAX_WAIT" ]; then
+                echo "::error::El contenedor $SERVICE permaneció en estado '$STATUS' tras ${MAX_WAIT}s"
+                docker compose -f "$COMPOSE_FILE" logs "$SERVICE" --tail=50
                 exit 1
               fi
-
-              sleep $INTERVAL
+              sleep "$INTERVAL"
               ELAPSED=$((ELAPSED + INTERVAL))
             done
           done
+          echo "::endgroup::"
+          echo "- ✅ **Infraestructura Docker (12 contenedores saludables)**: Lista" >> "$GITHUB_STEP_SUMMARY"
 
-          echo "Todos los contenedores estan healthy. Listo para tests de integracion."
+      - name: "[6/7] Pruebas Unitarias .NET (GlobalMart.Tests)"
+        run: |
+          set -euo pipefail
+          echo "::group::Suite GlobalMart.Tests"
+          dotnet test tests/GlobalMart.Tests/GlobalMart.Tests.csproj \
+            --no-build \
+            --configuration Release \
+            --logger "console;verbosity=normal"
+          echo "::endgroup::"
+          echo "- ✅ **Pruebas unitarias .NET**: Aprobadas" >> "$GITHUB_STEP_SUMMARY"
 
-      # ------------------------------------------------------------------
-      # 7. Tests unitarios e integración
-      # ------------------------------------------------------------------
-      - name: Run tests
+      - name: "[6/7] Suite completa GlobalMart.IntegrationTests"
         env:
-          # Fixture S2-022: crea y elimina esquemas propios (s2022_*) en el postgres-pos efimero de CI
           GLOBALMART_TEST_POSTGRES: "Host=localhost;Port=5436;Database=pos_db;Username=${{ env.DB_USER }};Password=${{ env.DB_PASSWORD }}"
-        run: dotnet test GlobalMartOS.sln --no-build --configuration Release --verbosity normal
+          Kafka__BootstrapServers: "localhost:9092"
+          PasarelaPago__BaseUrl: "http://localhost:5050"
+        run: |
+          set -euo pipefail
+          echo "::group::Suite completa GlobalMart.IntegrationTests"
+          dotnet test tests/GlobalMart.IntegrationTests/GlobalMart.IntegrationTests.csproj \
+            --no-build \
+            --configuration Release \
+            --results-directory TestResults \
+            --logger "trx;LogFileName=ci-results.trx" \
+            --logger "console;verbosity=normal"
+          echo "::endgroup::"
 
-      # ------------------------------------------------------------------
-      # 8. Limpieza — se ejecuta siempre, aunque los tests fallen
-      # ------------------------------------------------------------------
-      - name: Teardown infrastructure
+          python3 - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import xml.etree.ElementTree as ET
+          tree = ET.parse("TestResults/ci-results.trx")
+          ns = {"t": "http://microsoft.com/schemas/VisualStudio/TeamTest/2010"}
+          c = tree.find(".//t:Counters", ns)
+          if c is not None:
+              print(f"- ✅ **Suite completa xUnit**: {c.attrib.get('passed')}/{c.attrib.get('total')} aprobadas (fallidas: {c.attrib.get('failed')}, omitidas: {c.attrib.get('notExecuted')})")
+          PY
+
+      - name: "[6/7] Publicar artefacto de resultados TRX"
         if: always()
-        run: docker compose -f $COMPOSE_FILE down -v --remove-orphans
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-test-results-trx
+          path: TestResults/*.trx
+          if-no-files-found: ignore
+
+      - name: "[7/7] Limpieza de infraestructura Docker"
+        if: always()
+        run: docker compose -f "$COMPOSE_FILE" down -v --remove-orphans

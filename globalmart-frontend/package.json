@@ -12,6 +12,7 @@
     "publish": "electron-forge publish",
     "typecheck": "tsc --noEmit",
     "lint": "eslint --ext .ts,.tsx .",
+    "test:unit": "node --test tests/*.test.cjs",
     "smoke:simulators": "ts-node tests/smoke-simulators.ts",
     "test:e2e": "playwright test",
     "test:e2e:electron": "node e2e/electron/build.cjs && playwright test --config playwright.electron.config.ts --grep-invert @integrado",
