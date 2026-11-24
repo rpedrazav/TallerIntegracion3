@@ -1,4 +1,4 @@
-﻿apiVersion: v1
+apiVersion: v1
 kind: Service
 metadata:
   name: postgres-tenantidentityservice
@@ -158,6 +158,8 @@ spec:
         env:
         - name: ConnectionStrings__DefaultConnection
           value: "Host=postgres-taxcomplianceservice;Database=tax_db;Username=postgres;Password=postgres"
+        - name: Services__TenantIdentityService__BaseUrl
+          value: "http://tenantidentityservice"
         - name: ASPNETCORE_HTTP_PORTS
           value: "8080"
         ports:
@@ -330,6 +332,12 @@ spec:
         env:
         - name: ConnectionStrings__DefaultConnection
           value: "Host=postgres-poscartservice;Database=pos_db;Username=postgres;Password=postgres"
+        - name: Services__CatalogPricingService__BaseUrl
+          value: "http://catalogpricingservice"
+        - name: Services__TaxComplianceService__BaseUrl
+          value: "http://taxcomplianceservice"
+        - name: PasarelaPago__BaseUrl
+          value: "http://payment-simulator:5050"
         - name: ASPNETCORE_HTTP_PORTS
           value: "8080"
         ports:

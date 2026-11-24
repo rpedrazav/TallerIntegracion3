@@ -10,10 +10,17 @@ on:
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
-    
+
     steps:
     - name: Checkout del código
       uses: actions/checkout@v4
+
+    - name: Calcular tag trazable (fecha + short SHA)
+      id: meta
+      run: |
+        SHORT_SHA=$(git rev-parse --short HEAD)
+        DATE_UTC=$(date -u +%Y%m%d)
+        echo "image_tag=s2-${DATE_UTC}-${SHORT_SHA}" >> "$GITHUB_OUTPUT"
 
     - name: Iniciar sesión en Docker Hub
       uses: docker/login-action@v3
@@ -21,42 +28,52 @@ jobs:
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}
 
-    - name: Construir y Subir TenantIdentityService
+    - name: Construir y Subir TenantIdentityService (MS-1)
       uses: docker/build-push-action@v5
       with:
         context: ./src/TenantIdentityService
         file: ./src/TenantIdentityService/Dockerfile
         push: true
-        tags: ${{ secrets.DOCKER_USERNAME }}/tenantidentityservice:latest
+        tags: |
+          ${{ secrets.DOCKER_USERNAME }}/tenantidentityservice:${{ steps.meta.outputs.image_tag }}
+          ${{ secrets.DOCKER_USERNAME }}/tenantidentityservice:latest
 
-    - name: Construir y Subir TaxComplianceService
+    - name: Construir y Subir TaxComplianceService (MS-2)
       uses: docker/build-push-action@v5
       with:
         context: ./src/TaxComplianceService
         file: ./src/TaxComplianceService/Dockerfile
         push: true
-        tags: ${{ secrets.DOCKER_USERNAME }}/taxcomplianceservice:latest
+        tags: |
+          ${{ secrets.DOCKER_USERNAME }}/taxcomplianceservice:${{ steps.meta.outputs.image_tag }}
+          ${{ secrets.DOCKER_USERNAME }}/taxcomplianceservice:latest
 
-    - name: Construir y Subir CatalogPricingService
+    - name: Construir y Subir CatalogPricingService (MS-3)
       uses: docker/build-push-action@v5
       with:
         context: ./src/CatalogPricingService
         file: ./src/CatalogPricingService/Dockerfile
         push: true
-        tags: ${{ secrets.DOCKER_USERNAME }}/catalogpricingservice:latest
+        tags: |
+          ${{ secrets.DOCKER_USERNAME }}/catalogpricingservice:${{ steps.meta.outputs.image_tag }}
+          ${{ secrets.DOCKER_USERNAME }}/catalogpricingservice:latest
 
-    - name: Construir y Subir POSCartService
-      uses: docker/build-push-action@v5
-      with:
-        context: ./src/POSCartService
-        file: ./src/POSCartService/Dockerfile
-        push: true
-        tags: ${{ secrets.DOCKER_USERNAME }}/poscartservice:latest
-
-    - name: Construir y Subir WarehouseInventoryService
+    - name: Construir y Subir WarehouseInventoryService (MS-4)
       uses: docker/build-push-action@v5
       with:
         context: ./src/WarehouseInventoryService
         file: ./src/WarehouseInventoryService/Dockerfile
         push: true
-        tags: ${{ secrets.DOCKER_USERNAME }}/warehouseinventoryservice:latest
+        tags: |
+          ${{ secrets.DOCKER_USERNAME }}/warehouseinventoryservice:${{ steps.meta.outputs.image_tag }}
+          ${{ secrets.DOCKER_USERNAME }}/warehouseinventoryservice:latest
+
+    - name: Construir y Subir POSCartService (MS-5)
+      uses: docker/build-push-action@v5
+      with:
+        context: ./src/POSCartService
+        file: ./src/POSCartService/Dockerfile
+        push: true
+        tags: |
+          ${{ secrets.DOCKER_USERNAME }}/poscartservice:${{ steps.meta.outputs.image_tag }}
+          ${{ secrets.DOCKER_USERNAME }}/poscartservice:latest
