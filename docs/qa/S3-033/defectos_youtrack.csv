@@ -1,0 +1,25 @@
+Summary,Description,Assignee,Priority,Sprints,Semana,AreaTrabajo,Tags,Estimation
+Defecto: login se queda en Autenticando más de 5 s por setToken,"Pasos: 1) docker compose + run-apis + simulador, API_MODE=local. 2) En globalmart-frontend: npm run test:e2e:integrado -- admin-venta.integrated.spec.ts. 3) O iniciar sesión como cajero a mano.
+Esperado: el login termina en menos de 5 s.
+Observado: Kong responde 200 en menos de 1,3 s pero la UI sigue en Autenticando más de 5 s; admin-venta 0/2. La traza apunta a window.api.setToken (IPC a electron-store). Causa raíz NO VERIFICADO.
+Prioridad MoSCoW: Must. Evidencia: docs/qa/S3-029/reporte.md.",dleiva2024,Medio,Sprint 3,Semana 12,Frontend,"Defecto,Must",1h
+Defecto: Electron tarda más de 30 s en abrir o se queda sin memoria en E2E,"Pasos: ejecutar npm run test:e2e:electron y npm run test:e2e:integrado varias veces seguidas en Windows.
+Esperado: la ventana abre y la prueba llega a su lógica.
+Observado: en ~5 de 8 corridas hubo timeout de 30 s; un worker murió con Fatal process out of memory: Zone. Pasa al repetir. Puede compartir causa con el defecto de setToken (NO VERIFICADO).
+Prioridad MoSCoW: Should. Evidencia: docs/qa/S3-005/reporte.md (E4) y docs/qa/S3-030/reporte.md (E7).",admin,Medio,Sprint 3,Semana 12,Frontend,"Defecto,Should",1h
+Defecto: los PostgreSQL del clúster no tienen volumen persistente,"Pasos: revisar k8s/manifests/all-services.yaml y reiniciar un pod de PostgreSQL.
+Esperado: los datos sobreviven al reinicio.
+Observado: no hay PersistentVolumeClaim; un reinicio perdería la demo. Lo ejecuta el scrum master (el clúster no lo toca el agente).
+Prioridad MoSCoW: Should. Evidencia: REM-03 en docs/qa/S2-120/registro-release-sprint2.md.",admin,Medio,Sprint 3,Semana 12,Infraestructura,"Defecto,Should",1h
+Defecto: el cobro de prueba del smoke devuelve HTTP 400,"Pasos: con el simulador arriba, bash scripts/smoke-test.sh.
+Esperado: el cobro de prueba responde 2xx.
+Observado: responde 400 en cada corrida y el script termina en exit 0, ocultando el fallo. Causa NO VERIFICADO (posible payload obsoleto).
+Prioridad MoSCoW: Should. Evidencia: docs/qa/S3-005/reporte.md (E3) y docs/qa/S3-030/reporte.md.",spereda2024,Facil,Sprint 3,Semana 12,Backend,"Defecto,Should",30m
+Defecto: demo-mostrador.spec.ts reescribe capturas versionadas en cada corrida,"Pasos: npx playwright test demo-mostrador y luego git status.
+Esperado: el árbol queda limpio.
+Observado: reescribe docs/qa/S2-110/capturas/; hubo que restaurarlas con git checkout en S3-032 y CI-256.
+Prioridad MoSCoW: Should. Evidencia: docs/qa/S3-032/reporte.md y docs/qa/CI-256/reporte.md.",dprado2024,Facil,Sprint 3,Semana 12,Testing,"Defecto,Should",30m
+Defecto: smoke-test.sh imprime la sustitución de comando literal,"Pasos: bash scripts/smoke-test.sh y mirar la línea del turno activo (scripts/smoke-test.sh:116).
+Esperado: Turno activo.
+Observado: imprime el texto del comando por el espacio entre $ y (. Solo cosmético; el código HTTP sí se valida.
+Prioridad MoSCoW: Could. Evidencia: docs/qa/S3-030/reporte.md (O1).",dprado2024,Facil,Sprint 3,Semana 12,Testing,"Defecto,Could",15m
