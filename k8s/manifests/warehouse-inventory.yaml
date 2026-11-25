@@ -33,7 +33,7 @@ spec:
     spec:
       containers:
         - name: warehouseinventoryservice
-          image: rpedrazav/warehouseinventoryservice:admin-20261027-2
+          image: rpedrazav/warehouseinventoryservice:s2-20261125-40379da
           imagePullPolicy: Always
           env:
             - name: ASPNETCORE_HTTP_PORTS

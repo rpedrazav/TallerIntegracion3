@@ -67,7 +67,7 @@ spec:
     spec:
       containers:
       - name: tenantidentityservice
-        image: rpedrazav/tenantidentityservice:admin-20261027-roles2
+        image: rpedrazav/tenantidentityservice:s2-20261125-40379da
         imagePullPolicy: Always
         env:
         - name: ConnectionStrings__DefaultConnection
@@ -153,7 +153,7 @@ spec:
     spec:
       containers:
       - name: taxcomplianceservice
-        image: rpedrazav/taxcomplianceservice:latest
+        image: rpedrazav/taxcomplianceservice:s2-20261125-40379da
         imagePullPolicy: Always
         env:
         - name: ConnectionStrings__DefaultConnection
@@ -241,7 +241,7 @@ spec:
     spec:
       containers:
       - name: catalogpricingservice
-        image: rpedrazav/catalogpricingservice:latest
+        image: rpedrazav/catalogpricingservice:s2-20261125-40379da
         imagePullPolicy: Always
         env:
         - name: ConnectionStrings__DefaultConnection
@@ -327,7 +327,7 @@ spec:
     spec:
       containers:
       - name: poscartservice
-        image: rpedrazav/poscartservice:latest
+        image: rpedrazav/poscartservice:s2-20261125-40379da
         imagePullPolicy: Always
         env:
         - name: ConnectionStrings__DefaultConnection
