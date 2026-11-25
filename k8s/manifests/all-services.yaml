@@ -336,6 +336,8 @@ spec:
           value: "http://catalogpricingservice"
         - name: Services__TaxComplianceService__BaseUrl
           value: "http://taxcomplianceservice"
+        - name: Services__IdentityUrl
+          value: "http://tenantidentityservice"
         - name: PasarelaPago__BaseUrl
           value: "http://payment-simulator:5050"
         - name: ASPNETCORE_HTTP_PORTS
