@@ -203,6 +203,16 @@ services:
         plugins:
           - name: jwt
 
+      - name: recepciones-route
+        paths:
+          - /api/recepciones
+        strip_path: false
+        methods:
+          - POST
+          - OPTIONS
+        plugins:
+          - name: jwt
+
   # --------------------------------------------------------------------------
   # MS-5: POS & Cart Service (Host :5000)
   # --------------------------------------------------------------------------

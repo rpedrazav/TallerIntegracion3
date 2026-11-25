@@ -21,6 +21,8 @@ El flujo ADMIN, la creación de cajero con datos copiables, el ajuste de inventa
 
 > Estado real de las pantallas implementadas en el frontend Electron + React.
 
+**TI3-802 — Recepción de mercadería [IMPLEMENTADO]:** en `/admin/inventario`, el rol activo ADMIN ve un formulario con producto y sucursal activos, cantidad, vencimiento y ubicación opcional. Envía un único `POST /api/recepciones` con Bearer y, tras el 201, vuelve a consultar `GET /api/stock?sucursal_id=…`. Si falla esa lectura, «Recepción registrada» permanece visible y el reintento solo ejecuta el GET. Los errores de envío 400/401/403/404/503 y red conservan los datos. Playwright aprobó 17/17 con fixtures HTTP, incluidos nueve casos de recepción. [Evidencia](../../qa/TI3-802/reporte.md).
+
 Los clientes tipados en `src/api/client.ts` cubren login (MS-1), catálogo del POS (MS-3) y turnos (MS-5). Centralizan las URL, el JWT y el timeout de 15 s. En peticiones protegidas, un 401 cierra la sesión y redirige al login [IMPLEMENTADO].
 
 ## Login.tsx [IMPLEMENTADO]
@@ -243,7 +245,7 @@ Según diagramas `diagramas/rodrigo/`:
 
 Pantallas no implementadas (Sprints posteriores):
 - Dashboard de ventas (MS-7)
-- Gestión de inventario / FEFO / recepciones (MS-4)
+- Pantalla de lotes por vencer y gestión avanzada de inventario (MS-4)
 - Programa de lealtad (MS-8)
 
 ## Conexiones

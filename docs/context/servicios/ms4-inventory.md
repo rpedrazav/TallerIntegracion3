@@ -56,7 +56,7 @@ src/WarehouseInventoryService/
 | GET | `/stock/{productId}?sucursal_id=` (alias `/api/stock/{productId}`) | JWT | [IMPLEMENTADO] |
 | GET | `/stock?sucursal_id=` | JWT | [IMPLEMENTADO] |
 | POST | `/stock/ajuste` | JWT + ADMIN/REPONEDOR | [IMPLEMENTADO] |
-| POST | `/recepciones` | JWT + ADMIN/REPONEDOR | [IMPLEMENTADO; PostgreSQL 3/3 EN RAMA `local`] |
+| POST | `/recepciones` y `/api/recepciones` | JWT + ADMIN/REPONEDOR | [IMPLEMENTADO; ALIAS HTTP VERIFICADO DIRECTAMENTE] |
 | GET | `/lotes?porVencer=&sucursal_id=` | JWT + ADMIN/REPONEDOR | [IMPLEMENTADO EN CÓDIGO] |
 | POST | `/seed` | JWT + ADMIN del tenant demo (solo Development) | [IMPLEMENTADO] TI3-258 |
 | GET | `/health` | Público (`/health`) | [IMPLEMENTADO] |
@@ -92,7 +92,7 @@ Request:
 
 HTTP 201 devuelve `id`, `productoId`, `sucursalId`, `cantidad`, `fechaVencimiento` y `ubicacion`; no expone `tenantId`. `RecepcionService` abre una transacción serializable, crea `Lote`, suma `Stock.CantidadActual` y agrega un `MovimientoStock` positivo de tipo `RECEPCION`. Un único `SaveChanges` precede al commit; cualquier fallo descarta las tres mutaciones.
 
-Flujo backend: `RecepcionesController → RecepcionValidator → RecepcionService → WarehouseDbContext`. No existe todavía una pantalla frontend de recepciones.
+Flujo backend: `RecepcionesController → RecepcionValidator → RecepcionService → WarehouseDbContext`. Desde TI3-802, `/api/recepciones` usa la misma acción que la ruta original `/recepciones` para admitir el prefijo `/api` del cliente de Admin. Ambas rutas conservan JWT, roles ADMIN/REPONEDOR, DTO, validaciones, respuesta y transacción. Kong local agrega `recepciones-route` para POST/OPTIONS con el plugin JWT y `strip_path: false`, hacia `http://host.docker.internal:5205`. La ruta de stock permanece independiente. HTTP directo de ambas rutas verificado con JWT de pruebas. Kong en ejecución y el despliegue remoto quedan [NO VERIFICADOS]. [Evidencia y operación](../../qa/TI3-802/reporte.md).
 
 **Límites:** no hay idempotencia de recepciones, por lo que repetir una solicitud válida vuelve a sumar stock. Mermas, transferencias y alertas Kafka no están implementadas. El descuento FEFO ocurre posteriormente al consumir una venta. Despliegue remoto [NO VERIFICADO]. Contrato ampliado: [[fefo]].
 

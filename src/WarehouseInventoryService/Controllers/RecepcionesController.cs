@@ -6,6 +6,7 @@ namespace WarehouseInventoryService.Controllers;
 
 [ApiController]
 [Route("recepciones")]
+[Route("api/recepciones")]
 [Authorize(Roles = "ADMIN,REPONEDOR")]
 public sealed class RecepcionesController : ControllerBase
 {

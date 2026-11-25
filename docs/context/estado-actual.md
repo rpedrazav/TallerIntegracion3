@@ -13,6 +13,10 @@ reglas: []
 ---
 # Estado Real de Implementación — GlobalMart OS
 
+## TI3-802 — Recepción de mercadería en Admin (2026-11-24)
+
+[IMPLEMENTADO] ADMIN con rol activo registra recepciones desde `/admin/inventario`. El 201 confirma el registro y dispara la consulta de stock de la sucursal. Un fallo de lectura conserva la confirmación y solo habilita reintentar el GET. MS-4 preserva `/recepciones` y suma el alias `/api/recepciones` para Kong local y el frontend, con autorización ADMIN/REPONEDOR y la misma acción de registro. Playwright 17/17 con fixtures, TypeScript y 44/44 unitarias MS-4 aprobadas. HTTP directo verificó ambas rutas. Kong en ejecución y el flujo de Admin con servicios reales quedan [NO VERIFICADOS]. [Evidencia](../qa/TI3-802/reporte.md).
+
 ## S3-040 / S3-041 / S3-042 — Outbox MS-5 y Cuadre con Ventas Anuladas (2026-11-24)
 
 [IMPLEMENTADO Y PROBADO]
