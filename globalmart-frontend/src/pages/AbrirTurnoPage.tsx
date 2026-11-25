@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios, { AxiosError } from 'axios';
 import { useAuth } from '../hooks/useAuth';
 import { posApi, TurnoActivo } from '../api/client';
+import './AbrirTurnoPage.css';
 
 interface JwtPayload {
   sub?: string;
@@ -130,192 +131,76 @@ export default function AbrirTurnoPage() {
   };
 
   return (
-    <div style={{ maxWidth: '640px', margin: '2rem auto', padding: '0 1rem' }}>
-      {/* Tarjeta Principal */}
-      <div
-        style={{
-          background: 'var(--color-surface)',
-          borderRadius: '12px',
-          boxShadow: '0 4px 16px rgba(0, 0, 0, 0.08)',
-          border: '1px solid var(--color-line)',
-          overflow: 'hidden',
-        }}
-      >
-        {/* Cabecera */}
-        <div
-          style={{
-            background: 'linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary) 100%)',
-            color: 'var(--color-surface)',
-            padding: '1.75rem 2rem',
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
-            <span style={{ fontSize: '1.75rem' }}>💼</span>
-            <h1 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 700, letterSpacing: '-0.02em' }}>
-              Apertura de Turno de Caja
-            </h1>
+    <div className="abrir-turno-page">
+      <div className="abrir-turno-card">
+        <div className="abrir-turno-header">
+          <div className="abrir-turno-title-row">
+            <span className="abrir-turno-icon" aria-hidden="true">💼</span>
+            <h1 className="abrir-turno-title">Apertura de Turno de Caja</h1>
           </div>
-          <p style={{ margin: 0, opacity: 0.9, fontSize: '0.925rem' }}>
+          <p className="abrir-turno-subtitle">
             Registra el monto inicial de efectivo en caja antes de comenzar la sesión de ventas.
           </p>
         </div>
 
-        {/* Cuerpo */}
-        <div style={{ padding: '2rem' }}>
-          {/* Si ya hay un turno activo detectado */}
+        <div className="abrir-turno-body">
           {turnoActivo && (
-            <div
-              style={{
-                marginBottom: '1.5rem',
-                padding: '1rem',
-                background: 'var(--color-primary-bg)',
-                border: '1px solid var(--color-muted)',
-                borderRadius: '8px',
-                color: 'var(--color-primary)',
-                fontSize: '0.9rem',
-              }}
-            >
-              <div style={{ fontWeight: 600, marginBottom: '0.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <span>ℹ️</span> Turno Activo Detectado
+            <div className="abrir-turno-info-box" role="status">
+              <div className="abrir-turno-info-title">
+                <span aria-hidden="true">ℹ️</span> Turno Activo Detectado
               </div>
-              <p style={{ margin: '0 0 0.75rem 0' }}>
+              <p className="abrir-turno-info-text">
                 Ya tienes un turno activo abierto (ID:{' '}
-                <code style={{ background: 'var(--color-primary-bg)', padding: '0.1rem 0.3rem', borderRadius: '4px' }}>
-                  {turnoActivo.id}
-                </code>
-                ). Puedes continuar directamente al Punto de Venta.
+                <code className="abrir-turno-code">{turnoActivo.id}</code>). Puedes continuar
+                directamente al Punto de Venta.
               </p>
               <button
                 type="button"
                 onClick={() => navigate('/pos')}
-                style={{
-                  background: 'var(--color-primary)',
-                  color: 'var(--color-surface)',
-                  border: 'none',
-                  padding: '0.5rem 1rem',
-                  borderRadius: '6px',
-                  fontWeight: 600,
-                  fontSize: '0.875rem',
-                  cursor: 'pointer',
-                }}
+                className="abrir-turno-btn-go-pos"
               >
                 Ir al Punto de Venta →
               </button>
             </div>
           )}
 
-          {/* Banner de Cajero / Sesión */}
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              background: 'var(--color-bg)',
-              border: '1px solid var(--color-line)',
-              borderRadius: '8px',
-              padding: '0.875rem 1rem',
-              marginBottom: '1.5rem',
-            }}
-          >
+          <div className="abrir-turno-banner">
             <div>
-              <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--color-ink-soft)', fontWeight: 600 }}>
-                Cajero en Sesión
-              </div>
-              <div style={{ fontWeight: 600, color: 'var(--color-ink)', fontSize: '0.95rem' }}>
+              <div className="abrir-turno-meta-label">Cajero en Sesión</div>
+              <div className="abrir-turno-cashier-name">
                 {userInfo?.nombre || 'Cajero Autenticado'}
               </div>
             </div>
-            <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--color-ink-soft)', fontWeight: 600 }}>
-                Rol
-              </div>
-              <span
-                style={{
-                  display: 'inline-block',
-                  background: 'var(--color-primary-bg)',
-                  color: 'var(--color-primary)',
-                  padding: '0.2rem 0.6rem',
-                  borderRadius: '9999px',
-                  fontSize: '0.75rem',
-                  fontWeight: 700,
-                }}
-              >
+            <div className="abrir-turno-role-box">
+              <div className="abrir-turno-meta-label">Rol</div>
+              <span className="abrir-turno-role-badge">
                 {userInfo?.active_role || 'CAJERO'}
               </span>
             </div>
           </div>
 
-          {/* Mensajes de Alerta */}
           {error && (
-            <div
-              style={{
-                backgroundColor: 'var(--color-danger-bg)',
-                border: '1px solid var(--color-danger)',
-                color: 'var(--color-danger)',
-                padding: '0.875rem 1rem',
-                borderRadius: '8px',
-                fontSize: '0.875rem',
-                marginBottom: '1.25rem',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-              }}
-            >
-              <span>⚠️</span>
+            <div className="abrir-turno-alert abrir-turno-alert--danger" role="alert">
+              <span aria-hidden="true">⚠️</span>
               <span>{error}</span>
             </div>
           )}
 
           {successMsg && (
-            <div
-              style={{
-                backgroundColor: 'var(--color-success-bg)',
-                border: '1px solid var(--color-success)',
-                color: 'var(--color-success)',
-                padding: '0.875rem 1rem',
-                borderRadius: '8px',
-                fontSize: '0.875rem',
-                marginBottom: '1.25rem',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-              }}
-            >
-              <span>✅</span>
+            <div className="abrir-turno-alert abrir-turno-alert--success" role="status">
+              <span aria-hidden="true">✅</span>
               <span>{successMsg}</span>
             </div>
           )}
 
-          {/* Formulario */}
           <form onSubmit={handleSubmit}>
-            <div style={{ marginBottom: '1.5rem' }}>
-              <label
-                htmlFor="monto-inicial"
-                style={{
-                  display: 'block',
-                  fontWeight: 600,
-                  color: 'var(--color-ink)',
-                  fontSize: '0.95rem',
-                  marginBottom: '0.5rem',
-                }}
-              >
+            <div className="abrir-turno-field">
+              <label htmlFor="monto-inicial" className="abrir-turno-label">
                 Monto inicial de caja
               </label>
 
-              <div style={{ position: 'relative' }}>
-                <span
-                  style={{
-                    position: 'absolute',
-                    left: '1rem',
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    fontWeight: 700,
-                    color: 'var(--color-ink-soft)',
-                    fontSize: '1.25rem',
-                  }}
-                >
-                  $
-                </span>
+              <div className="abrir-turno-input-wrap">
+                <span className="abrir-turno-currency" aria-hidden="true">$</span>
                 <input
                   id="monto-inicial"
                   type="number"
@@ -328,29 +213,13 @@ export default function AbrirTurnoPage() {
                   }}
                   placeholder="0"
                   required
-                  style={{
-                    width: '100%',
-                    boxSizing: 'border-box',
-                    padding: '0.875rem 1rem 0.875rem 2.5rem',
-                    fontSize: '1.25rem',
-                    fontWeight: 600,
-                    borderRadius: '8px',
-                    border: !isMontoValid && montoInicial !== '' ? '2px solid var(--color-danger)' : '1px solid var(--color-line)',
-                    outline: 'none',
-                    transition: 'border-color 0.2s',
-                    color: 'var(--color-ink)',
-                  }}
-                  onFocus={(e) => (e.target.style.borderColor = 'var(--color-primary)')}
-                  onBlur={(e) =>
-                    (e.target.style.borderColor = !isMontoValid && montoInicial !== '' ? 'var(--color-danger)' : 'var(--color-line)')
-                  }
+                  className={`abrir-turno-input${!isMontoValid && montoInicial !== '' ? ' abrir-turno-input--invalid' : ''}`}
                 />
               </div>
 
-              {/* Mensaje de validación rápida */}
-              <div style={{ marginTop: '0.375rem', fontSize: '0.8rem', color: 'var(--color-ink-soft)' }}>
+              <div className="abrir-turno-hint">
                 {!isMontoValid && montoInicial !== '' ? (
-                  <span style={{ color: 'var(--color-danger)', fontWeight: 600 }}>
+                  <span className="abrir-turno-hint--error">
                     El monto debe ser un número mayor o igual a 0.
                   </span>
                 ) : (
@@ -358,28 +227,15 @@ export default function AbrirTurnoPage() {
                 )}
               </div>
 
-              {/* Botones de montos frecuentes */}
-              <div style={{ marginTop: '1rem' }}>
-                <div style={{ fontSize: '0.8rem', color: 'var(--color-ink-soft)', marginBottom: '0.4rem', fontWeight: 500 }}>
-                  Montos frecuentes sugeridos:
-                </div>
-                <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+              <div className="abrir-turno-presets">
+                <div className="abrir-turno-presets-label">Montos frecuentes sugeridos:</div>
+                <div className="abrir-turno-presets-list">
                   {[0, 20000, 50000, 100000].map((val) => (
                     <button
                       key={val}
                       type="button"
                       onClick={() => handlePresetClick(val)}
-                      style={{
-                        background: montoNum === val ? 'var(--color-primary-bg)' : 'var(--color-bg)',
-                        color: montoNum === val ? 'var(--color-primary)' : 'var(--color-ink-soft)',
-                        border: montoNum === val ? '1px solid var(--color-primary)' : '1px solid var(--color-line)',
-                        borderRadius: '6px',
-                        padding: '0.4rem 0.8rem',
-                        fontSize: '0.85rem',
-                        fontWeight: 600,
-                        cursor: 'pointer',
-                        transition: 'all 0.15s ease',
-                      }}
+                      className={`abrir-turno-preset-btn${montoNum === val ? ' abrir-turno-preset-btn--active' : ''}`}
                     >
                       ${val.toLocaleString('es-CL')}
                     </button>
@@ -388,33 +244,10 @@ export default function AbrirTurnoPage() {
               </div>
             </div>
 
-            {/* Botón de acción */}
             <button
               type="submit"
               disabled={isLoading || !isMontoValid}
-              style={{
-                width: '100%',
-                padding: '0.95rem',
-                backgroundColor: isLoading || !isMontoValid ? 'var(--color-muted)' : 'var(--color-primary)',
-                color: 'var(--color-surface)',
-                border: 'none',
-                borderRadius: '8px',
-                fontSize: '1.05rem',
-                fontWeight: 700,
-                cursor: isLoading || !isMontoValid ? 'not-allowed' : 'pointer',
-                transition: 'background-color 0.2s, transform 0.1s',
-                boxShadow: '0 4px 6px -1px color-mix(in srgb, var(--color-primary) 25%, transparent)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '0.5rem'
-              }}
-              onMouseOver={(e) => {
-                if (!isLoading && isMontoValid) e.currentTarget.style.backgroundColor = 'var(--color-primary)';
-              }}
-              onMouseOut={(e) => {
-                if (!isLoading && isMontoValid) e.currentTarget.style.backgroundColor = 'var(--color-primary)';
-              }}
+              className="abrir-turno-submit"
             >
               {isLoading && <span className="spinner" />}
               {isLoading ? 'Abriendo Turno...' : 'Abrir Turno'}

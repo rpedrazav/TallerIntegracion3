@@ -26,55 +26,33 @@ export default function ConfirmarCierreModal({
       onClick={(e) => {
         if (e.target === e.currentTarget) onCancelar();
       }}
-      style={{
-        padding: 0,
-        border: '1px solid var(--color-line)',
-        borderRadius: '12px',
-        background: 'var(--color-surface)',
-        color: 'var(--color-ink)',
-      }}
+      className="confirmar-cierre-dialog"
     >
-      <div style={{ padding: '1.5rem', maxWidth: '420px' }}>
-        <h3 id="confirmar-cierre-titulo" style={{ marginTop: 0 }}>
+      <div className="confirmar-cierre-content">
+        <h3 id="confirmar-cierre-titulo" className="confirmar-cierre-title">
           Confirmar cierre de turno
         </h3>
         <p>
-          Monto declarado: <strong>${totalDeclarado.toLocaleString('es-CL')}</strong>
+          Monto declarado: <strong className="num">${totalDeclarado.toLocaleString('es-CL')}</strong>
         </p>
         {cuadreSynced && cuadreResult && (
           <p>
-            Diferencia del cuadre: <strong>${cuadreResult.diferencia.toLocaleString('es-CL')}</strong>
+            Diferencia del cuadre: <strong className="num">${cuadreResult.diferencia.toLocaleString('es-CL')}</strong>
           </p>
         )}
-        <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
+        <div className="confirmar-cierre-actions">
           <button
             type="button"
             autoFocus
             onClick={onCancelar}
-            style={{
-              padding: '0.6rem 1.1rem',
-              borderRadius: '8px',
-              border: '1px solid var(--color-line)',
-              background: 'transparent',
-              color: 'var(--color-ink)',
-              fontWeight: 600,
-              cursor: 'pointer',
-            }}
+            className="confirmar-cierre-btn-cancel"
           >
             Cancelar
           </button>
           <button
             type="button"
             onClick={onConfirmar}
-            style={{
-              padding: '0.6rem 1.1rem',
-              borderRadius: '8px',
-              border: 'none',
-              background: 'var(--color-danger)',
-              color: 'var(--color-surface)',
-              fontWeight: 700,
-              cursor: 'pointer',
-            }}
+            className="confirmar-cierre-btn-confirm"
           >
             Confirmar cierre
           </button>

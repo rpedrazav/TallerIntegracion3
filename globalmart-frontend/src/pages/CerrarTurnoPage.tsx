@@ -8,6 +8,7 @@ import TablaDenominaciones, { DENOMINACIONES } from '../components/pos/TablaDeno
 import CuadreCaja from '../components/pos/CuadreCaja';
 import ConfirmarCierreModal from '../components/pos/ConfirmarCierreModal';
 import ResultadoCierre from '../components/pos/ResultadoCierre';
+import './CerrarTurnoPage.css';
 
 export default function CerrarTurnoPage() {
   const { token } = useAuth();
@@ -208,81 +209,41 @@ export default function CerrarTurnoPage() {
   };
 
   return (
-    <div style={{ maxWidth: '900px', margin: '1.5rem auto', padding: '0 1rem' }}>
-      <div
-        style={{
-          background: 'var(--color-surface)',
-          borderRadius: '16px',
-          boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.04)',
-          border: '1px solid var(--color-line)',
-          overflow: 'hidden',
-        }}
-      >
-        {/* Cabecera */}
-        <div
-          style={{
-            background: 'linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary) 60%, var(--color-primary) 100%)',
-            color: 'var(--color-surface)',
-            padding: '2rem',
-            position: 'relative',
-          }}
-        >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
+    <div className="cerrar-turno-page">
+      <div className="cerrar-turno-card">
+        <div className="cerrar-turno-header">
+          <div className="cerrar-turno-header-row">
             <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
-                <span style={{ fontSize: '2rem' }}>🧾</span>
-                <h1 style={{ margin: 0, fontSize: '1.75rem', fontWeight: 800, letterSpacing: '-0.025em' }}>
-                  Cierre de Turno y Cuadre de Caja
-                </h1>
+              <div className="cerrar-turno-title-row">
+                <span className="cerrar-turno-icon" aria-hidden="true">🧾</span>
+                <h1 className="cerrar-turno-title">Cierre de Turno y Cuadre de Caja</h1>
               </div>
-              <p style={{ margin: 0, opacity: 0.95, fontSize: '0.95rem' }}>
+              <p className="cerrar-turno-subtitle">
                 Conteo y desglose de denominaciones de billetes y monedas para el arqueo final.
               </p>
             </div>
 
-            <div
-              style={{
-                background: 'rgba(255, 255, 255, 0.15)',
-                backdropFilter: 'blur(8px)',
-                borderRadius: '10px',
-                padding: '0.75rem 1.25rem',
-                border: '1px solid rgba(255, 255, 255, 0.25)',
-                fontSize: '0.85rem',
-              }}
-            >
+            <div className="cerrar-turno-meta">
               <div><strong>Cajero:</strong> {userInfo?.nombre || 'Cajero en Sesión'}</div>
               <div><strong>Rol:</strong> {userInfo?.active_role || 'CAJERO'}</div>
               {checkingTurno ? (
-                <div style={{ marginTop: '0.25rem', opacity: 0.85, fontSize: '0.8rem' }}>
+                <div className="cerrar-turno-meta-sub">
                   <em>Verificando turno activo...</em>
                 </div>
               ) : turnoActivo ? (
-                <div style={{ marginTop: '0.25rem' }}>
-                  <strong>Turno ID:</strong> <code style={{ fontSize: '0.8rem' }}>{turnoActivo.id.slice(0, 8)}...</code>
+                <div className="cerrar-turno-meta-sub">
+                  <strong>Turno ID:</strong>{' '}
+                  <code className="cerrar-turno-code">{turnoActivo.id.slice(0, 8)}...</code>
                 </div>
               ) : null}
             </div>
           </div>
         </div>
 
-        {/* Contenido */}
-        <div style={{ padding: '2rem' }}>
+        <div className="cerrar-turno-body">
           {errorMsg && (
-            <div
-              style={{
-                backgroundColor: 'var(--color-danger-bg)',
-                border: '1px solid var(--color-danger)',
-                color: 'var(--color-danger)',
-                padding: '1rem',
-                borderRadius: '10px',
-                fontSize: '0.925rem',
-                marginBottom: '1.5rem',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.75rem',
-              }}
-            >
-              <span style={{ fontSize: '1.25rem' }}>⚠️</span>
+            <div className="cerrar-turno-alert cerrar-turno-alert--danger" role="alert">
+              <span aria-hidden="true">⚠️</span>
               <span>{errorMsg}</span>
             </div>
           )}
@@ -297,42 +258,19 @@ export default function CerrarTurnoPage() {
           )}
 
           {noTurnoOpen && !turnoClosedSuccess && (
-            <div
-              style={{
-                backgroundColor: 'var(--color-warning-bg)',
-                border: '1px solid var(--color-warning)',
-                color: 'var(--color-warning-text)',
-                padding: '1.25rem',
-                borderRadius: '10px',
-                marginBottom: '1.5rem',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                flexWrap: 'wrap',
-                gap: '1rem',
-              }}
-            >
+            <div className="cerrar-turno-alert cerrar-turno-alert--warning" role="status">
               <div>
-                <div style={{ fontWeight: 700, fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <span>ℹ️</span> No tienes un turno abierto actualmente
+                <div className="cerrar-turno-alert-title">
+                  <span aria-hidden="true">ℹ️</span> No tienes un turno abierto actualmente
                 </div>
-                <div style={{ fontSize: '0.875rem', marginTop: '0.25rem' }}>
+                <div className="cerrar-turno-alert-detail">
                   Para realizar ventas o efectuar el arqueo de caja debes abrir un turno previamente.
                 </div>
               </div>
               <button
                 type="button"
                 onClick={() => navigate('/abrir-turno')}
-                style={{
-                  background: 'var(--color-warning)',
-                  color: 'var(--color-surface)',
-                  border: 'none',
-                  padding: '0.6rem 1.2rem',
-                  borderRadius: '8px',
-                  fontWeight: 600,
-                  fontSize: '0.9rem',
-                  cursor: 'pointer',
-                }}
+                className="cerrar-turno-btn-warning"
               >
                 Abrir Turno Ahora →
               </button>
@@ -362,20 +300,11 @@ export default function CerrarTurnoPage() {
                 onCalcularCuadre={handleCalcularCuadre}
               />
 
-              <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+              <div className="cerrar-turno-actions">
                 <button
                   type="button"
                   onClick={() => navigate('/pos')}
-                  style={{
-                    padding: '0.85rem 1.5rem',
-                    background: 'var(--color-surface)',
-                    color: 'var(--color-ink-soft)',
-                    border: '1px solid var(--color-line)',
-                    borderRadius: '8px',
-                    fontWeight: 600,
-                    fontSize: '1rem',
-                    cursor: 'pointer',
-                  }}
+                  className="cerrar-turno-btn-secondary"
                 >
                   Volver al POS
                 </button>
@@ -384,18 +313,7 @@ export default function CerrarTurnoPage() {
                   type="button"
                   onClick={() => confirmDialogRef.current?.showModal()}
                   disabled={isClosingTurno || noTurnoOpen}
-                  style={{
-                    padding: '0.85rem 2rem',
-                    backgroundColor: isClosingTurno || noTurnoOpen ? 'var(--color-muted)' : 'var(--color-danger)',
-                    color: 'var(--color-surface)',
-                    border: 'none',
-                    borderRadius: '8px',
-                    fontWeight: 700,
-                    fontSize: '1.05rem',
-                    cursor: isClosingTurno || noTurnoOpen ? 'not-allowed' : 'pointer',
-                    boxShadow: '0 4px 6px -1px color-mix(in srgb, var(--color-danger) 25%, transparent)',
-                    transition: 'all 0.15s ease',
-                  }}
+                  className="cerrar-turno-btn-danger"
                 >
                   {isClosingTurno ? 'Cerrando Turno...' : '🔒 Confirmar y Cerrar Turno'}
                 </button>

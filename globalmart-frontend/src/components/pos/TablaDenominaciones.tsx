@@ -40,141 +40,58 @@ export default function TablaDenominaciones({
 }: TablaDenominacionesProps) {
   return (
     <>
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: '1.25rem',
-          flexWrap: 'wrap',
-          gap: '1rem',
-        }}
-      >
+      <div className="denom-header">
         <div>
-          <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700, color: 'var(--color-ink)' }}>
-            Desglose de Efectivo en Gaveta
-          </h2>
-          <span style={{ fontSize: '0.85rem', color: 'var(--color-ink-soft)' }}>
+          <h2 className="denom-title">Desglose de Efectivo en Gaveta</h2>
+          <span className="denom-subtitle">
             Indica la cantidad física de cada billete y moneda encontrada.
           </span>
         </div>
         <button
           type="button"
           onClick={onReset}
-          style={{
-            background: 'var(--color-bg)',
-            color: 'var(--color-ink-soft)',
-            border: '1px solid var(--color-line)',
-            padding: '0.5rem 1rem',
-            borderRadius: '8px',
-            fontSize: '0.85rem',
-            fontWeight: 600,
-            cursor: 'pointer',
-          }}
+          className="denom-reset-btn"
           title="Reiniciar todos los contadores a 0"
         >
           🔄 Limpiar Conteo
         </button>
       </div>
 
-      <div
-        style={{
-          overflowX: 'auto',
-          border: '1px solid var(--color-line)',
-          borderRadius: '12px',
-          marginBottom: '2rem',
-        }}
-      >
-        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+      <div className="denom-table-wrap">
+        <table className="denom-table">
           <thead>
-            <tr style={{ background: 'var(--color-bg)', borderBottom: '2px solid var(--color-line)', color: 'var(--color-ink-soft)' }}>
-              <th style={{ padding: '0.875rem 1.25rem', fontSize: '0.85rem', fontWeight: 700, textTransform: 'uppercase' }}>
-                Tipo
-              </th>
-              <th style={{ padding: '0.875rem 1.25rem', fontSize: '0.85rem', fontWeight: 700, textTransform: 'uppercase' }}>
-                Denominación
-              </th>
-              <th
-                style={{
-                  padding: '0.875rem 1.25rem',
-                  fontSize: '0.85rem',
-                  fontWeight: 700,
-                  textTransform: 'uppercase',
-                  width: '240px',
-                  textAlign: 'center',
-                }}
-              >
-                Cantidad
-              </th>
-              <th
-                style={{
-                  padding: '0.875rem 1.25rem',
-                  fontSize: '0.85rem',
-                  fontWeight: 700,
-                  textTransform: 'uppercase',
-                  textAlign: 'right',
-                }}
-              >
-                Subtotal
-              </th>
+            <tr className="denom-thead-row">
+              <th className="denom-th">Tipo</th>
+              <th className="denom-th">Denominación</th>
+              <th className="denom-th denom-th--center">Cantidad</th>
+              <th className="denom-th denom-th--right">Subtotal</th>
             </tr>
           </thead>
           <tbody>
             {DENOMINACIONES.map((den, index) => {
               const qty = cantidades[den.id] || 0;
               const subtotal = den.valor * qty;
-              const isEven = index % 2 === 0;
 
               return (
                 <tr
                   key={den.id}
-                  style={{
-                    backgroundColor: isEven ? 'var(--color-surface)' : 'var(--color-bg)',
-                    borderBottom: '1px solid var(--color-bg)',
-                  }}
+                  className={`denom-row ${index % 2 === 0 ? 'denom-row--even' : 'denom-row--odd'}`}
                 >
-                  <td style={{ padding: '0.875rem 1.25rem' }}>
-                    <span
-                      style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '0.4rem',
-                        padding: '0.25rem 0.6rem',
-                        borderRadius: '9999px',
-                        fontSize: '0.75rem',
-                        fontWeight: 700,
-                        background: den.tipo === 'billete' ? 'var(--color-primary-bg)' : 'var(--color-warning-bg)',
-                        color: den.tipo === 'billete' ? 'var(--color-primary)' : 'var(--color-warning-text)',
-                      }}
-                    >
-                      <span>{den.tipo === 'billete' ? '💵' : '🪙'}</span>
-                      <span style={{ textTransform: 'capitalize' }}>{den.tipo}</span>
+                  <td className="denom-td">
+                    <span className={`denom-badge denom-badge--${den.tipo}`}>
+                      <span aria-hidden="true">{den.tipo === 'billete' ? '💵' : '🪙'}</span>
+                      <span>{den.tipo}</span>
                     </span>
                   </td>
 
-                  <td style={{ padding: '0.875rem 1.25rem', fontWeight: 700, fontSize: '1.05rem', color: 'var(--color-ink)' }}>
-                    {den.label}
-                  </td>
+                  <td className="denom-td denom-td--label">{den.label}</td>
 
-                  <td style={{ padding: '0.875rem 1.25rem', textAlign: 'center' }}>
-                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
+                  <td className="denom-td denom-td--center">
+                    <div className="denom-qty-controls">
                       <button
                         type="button"
                         onClick={() => onStepChange(den.id, -1)}
-                        style={{
-                          width: '32px',
-                          height: '34px',
-                          borderRadius: '6px',
-                          border: '1px solid var(--color-line)',
-                          background: 'var(--color-bg)',
-                          fontWeight: 'bold',
-                          fontSize: '1rem',
-                          color: 'var(--color-ink)',
-                          cursor: 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                        }}
+                        className="denom-step-btn"
                       >
                         -
                       </button>
@@ -187,45 +104,20 @@ export default function TablaDenominaciones({
                         value={qty === 0 ? '' : qty}
                         onChange={(e) => onCantidadChange(den.id, e.target.value)}
                         placeholder="0"
-                        style={{
-                          width: '90px',
-                          padding: '0.45rem 0.5rem',
-                          textAlign: 'center',
-                          fontSize: '1rem',
-                          fontWeight: 700,
-                          borderRadius: '6px',
-                          border: '1px solid var(--color-line)',
-                          outline: 'none',
-                          color: 'var(--color-ink)',
-                          backgroundColor: qty > 0 ? 'var(--color-success-bg)' : 'var(--color-surface)',
-                          borderColor: qty > 0 ? 'var(--color-success)' : 'var(--color-line)',
-                        }}
+                        className={`denom-qty-input${qty > 0 ? ' denom-qty-input--active' : ''}`}
                       />
 
                       <button
                         type="button"
                         onClick={() => onStepChange(den.id, 1)}
-                        style={{
-                          width: '32px',
-                          height: '34px',
-                          borderRadius: '6px',
-                          border: '1px solid var(--color-line)',
-                          background: 'var(--color-bg)',
-                          fontWeight: 'bold',
-                          fontSize: '1rem',
-                          color: 'var(--color-ink)',
-                          cursor: 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                        }}
+                        className="denom-step-btn"
                       >
                         +
                       </button>
                     </div>
                   </td>
 
-                  <td style={{ padding: '0.875rem 1.25rem', textAlign: 'right', fontWeight: 700, color: subtotal > 0 ? 'var(--color-primary)' : 'var(--color-muted)' }}>
+                  <td className={`denom-td denom-td--subtotal${subtotal > 0 ? ' denom-td--subtotal-active' : ''}`}>
                     ${subtotal.toLocaleString('es-CL')}
                   </td>
                 </tr>
@@ -233,27 +125,27 @@ export default function TablaDenominaciones({
             })}
           </tbody>
           <tfoot>
-            <tr style={{ background: 'var(--color-bg)', borderTop: '2px solid var(--color-line)' }}>
-              <td colSpan={2} style={{ padding: '0.75rem 1.25rem', fontWeight: 600, color: 'var(--color-ink-soft)' }}>
+            <tr className="denom-tfoot-row denom-tfoot-row--divider">
+              <td colSpan={2} className="denom-tfoot-label">
                 💵 Subtotal Billetes:
               </td>
-              <td colSpan={2} style={{ padding: '0.75rem 1.25rem', textAlign: 'right', fontWeight: 700, color: 'var(--color-ink)' }}>
+              <td colSpan={2} className="denom-tfoot-value">
                 ${totalBilletes.toLocaleString('es-CL')}
               </td>
             </tr>
-            <tr style={{ background: 'var(--color-bg)' }}>
-              <td colSpan={2} style={{ padding: '0.75rem 1.25rem', fontWeight: 600, color: 'var(--color-ink-soft)' }}>
+            <tr className="denom-tfoot-row">
+              <td colSpan={2} className="denom-tfoot-label">
                 🪙 Subtotal Monedas:
               </td>
-              <td colSpan={2} style={{ padding: '0.75rem 1.25rem', textAlign: 'right', fontWeight: 700, color: 'var(--color-ink)' }}>
+              <td colSpan={2} className="denom-tfoot-value">
                 ${totalMonedas.toLocaleString('es-CL')}
               </td>
             </tr>
-            <tr style={{ background: 'var(--color-primary-bg)', borderTop: '2px solid var(--color-primary)' }}>
-              <td colSpan={2} style={{ padding: '1rem 1.25rem', fontWeight: 800, fontSize: '1.15rem', color: 'var(--color-primary)' }}>
+            <tr className="denom-tfoot-total-row">
+              <td colSpan={2} className="denom-tfoot-total-label">
                 TOTAL DECLARADO EN CAJA:
               </td>
-              <td colSpan={2} style={{ padding: '1rem 1.25rem', textAlign: 'right', fontWeight: 800, fontSize: '1.45rem', color: 'var(--color-primary)' }}>
+              <td colSpan={2} className="denom-tfoot-total-value">
                 ${totalDeclarado.toLocaleString('es-CL')}
               </td>
             </tr>
