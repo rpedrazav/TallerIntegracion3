@@ -61,7 +61,7 @@ desplegados MS-1 → MS-5 queda [NO VERIFICADA]. La URL se toma de `Services:Ide
 | GET | `/api/turnos/activo` | JWT | [IMPLEMENTADO] |
 | GET | `/api/turnos/abiertos` | JWT ADMIN | [IMPLEMENTADO — turnos ABIERTOS del tenant del JWT; el ADMIN los usa para ver y anular ventas (TI3-763)] |
 | POST | `/api/turnos/cerrar` | JWT | [IMPLEMENTADO] |
-| POST | `/api/turnos/cuadre` | JWT | [IMPLEMENTADO — suma efectivo neto (Monto − Vuelto) de pagos EFECTIVO de ventas COMPLETADAS, sin fondo inicial (S2-112); retorna efectivo_esperado, monto_declarado, diferencia] |
+| POST | `/api/turnos/cuadre` | JWT | [IMPLEMENTADO — suma efectivo neto (Monto − Vuelto) de pagos EFECTIVO de ventas COMPLETADAS, sin fondo inicial (S2-112); excluye ventas anuladas (S3-042); retorna efectivo_esperado, monto_declarado, diferencia] |
 | POST | `/api/ventas` | JWT | [IMPLEMENTADO — Contrato fijado S2-001] |
 | POST | `/api/ventas/{id}/items` | JWT | [IMPLEMENTADO] |
 | PUT | `/api/ventas/{id}/items/{itemId}` | JWT | [IMPLEMENTADO] |

@@ -218,6 +218,21 @@ Creación y edición conservan el modal ante error y muestran mensajes comprensi
 // Delega cambios de cantidad y eliminación a Pos.tsx, que sincroniza en serie con MS-5
 ```
 
+## VentasTurnoPage.tsx [IMPLEMENTADO]
+
+Pantalla para consultar el historial de ventas del turno y realizar anulaciones:
+- Muestra lista de ventas con ID, método de pago, monto total y estado.
+- Las ventas en estado `ANULADA` se muestran con un badge distintivo de peligro (`--color-danger-bg`, `--color-danger-text`, `--color-danger`), conservan el total original y no exponen la acción Anular.
+- Para rol `ADMIN`, ventas en estado `COMPLETADA` muestran acción "Anular" con diálogo modal que exige motivo obligatorio (1–500 caracteres).
+- Para rol `CAJERO`, la acción Anular permanece completamente oculta.
+
+## CuadreCaja.tsx [IMPLEMENTADO]
+
+Componente de arqueo de caja integrado en `CerrarTurnoPage`:
+- Consulta el efectivo esperado del turno a MS-5 (`POST /api/turnos/cuadre`).
+- Explicita al usuario que el cálculo suma los pagos en efectivo completados y excluye automáticamente las ventas anuladas.
+- Compara el efectivo esperado con el monto declarado de la gaveta calculando la diferencia exacta (sobrante / faltante).
+
 ## Pantallas diseñadas (PLANIFICADAS)
 
 Según diagramas `diagramas/rodrigo/`:

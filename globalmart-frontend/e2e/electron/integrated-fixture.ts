@@ -36,7 +36,13 @@ export const test = base.extend<{ app: Page; electron: ElectronApplication; apiE
   app: async ({ electron, apiErrors }, use, info) => {
     await expect.poll(() => electron.windows().some(w => w.url().startsWith('file:'))).toBe(true);
     const page = electron.windows().find(w => w.url().startsWith('file:'))!;
-    await electron.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows().forEach(w => { w.webContents.closeDevTools(); w.setSize(1440, 900); }));
+    await page.waitForLoadState('domcontentloaded');
+    await electron.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows().forEach(w => {
+      if (w.webContents.isDevToolsOpened()) {
+        w.webContents.closeDevTools();
+      }
+      w.setSize(1440, 900);
+    })).catch(() => undefined);
     await page.goto(page.url().replace('index.html', 'integrated.html'));
     // Toda respuesta >= 400 es un error de API, salvo las que la prueba declara esperadas.
     page.on('response', (r: Response) => {

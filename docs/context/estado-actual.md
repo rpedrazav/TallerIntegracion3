@@ -13,6 +13,13 @@ reglas: []
 ---
 # Estado Real de Implementación — GlobalMart OS
 
+## S3-040 / S3-041 / S3-042 — Outbox MS-5 y Cuadre con Ventas Anuladas (2026-11-24)
+
+[IMPLEMENTADO Y PROBADO]
+- **S3-040 (TI3-791):** Revisión de ramas del outbox de MS-5 (`OutboxPublisherWorker`, `OutboxPublisherService`, `OutboxRepository`). El publicador se mantiene lineal, sin bifurcaciones muertas; suite de integración S2-007..S2-010 aprobada con 6/6 casos. Se documenta la separación entre el ciclo automático implementado y el reproceso manual/deduplicación durable en MS-4 (futuros).
+- **S3-041 (TI3-792):** `VentasTurnoPage.tsx` muestra un badge distintivo para el estado `ANULADA` con tokens CSS del tema (`--color-danger-bg`, `--color-danger-text`, `--color-danger`), ocultando el botón Anular y conservando el monto original. `CuadreCaja.tsx` explicita que el cálculo de efectivo esperado vía MS-5 excluye las ventas anuladas. Suite E2E Playwright: 25/25 aprobadas; `npm run typecheck` aprobado con 0 errores.
+- **S3-042 (TI3-793):** Prueba de integración en `tests/GlobalMart.IntegrationTests/CierreTurnoIntegrationTests.cs` (`[Trait("Plan", "S3-042")]`) sobre PostgreSQL real (`pos_db`). Valida que registrar 2 ventas en efectivo ($119 y $60), anular una con token ADMIN y consultar `POST /api/turnos/cuadre` reduce el efectivo esperado de $179 a $60 exactamente (`diferencia = 0`); un reintento de anulación responde 409 y mantiene el cuadre en $60, preservando los registros de pagos y el estado `ANULADA` en BD. Regresión conjunta: 9/9 casos aprobados. [Reportes QA](../qa/S3-040/reporte.md, ../qa/S3-041/reporte.md, ../qa/S3-042/reporte.md).
+
 ## S3-038 — Anulación desde la UI (2026-11-23)
 
 [PROBADO CON API SIMULADA] `e2e/ventas-turno.spec.ts` cubre ADMIN con anulación exitosa, CAJERO sin botón y rechazo 403 con una pantalla ADMIN desactualizada, y TARJETA con reversa rechazada. Comprueba estado e importe después de recargar. Los tres escenarios aprobaron dentro de una corrida de 25/25 pruebas, exit code 0; TypeScript aprobado. No certifica persistencia ni permisos reales del backend: HTTP y sesión están simulados. [Evidencia y límites](../qa/S3-038/reporte.md). Electron empaquetado y clúster [NO VERIFICADOS].

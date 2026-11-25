@@ -23,15 +23,18 @@ const test = base.extend<{ pos: Page }>({
       unexpected.push(`${route.request().method()} ${route.request().url()}`);
       await route.abort();
     });
-    // The real main opens DevTools; it can be reported before the POS window.
+    // The real main opens DevTools in dev mode; wait for the window to load before interacting.
     await expect.poll(() => app.windows().some(window => window.url().startsWith('file:'))).toBe(true);
     const page = app.windows().find(window => window.url().startsWith('file:'))!;
+    await page.waitForLoadState('domcontentloaded');
     await app.evaluate(({ BrowserWindow }) => {
       for (const window of BrowserWindow.getAllWindows()) {
-        window.webContents.closeDevTools();
+        if (window.webContents.isDevToolsOpened()) {
+          window.webContents.closeDevTools();
+        }
         window.setSize(1440, 900);
       }
-    });
+    }).catch(() => undefined);
     try {
       await expect(page.getByRole('button', { name: 'Ingresar', exact: true })).toBeVisible();
       expect(await page.evaluate(() => window.api.getToken())).toBeNull();

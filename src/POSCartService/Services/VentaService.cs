@@ -66,13 +66,11 @@ public class VentaService : IVentaService
             CajeroId   = cajeroId,
             SucursalId = sucursalId,
             TenantId   = tenantId,
-            Subtotal   = subtotal,
-            Impuestos  = impuestos,
-            Total      = total,
             MetodoPago = metodoPago,
             Estado     = EstadoVenta.PENDIENTE,
             Items      = listaItems
         };
+        AplicarTotales(venta, subtotal, impuestos, total);
 
         return await _ventaRepository.CrearAsync(venta);
     }
@@ -151,10 +149,7 @@ public class VentaService : IVentaService
             await _itemVentaRepository.CrearAsync(item);
         }
 
-        // Actualizar totales calculados de la venta padre
-        venta.Subtotal  = subtotal;
-        venta.Impuestos = impuestos;
-        venta.Total     = total;
+        AplicarTotales(venta, subtotal, impuestos, total);
 
         await _ventaRepository.ActualizarAsync(venta);
 
@@ -197,9 +192,7 @@ public class VentaService : IVentaService
             await _itemVentaRepository.ActualizarAsync(item);
         }
 
-        venta.Subtotal  = nuevoSubtotalVenta;
-        venta.Impuestos = nuevosImpuestosVenta;
-        venta.Total     = nuevoTotalVenta;
+        AplicarTotales(venta, nuevoSubtotalVenta, nuevosImpuestosVenta, nuevoTotalVenta);
 
         await _ventaRepository.ActualizarAsync(venta);
 
@@ -233,10 +226,7 @@ public class VentaService : IVentaService
         // Remover de la colección en memoria
         venta.Items.Remove(item);
 
-        // Actualizar totales de la venta padre
-        venta.Subtotal  = nuevoSubtotalVenta;
-        venta.Impuestos = nuevosImpuestosVenta;
-        venta.Total     = nuevoTotalVenta;
+        AplicarTotales(venta, nuevoSubtotalVenta, nuevosImpuestosVenta, nuevoTotalVenta);
 
         await _ventaRepository.ActualizarAsync(venta);
 
@@ -274,6 +264,14 @@ public class VentaService : IVentaService
         intentoPago.CreatedAt = intentoPago.CreatedAt == default ? outboxMessage.CreatedAt : intentoPago.CreatedAt;
 
         return await _ventaRepository.CompletarTarjetaConOutboxAsync(venta.Id, pago, intentoPago, outboxMessage);
+    }
+
+    // MS-2 es la autoridad fiscal: conservar sus importes y redondeos sin recalcularlos aquí.
+    private static void AplicarTotales(Venta venta, decimal subtotal, decimal impuestos, decimal total)
+    {
+        venta.Subtotal = subtotal;
+        venta.Impuestos = impuestos;
+        venta.Total = total;
     }
 
     private static OutboxMessage CrearOutboxVentaCompletada(Venta venta)
