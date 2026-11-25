@@ -7,6 +7,7 @@ import PesoProducto, { PesoEstado } from '../components/pos/PesoProducto';
 import PaymentModal from '../components/pos/PaymentModal';
 import CartTable from '../components/pos/CartTable';
 import CartSummary from '../components/pos/CartSummary';
+import './Pos.css';
 import { manualWeightForCart, readStableWeightForCart } from '../hardware/scale-cart';
 import { usePosRecovery, PosRecoveryResolved } from '../hooks/usePosRecovery';
 import { useVenta, ProductItem } from '../hooks/useVenta';
@@ -281,8 +282,8 @@ export default function Pos() {
 
   if (turnoStatus === 'checking') {
     return (
-      <div role="status" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '2rem', color: 'var(--color-ink-soft)' }}>
-        <span className="spinner" style={{ borderColor: 'var(--color-line)', borderTopColor: 'var(--color-primary)' }} />
+      <div role="status" className="pos-loading">
+        <span className="spinner pos-loading-spinner" />
         Verificando turno de caja...
       </div>
     );
@@ -290,9 +291,9 @@ export default function Pos() {
 
   if (turnoStatus === 'error') {
     return (
-      <div role="alert" style={{ padding: '2rem', color: 'var(--color-danger)' }}>
+      <div role="alert" className="pos-error-state">
         <p>{turnoError}</p>
-        <button type="button" onClick={retryTurno}>
+        <button type="button" onClick={retryTurno} className="pos-alert-action">
           Reintentar
         </button>
       </div>
@@ -300,7 +301,7 @@ export default function Pos() {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 100px)', gap: '1rem' }}>
+    <div className="pos-page">
       {cobroManager.isPaymentOpen && venta && (
         <PaymentModal
           total={venta.total}
@@ -336,10 +337,10 @@ export default function Pos() {
       )}
 
       {ventaError && (
-        <div role="alert" style={{ padding: '0.75rem 1rem', border: '1px solid var(--color-danger)', background: 'var(--color-danger-bg)', color: 'var(--color-danger)', borderRadius: '8px' }}>
-          {ventaError}{' '}
+        <div role="alert" className="pos-alert pos-alert--danger">
+          <span>{ventaError}</span>
           {saleNeedsRefresh && (
-            <button type="button" onClick={retrySaleRefresh} disabled={pendingMutations > 0}>
+            <button type="button" onClick={retrySaleRefresh} disabled={pendingMutations > 0} className="pos-alert-action">
               Actualizar venta
             </button>
           )}
@@ -347,10 +348,10 @@ export default function Pos() {
       )}
 
       {cobroManager.paymentState === 'uncertain' && venta && (
-        <div role="alert" style={{ padding: '0.75rem 1rem', border: '1px solid var(--color-warning)', background: 'var(--color-warning-bg)', color: 'var(--color-warning-text)', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.75rem' }}>
+        <div role="alert" className="pos-alert pos-alert--warning">
           <span>Resultado del cobro sin confirmar para venta #{venta.id.slice(0, 8)}. Verifica el estado antes de continuar.</span>
           {!cobroManager.isPaymentOpen && (
-            <button type="button" onClick={() => cobroManager.setIsPaymentOpen(true)}>
+            <button type="button" onClick={() => cobroManager.setIsPaymentOpen(true)} className="pos-alert-action">
               Verificar estado del cobro
             </button>
           )}
@@ -358,9 +359,9 @@ export default function Pos() {
       )}
 
       {cobroManager.paymentState === 'cancelled' && venta && !cobroManager.isPaymentOpen && (
-        <div role="status" style={{ padding: '0.75rem 1rem', border: '1px solid var(--color-line)', background: 'var(--color-bg)', color: 'var(--color-ink)', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.75rem' }}>
+        <div role="status" className="pos-alert pos-alert--info">
           <span>Intento cancelado para venta #{venta.id.slice(0, 8)}. Puedes continuar el cobro sin perder el carrito.</span>
-          <button type="button" onClick={() => cobroManager.setIsPaymentOpen(true)}>
+          <button type="button" onClick={() => cobroManager.setIsPaymentOpen(true)} className="pos-alert-action">
             Continuar cobro
           </button>
         </div>
@@ -370,41 +371,21 @@ export default function Pos() {
       {isReadingScale && <div role="status">Esperando un peso estable de la balanza...</div>}
 
       {venta && (
-        <div role="status" style={{ padding: '0.75rem 1rem', border: '1px solid var(--color-success)', background: 'var(--color-success-bg)', color: 'var(--color-success)', borderRadius: '8px' }}>
+        <div role="status" className="pos-alert pos-alert--success">
           Venta {venta.estado === 'COMPLETADA' ? 'completada' : 'pendiente'} #{venta.id.slice(0, 8)}. Los ítems y totales provienen de MS-5.{cobroManager.recoveryNotice ? ` ${cobroManager.recoveryNotice}` : ''}
         </div>
       )}
 
       {mensajeConfirmacion && (
-        <div
-          style={{
-            backgroundColor: 'var(--color-success-bg)',
-            border: '1px solid var(--color-success)',
-            color: 'var(--color-success)',
-            padding: '0.75rem 1rem',
-            borderRadius: '8px',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 600, fontSize: '0.925rem' }}>
-            <span>✅</span>
+        <div className="pos-alert pos-alert--success" role="status">
+          <div className="pos-alert-title-row">
+            <span aria-hidden="true">✅</span>
             <span>{mensajeConfirmacion}</span>
           </div>
           <button
             type="button"
             onClick={() => setMensajeConfirmacion(null)}
-            style={{
-              background: 'none',
-              border: 'none',
-              color: 'var(--color-success)',
-              fontWeight: 'bold',
-              cursor: 'pointer',
-              fontSize: '1rem',
-              padding: '0.2rem 0.5rem',
-            }}
+            className="pos-alert-close"
             title="Cerrar mensaje"
           >
             ✕
@@ -412,10 +393,10 @@ export default function Pos() {
         </div>
       )}
 
-      <div style={{ display: 'flex', flex: 1, gap: '1rem', minHeight: 0 }}>
+      <div className="pos-columns">
         {/* Columna Izquierda: Búsqueda y Escaneo */}
-        <div style={{ flex: '0 0 320px', display: 'flex', flexDirection: 'column', background: 'var(--color-surface)', padding: '1rem', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-          <h3 style={{ marginTop: 0, color: 'var(--color-primary)', fontSize: '1.25rem' }}>Buscar Producto</h3>
+        <div className="pos-panel pos-panel--search">
+          <h3 className="pos-panel-title">Buscar Producto</h3>
           {isStartingSale ||
           isReadingScale ||
           capturaPeso ||
@@ -423,7 +404,7 @@ export default function Pos() {
           paymentState === 'uncertain' ||
           paymentState === 'processing' ||
           (venta && venta.estado !== 'PENDIENTE') ? (
-            <p style={{ color: 'var(--color-ink-soft)' }}>
+            <p className="pos-search-blocked">
               {isStartingSale
                 ? 'Iniciando venta...'
                 : isReadingScale
@@ -434,30 +415,9 @@ export default function Pos() {
             <BarcodeInput onSearch={handleSearch} onTyping={handleTypingSearch} clearSignal={clearSearchSignal} />
           )}
 
-          <div
-            style={{
-              flex: 1,
-              border: searchResults.length === 0 ? '2px dashed var(--color-line)' : 'none',
-              borderRadius: '8px',
-              overflow: 'auto',
-              backgroundColor: searchResults.length === 0 ? 'var(--color-bg)' : 'transparent',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '0.5rem',
-            }}
-          >
+          <div className={`pos-search-results${searchResults.length === 0 ? ' pos-search-results--empty' : ''}`}>
             {searchResults.length === 0 ? (
-              <div
-                style={{
-                  flex: 1,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: 'var(--color-muted)',
-                  textAlign: 'center',
-                  padding: '1rem',
-                }}
-              >
+              <div className="pos-search-empty-msg">
                 {searchState === 'loading'
                   ? 'Buscando productos...'
                   : searchState === 'error'
@@ -471,33 +431,14 @@ export default function Pos() {
                 <div
                   key={prod.id}
                   onClick={() => { void addProductToCart(prod); }}
-                  style={{
-                    padding: '0.75rem',
-                    border: '1px solid var(--color-line)',
-                    borderRadius: '8px',
-                    backgroundColor: 'var(--color-surface)',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    transition: 'all 0.2s',
-                    boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
-                  }}
-                  onMouseOver={(e) => {
-                    e.currentTarget.style.borderColor = 'var(--color-primary)';
-                    e.currentTarget.style.backgroundColor = 'var(--color-primary-bg)';
-                  }}
-                  onMouseOut={(e) => {
-                    e.currentTarget.style.borderColor = 'var(--color-line)';
-                    e.currentTarget.style.backgroundColor = 'var(--color-surface)';
-                  }}
+                  className="pos-product-item"
                 >
                   <div>
-                    <div style={{ fontWeight: 600, color: 'var(--color-ink)' }}>{prod.nombre}</div>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--color-ink-soft)' }}>{prod.codigoBarras}</div>
-                    {prod.esPesoVariable && <div style={{ fontSize: '0.75rem', color: 'var(--color-warning-text)' }}>Requiere peso estable</div>}
+                    <div className="pos-product-name">{prod.nombre}</div>
+                    <div className="pos-product-barcode">{prod.codigoBarras}</div>
+                    {prod.esPesoVariable && <div className="pos-product-weight-tag">Requiere peso estable</div>}
                   </div>
-                  <div style={{ fontWeight: 'bold', color: 'var(--color-primary)' }}>
+                  <div className="pos-product-price">
                     ${prod.precioBase.toLocaleString('es-CL')}
                   </div>
                 </div>
@@ -543,47 +484,26 @@ export default function Pos() {
           )}
 
           {capturaPeso && (
-            <div style={{ marginTop: '0.75rem', padding: '0.75rem', backgroundColor: 'var(--color-bg)', borderRadius: '8px', border: '1px solid var(--color-line)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                <span style={{ fontWeight: 600, fontSize: '0.85rem', color: 'var(--color-ink)' }}>⚖️ Balanza Simulada</span>
-                <span style={{ fontSize: '0.8rem', color: pesoEstable ? 'var(--color-success)' : 'var(--color-muted)' }}>
+            <div className="pos-scale-widget">
+              <div className="pos-scale-header">
+                <span className="pos-scale-title">⚖️ Balanza Simulada</span>
+                <span className={`pos-scale-status${pesoEstable ? ' pos-scale-status--stable' : ''}`}>
                   {pesoEstable ? '● Estable' : '○ Leyendo...'}
                 </span>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                <span style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--color-primary)' }}>
-                  {pesoBalanza.toFixed(3)} kg
-                </span>
-                <button
-                  type="button"
-                  onClick={handleTarar}
-                  style={{
-                    padding: '0.25rem 0.5rem',
-                    fontSize: '0.75rem',
-                    backgroundColor: 'var(--color-surface)',
-                    border: '1px solid var(--color-line)',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                  }}
-                >
+              <div className="pos-scale-reading-row">
+                <span className="pos-scale-value">{pesoBalanza.toFixed(3)} kg</span>
+                <button type="button" onClick={handleTarar} className="pos-scale-tare-btn">
                   Tarar
                 </button>
               </div>
-              <div style={{ display: 'flex', gap: '0.25rem', flexWrap: 'wrap' }}>
+              <div className="pos-scale-presets">
                 {[0.25, 0.5, 1.0, 2.5].map((kg) => (
                   <button
                     key={kg}
                     type="button"
                     onClick={() => handleSimularPeso(kg)}
-                    style={{
-                      flex: 1,
-                      padding: '0.2rem',
-                      fontSize: '0.7rem',
-                      backgroundColor: 'var(--color-surface)',
-                      border: '1px solid var(--color-line)',
-                      borderRadius: '4px',
-                      cursor: 'pointer',
-                    }}
+                    className="pos-scale-preset-btn"
                   >
                     +{kg}kg
                   </button>

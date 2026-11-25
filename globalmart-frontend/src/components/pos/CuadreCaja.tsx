@@ -23,30 +23,11 @@ export default function CuadreCaja({
   onCalcularCuadre,
 }: CuadreCajaProps) {
   return (
-    <div
-      style={{
-        background: 'var(--color-bg)',
-        border: '1px solid var(--color-line)',
-        borderRadius: '12px',
-        padding: '1.5rem',
-        marginBottom: '2rem',
-      }}
-    >
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: '1rem',
-          flexWrap: 'wrap',
-          gap: '0.5rem',
-        }}
-      >
+    <div className="cuadre-box">
+      <div className="cuadre-header">
         <div>
-          <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 700, color: 'var(--color-ink)' }}>
-            Arqueo y Comparación de Cuadre
-          </h3>
-          <div style={{ fontSize: '0.85rem', color: 'var(--color-ink-soft)' }}>
+          <h3 className="cuadre-title">Arqueo y Comparación de Cuadre</h3>
+          <div className="cuadre-subtitle">
             Verifica la diferencia entre el efectivo esperado por ventas y lo contado físicamente.
           </div>
         </div>
@@ -55,118 +36,60 @@ export default function CuadreCaja({
           type="button"
           onClick={onCalcularCuadre}
           disabled={isCalculatingCuadre || noTurnoOpen}
-          style={{
-            background: 'var(--color-primary)',
-            color: 'var(--color-surface)',
-            border: 'none',
-            padding: '0.65rem 1.25rem',
-            borderRadius: '8px',
-            fontWeight: 700,
-            fontSize: '0.9rem',
-            cursor: isCalculatingCuadre || noTurnoOpen ? 'not-allowed' : 'pointer',
-          }}
+          className="cuadre-btn"
         >
           {isCalculatingCuadre ? 'Calculando...' : '🔍 Calcular Cuadre'}
         </button>
       </div>
 
       {efectivoEsperado !== null && (
-        <div style={{ marginTop: '1rem' }}>
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-              gap: '1rem',
-            }}
-          >
-            {/* Efectivo Esperado */}
-            <div
-              style={{
-                background: 'var(--color-surface)',
-                border: '1px solid var(--color-line)',
-                borderRadius: '8px',
-                padding: '1rem',
-              }}
-            >
-              <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--color-ink-soft)', fontWeight: 600 }}>
-                Efectivo Esperado (Ventas)
-              </div>
-              <div style={{ fontSize: '1.35rem', fontWeight: 800, color: 'var(--color-ink)', marginTop: '0.25rem' }}>
+        <div className="cuadre-results">
+          <div className="cuadre-grid">
+            <div className="cuadre-metric">
+              <div className="cuadre-metric-label">Efectivo Esperado (Ventas)</div>
+              <div className="cuadre-metric-value">
                 ${efectivoEsperado.toLocaleString('es-CL')}
               </div>
-              <div style={{ fontSize: '0.75rem', color: 'var(--color-ink-soft)', marginTop: '0.25rem' }}>
+              <div className="cuadre-metric-note">
                 Vía MS-5 (pagos efectivo completados; excluye ventas anuladas)
               </div>
             </div>
 
-            {/* Efectivo Declarado */}
-            <div
-              style={{
-                background: 'var(--color-surface)',
-                border: '1px solid var(--color-line)',
-                borderRadius: '8px',
-                padding: '1rem',
-              }}
-            >
-              <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--color-ink-soft)', fontWeight: 600 }}>
-                Efectivo Declarado (Gaveta)
-              </div>
-              <div style={{ fontSize: '1.35rem', fontWeight: 800, color: 'var(--color-primary)', marginTop: '0.25rem' }}>
+            <div className="cuadre-metric">
+              <div className="cuadre-metric-label">Efectivo Declarado (Gaveta)</div>
+              <div className="cuadre-metric-value cuadre-metric-value--primary">
                 ${totalDeclarado.toLocaleString('es-CL')}
               </div>
-              <div style={{ fontSize: '0.75rem', color: 'var(--color-ink-soft)', marginTop: '0.25rem' }}>
+              <div className="cuadre-metric-note">
                 Suma automática de billetes + monedas
               </div>
             </div>
 
-            {/* Diferencia */}
             {(() => {
               const diff = diferenciaCalculada ?? 0;
               const isExact = diff === 0;
               const isSobrante = diff > 0;
-              const hasDiscrepancy = !isExact;
               return (
-                <div
-                  style={{
-                    background: isExact ? 'var(--color-success-bg)' : 'var(--color-danger-bg)',
-                    border: `1px solid ${isExact ? 'var(--color-success)' : 'var(--color-danger)'}`,
-                    borderRadius: '8px',
-                    padding: '1rem',
-                  }}
-                >
-                  <div
-                    style={{
-                      fontSize: '0.75rem',
-                      textTransform: 'uppercase',
-                      fontWeight: 700,
-                      color: isExact ? 'var(--color-success)' : 'var(--color-danger)',
-                    }}
-                  >
+                <div className={`cuadre-metric ${isExact ? 'cuadre-metric--exact' : 'cuadre-metric--diff'}`}>
+                  <div className="cuadre-metric-label">
                     {isExact
                       ? '✅ Diferencia (Cuadre Exacto)'
                       : isSobrante
                       ? '⚠️ Diferencia (Sobrante)'
                       : '⚠️ Diferencia (Faltante)'}
                   </div>
-                  <div
-                    style={{
-                      fontSize: '1.5rem',
-                      fontWeight: 800,
-                      marginTop: '0.25rem',
-                      color: isExact ? 'var(--color-success)' : 'var(--color-danger)',
-                    }}
-                  >
+                  <div className="cuadre-metric-value">
                     {isSobrante ? '+' : ''}${diff.toLocaleString('es-CL')}
                   </div>
-                  <div style={{ fontSize: '0.75rem', marginTop: '0.25rem', color: isExact ? 'var(--color-success)' : 'var(--color-danger)' }}>
+                  <div className="cuadre-metric-note">
                     {isExact
                       ? 'La gaveta coincide exactamente con las ventas registradas'
                       : isSobrante
                       ? 'Hay más efectivo del esperado — revisar conteo'
                       : 'Falta efectivo respecto a las ventas — revisar conteo'}
                   </div>
-                  {hasDiscrepancy && (
-                    <div style={{ marginTop: '0.5rem', padding: '0.4rem 0.6rem', background: 'var(--color-danger-bg)', borderRadius: '6px', fontSize: '0.75rem', color: 'var(--color-danger)', fontWeight: 600 }}>
+                  {!isExact && (
+                    <div className="cuadre-discrepancy-note">
                       Discrepancia detectada: se recomienda revisar el conteo antes de cerrar el turno.
                     </div>
                   )}
@@ -175,9 +98,9 @@ export default function CuadreCaja({
             })()}
           </div>
 
-          <div style={{ marginTop: '0.75rem', fontSize: '0.8rem', color: 'var(--color-ink-soft)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <div className="cuadre-sync-status">
             {cuadreSynced ? (
-              <span style={{ color: 'var(--color-success)', fontWeight: 600 }}>
+              <span className="cuadre-sync-ok">
                 ✓ Cuadre verificado y sincronizado con el microservicio POS (MS-5)
                 {cuadreResult?.turno_id ? ` (Turno: ${cuadreResult.turno_id.slice(0, 8)}...)` : ''}.
               </span>

@@ -14,56 +14,27 @@ export default function ResultadoCierre({
   onVolverPos,
 }: ResultadoCierreProps) {
   return (
-    <div
-      style={{
-        backgroundColor: 'var(--color-success-bg)',
-        border: '1px solid var(--color-success)',
-        color: 'var(--color-success)',
-        padding: '1.25rem',
-        borderRadius: '10px',
-        fontSize: '0.95rem',
-        marginBottom: '1.5rem',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '0.75rem',
-      }}
-    >
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 700, fontSize: '1.05rem' }}>
-        <span>✅</span>
+    <div className="resultado-cierre" role="status">
+      <div className="resultado-cierre-title">
+        <span aria-hidden="true">✅</span>
         <span>{successMsg}</span>
       </div>
-      <p style={{ margin: 0 }}>
+      <p className="resultado-cierre-text">
         El turno ha finalizado correctamente. La gaveta ha sido registrada con un monto total declarado de{' '}
-        <strong>${totalDeclarado.toLocaleString('es-CL')}</strong>.
+        <strong className="num">${totalDeclarado.toLocaleString('es-CL')}</strong>.
       </p>
-      <div style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem' }}>
+      <div className="resultado-cierre-actions">
         <button
           type="button"
           onClick={onAbrirTurno}
-          style={{
-            backgroundColor: 'var(--color-success)',
-            color: 'var(--color-surface)',
-            border: 'none',
-            padding: '0.6rem 1.2rem',
-            borderRadius: '8px',
-            fontWeight: 600,
-            cursor: 'pointer',
-          }}
+          className="resultado-cierre-btn-primary"
         >
           Abrir Nuevo Turno →
         </button>
         <button
           type="button"
           onClick={onVolverPos}
-          style={{
-            backgroundColor: 'var(--color-surface)',
-            color: 'var(--color-success)',
-            border: '1px solid var(--color-success)',
-            padding: '0.6rem 1.2rem',
-            borderRadius: '8px',
-            fontWeight: 600,
-            cursor: 'pointer',
-          }}
+          className="resultado-cierre-btn-secondary"
         >
           Volver al POS
         </button>
