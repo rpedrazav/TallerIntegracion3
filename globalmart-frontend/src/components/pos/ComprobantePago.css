@@ -1,5 +1,5 @@
 .comprobante-wrapper {
-  margin: 16px 0;
+  margin: 10px 0 4px;
   text-align: left;
 }
 
@@ -9,17 +9,17 @@
   color: var(--color-ink, #1f2937);
   border: 1px dashed var(--color-line, #d1d5db);
   border-radius: 8px;
-  padding: 16px;
-  font-size: 0.85rem;
-  line-height: 1.4;
+  padding: 12px;
+  font-size: 0.82rem;
+  line-height: 1.35;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
 .comprobante-ticket__header {
   text-align: center;
   border-bottom: 1px dashed var(--color-line, #d1d5db);
-  padding-bottom: 10px;
-  margin-bottom: 10px;
+  padding-bottom: 8px;
+  margin-bottom: 8px;
 }
 
 .comprobante-ticket__title {

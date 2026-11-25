@@ -90,7 +90,7 @@ builder.Services.AddCors(options =>
 builder.Services.AddHttpClient(PaymentGatewayClient.HttpClientName, client =>
 {
     var baseUrl = builder.Configuration["PasarelaPago:BaseUrl"]
-        ?? throw new InvalidOperationException("PasarelaPago:BaseUrl no configurada en appsettings.json");
+        ?? "http://localhost:5050";
     var timeoutSeconds = builder.Configuration.GetValue<int>("PasarelaPago:TimeoutSeconds", 30);
     if (timeoutSeconds <= 0)
         throw new InvalidOperationException("PasarelaPago:TimeoutSeconds debe ser mayor que cero.");
@@ -99,8 +99,17 @@ builder.Services.AddHttpClient(PaymentGatewayClient.HttpClientName, client =>
     client.Timeout = TimeSpan.FromSeconds(timeoutSeconds);
     client.DefaultRequestHeaders.Add("Accept", "application/json");
 });
-builder.Services.AddScoped<IPaymentGatewayClient, PaymentGatewayClient>();
-builder.Services.AddScoped<IReversalGatewayClient, ReversalGatewayClient>();
+if (builder.Configuration.GetValue<bool>("PasarelaPago:ModoSimulado", false))
+{
+    builder.Services.AddSingleton<SimulatedPaymentGatewayClient>();
+    builder.Services.AddScoped<IPaymentGatewayClient>(sp => sp.GetRequiredService<SimulatedPaymentGatewayClient>());
+    builder.Services.AddScoped<IReversalGatewayClient>(sp => sp.GetRequiredService<SimulatedPaymentGatewayClient>());
+}
+else
+{
+    builder.Services.AddScoped<IPaymentGatewayClient, PaymentGatewayClient>();
+    builder.Services.AddScoped<IReversalGatewayClient, ReversalGatewayClient>();
+}
 builder.Services.AddScoped<ReversaTarjetaService>();
 
 // â”€â”€â”€ Clientes HTTP hacia microservicios MS-3 y MS-2 â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€

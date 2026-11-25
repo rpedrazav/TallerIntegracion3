@@ -282,6 +282,11 @@ export default function PaymentModal({
         )}
         {state === 'uncertain' && onVerify && <button type="button" className="payment-modal__primary" onClick={onVerify}>Verificar venta</button>}
         {state === 'uncertain' && onCancelAttempt && <button type="button" className="payment-modal__secondary" onClick={onCancelAttempt}>Cancelar intento</button>}
+        {state === 'uncertain' && method === 'card' && onChangeMethod && (
+          <button type="button" className="payment-modal__secondary" onClick={() => { setMethod('cash'); onChangeMethod('cash'); }}>
+            Cambiar a efectivo
+          </button>
+        )}
         {state === 'cancelled' && onContinueAfterCancel && <button type="button" className="payment-modal__primary" onClick={onContinueAfterCancel}>Continuar cobro</button>}
         {state !== 'available' && state !== 'processing' && <button type="button" className="payment-modal__secondary" onClick={onClose}>Cerrar</button>}
       </div>

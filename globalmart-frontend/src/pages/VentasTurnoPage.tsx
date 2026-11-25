@@ -14,6 +14,7 @@ export default function VentasTurnoPage() {
   const [turnos, setTurnos] = useState<TurnoActivo[]>([]);
   const [turnoId, setTurnoId] = useState('');
   const [ventas, setVentas] = useState<VentaPendiente[]>([]);
+  const [expandidas, setExpandidas] = useState<Record<string, boolean>>({});
   const [error, setError] = useState('');
   const [anulando, setAnulando] = useState<VentaPendiente | null>(null);
   const [motivo, setMotivo] = useState('');
@@ -64,6 +65,16 @@ export default function VentasTurnoPage() {
     }
   };
 
+  const toggleDetalle = (ventaId: string) => {
+    setExpandidas(prev => ({ ...prev, [ventaId]: !prev[ventaId] }));
+  };
+
+  const completadas = ventas.filter(v => v.estado === 'COMPLETADA');
+  const totalRecaudado = completadas.reduce((acc, v) => acc + v.total, 0);
+  const totalEfectivo = completadas.filter(v => v.metodo_pago === 'EFECTIVO').reduce((acc, v) => acc + v.total, 0);
+  const totalTarjeta = completadas.filter(v => v.metodo_pago === 'TARJETA').reduce((acc, v) => acc + v.total, 0);
+  const totalColumnas = isAdmin ? 6 : 5;
+
   return (
     <section>
       <h2>Ventas del turno</h2>
@@ -76,39 +87,116 @@ export default function VentasTurnoPage() {
           </select>
         </label>
       )}
+      {ventas.length > 0 && (
+        <div
+          style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: '1rem',
+            marginTop: '0.75rem',
+            padding: '0.75rem 1rem',
+            borderRadius: 8,
+            border: '1px solid var(--color-line)',
+            background: 'var(--color-surface)',
+            fontSize: '0.9rem',
+          }}
+        >
+          <span>Ventas completadas: <strong>{completadas.length}</strong> / {ventas.length}</span>
+          <span>Efectivo: <strong>$ {totalEfectivo.toLocaleString('es-CL')}</strong></span>
+          <span>Tarjeta: <strong>$ {totalTarjeta.toLocaleString('es-CL')}</strong></span>
+          <span>Total recaudado: <strong>$ {totalRecaudado.toLocaleString('es-CL')}</strong></span>
+        </div>
+      )}
       <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '1rem' }}>
-        <thead><tr><th align="left">Venta</th><th align="left">Método</th><th align="right">Total</th><th align="left">Estado</th>{isAdmin && <th />}</tr></thead>
+        <thead><tr><th align="left">Venta</th><th align="left">Método</th><th align="right">Total</th><th align="left">Estado</th><th align="right">Detalle</th>{isAdmin && <th />}</tr></thead>
         <tbody>
-          {ventas.map(v => (
-            <tr key={v.id} style={{ borderTop: '1px solid var(--color-line)' }}>
-              <td>{v.id.slice(0, 8)}</td>
-              <td>{v.metodo_pago}</td>
-              <td align="right">$ {v.total.toLocaleString('es-CL')}</td>
-              <td>
-                {v.estado === 'ANULADA' ? (
-                  <span
-                    data-testid="estado-anulada"
-                    style={{
-                      background: 'var(--color-danger-bg)',
-                      color: 'var(--color-danger-text)',
-                      padding: '0.22rem 0.65rem',
-                      borderRadius: '9999px',
-                      fontSize: '0.78rem',
-                      fontWeight: 700,
-                      whiteSpace: 'nowrap',
-                      border: '1px solid var(--color-danger)',
-                      display: 'inline-block',
-                    }}
-                  >
-                    ANULADA
-                  </span>
-                ) : (
-                  v.estado
+          {ventas.map(v => {
+            const abierta = !!expandidas[v.id];
+            const items = Array.isArray(v.items) ? v.items : [];
+            return (
+              <React.Fragment key={v.id}>
+                <tr style={{ borderTop: '1px solid var(--color-line)' }}>
+                  <td>{v.id.slice(0, 8)}</td>
+                  <td>{v.metodo_pago}</td>
+                  <td align="right">$ {v.total.toLocaleString('es-CL')}</td>
+                  <td>
+                    {v.estado === 'ANULADA' ? (
+                      <span
+                        data-testid="estado-anulada"
+                        style={{
+                          background: 'var(--color-danger-bg)',
+                          color: 'var(--color-danger-text)',
+                          padding: '0.22rem 0.65rem',
+                          borderRadius: '9999px',
+                          fontSize: '0.78rem',
+                          fontWeight: 700,
+                          whiteSpace: 'nowrap',
+                          border: '1px solid var(--color-danger)',
+                          display: 'inline-block',
+                        }}
+                      >
+                        ANULADA
+                      </span>
+                    ) : (
+                      v.estado
+                    )}
+                  </td>
+                  <td align="right">
+                    <button
+                      type="button"
+                      style={buttonStyle}
+                      aria-expanded={abierta}
+                      onClick={() => toggleDetalle(v.id)}
+                    >
+                      {abierta ? 'Ocultar detalle' : `Ver detalle (${items.length})`}
+                    </button>
+                  </td>
+                  {isAdmin && <td align="right">{v.estado === 'COMPLETADA' && <button type="button" style={buttonStyle} onClick={() => abrirAnulacion(v)}>Anular</button>}</td>}
+                </tr>
+                {abierta && (
+                  <tr style={{ background: 'var(--color-surface)' }}>
+                    <td colSpan={totalColumnas} style={{ padding: '0.75rem 1rem', borderTop: '1px dashed var(--color-line)' }}>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', fontSize: '0.85rem', marginBottom: '0.6rem', color: 'var(--color-ink-soft)' }}>
+                        <span>ID: <code>{v.id}</code></span>
+                        {v.created_at && <span>Fecha: <strong>{new Date(v.created_at).toLocaleString('es-CL')}</strong></span>}
+                        <span>Subtotal: <strong>$ {v.subtotal.toLocaleString('es-CL')}</strong></span>
+                        <span>IVA: <strong>$ {v.impuestos.toLocaleString('es-CL')}</strong></span>
+                        <span>Total: <strong>$ {v.total.toLocaleString('es-CL')}</strong></span>
+                      </div>
+                      {items.length === 0 ? (
+                        <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--color-ink-soft)' }}>
+                          Sin detalle de productos registrado para esta venta.
+                        </p>
+                      ) : (
+                        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
+                          <thead>
+                            <tr style={{ borderBottom: '1px solid var(--color-line)' }}>
+                              <th align="left" style={{ padding: '0.35rem 0.25rem' }}>Producto</th>
+                              <th align="right" style={{ padding: '0.35rem 0.25rem' }}>Cantidad / Peso</th>
+                              <th align="right" style={{ padding: '0.35rem 0.25rem' }}>Precio unit.</th>
+                              <th align="right" style={{ padding: '0.35rem 0.25rem' }}>Subtotal</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {items.map(item => (
+                              <tr key={item.id} style={{ borderBottom: '1px dotted var(--color-line)' }}>
+                                <td style={{ padding: '0.35rem 0.25rem' }}>{item.nombre_producto || item.producto_id}</td>
+                                <td align="right" style={{ padding: '0.35rem 0.25rem' }}>
+                                  {item.peso_kg != null ? `${item.peso_kg.toFixed(3)} kg` : `${item.cantidad} un.`}
+                                </td>
+                                <td align="right" style={{ padding: '0.35rem 0.25rem' }}>$ {item.precio_unitario.toLocaleString('es-CL')}</td>
+                                <td align="right" style={{ padding: '0.35rem 0.25rem' }}>$ {item.subtotal.toLocaleString('es-CL')}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      )}
+                    </td>
+                  </tr>
                 )}
-              </td>
-              {isAdmin && <td align="right">{v.estado === 'COMPLETADA' && <button type="button" style={buttonStyle} onClick={() => abrirAnulacion(v)}>Anular</button>}</td>}
-            </tr>
-          ))}
+              </React.Fragment>
+            );
+          })}
         </tbody>
       </table>
       {ventas.length === 0 && turnoId && !error && <p>Este turno aún no tiene ventas.</p>}

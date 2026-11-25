@@ -196,7 +196,7 @@ export function useCobro({ venta, onUpdateVenta, turnoId }: UseCobroOptions) {
 
   const changePaymentMethod = async (method: PaymentMethod) => {
     const current = saleRef.current;
-    if (!current || current.estado !== 'PENDIENTE' || paymentInFlight.current || paymentState === 'uncertain') return;
+    if (!current || current.estado !== 'PENDIENTE' || paymentInFlight.current) return;
     paymentInFlight.current = true;
     setPaymentError('');
     try {

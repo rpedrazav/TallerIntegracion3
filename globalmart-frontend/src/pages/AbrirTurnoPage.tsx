@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios, { AxiosError } from 'axios';
 import { useAuth } from '../hooks/useAuth';
 import { posApi, TurnoActivo } from '../api/client';
+import { buildServiceUrl } from '../config/api';
 import './AbrirTurnoPage.css';
 
 interface JwtPayload {
@@ -84,12 +85,34 @@ export default function AbrirTurnoPage() {
     setIsLoading(true);
 
     try {
-      const sucursalId =
+      if (!token) return;
+
+      let sucursalId =
         userInfo?.sucursal_id && userInfo.sucursal_id.length > 10
           ? userInfo.sucursal_id
-          : '00000000-0000-0000-0000-000000000001';
+          : '';
 
-      if (!token) return;
+      if (!sucursalId) {
+        try {
+          const { data } = await axios.get<Array<{ id: string; activa?: boolean }>>(
+            buildServiceUrl('identity', '/sucursales'),
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+          const activa = Array.isArray(data)
+            ? data.find((s) => s.activa !== false) ?? data[0]
+            : undefined;
+          if (activa?.id) {
+            sucursalId = activa.id;
+          }
+        } catch {
+          // Si no se puede consultar el listado de sucursales, usa el respaldo local para entornos mock.
+        }
+      }
+
+      if (!sucursalId) {
+        sucursalId = '00000000-0000-0000-0000-000000000001';
+      }
+
       await posApi.openShift(sucursalId, montoNum);
 
       const confirmMsg = '¡Turno de caja abierto exitosamente!';

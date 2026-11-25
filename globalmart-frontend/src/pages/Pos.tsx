@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { catalogApi, CatalogProduct, posApi } from '../api/client';
@@ -48,17 +48,14 @@ export default function Pos() {
   const [pesoBalanza, setPesoBalanza] = useState<number>(0);
   const [pesoEstable, setPesoEstable] = useState<boolean>(true);
 
+  // Ref para evitar referencias adelantadas a setters/hooks declarados abajo
+  const recoveryHandlerRef = useRef<((data: PosRecoveryResolved) => void) | null>(null);
+  const handleRecoveryResolved = useCallback((data: PosRecoveryResolved) => {
+    recoveryHandlerRef.current?.(data);
+  }, []);
+
   // Hook de recuperación del turno y estado previo
-  const { turnoStatus, turnoError, turnoId, retryTurno } = usePosRecovery(
-    useCallback((data: PosRecoveryResolved) => {
-      setVenta(data.venta);
-      if (data.venta) {
-        setDraftItems([]);
-        setSearchResults([]);
-      }
-      cobroManager.applyRecoveryPayment(data);
-    }, [])
-  );
+  const { turnoStatus, turnoError, turnoId, retryTurno } = usePosRecovery(handleRecoveryResolved);
 
   // Hook de venta y carrito
   const {
@@ -102,6 +99,17 @@ export default function Pos() {
   });
 
   const paymentState = cobroManager.paymentState;
+
+  useEffect(() => {
+    recoveryHandlerRef.current = (data: PosRecoveryResolved) => {
+      setVenta(data.venta);
+      if (data.venta) {
+        setDraftItems([]);
+        setSearchResults([]);
+      }
+      cobroManager.applyRecoveryPayment(data);
+    };
+  }, [cobroManager, setDraftItems, setVenta]);
 
   const commitProductToCart = useCallback((product: CatalogProduct, weightKg?: number): boolean => {
     if (venta) {

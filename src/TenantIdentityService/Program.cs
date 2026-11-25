@@ -155,7 +155,7 @@ if (app.Environment.IsDevelopment())
     void SeedUsuario(string id, string nombre, string email, string rolId)
     {
         var usuarioId = Guid.Parse(id);
-        if (db.Usuarios.IgnoreQueryFilters().Any(u => u.Id == usuarioId)) return;
+        if (db.Usuarios.IgnoreQueryFilters().Any(u => u.Id == usuarioId || (u.TenantId == tenantIdDemo && u.Email == email))) return;
         db.Usuarios.Add(new TenantIdentityService.Models.Usuario
         {
             Id           = usuarioId,
@@ -179,26 +179,41 @@ if (app.Environment.IsDevelopment())
             "Seed de desarrollo aplicado. Cajero: cajero@demo.cl | Admin: admin@demo.cl | tenantId: {TenantId}",
             tenantIdDemo);
     }
-    else if (!db.Usuarios.IgnoreQueryFilters().Any(u => u.Email == "admin@demo.cl"))
+
+    // Asegurar que el cajero demo tenga al menos una sucursal activa asignada en desarrollo.
+    var cajeroDemo = db.Usuarios.IgnoreQueryFilters()
+        .FirstOrDefault(u => u.TenantId == tenantIdDemo && u.Email == "cajero@demo.cl");
+    if (cajeroDemo is not null)
     {
-        var rolAdminId = Guid.Parse("11111111-0000-0000-0000-000000000003");
-        var admin = new TenantIdentityService.Models.Usuario
+        var sucursalDemo = db.Sucursales.IgnoreQueryFilters()
+            .FirstOrDefault(s => s.TenantId == tenantIdDemo && s.Activa);
+        if (sucursalDemo is null)
         {
-            Id           = Guid.Parse("bbbbbbbb-0000-0000-0000-000000000002"),
-            TenantId     = tenantIdDemo,
-            Nombre       = "Admin Demo",
-            Email        = "admin@demo.cl",
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword("demo1234"),
-            Activo       = true
-        };
-        var adminRol = new TenantIdentityService.Models.UsuarioRol
+            sucursalDemo = new TenantIdentityService.Models.Sucursal
+            {
+                Id          = Guid.Parse("cccccccc-0000-0000-0000-000000000001"),
+                TenantId    = tenantIdDemo,
+                Nombre      = "Sucursal Demo",
+                Direccion   = "Av. Providencia 1234, Santiago",
+                ZonaHoraria = "America/Santiago",
+                Activa      = true
+            };
+            db.Sucursales.Add(sucursalDemo);
+        }
+
+        var tieneVinculo = db.UsuarioSucursales.IgnoreQueryFilters()
+            .Any(us => us.UsuarioId == cajeroDemo.Id && us.SucursalId == sucursalDemo.Id);
+        if (!tieneVinculo)
         {
-            UsuarioId = admin.Id,
-            RolId     = rolAdminId
-        };
-        db.Usuarios.Add(admin);
-        db.UsuarioRoles.Add(adminRol);
-        db.SaveChanges();
+            db.UsuarioSucursales.Add(new TenantIdentityService.Models.UsuarioSucursal
+            {
+                UsuarioId  = cajeroDemo.Id,
+                SucursalId = sucursalDemo.Id
+            });
+        }
+
+        if (db.ChangeTracker.HasChanges())
+            db.SaveChanges();
     }
 }
 

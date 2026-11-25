@@ -339,7 +339,9 @@ spec:
         - name: Services__IdentityUrl
           value: "http://tenantidentityservice"
         - name: PasarelaPago__BaseUrl
-          value: "http://payment-simulator:5050"
+          value: "http://127.0.0.1:5050"
+        - name: Kafka__MessageTimeoutMs
+          value: "500"
         - name: ASPNETCORE_HTTP_PORTS
           value: "8080"
         ports:
@@ -349,8 +351,33 @@ spec:
             cpu: "25m"
             memory: "64Mi"
           limits:
-            cpu: "200m"
-            memory: "256Mi"
+            cpu: "350m"
+            memory: "192Mi"
+      - name: payment-simulator
+        image: node:20-alpine
+        command: ["node", "/app/server.js"]
+        env:
+        - name: PORT
+          value: "5050"
+        - name: HOST
+          value: "127.0.0.1"
+        ports:
+        - containerPort: 5050
+        volumeMounts:
+        - name: simulator-code
+          mountPath: /app
+          readOnly: true
+        resources:
+          requests:
+            cpu: "25m"
+            memory: "64Mi"
+          limits:
+            cpu: "50m"
+            memory: "64Mi"
+      volumes:
+      - name: simulator-code
+        configMap:
+          name: payment-simulator-code
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
@@ -408,7 +435,7 @@ spec:
             memory: "64Mi"
           limits:
             cpu: "100m"
-            memory: "128Mi"
+            memory: "64Mi"
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress

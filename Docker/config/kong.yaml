@@ -213,6 +213,16 @@ services:
         plugins:
           - name: jwt
 
+      - name: lotes-route
+        paths:
+          - /api/lotes
+        strip_path: false
+        methods:
+          - GET
+          - OPTIONS
+        plugins:
+          - name: jwt
+
   # --------------------------------------------------------------------------
   # MS-5: POS & Cart Service (Host :5000)
   # --------------------------------------------------------------------------

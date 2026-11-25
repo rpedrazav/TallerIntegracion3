@@ -6,6 +6,7 @@ namespace WarehouseInventoryService.Controllers;
 
 [ApiController]
 [Route("lotes")]
+[Route("api/lotes")]
 [Authorize(Roles = "ADMIN,REPONEDOR")]
 public sealed class LotesController : ControllerBase
 {
