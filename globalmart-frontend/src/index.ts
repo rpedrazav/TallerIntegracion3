@@ -47,8 +47,11 @@ app.commandLine.appendSwitch('ignore-certificate-errors');
 const createWindow = (): void => {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
-    height: 600,
-    width: 800,
+    title: 'GlobalMart OS',
+    height: 800,
+    width: 1280,
+    minWidth: 1024,
+    minHeight: 680,
     webPreferences: {
       preload: MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY,
       contextIsolation: true,
@@ -60,8 +63,8 @@ const createWindow = (): void => {
   // and load the index.html of the app.
   mainWindow.loadURL(MAIN_WINDOW_WEBPACK_ENTRY);
 
-  // Open the DevTools only in local development when not running tests.
-  if (!process.env.E2E_USER_DATA) {
+  // Open the DevTools only in local development when not running tests or packaged .exe.
+  if (!app.isPackaged && !process.env.E2E_USER_DATA) {
     mainWindow.webContents.openDevTools();
   }
 };

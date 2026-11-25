@@ -1,14 +1,15 @@
 {
   "name": "globalmart-frontend",
-  "productName": "globalmart-frontend",
+  "productName": "GlobalMartOS",
   "version": "1.0.0",
-  "description": "My Electron application description",
+  "description": "GlobalMart OS — Punto de Venta y Administración",
   "main": ".webpack/main",
   "private": true,
   "scripts": {
     "start": "electron-forge start -- --no-sandbox",
     "package": "electron-forge package",
     "make": "electron-forge make",
+    "make:win": "electron-forge make --platform=win32 --arch=x64",
     "publish": "electron-forge publish",
     "typecheck": "tsc --noEmit",
     "lint": "eslint --ext .ts,.tsx .",

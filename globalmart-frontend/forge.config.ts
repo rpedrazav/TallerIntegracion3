@@ -14,10 +14,18 @@ import { rendererConfig } from './webpack.renderer.config';
 const config: ForgeConfig = {
   packagerConfig: {
     asar: true,
+    name: 'GlobalMartOS',
+    executableName: 'GlobalMartOS',
   },
   rebuildConfig: {},
   makers: [
-    new MakerSquirrel({}),
+    new MakerSquirrel({
+      name: 'GlobalMartOS',
+      authors: 'Equipo GlobalMart OS',
+      description: 'GlobalMart OS — Punto de Venta y Administración',
+      exe: 'GlobalMartOS.exe',
+      setupExe: 'GlobalMartOS-Setup.exe',
+    }),
     new MakerZIP({}, ['darwin']),
     new MakerRpm({}),
     new MakerDeb({}),
@@ -28,7 +36,7 @@ const config: ForgeConfig = {
       mainConfig,
       loggerPort: 9005,
       port: 3005,
-      devContentSecurityPolicy: "default-src 'self' 'unsafe-inline' data:; script-src 'self' 'unsafe-eval' 'unsafe-inline' data:; connect-src 'self' http://localhost:* http://127.0.0.1:* https://auth-rpedraza.dev.censei.cl https://catalog-rpedraza.dev.censei.cl https://pos-rpedraza.dev.censei.cl ws://localhost:*;",
+      devContentSecurityPolicy: "default-src 'self' 'unsafe-inline' data:; script-src 'self' 'unsafe-eval' 'unsafe-inline' data:; connect-src 'self' http://localhost:* http://127.0.0.1:* https://auth-rpedraza.dev.censei.cl https://catalog-rpedraza.dev.censei.cl https://pos-rpedraza.dev.censei.cl https://inventory-rpedraza.dev.censei.cl ws://localhost:*;",
       renderer: {
         config: rendererConfig,
         entryPoints: [
