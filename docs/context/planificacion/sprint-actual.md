@@ -1,11 +1,11 @@
 ---
 id: sprint-actual
 tipo: planificacion
-titulo: Sprint Actual — Sprint 3 (En Curso)
+titulo: Sprint Actual — Sprint 3 (En Curso, Semana 12 replanificada)
 estado: vigente
-fuentes: [tareas/plan_sprint3.xlsx, docs/qa/S2-111/checklist-salida.md, tareas/plan_sprint2_revisado.xlsx, docs/qa/S2-092/reporte.md, docs/qa/S2-106/reporte.md, docs/qa/S2-107/reporte.md, tareas/sprint2_youtrack_resultado.json, docs/defensa-sprint2/01-resumen.md, docs/context/estado-actual.md, aclaración del equipo (Daniel Prado, 2026-11-14)]
+fuentes: [tareas/plan_sprint3.xlsx, tareas/tareas_semana12_youtrack.csv, reunión con el profesor (2026-11-26), docs/qa/S2-111/checklist-salida.md, tareas/plan_sprint2_revisado.xlsx, docs/qa/S2-092/reporte.md, docs/qa/S2-106/reporte.md, docs/qa/S2-107/reporte.md, tareas/sprint2_youtrack_resultado.json, docs/defensa-sprint2/01-resumen.md, docs/context/estado-actual.md, aclaración del equipo (Daniel Prado, 2026-11-14)]
 verificado_contra_codigo: false
-ultima_revision: 2026-11-18
+ultima_revision: 2026-11-27
 depende_de: [sprints-anteriores, roadmap]
 publica: []
 consume: []
@@ -116,6 +116,25 @@ Plan completo: [plan_sprint3.xlsx](../../../tareas/plan_sprint3.xlsx). Guía par
 **Bug de cierre de turno:** reportado como congelamiento de la app al cerrar turno; no se reproduce en `dev` (2026-11-14). Se reemplaza igual `window.confirm` por un modal y se agrega un E2E.
 
 **Modal de cierre ya existe (2026-11-18, S3-029):** el modal base de S3-036 se adelantó para poder automatizar el E2E. Vive en `CerrarTurnoPage.tsx` como `<dialog>` nativo (`confirmDialogRef` + `showModal()`), no en un componente aparte. **S3-036 (Diego) parte de ese mismo archivo y bloque**: puede pulir estilo o moverlo al partir `CerrarTurnoPage.tsx`, pero no crear un segundo modal. Contrato que usa `e2e/electron/cierre-turno.integrated.spec.ts` y que no debe cambiar sin actualizar el spec: diálogo con nombre «Confirmar cierre de turno» y `aria-modal="true"`; botones «Cancelar» (foco inicial) y «Confirmar cierre»; `Escape` y clic en el fondo cancelan; el foco vuelve a «🔒 Confirmar y Cerrar Turno»; muestra el monto declarado en `es-CL`. `admin-venta.integrated.spec.ts` también hace clic en «Confirmar cierre».
+
+## Semana 12 replanificada (2026-11-27)
+
+En la reunión del jueves 26-nov el profesor pidió tres cosas: (1) arreglar el inventario y hacerlo funcionar por tenant, (2) multi-tenant real, porque el sistema opera con un solo tenant fijo (seed `aaaaaaaa-…-0001`, GUID por defecto en `Login.tsx`), distinto de lo comprometido en el Sprint 0, y (3) simular el Servicio de Impuestos Internos. Las 29 tareas de Semana 12 (`S3-065`..`S3-093`, todas aún «Planificada») se reemplazan por **`S3-094`..`S3-123`** (30 h, 300 min por persona). Las viejas quedan en la hoja `Reemplazadas Semana 12` de [plan_sprint3.xlsx](../../../tareas/plan_sprint3.xlsx); la importación para YouTrack está en [tareas_semana12_youtrack.csv](../../../tareas/tareas_semana12_youtrack.csv).
+
+| Persona | Foco | Tareas |
+|---|---|---|
+| Daniel | Multi-tenant: `POST /api/tenants` (SUPER_ADMIN), login por código de minimarket, segundo tenant en el seed, login/cabecera y pantalla de minimarkets | S3-094..S3-098 |
+| Sebastián | Inventario: reproducir fallas, descuento de stock agregado sin lotes, descuento sin Kafka por HTTP interno desde el outbox, lotes por vencer en Admin, seed de MS-4 por tenant | S3-099..S3-103 |
+| Nicolás | SII simulado (backend): contrato, servidor en `Docker/simulator`, `POST /api/dte` en MS-2, MS-5 pide la boleta al completar la venta, pruebas | S3-104..S3-108 |
+| Martín | SII simulado (datos y UI): datos fiscales por tenant, boleta en el POS, libro de boletas en Admin, rutas Kong/compose, guion de demo | S3-109..S3-113 |
+| Rodrigo | Despliegue final, rutas del Kong del clúster, `Setup.exe` final, smoke en equipo limpio, YouTrack y notas de versión | S3-114..S3-118 |
+| Diego | Plan de pruebas, probar y corregir multi-tenant, inventario y SII, regresión final y reporte en `docs/qa/S3-123/` | S3-119..S3-123 |
+
+**Hallazgos que originan las tareas de inventario (revisión de código del 27-nov, después del pull de `0af6b2e`):** las rutas `/api/lotes` y `/api/recepciones` con Kong local y la recepción en Admin ya están hechas (TI3-802, `0af6b2e`), así que no se replanifican. Lo pendiente: en el clúster la venta no descuenta stock porque no hay Kafka; un producto sin lotes bloquea la partición; el Admin no muestra los lotes por vencer; `SeedController` usa `SeedData.DemoTenantId` fijo. En el clúster el simulador de pago corre como sidecar de MS-5 en `127.0.0.1:5050`, por lo que el SII simulado necesita el mismo sidecar en el pod de MS-2 (S3-105, S3-114).
+
+**Orden:** viernes 27 a domingo 29 se implementa (S3-094, S3-095, S3-101, S3-104..S3-106 primero, porque desbloquean al resto); lunes 30 integración y pruebas de Diego; **congelamiento de funcionalidades: lunes 30-nov 23:59** (antes domingo 29); martes 1-dic solo correcciones, despliegue y `.exe`.
+
+**Arquitectura:** la entrega HTTP de S3-101 no reemplaza Kafka: es un modo del mismo outbox para el clúster sin broker, reutiliza `SaleEventProcessor` y no se publica en Kong. El SII se simula en el servicio externo ya existente (`Docker/simulator`), sin certificados ni CAF reales.
 
 Pendientes conocidos que no entran en el sprint, según [[estado-actual]]: refresh/revocación de JWT, auditoría de usuarios en la UI y entrega de eventos Kafka en el clúster [NO VERIFICADO].
 

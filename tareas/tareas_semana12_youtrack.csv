@@ -1,0 +1,167 @@
+﻿Summary,Description,Assignee,Priority,Sprints,Semana,AreaTrabajo,Tags,Estimation
+Alta de minimarket (tenant) en MS-1,"Objetivo: Crear POST /api/tenants solo para SUPER_ADMIN que da de alta un minimarket: Tenant, configuración (país, moneda, IVA 19), sucursal inicial y usuario ADMIN, en una sola transacción. Reutilizar la lógica de AdminBootstrap en vez de duplicarla.
+Entrega verificable: Endpoint POST /api/tenants y GET /api/tenants (lista para SUPER_ADMIN) con prueba de integración.
+Aceptación: SUPER_ADMIN crea un tenant y su ADMIN puede iniciar sesión de inmediato; ADMIN o CAJERO reciben 403; código duplicado devuelve 409; un fallo intermedio no deja datos parciales.
+Simplificación: Los archivos tocados quedan sin código muerto ni duplicado, y el flujo se puede seguir desde el botón hasta la BD sin desvíos.
+Prioridad MoSCoW: Must. Dificultad: Alta. Meta: Microservicios (FEFO y MS-1).
+Hallazgo o necesidad: Profesor (26-nov): el sistema opera con un solo tenant fijo, distinto de lo comprometido en el Sprint 0.",dprado2024,Alta,Sprint 3,Semana 12,Backend,Semana 12,1h30m
+Login por código de minimarket,"Objetivo: Agregar Codigo único y legible a Tenant (p. ej. ""demo"", ""donpepe"") con migración. LoginRequest acepta el código en lugar del GUID; el JWT agrega el claim tenant_nombre. El tenant sigue saliendo del JWT en todos los MS (RN-01).
+Entrega verificable: Migración AddCodigoToTenant, LoginRequest con TenantCodigo y claim tenant_nombre.
+Aceptación: Login con código válido emite JWT con tenant_id y tenant_nombre correctos; código inexistente devuelve 401 sin revelar si existe; pruebas de MS-1 pasan.
+Simplificación: Los archivos tocados quedan sin código muerto ni duplicado, y el flujo se puede seguir desde el botón hasta la BD sin desvíos.
+Prioridad MoSCoW: Must. Dificultad: Media. Meta: Microservicios (FEFO y MS-1).
+Hallazgo o necesidad: Profesor (26-nov): el sistema opera con un solo tenant fijo, distinto de lo comprometido en el Sprint 0.",dprado2024,Medio,Sprint 3,Semana 12,Backend,Semana 12,1h
+Segundo minimarket en el seed de MS-1 y MS-3,"Objetivo: Sembrar un segundo tenant (""Minimarket Don Pepe"", código donpepe) con su ADMIN, CAJERO, sucursal y un catálogo propio en MS-3 distinto del tenant demo, para demostrar aislamiento en la defensa.
+Entrega verificable: Seed con dos tenants y credenciales documentadas en docs/context/proyecto/como-ejecutar.md.
+Aceptación: Con docker compose limpio se puede entrar a ""demo"" y a ""donpepe""; cada uno ve solo sus productos y usuarios.
+Simplificación: Los archivos tocados quedan sin código muerto ni duplicado, y el flujo se puede seguir desde el botón hasta la BD sin desvíos.
+Prioridad MoSCoW: Must. Dificultad: Baja. Meta: Microservicios (FEFO y MS-1).
+Hallazgo o necesidad: Profesor (26-nov): el sistema opera con un solo tenant fijo, distinto de lo comprometido en el Sprint 0.",dprado2024,Facil,Sprint 3,Semana 12,Backend,Semana 12,45m
+Login y cabecera con el minimarket en el frontend,"Objetivo: Reemplazar el campo ""Tenant ID"" (GUID) de Login.tsx por ""Código de minimarket"" y mostrar tenant_nombre en la cabecera del POS y del Admin. Quitar el GUID por defecto del código.
+Entrega verificable: Login.tsx y cabeceras actualizadas; useTenantStore guarda el nombre desde el JWT.
+Aceptación: El usuario entra escribiendo ""demo"" o ""donpepe"" y ve el nombre de su minimarket; npm run typecheck pasa y los E2E de login se actualizan.
+Simplificación: Los archivos tocados quedan sin código muerto ni duplicado, y el flujo se puede seguir desde el botón hasta la BD sin desvíos.
+Prioridad MoSCoW: Must. Dificultad: Baja. Meta: Microservicios (FEFO y MS-1).
+Hallazgo o necesidad: Profesor (26-nov): el sistema opera con un solo tenant fijo, distinto de lo comprometido en el Sprint 0.",dprado2024,Facil,Sprint 3,Semana 12,Frontend,Semana 12,45m
+Pantalla de minimarkets para SUPER_ADMIN,"Objetivo: Agregar /admin/minimarkets visible solo para SUPER_ADMIN: lista de tenants y formulario de alta (nombre, código, correo y contraseña inicial del ADMIN) que llama a POST /api/tenants.
+Entrega verificable: Página AdminMinimarkets.tsx y funciones en api/client.ts; ruta en Kong para /api/tenants.
+Aceptación: SUPER_ADMIN crea un minimarket desde la UI y luego entra con su código; ADMIN de un tenant no ve la opción. Flujo botón → client.ts → Controller → DbContext en 5 saltos.
+Simplificación: Los archivos tocados quedan sin código muerto ni duplicado, y el flujo se puede seguir desde el botón hasta la BD sin desvíos.
+Prioridad MoSCoW: Should. Dificultad: Media. Meta: Microservicios (FEFO y MS-1).
+Hallazgo o necesidad: Profesor (26-nov): el sistema opera con un solo tenant fijo, distinto de lo comprometido en el Sprint 0.",dprado2024,Medio,Sprint 3,Semana 12,Frontend,Semana 12,1h
+Reproducir y listar las fallas del inventario,"Objetivo: Recorrer Admin Inventario (listado, ajuste), recepción, lotes por vencer y venta → descuento de stock en docker compose y en el clúster, con dos tenants.
+Entrega verificable: Lista de fallas con paso, resultado esperado y real, registrada en YouTrack.
+Aceptación: Cada falla tiene responsable dentro de S3-100..S3-103 o queda marcada como fuera de alcance.
+Prioridad MoSCoW: Must. Dificultad: Baja. Meta: Funcionalidad de punta a punta.
+Hallazgo o necesidad: Profesor (26-nov): el inventario está roto y debe funcionar por tenant.",spereda2024,Facil,Sprint 3,Semana 12,Testing,Semana 12,30m
+Descontar stock agregado cuando el producto no tiene lotes,"Objetivo: Hoy un sale.completed de un producto con stock agregado pero sin lotes queda reintentando para siempre y bloquea la partición. Descontar el stock agregado y registrar el movimiento sin lote. Las rutas /api/lotes y /api/recepciones ya quedaron expuestas en 0af6b2e y 2ad99dd (lo que era esta tarea).
+Entrega verificable: Cambio en SaleEventProcessor/StockRepository y prueba unitaria.
+Aceptación: Venta de un producto sin lotes con stock suficiente descuenta el agregado y confirma el evento; con stock insuficiente sigue reintentando sin descuentos parciales.
+Simplificación: Los archivos tocados quedan sin código muerto ni duplicado, y el flujo se puede seguir desde el botón hasta la BD sin desvíos.
+Prioridad MoSCoW: Must. Dificultad: Media. Meta: Funcionalidad de punta a punta.
+Hallazgo o necesidad: Profesor (26-nov): el inventario está roto y debe funcionar por tenant.",spereda2024,Medio,Sprint 3,Semana 12,Backend,Semana 12,45m
+Descontar stock en el clúster sin Kafka,"Objetivo: En el clúster no hay Kafka y la venta no descuenta stock. Cuando Kafka:Enabled=false, el OutboxPublisher de MS-5 entrega el mismo sale.completed por HTTP a un endpoint interno de MS-4 (POST /internal/sale-completed, protegido con clave de servicio y sin ruta en Kong) que reutiliza SaleEventProcessor. Se mantiene el outbox, la idempotencia por EventId y el tenant del evento.
+Entrega verificable: Endpoint interno en MS-4, entrega HTTP en el publicador de MS-5 y prueba de integración.
+Aceptación: Con Kafka desactivado, una venta en el tenant A descuenta el stock de A y deja intacto el de B; reenviar el mismo evento no descuenta dos veces; sin clave de servicio responde 401.
+Simplificación: Los archivos tocados quedan sin código muerto ni duplicado, y el flujo se puede seguir desde el botón hasta la BD sin desvíos.
+Prioridad MoSCoW: Must. Dificultad: Alta. Meta: Funcionalidad de punta a punta.
+Hallazgo o necesidad: Profesor (26-nov): el inventario está roto y debe funcionar por tenant.",spereda2024,Alta,Sprint 3,Semana 12,Backend,Semana 12,2h
+Lotes por vencer en Admin Inventario,"Objetivo: Agregar a AdminInventario.tsx la tabla de lotes por vencer (GET /api/lotes?porVencer=&sucursal_id=) con nombre de producto, cantidad y vencimiento, y refrescarla tras una recepción. La recepción y los nombres de producto ya existen (TI3-802, RecepcionMercaderiaForm); reemplaza S3-075.
+Entrega verificable: Tabla de lotes por vencer en AdminInventario.tsx y E2E en admin.spec.ts.
+Aceptación: Una recepción con vencimiento cercano aparece en la tabla sin recargar; errores 400/404/503 muestran mensaje claro; npm run typecheck pasa.
+Simplificación: Los archivos tocados quedan sin código muerto ni duplicado, y el flujo se puede seguir desde el botón hasta la BD sin desvíos.
+Prioridad MoSCoW: Must. Dificultad: Baja. Meta: Funcionalidad de punta a punta.
+Hallazgo o necesidad: Profesor (26-nov): el inventario está roto y debe funcionar por tenant.",spereda2024,Facil,Sprint 3,Semana 12,Frontend,Semana 12,45m
+Seed de MS-4 por tenant y para el segundo minimarket,"Objetivo: SeedController usa SeedData.DemoTenantId fijo; cambiarlo para sembrar stock y lotes del tenant que llama, con productos de su catálogo, y sembrar stock y lotes del segundo minimarket (coordinar IDs de producto y sucursal con S3-096 de Daniel) para que la demo muestre inventarios distintos.
+Entrega verificable: SeedController y SeedData sin tenant fijo.
+Aceptación: Ejecutar el seed como ADMIN de donpepe crea stock solo para donpepe; repetirlo no duplica datos.
+Simplificación: Los archivos tocados quedan sin código muerto ni duplicado, y el flujo se puede seguir desde el botón hasta la BD sin desvíos.
+Prioridad MoSCoW: Must. Dificultad: Media. Meta: Funcionalidad de punta a punta.
+Hallazgo o necesidad: Profesor (26-nov): el inventario está roto y debe funcionar por tenant.",spereda2024,Medio,Sprint 3,Semana 12,Backend,Semana 12,1h
+Contrato del SII simulado,"Objetivo: Definir el contrato de la boleta electrónica (tipo 39): request de MS-2 al SII simulado, respuesta con trackId y estados ACEPTADO, RECHAZADO y PENDIENTE, y reglas deterministas para provocar cada estado en la demo.
+Entrega verificable: docs/context/dominio/dte-sii-simulado.md con ejemplos.
+Aceptación: El contrato no exige certificados reales ni CAF reales (se simulan) y Martín puede construir la UI sin esperar el backend.
+Simplificación: Los archivos tocados quedan sin código muerto ni duplicado, y el flujo se puede seguir desde el botón hasta la BD sin desvíos.
+Prioridad MoSCoW: Must. Dificultad: Baja. Meta: Microservicios (FEFO y MS-1).
+Hallazgo o necesidad: Profesor (26-nov): simular el Servicio de Impuestos Internos (SII).",nmartinez2024,Facil,Sprint 3,Semana 12,Backend,Semana 12,30m
+Servidor del SII simulado,"Objetivo: Agregar al simulador existente (Docker/simulator/server.js, el mismo de la pasarela) POST /sii/boletas y GET /sii/boletas/{trackId} según el contrato, con un archivo de prueba como reversals.test.js. Ojo: en el clúster el simulador corre como sidecar de MS-5 en 127.0.0.1:5050 (configmap payment-simulator-code, commit 0af6b2e), así que MS-2 no lo alcanza: preparar en k8s/manifests/all-services.yaml el mismo sidecar en el pod de MS-2 reutilizando el configmap.
+Entrega verificable: Endpoints del SII simulado y pruebas Node.
+Aceptación: Las reglas del contrato producen ACEPTADO y RECHAZADO de forma repetible; el simulador corre en docker compose sin dependencias nuevas; el manifiesto de MS-2 queda listo para Rodrigo.
+Simplificación: Los archivos tocados quedan sin código muerto ni duplicado, y el flujo se puede seguir desde el botón hasta la BD sin desvíos.
+Prioridad MoSCoW: Must. Dificultad: Media. Meta: Microservicios (FEFO y MS-1).
+Hallazgo o necesidad: Profesor (26-nov): simular el Servicio de Impuestos Internos (SII).",nmartinez2024,Medio,Sprint 3,Semana 12,Backend,Semana 12,1h
+Emitir boleta electrónica en MS-2,"Objetivo: POST /api/dte en MS-2: crea DocumentoTributario con folio por tenant (reutilizar obtener_correlativo), arma el XML simplificado, lo envía al SII simulado por HttpClient y guarda Estado y CodigoAutorizacion (trackId). Montos calculados en el servidor; tenant solo del JWT.
+Entrega verificable: Endpoint, servicio y migración si hace falta.
+Aceptación: Boleta aceptada guarda folio y trackId; SII caído deja la boleta PENDIENTE sin error 500; un tenant no ve boletas de otro.
+Simplificación: Los archivos tocados quedan sin código muerto ni duplicado, y el flujo se puede seguir desde el botón hasta la BD sin desvíos.
+Prioridad MoSCoW: Must. Dificultad: Alta. Meta: Microservicios (FEFO y MS-1).
+Hallazgo o necesidad: Profesor (26-nov): simular el Servicio de Impuestos Internos (SII).",nmartinez2024,Alta,Sprint 3,Semana 12,Backend,Semana 12,1h30m
+MS-5 solicita la boleta al completar la venta,"Objetivo: Cuando la venta pasa a COMPLETADA, VentaService pide la boleta a MS-2 con el JWT del cajero y guarda el id del documento en la venta. Si MS-2 o el SII fallan, la venta igual se completa y la boleta queda PENDIENTE.
+Entrega verificable: Llamada a MS-2 en el cierre de la venta y campo DocumentoId en la venta.
+Aceptación: Una venta en efectivo y una con tarjeta generan boleta; con MS-2 caído la caja no se bloquea; pruebas de VentaIntegrationTests pasan.
+Simplificación: Los archivos tocados quedan sin código muerto ni duplicado, y el flujo se puede seguir desde el botón hasta la BD sin desvíos.
+Prioridad MoSCoW: Must. Dificultad: Media. Meta: Microservicios (FEFO y MS-1).
+Hallazgo o necesidad: Profesor (26-nov): simular el Servicio de Impuestos Internos (SII).",nmartinez2024,Medio,Sprint 3,Semana 12,Backend,Semana 12,1h
+Pruebas de la boleta electrónica,"Objetivo: Cubrir en tests/GlobalMart.Tests o IntegrationTests: aceptada, rechazada, SII caído → PENDIENTE, folio correlativo por tenant y aislamiento entre dos tenants.
+Entrega verificable: Pruebas nuevas en verde y nodo ms2-tax actualizado con la skill grafo-contexto.
+Aceptación: dotnet test de MS-2 y MS-5 pasa; el nodo ms2-tax marca DTE simulado como IMPLEMENTADO con evidencia.
+Prioridad MoSCoW: Must. Dificultad: Media. Meta: Microservicios (FEFO y MS-1).
+Hallazgo o necesidad: Profesor (26-nov): simular el Servicio de Impuestos Internos (SII).",nmartinez2024,Medio,Sprint 3,Semana 12,Testing,Semana 12,1h
+Datos fiscales del emisor por tenant,"Objetivo: Completar ConfiguracionFiscal de MS-2 con RUT emisor, razón social, giro y dirección, y sembrarla para los dos minimarkets (coordinar códigos con Daniel). MS-2 la usa al armar la boleta.
+Entrega verificable: Modelo, migración y seed de ConfiguracionFiscal para demo y donpepe.
+Aceptación: Cada boleta muestra el RUT y la razón social de su propio tenant; RUT con dígito verificador inválido se rechaza con 400.
+Simplificación: Los archivos tocados quedan sin código muerto ni duplicado, y el flujo se puede seguir desde el botón hasta la BD sin desvíos.
+Prioridad MoSCoW: Must. Dificultad: Media. Meta: Microservicios (FEFO y MS-1).
+Hallazgo o necesidad: Profesor (26-nov): simular el Servicio de Impuestos Internos (SII).",msanhueza2024,Medio,Sprint 3,Semana 12,Backend,Semana 12,1h
+Mostrar la boleta electrónica en el POS,"Objetivo: Convertir el ComprobantePago.tsx existente (hoy muestra el aviso «no tributario» de S2-108) en la boleta, sin crear otro componente: folio, RUT y razón social del emisor, detalle, neto, IVA, total, estado SII y timbre ""SII SIMULADO"". Permitir reimpresión con GET /comprobantes/{id}.
+Entrega verificable: ComprobantePago.tsx y buildSafeReceiptData con datos de la boleta; funciones en api/client.ts.
+Aceptación: La boleta aparece después de cada venta con los montos del servidor; si está PENDIENTE se indica sin bloquear la caja; npm run typecheck pasa.
+Simplificación: Los archivos tocados quedan sin código muerto ni duplicado, y el flujo se puede seguir desde el botón hasta la BD sin desvíos.
+Prioridad MoSCoW: Must. Dificultad: Media. Meta: Funcionalidad de punta a punta.
+Hallazgo o necesidad: Profesor (26-nov): simular el Servicio de Impuestos Internos (SII).",msanhueza2024,Medio,Sprint 3,Semana 12,Frontend,Semana 12,1h30m
+Libro de boletas en Admin,"Objetivo: Agregar GET /api/dte?desde=&hasta= en MS-2 (filtrado por tenant) y la página /admin/boletas con folio, fecha, total y estado SII.
+Entrega verificable: Endpoint de listado y página AdminBoletas.tsx.
+Aceptación: ADMIN ve solo las boletas de su minimarket, filtradas por fecha; CAJERO recibe 403.
+Simplificación: Los archivos tocados quedan sin código muerto ni duplicado, y el flujo se puede seguir desde el botón hasta la BD sin desvíos.
+Prioridad MoSCoW: Should. Dificultad: Media. Meta: Funcionalidad de punta a punta.
+Hallazgo o necesidad: Profesor (26-nov): simular el Servicio de Impuestos Internos (SII).",msanhueza2024,Medio,Sprint 3,Semana 12,Frontend,Semana 12,1h30m
+Rutas de DTE y SII simulado en Kong y compose,"Objetivo: Agregar /api/dte a Docker/config/kong.yaml, la URL del SII simulado en appsettings de MS-2 y la variable en docker-compose. En el clúster MS-2 apunta al sidecar 127.0.0.1 que prepara Nicolás en S3-105.
+Entrega verificable: kong.yaml, appsettings y docker-compose actualizados.
+Aceptación: Con docker compose limpio, una venta desde la app genera boleta ACEPTADA sin configuración manual.
+Prioridad MoSCoW: Must. Dificultad: Baja. Meta: Microservicios (FEFO y MS-1).
+Hallazgo o necesidad: Profesor (26-nov): simular el Servicio de Impuestos Internos (SII).",msanhueza2024,Facil,Sprint 3,Semana 12,DevOps,Semana 12,30m
+Guion de demo del SII simulado,"Objetivo: Escribir el recorrido de defensa: venta → boleta aceptada → venta que provoca rechazo → libro de boletas, en ambos minimarkets.
+Entrega verificable: docs/defensa-sprint3/demo-sii.md.
+Aceptación: El guion se ejecuta completo en menos de 5 minutos con los datos del seed.
+Prioridad MoSCoW: Must. Dificultad: Baja. Meta: Funcionalidad de punta a punta.
+Hallazgo o necesidad: Profesor (26-nov): simular el Servicio de Impuestos Internos (SII).",msanhueza2024,Facil,Sprint 3,Semana 12,Testing,Semana 12,30m
+Desplegar la versión final en el clúster,"Objetivo: Construir y desplegar MS-1 a MS-5 (los manifiestos ya usan tags fijos desde S3-052) y el sidecar del simulador en MS-5 y MS-2 (configmap payment-simulator-code actualizado con el SII) con las migraciones nuevas (Codigo de tenant, DTE, datos fiscales). MS-4 y MS-5 con Kafka:Enabled=false y la entrega HTTP de S3-101.
+Entrega verificable: Imágenes nuevas en el clúster y pods sanos.
+Aceptación: /health de todos los MS responde 200; las migraciones quedan aplicadas; los dos minimarkets del seed existen en el clúster.
+Prioridad MoSCoW: Must. Dificultad: Alta. Meta: Entrega en clúster y .exe.
+Hallazgo o necesidad: Profesor (26-nov): multi-tenant, inventario y SII deben verse funcionando en la defensa.",admin,Alta,Sprint 3,Semana 12,DevOps,Semana 12,1h30m
+Rutas nuevas en el Kong del clúster,"Objetivo: Aplicar en el clúster las rutas /api/tenants, /api/lotes, /api/recepciones y /api/dte preparadas por Daniel, Sebastián y Martín. El endpoint interno de MS-4 no se publica.
+Entrega verificable: Ingress/Kong del clúster actualizado.
+Aceptación: Cada ruta responde con JWT a través del dominio del clúster; /internal/sale-completed no es accesible desde fuera.
+Prioridad MoSCoW: Must. Dificultad: Baja. Meta: Entrega en clúster y .exe.
+Hallazgo o necesidad: Profesor (26-nov): multi-tenant, inventario y SII deben verse funcionando en la defensa.",admin,Facil,Sprint 3,Semana 12,DevOps,Semana 12,30m
+Generar el Setup.exe final,"Objetivo: Ejecutar npm run make en modo remote apuntando al clúster, con nombre, icono y versión 3.0; dejar el instalador en la release del repositorio.
+Entrega verificable: GlobalMart-Setup.exe publicado.
+Aceptación: El instalador se instala sin advertencias de dependencias y abre en el login con el campo ""Código de minimarket"".
+Prioridad MoSCoW: Must. Dificultad: Media. Meta: Entrega en clúster y .exe.
+Hallazgo o necesidad: Entrega comprometida: .exe apuntando al clúster para la defensa del 2-dic.",admin,Medio,Sprint 3,Semana 12,DevOps,Semana 12,1h
+Smoke del .exe en un equipo limpio,"Objetivo: En un equipo sin el repositorio: instalar, entrar a ""demo"" y a ""donpepe"", abrir turno, vender, ver la boleta, revisar que el stock bajó y registrar una recepción.
+Entrega verificable: Checklist con capturas en docs/qa/S3-117/reporte.md.
+Aceptación: Todo el recorrido pasa contra el clúster; cada fallo se registra en YouTrack para Diego.
+Prioridad MoSCoW: Must. Dificultad: Media. Meta: Entrega en clúster y .exe.
+Hallazgo o necesidad: Entrega comprometida: .exe apuntando al clúster para la defensa del 2-dic.",admin,Medio,Sprint 3,Semana 12,Testing,Semana 12,1h
+Actualizar YouTrack y notas de versión,"Objetivo: Cancelar en YouTrack las tareas de Semana 12 reemplazadas (S3-065..S3-093), importar tareas_semana12_youtrack.csv y escribir las notas de versión del Sprint 3.
+Entrega verificable: YouTrack al día y docs/defensa-sprint3/notas-version.md.
+Aceptación: Cada integrante tiene 5 h en Semana 12 en YouTrack y las notas listan multi-tenant, inventario y SII simulado.
+Prioridad MoSCoW: Must. Dificultad: Baja. Meta: Entrega en clúster y .exe.
+Hallazgo o necesidad: Replanificación de Semana 12 tras la reunión con el profesor (26-nov).",admin,Facil,Sprint 3,Semana 12,DevOps,Semana 12,1h
+Plan de pruebas de la Semana 12,"Objetivo: Escribir los casos de prueba de multi-tenant, inventario y SII simulado a partir de los criterios de S3-094..S3-113.
+Entrega verificable: Lista de casos en docs/qa/S3-123/reporte.md (borrador).
+Aceptación: Cada criterio de aceptación de las tareas nuevas tiene al menos un caso.
+Prioridad MoSCoW: Must. Dificultad: Baja. Meta: Calidad y regresión.
+Hallazgo o necesidad: Profesor (26-nov): las tres funcionalidades nuevas deben llegar probadas a la defensa.",dleiva2024,Facil,Sprint 3,Semana 12,Testing,Semana 12,30m
+Probar y corregir el multi-tenant,"Objetivo: Probar con los dos minimarkets: login por código, alta desde SUPER_ADMIN y aislamiento de usuarios, productos, stock, ventas y boletas (un tenant nunca ve ni modifica datos del otro). Agregar una prueba de integración de aislamiento con dos tenants y corregir los defectos encontrados.
+Entrega verificable: Prueba de integración nueva y defectos corregidos o registrados.
+Aceptación: La prueba de aislamiento pasa; no queda defecto Must abierto de multi-tenant.
+Prioridad MoSCoW: Must. Dificultad: Alta. Meta: Calidad y regresión.
+Hallazgo o necesidad: Profesor (26-nov): el sistema opera con un solo tenant fijo, distinto de lo comprometido en el Sprint 0.",dleiva2024,Alta,Sprint 3,Semana 12,Testing,Semana 12,1h30m
+Probar y corregir el inventario,"Objetivo: Probar recepción, lotes por vencer, ajuste y descuento de stock por venta con Kafka (docker compose) y sin Kafka (entrega HTTP); corregir defectos.
+Entrega verificable: Resultados por caso y defectos corregidos o registrados.
+Aceptación: La venta descuenta stock en ambos modos y solo en el tenant correcto; no queda defecto Must abierto de inventario.
+Prioridad MoSCoW: Must. Dificultad: Media. Meta: Calidad y regresión.
+Hallazgo o necesidad: Profesor (26-nov): el inventario está roto y debe funcionar por tenant.",dleiva2024,Medio,Sprint 3,Semana 12,Testing,Semana 12,1h
+Probar y corregir el SII simulado,"Objetivo: Probar boleta aceptada, rechazada y PENDIENTE con SII caído, folios correlativos por tenant, boleta en el POS y libro de boletas; corregir defectos.
+Entrega verificable: Resultados por caso y defectos corregidos o registrados.
+Aceptación: No queda defecto Must abierto del SII simulado; el guion de demo de Martín se ejecuta sin errores.
+Prioridad MoSCoW: Must. Dificultad: Media. Meta: Calidad y regresión.
+Hallazgo o necesidad: Profesor (26-nov): simular el Servicio de Impuestos Internos (SII).",dleiva2024,Medio,Sprint 3,Semana 12,Testing,Semana 12,1h
+Regresión final y reporte de pruebas,"Objetivo: Ejecutar dotnet test, npm run typecheck y npm run ci:local sobre la versión final y escribir el reporte con la skill reporte-qa.
+Entrega verificable: docs/qa/S3-123/reporte.md con resultados, comandos y defectos.
+Aceptación: Todas las suites pasan o cada fallo tiene causa y responsable; el reporte queda en el repositorio antes del 1-dic.
+Prioridad MoSCoW: Must. Dificultad: Media. Meta: Calidad y regresión.
+Hallazgo o necesidad: Cierre del Sprint 3 antes de la defensa del 2-dic.",dleiva2024,Medio,Sprint 3,Semana 12,Testing,Semana 12,1h
