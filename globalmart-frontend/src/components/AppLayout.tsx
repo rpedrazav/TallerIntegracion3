@@ -6,7 +6,7 @@ import { canAccessAdmin } from '../utils/adminAccess';
 
 export default function AppLayout() {
   const { logout, token, loading } = useAuth();
-  const { esAdmin, setToken } = useTenantStore();
+  const { esAdmin, tenantNombre, setToken } = useTenantStore();
   const navigate = useNavigate();
 
   React.useEffect(() => {
@@ -16,7 +16,6 @@ export default function AppLayout() {
   const handleLogout = async () => {
     await logout();
     localStorage.removeItem('token');
-    localStorage.removeItem('tenant');
     useTenantStore.getState().clear();
     navigate('/login', { replace: true });
   };
@@ -47,6 +46,7 @@ export default function AppLayout() {
           </div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          {tenantNombre && <span style={{ fontWeight: 700 }}>{tenantNombre}</span>}
           <span style={{ fontWeight: 500 }}>{esAdmin ? 'Administrador' : 'Caja'}</span>
           <button 
             onClick={handleLogout}

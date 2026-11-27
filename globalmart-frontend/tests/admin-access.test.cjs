@@ -44,6 +44,15 @@ test('useTenantStore deriva esAdmin exclusivamente de active_role', async (t) =>
   }
 });
 
+test('useTenantStore toma tenant y nombre del minimarket solo del JWT (S3-097)', () => {
+  useTenantStore.getState().setToken(crearToken({ tenant_id: 'tenant-b', tenant_nombre: 'Minimarket Don Pepe', active_role: 'CAJERO' }));
+  assert.equal(useTenantStore.getState().tenantId, 'tenant-b');
+  assert.equal(useTenantStore.getState().tenantNombre, 'Minimarket Don Pepe');
+
+  useTenantStore.getState().clear();
+  assert.equal(useTenantStore.getState().tenantNombre, null);
+});
+
 test('ADMIN y SUPER_ADMIN acceden a Administración y CAJERO no', () => {
   const helperPath = path.resolve(__dirname, '../src/utils/adminAccess.ts');
   const source = readFileSync(helperPath, 'utf8');

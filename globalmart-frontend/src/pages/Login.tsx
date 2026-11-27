@@ -3,14 +3,27 @@ import { useNavigate } from 'react-router-dom';
 import { AxiosError } from 'axios';
 import { identityApi } from '../api/client';
 
+const labelStyle: React.CSSProperties = { display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 600, color: 'var(--color-ink)' };
+
+const inputStyle = (disabled: boolean): React.CSSProperties => ({
+  width: '100%',
+  boxSizing: 'border-box',
+  padding: '0.625rem 0.75rem',
+  border: '1px solid var(--color-line)',
+  borderRadius: '6px',
+  fontSize: '0.875rem',
+  color: 'var(--color-ink)',
+  backgroundColor: disabled ? 'var(--color-bg)' : 'var(--color-surface)',
+  outline: 'none',
+  transition: 'border-color 0.2s'
+});
+
 /**
- * TI3-471: Vista de Login con manejo de errores y spinner de carga.
- * - Muestra spinner mientras se procesa la autenticación.
- * - Mensajes de error claros según el tipo de fallo (401, red, etc.).
- * - Desactiva el botón durante la carga para evitar doble-submit.
+ * TI3-471 / S3-097: Login con código de minimarket, manejo de errores y spinner de carga.
+ * El tenant del JWT sale del código; el renderer nunca envía el GUID.
  */
 export default function Login() {
-  const [tenantId, setTenantId] = useState('aaaaaaaa-0000-0000-0000-000000000001');
+  const [tenantCodigo, setTenantCodigo] = useState('');
   const [email, setEmail] = useState('cajero@demo.cl');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -23,12 +36,11 @@ export default function Login() {
     setIsLoading(true);
 
     try {
-      const response = await identityApi.login({ email, password, tenantId });
-      
+      const response = await identityApi.login({ email, password, tenantCodigo });
+
       const { token } = response;
       await window.api.setToken(token);
       localStorage.setItem('token', token);
-      localStorage.setItem('tenant', tenantId);
       navigate(['ADMIN', 'SUPER_ADMIN'].includes(response.usuario.activeRole?.toUpperCase()) ? '/admin' : '/pos', { replace: true });
     } catch (err: unknown) {
       // TI3-471: Manejo de errores específico según tipo de fallo
@@ -38,8 +50,9 @@ export default function Login() {
       } else if (axiosErr.response) {
         // Error HTTP del servidor
         switch (axiosErr.response.status) {
+          case 400:
           case 401:
-            setError('Credenciales o Tenant ID incorrectos.');
+            setError('Credenciales o código de minimarket incorrectos.');
             break;
           case 403:
             setError('No tienes permiso para acceder. Contacta al administrador.');
@@ -71,7 +84,7 @@ export default function Login() {
       <div style={{ backgroundColor: 'var(--color-surface)', padding: '2rem', borderRadius: '12px', boxShadow: '0 4px 16px rgba(0,0,0,0.08)', width: '380px', border: '1px solid var(--color-line)' }}>
         <h1 style={{ textAlign: 'center', color: 'var(--color-primary)', marginBottom: '0.5rem', fontSize: '1.5rem', fontWeight: 700 }}>GlobalMart OS</h1>
         <p style={{ textAlign: 'center', color: 'var(--color-ink-soft)', marginBottom: '1.5rem', fontSize: '0.9rem' }}>Inicia Sesión</p>
-        
+
         {/* TI3-471: Banner de error con icono */}
         {error && (
           <div style={{
@@ -93,66 +106,39 @@ export default function Login() {
 
         <form onSubmit={handleLogin}>
           <div style={{ marginBottom: '1rem' }}>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 600, color: 'var(--color-ink)' }}>Tenant ID</label>
-            <input 
-              type="text" 
-              value={tenantId}
-              onChange={(e) => setTenantId(e.target.value)}
+            <label htmlFor="login-codigo" style={labelStyle}>Código de minimarket</label>
+            <input
+              id="login-codigo"
+              type="text"
+              value={tenantCodigo}
+              onChange={(e) => setTenantCodigo(e.target.value)}
+              placeholder="ej: demo"
+              autoCapitalize="none"
+              required
               disabled={isLoading}
-              style={{
-                width: '100%',
-                boxSizing: 'border-box',
-                padding: '0.625rem 0.75rem',
-                border: '1px solid var(--color-line)',
-                borderRadius: '6px',
-                fontSize: '0.875rem',
-                color: 'var(--color-ink)',
-                backgroundColor: isLoading ? 'var(--color-bg)' : 'var(--color-surface)',
-                outline: 'none',
-                transition: 'border-color 0.2s'
-              }}
+              style={inputStyle(isLoading)}
             />
           </div>
           <div style={{ marginBottom: '1rem' }}>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 600, color: 'var(--color-ink)' }}>Email</label>
-            <input 
-              type="email" 
+            <label htmlFor="login-email" style={labelStyle}>Email</label>
+            <input
+              id="login-email"
+              type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               disabled={isLoading}
-              style={{
-                width: '100%',
-                boxSizing: 'border-box',
-                padding: '0.625rem 0.75rem',
-                border: '1px solid var(--color-line)',
-                borderRadius: '6px',
-                fontSize: '0.875rem',
-                color: 'var(--color-ink)',
-                backgroundColor: isLoading ? 'var(--color-bg)' : 'var(--color-surface)',
-                outline: 'none',
-                transition: 'border-color 0.2s'
-              }}
+              style={inputStyle(isLoading)}
             />
           </div>
           <div style={{ marginBottom: '1.5rem' }}>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 600, color: 'var(--color-ink)' }}>Contraseña</label>
-            <input 
-              type="password" 
+            <label htmlFor="login-password" style={labelStyle}>Contraseña</label>
+            <input
+              id="login-password"
+              type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               disabled={isLoading}
-              style={{
-                width: '100%',
-                boxSizing: 'border-box',
-                padding: '0.625rem 0.75rem',
-                border: '1px solid var(--color-line)',
-                borderRadius: '6px',
-                fontSize: '0.875rem',
-                color: 'var(--color-ink)',
-                backgroundColor: isLoading ? 'var(--color-bg)' : 'var(--color-surface)',
-                outline: 'none',
-                transition: 'border-color 0.2s'
-              }}
+              style={inputStyle(isLoading)}
             />
           </div>
           {/* TI3-471: Botón con spinner de carga */}

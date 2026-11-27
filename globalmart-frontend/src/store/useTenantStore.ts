@@ -4,32 +4,27 @@ import { parseJwt } from '../utils/jwt';
 interface TenantState {
   token: string | null;
   tenantId: string | null;
+  tenantNombre: string | null;
   esAdmin: boolean;
   setToken: (token: string | null) => void;
   clear: () => void;
 }
 
+// Tenant, nombre del minimarket y rol salen solo del JWT emitido por MS-1.
 export const useTenantStore = create<TenantState>((set) => ({
   token: null,
   tenantId: null,
+  tenantNombre: null,
   esAdmin: false,
   setToken: (token) => {
-    if (!token) {
-      set({ token: null, tenantId: localStorage.getItem('tenant') || '', esAdmin: false });
-      return;
-    }
-    try {
-      const payload = parseJwt(token);
-      const id = payload?.tenant_id || localStorage.getItem('tenant') || '';
-      const rolActivo = payload?.active_role?.toUpperCase();
-      const tieneRolAdmin =
-        rolActivo === 'ADMIN' ||
-        rolActivo === 'SUPER_ADMIN';
-
-      set({ token, tenantId: id, esAdmin: tieneRolAdmin });
-    } catch {
-      set({ token: null, tenantId: null, esAdmin: false });
-    }
+    const payload = parseJwt(token);
+    const rolActivo = payload?.active_role?.toUpperCase();
+    set({
+      token,
+      tenantId: payload?.tenant_id ?? null,
+      tenantNombre: payload?.tenant_nombre ?? null,
+      esAdmin: rolActivo === 'ADMIN' || rolActivo === 'SUPER_ADMIN',
+    });
   },
-  clear: () => set({ token: null, tenantId: null, esAdmin: false }),
+  clear: () => set({ token: null, tenantId: null, tenantNombre: null, esAdmin: false }),
 }));

@@ -5,9 +5,9 @@ import * as path from 'node:path';
 const tenant = 'aaaaaaaa-0000-0000-0000-000000000024';
 const branch = 'bbbbbbbb-0000-0000-0000-000000000024';
 const shift = 'cccccccc-0000-0000-0000-000000000024';
-const credentials = { tenantId: tenant, email: 'cashier@example.test', password: 'dummy-e2e-only' };
+const credentials = { email: 'cashier@example.test', password: 'dummy-e2e-only', tenantCodigo: 'e2e' };
 const token = [Buffer.from(JSON.stringify({ alg: 'none' })).toString('base64url'),
-  Buffer.from(JSON.stringify({ sub: 'e2e-cashier', tenant_id: tenant, sucursal_id: branch, active_role: 'CAJERO', roles: ['CAJERO'] })).toString('base64url'), 'dummy'].join('.');
+  Buffer.from(JSON.stringify({ sub: 'e2e-cashier', tenant_id: tenant, tenant_nombre: 'Minimarket E2E', sucursal_id: branch, active_role: 'CAJERO', roles: ['CAJERO'] })).toString('base64url'), 'dummy'].join('.');
 
 const test = base.extend<{ pos: Page }>({
   pos: async ({}, use, info) => {
@@ -51,7 +51,7 @@ const test = base.extend<{ pos: Page }>({
 });
 
 async function login(page: Page) {
-  await page.locator('input[type=text]').fill(credentials.tenantId);
+  await page.getByLabel('Código de minimarket').fill(credentials.tenantCodigo);
   await page.locator('input[type=email]').fill(credentials.email);
   await page.locator('input[type=password]').fill(credentials.password);
   await page.getByRole('button', { name: 'Ingresar', exact: true }).click();
@@ -66,7 +66,6 @@ test('login → apertura de turno → POS con sesión IPC persistente', async ({
     const url = new URL(req.url());
     if (url.pathname === '/api/auth/login' && req.method() === 'POST') {
       expect(req.postDataJSON()).toEqual(credentials);
-      expect(req.headers()['x-tenant-id']).toBe(tenant);
       return route.fulfill({ json: { token, usuario: { id: 'e2e-cashier', nombre: 'Cajero E2E', email: credentials.email, activeRole: 'CAJERO', roles: ['CAJERO'] } } });
     }
     expect(req.headers().authorization).toBe(`Bearer ${token}`);
@@ -92,6 +91,7 @@ test('login → apertura de turno → POS con sesión IPC persistente', async ({
   await login(page);
   await expect(page.getByRole('heading', { name: 'Apertura de Turno de Caja' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'INICIAR VENTA', exact: true })).toHaveCount(0);
+  await expect(page.getByText('Minimarket E2E', { exact: true })).toBeVisible();
   await page.getByLabel('Monto inicial de caja').fill('20000');
   await page.getByRole('button', { name: 'Abrir Turno', exact: true }).click();
   await expect(page.getByText('Carrito vacío', { exact: true })).toBeVisible();
@@ -106,7 +106,7 @@ test('login → apertura de turno → POS con sesión IPC persistente', async ({
 test('credenciales rechazadas mantienen sesión vacía y no entran al POS', async ({ pos: page }) => {
   await page.route('http://localhost:8000/api/auth/login', route => route.fulfill({ status: 401, json: { error: 'Credenciales inválidas' } }));
   await login(page);
-  await expect(page.getByText('Credenciales o Tenant ID incorrectos.')).toBeVisible();
+  await expect(page.getByText('Credenciales o código de minimarket incorrectos.')).toBeVisible();
   expect(await page.evaluate(() => window.api.getToken())).toBeNull();
   await expect(page.getByRole('button', { name: 'INICIAR VENTA', exact: true })).toHaveCount(0);
 });

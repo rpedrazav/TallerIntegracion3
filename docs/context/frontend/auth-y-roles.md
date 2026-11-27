@@ -5,7 +5,7 @@ titulo: Autenticación y Roles en el Frontend
 estado: parcial
 fuentes: [globalmart-frontend/src/hooks/useAuth.ts, globalmart-frontend/src/pages/Login.tsx, globalmart-frontend/src/api/client.ts, globalmart-frontend/src/App.tsx, globalmart-frontend/src/components/AppLayout.tsx, globalmart-frontend/src/store/useTenantStore.ts, globalmart-frontend/src/pages/AdminRoles.tsx, globalmart-frontend/src/components/admin/CrearUsuarioModal.tsx, globalmart-frontend/tests/admin-access.test.cjs, globalmart-frontend/e2e/admin.spec.ts]
 verificado_contra_codigo: true
-ultima_revision: 2026-11-24
+ultima_revision: 2026-11-27
 depende_de: [estructura, rbac-multirol, ms1-identity]
 publica: []
 consume: []
@@ -33,12 +33,14 @@ El JWT se guarda mediante `window.api.setToken` en electron-store. Login tambié
 ## Flujo de login
 
 ```
-1. Usuario ingresa email + password + tenantId en Login.tsx
+1. Usuario ingresa código de minimarket + email + password en Login.tsx (S3-097)
 2. `identityApi.login` ejecuta POST /auth/login en MS-1 con timeout de 15 s
-3. Respuesta: { token: "eyJ...", expiresAt: "...", usuario: { ... } }
+3. Respuesta: { token: "eyJ...", expiresAt: "...", usuario: { ... } }; el JWT trae tenant_id y tenant_nombre
 4. `window.api.setToken(token)` guarda el JWT en electron-store
-5. navigate('/pos')
+5. navigate('/admin' o '/pos' según active_role)
 ```
+
+`useTenantStore.setToken` deriva `tenantId`, `tenantNombre` y `esAdmin` solo del JWT; el renderer ya no guarda el tenant en `localStorage` ni envía `x-tenant-id` en el login.
 
 ## Protección de rutas
 

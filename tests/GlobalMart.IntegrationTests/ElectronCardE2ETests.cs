@@ -198,7 +198,7 @@ public sealed class ElectronCardE2ETests
                 {
                     using var login = await JsonDocument.ParseAsync(req.InputStream, cancellationToken: ct);
                     var data = login.RootElement;
-                    if (data.GetProperty("tenantId").GetGuid() != tenant || data.GetProperty("email").GetString() != "cashier@example.test"
+                    if (data.GetProperty("tenantCodigo").GetString() != tenant.ToString() || data.GetProperty("email").GetString() != "cashier@example.test"
                         || data.GetProperty("password").GetString() != "dummy-e2e-only") { res.StatusCode = 401; continue; }
                     fixture = new { token, usuario = new { activeRole = "CAJERO", roles = new[] { "CAJERO" } } };
                 }

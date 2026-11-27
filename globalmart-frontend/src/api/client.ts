@@ -16,7 +16,6 @@ function createClient(baseURL: string, protectedApi: boolean): AxiosInstance {
       if (error.response?.status === 401) {
         await window.api.logout().catch(() => undefined);
         localStorage.removeItem('token');
-        localStorage.removeItem('tenant');
         window.location.hash = '#/login';
       }
       return Promise.reject(error);
@@ -32,7 +31,7 @@ const pos = createClient(API_URLS.pos, true);
 export interface LoginRequest {
   email: string;
   password: string;
-  tenantId: string;
+  tenantCodigo: string;
 }
 
 export interface LoginResponse {
@@ -43,9 +42,7 @@ export interface LoginResponse {
 
 export const identityApi = {
   login: async (request: LoginRequest): Promise<LoginResponse> => {
-    const response = await identity.post<LoginResponse>('/auth/login', request, {
-      headers: { 'x-tenant-id': request.tenantId },
-    });
+    const response = await identity.post<LoginResponse>('/auth/login', request);
     return response.data;
   },
 };

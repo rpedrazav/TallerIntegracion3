@@ -21,7 +21,7 @@ const path = require('node:path');
         window.webContents.closeDevTools(); window.setSize(1440, 900);
       }
     });
-    await page.locator('input[type=text]').fill(process.env.S2055_TENANT);
+    await page.getByLabel('Código de minimarket').fill(process.env.S2055_TENANT);
     await page.locator('input[type=email]').fill('cashier@example.test');
     await page.locator('input[type=password]').fill('dummy-e2e-only');
     await page.getByRole('button', { name: 'Ingresar', exact: true }).click();

@@ -13,6 +13,10 @@ reglas: []
 ---
 # Estado Real de Implementación — GlobalMart OS
 
+## S3-097 — Login y cabecera con el minimarket (2026-11-27)
+
+[IMPLEMENTADO] `Login.tsx` pide «Código de minimarket» (sin GUID por defecto) y envía `tenantCodigo`; `useTenantStore` guarda `tenantNombre` desde el JWT y las cabeceras del POS y del Admin muestran el nombre del minimarket. Se eliminó el `localStorage` `tenant` y el header `x-tenant-id` del login. `npm run typecheck` OK; E2E Electron `pos.spec.ts` 3/3 (incluye el nombre en la cabecera); `admin-access.test.cjs` y `user-edit.test.cjs` 12/12 con un shim de `ts-node`, porque `ts-node` no está instalado en `node_modules` (falla previa). Contra el clúster [NO VERIFICADO].
+
 ## S3-096 — Segundo minimarket en el seed (2026-11-27)
 
 [IMPLEMENTADO] En `Development`, MS-1 siembra `demo`, `donpepe` (CAJERO, ADMIN, sucursal) y el SUPER_ADMIN `superadmin@globalmart.cl` en el tenant de plataforma `globalmart`; MS-3 siembra 30 productos para demo y 8 distintos para donpepe (antes su `SeedData` no se invocaba). Verificado con MS-1 y MS-3 contra bases vacías: los cinco usuarios entran por código, cada ADMIN ve solo sus usuarios y productos, el SUPER_ADMIN lista los tres tenants y un ADMIN recibe 403. Credenciales en [como-ejecutar](proyecto/como-ejecutar.md). El clúster corre MS-1/MS-3 sin `Development`, así que allí el seed no corre [NO VERIFICADO].

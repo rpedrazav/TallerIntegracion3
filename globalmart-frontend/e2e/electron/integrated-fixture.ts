@@ -6,6 +6,7 @@ import * as path from 'node:path';
 
 export { expect };
 export const tenantId = 'aaaaaaaa-0000-0000-0000-000000000001';
+export const tenantCodigo = 'demo';
 export const MS1 = 'http://localhost:5124';
 export const MS3 = 'http://localhost:5203';
 export const MS5 = 'http://localhost:5000';
@@ -15,7 +16,7 @@ export async function api(url: string, token?: string, init: RequestInit = {}) {
   return { status: res.status, body: await res.json().catch(() => null) };
 }
 export const tokenOf = async (email: string) =>
-  (await api(`${MS1}/auth/login`, undefined, { method: 'POST', body: JSON.stringify({ email, password: 'demo1234', tenantId }) })).body.token as string;
+  (await api(`${MS1}/auth/login`, undefined, { method: 'POST', body: JSON.stringify({ email, password: 'demo1234', tenantCodigo }) })).body.token as string;
 
 /** Consulta escalar en la BD de MS-5 (postgres-pos de docker compose). */
 export const posDb = (sql: string) => execFileSync('docker', ['exec', 'postgres-pos', 'sh', '-c',
@@ -66,7 +67,7 @@ export const test = base.extend<{ app: Page; electron: ElectronApplication; apiE
 });
 
 export async function login(page: Page, email: string) {
-  await page.locator('input[type=text]').fill(tenantId);
+  await page.getByLabel('Código de minimarket').fill(tenantCodigo);
   await page.locator('input[type=email]').fill(email);
   await page.locator('input[type=password]').fill('demo1234');
   await page.getByRole('button', { name: 'Ingresar', exact: true }).click();

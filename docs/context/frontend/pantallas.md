@@ -5,7 +5,7 @@ titulo: Pantallas del Frontend — GlobalMart OS
 estado: parcial
 fuentes: [globalmart-frontend/src/pages/, globalmart-frontend/src/components/, globalmart-frontend/src/api/client.ts, globalmart-frontend/src/hardware/scale-cart.ts, globalmart-frontend/src/payments/SimulatedTerminalAdapter.ts, globalmart-frontend/src/payments/terminal-ipc.ts, globalmart-frontend/src/payments/synchronizeCardPayment.ts, globalmart-frontend/src/preload.ts, globalmart-frontend/tests/scale-main-preload.integration.test.cjs, globalmart-frontend/tests/user-edit.test.cjs, globalmart-frontend/tests/user-deactivation.test.cjs, globalmart-frontend/e2e/admin-flows.spec.ts, globalmart-frontend/e2e/productos-admin.spec.ts, globalmart-frontend/e2e/weight-cart.spec.ts, globalmart-frontend/tests/terminal-port.test.cjs, globalmart-frontend/tests/terminal-ipc.test.cjs, globalmart-frontend/tests/synchronized-card-payment.test.cjs]
 verificado_contra_codigo: true
-ultima_revision: 2026-11-24
+ultima_revision: 2026-11-27
 depende_de: [estructura, ms1-identity, ms5-pos, guia-estilo]
 publica: []
 consume: []
@@ -28,21 +28,22 @@ Los clientes tipados en `src/api/client.ts` cubren login (MS-1), catálogo del P
 ## Login.tsx [IMPLEMENTADO]
 
 ```
-Pantalla de inicio de sesión con 3 campos:
-  - Tenant ID (GUID)
+Pantalla de inicio de sesión con 3 campos (S3-097):
+  - Código de minimarket (ej: demo, donpepe); sin valor por defecto
   - Email
   - Contraseña
 
 Al enviar:
   → POST /auth/login mediante identityApi.login
-  → Si exitoso: await window.api.setToken(token) → navigate('/pos')
-  → Si error: muestra mensaje de error
+  → Si exitoso: await window.api.setToken(token) → navigate('/admin' o '/pos' según active_role)
+  → Si error (400/401): «Credenciales o código de minimarket incorrectos.»
 
 Valores pre-llenados para desarrollo:
   - Email: cajero@demo.cl
-  - Password: (ver seed en [[como-ejecutar]])
-  - Tenant ID: aaaaaaaa-0000-0000-0000-000000000001
+  - Password y códigos: ver seed en [[como-ejecutar]]
 ```
+
+La cabecera del POS (`AppLayout`) y la del Admin (`AdminLayout`) muestran el nombre del minimarket (`tenant_nombre` del JWT, guardado por `useTenantStore`) en vez del GUID [IMPLEMENTADO].
 
 La URL base de MS-1 está en `src/api/client.ts`.
 
