@@ -25,6 +25,8 @@ function createClient(baseURL: string, protectedApi: boolean): AxiosInstance {
 }
 
 const identity = createClient(API_URLS.identity, false);
+// Login va sin JWT ni interceptor de 401; el resto de MS-1 usa este cliente protegido.
+const identityAuth = createClient(API_URLS.identity, true);
 const catalog = createClient(API_URLS.catalog, true);
 const pos = createClient(API_URLS.pos, true);
 
@@ -43,6 +45,33 @@ export interface LoginResponse {
 export const identityApi = {
   login: async (request: LoginRequest): Promise<LoginResponse> => {
     const response = await identity.post<LoginResponse>('/auth/login', request);
+    return response.data;
+  },
+};
+
+export interface Minimarket {
+  id: string;
+  nombre: string;
+  codigo: string | null;
+  activo: boolean;
+  creadoEn: string;
+}
+
+export interface CrearMinimarketRequest {
+  nombre: string;
+  codigo: string;
+  adminEmail: string;
+  adminPassword: string;
+}
+
+// S3-098: alta y listado de minimarkets (solo SUPER_ADMIN; MS-1 responde 403 al resto).
+export const tenantsApi = {
+  list: async (): Promise<Minimarket[]> => {
+    const response = await identityAuth.get<Minimarket[]>('/tenants');
+    return response.data;
+  },
+  create: async (request: CrearMinimarketRequest): Promise<Minimarket> => {
+    const response = await identityAuth.post<Minimarket>('/tenants', request);
     return response.data;
   },
 };

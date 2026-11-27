@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AxiosError } from 'axios';
 import { identityApi } from '../api/client';
+import { rutaInicial } from '../utils/adminAccess';
 
 const labelStyle: React.CSSProperties = { display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 600, color: 'var(--color-ink)' };
 
@@ -41,7 +42,7 @@ export default function Login() {
       const { token } = response;
       await window.api.setToken(token);
       localStorage.setItem('token', token);
-      navigate(['ADMIN', 'SUPER_ADMIN'].includes(response.usuario.activeRole?.toUpperCase()) ? '/admin' : '/pos', { replace: true });
+      navigate(rutaInicial(response.usuario.activeRole), { replace: true });
     } catch (err: unknown) {
       // TI3-471: Manejo de errores específico según tipo de fallo
       const axiosErr = err as AxiosError<{ message?: string; error?: string }>;

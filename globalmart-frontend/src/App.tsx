@@ -11,12 +11,13 @@ import VentasTurnoPage from './pages/VentasTurnoPage';
 import ProductosPage from './pages/ProductosPage';
 import { useAuth } from './hooks/useAuth';
 import { useTenantStore } from './store/useTenantStore';
-import { canAccessAdmin } from './utils/adminAccess';
+import { canAccessAdmin, rutaInicial } from './utils/adminAccess';
 import { parseJwt } from './utils/jwt';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminRoles from './pages/AdminRoles';
 import AdminInventario from './pages/AdminInventario';
 import AdminSucursales from './pages/AdminSucursales';
+import AdminMinimarkets from './pages/AdminMinimarkets';
 
 interface AdminRouteProps {
   children: React.ReactNode;
@@ -66,8 +67,7 @@ function Home() {
   const { token, loading } = useAuth();
   if (loading) return null;
   if (!token) return <Navigate to="/login" replace />;
-  const role = parseJwt(token)?.active_role?.toUpperCase();
-  return <Navigate to={role === 'ADMIN' || role === 'SUPER_ADMIN' ? '/admin' : '/pos'} replace />;
+  return <Navigate to={rutaInicial(parseJwt(token)?.active_role)} replace />;
 }
 
 export default function App() {
@@ -88,6 +88,7 @@ export default function App() {
           <Route path="/admin/roles" element={<AdminRoles />} />
           <Route path="/admin/inventario" element={<AdminInventario />} />
           <Route path="/admin/sucursales" element={<AdminSucursales />} />
+          <Route path="/admin/minimarkets" element={<AdminMinimarkets />} />
           <Route path="/admin/productos" element={<ProductosPage />} />
           <Route path="/admin/configuracion" element={<Admin />} />
         </Route>

@@ -13,6 +13,10 @@ reglas: []
 ---
 # Estado Real de Implementación — GlobalMart OS
 
+## S3-098 — Pantalla de minimarkets para SUPER_ADMIN (2026-11-27)
+
+[IMPLEMENTADO] `/admin/minimarkets` (`AdminMinimarkets.tsx`) lista y da de alta minimarkets con `tenantsApi` de `api/client.ts`; solo SUPER_ADMIN ve la opción y llega ahí tras el login (`rutaInicial`). Kong local ya tenía `/api/tenants`; verificado por HTTP vía Kong: alta 201 y login inmediato del ADMIN nuevo con su código, 403 para ADMIN, 401 sin JWT. E2E `minimarkets.spec.ts` 3/3 y `admin.spec.ts` sin regresiones; `npm run typecheck` OK. Ruta en el Kong del clúster (S3-115) [NO VERIFICADO].
+
 ## S3-097 — Login y cabecera con el minimarket (2026-11-27)
 
 [IMPLEMENTADO] `Login.tsx` pide «Código de minimarket» (sin GUID por defecto) y envía `tenantCodigo`; `useTenantStore` guarda `tenantNombre` desde el JWT y las cabeceras del POS y del Admin muestran el nombre del minimarket. Se eliminó el `localStorage` `tenant` y el header `x-tenant-id` del login. `npm run typecheck` OK; E2E Electron `pos.spec.ts` 3/3 (incluye el nombre en la cabecera); `admin-access.test.cjs` y `user-edit.test.cjs` 12/12 con un shim de `ts-node`, porque `ts-node` no está instalado en `node_modules` (falla previa). Contra el clúster [NO VERIFICADO].

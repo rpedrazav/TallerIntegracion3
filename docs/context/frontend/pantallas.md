@@ -163,6 +163,10 @@ La búsqueda del POS consulta `GET /products/search` por nombre o código parcia
 //   - S3-038 refuerza ADMIN, CAJERO (incluido 403 con sesión cambiada) y TARJETA rechazada; estado e importe tras recargar. 25/25 con API simulada: docs/qa/S3-038/reporte.md
 ```
 
+## AdminMinimarkets.tsx — S3-098 [IMPLEMENTADO]
+
+`/admin/minimarkets`, solo para `SUPER_ADMIN`: tabla de minimarkets (nombre, código, estado, fecha) y formulario de alta (nombre, código de acceso, correo y contraseña inicial del ADMIN). Flujo: botón «Crear minimarket» → `crear` → `tenantsApi.create` (`api/client.ts`, cliente MS-1 protegido) → Kong `/api/tenants` → `TenantConfigController.Crear` → `TenantRepository.CreateWithAdminAsync` → `TenantDbContext`. Muestra el 400/403/409 de MS-1. Tras el login, `rutaInicial` (`utils/adminAccess.ts`) lleva a SUPER_ADMIN a esta pantalla y `AdminLayout` le muestra solo el enlace «Minimarkets» (sin «Ir al punto de venta»); un ADMIN no ve la opción. Pruebas: `e2e/minimarkets.spec.ts` (3 casos) y `tests/admin-access.test.cjs`. Verificado además por HTTP a través de Kong local: alta 201, login inmediato del nuevo ADMIN, 403 para ADMIN y 401 sin JWT.
+
 ## Admin.tsx [PARCIAL]
 
 Ruta `/admin`. Panel de administración con pestañas ("Usuarios" y "Configuración del Tenant"):

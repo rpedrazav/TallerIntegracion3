@@ -37,7 +37,7 @@ El JWT se guarda mediante `window.api.setToken` en electron-store. Login tambié
 2. `identityApi.login` ejecuta POST /auth/login en MS-1 con timeout de 15 s
 3. Respuesta: { token: "eyJ...", expiresAt: "...", usuario: { ... } }; el JWT trae tenant_id y tenant_nombre
 4. `window.api.setToken(token)` guarda el JWT en electron-store
-5. navigate('/admin' o '/pos' según active_role)
+5. navigate(rutaInicial(active_role)): SUPER_ADMIN → /admin/minimarkets, ADMIN → /admin, resto → /pos (S3-098)
 ```
 
 `useTenantStore.setToken` deriva `tenantId`, `tenantNombre` y `esAdmin` solo del JWT; el renderer ya no guarda el tenant en `localStorage` ni envía `x-tenant-id` en el login.

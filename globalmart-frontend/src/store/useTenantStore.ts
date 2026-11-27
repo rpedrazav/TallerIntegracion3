@@ -6,6 +6,7 @@ interface TenantState {
   tenantId: string | null;
   tenantNombre: string | null;
   esAdmin: boolean;
+  esSuperAdmin: boolean;
   setToken: (token: string | null) => void;
   clear: () => void;
 }
@@ -16,6 +17,7 @@ export const useTenantStore = create<TenantState>((set) => ({
   tenantId: null,
   tenantNombre: null,
   esAdmin: false,
+  esSuperAdmin: false,
   setToken: (token) => {
     const payload = parseJwt(token);
     const rolActivo = payload?.active_role?.toUpperCase();
@@ -24,7 +26,8 @@ export const useTenantStore = create<TenantState>((set) => ({
       tenantId: payload?.tenant_id ?? null,
       tenantNombre: payload?.tenant_nombre ?? null,
       esAdmin: rolActivo === 'ADMIN' || rolActivo === 'SUPER_ADMIN',
+      esSuperAdmin: rolActivo === 'SUPER_ADMIN',
     });
   },
-  clear: () => set({ token: null, tenantId: null, tenantNombre: null, esAdmin: false }),
+  clear: () => set({ token: null, tenantId: null, tenantNombre: null, esAdmin: false, esSuperAdmin: false }),
 }));

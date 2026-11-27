@@ -53,6 +53,14 @@ test('useTenantStore toma tenant y nombre del minimarket solo del JWT (S3-097)',
   assert.equal(useTenantStore.getState().tenantNombre, null);
 });
 
+test('rutaInicial lleva a SUPER_ADMIN a Minimarkets, a ADMIN al Admin y al resto al POS (S3-098)', () => {
+  const { rutaInicial } = require('../src/utils/adminAccess.ts');
+  assert.equal(rutaInicial('SUPER_ADMIN'), '/admin/minimarkets');
+  assert.equal(rutaInicial('admin'), '/admin');
+  assert.equal(rutaInicial('CAJERO'), '/pos');
+  assert.equal(rutaInicial(undefined), '/pos');
+});
+
 test('ADMIN y SUPER_ADMIN acceden a Administración y CAJERO no', () => {
   const helperPath = path.resolve(__dirname, '../src/utils/adminAccess.ts');
   const source = readFileSync(helperPath, 'utf8');
