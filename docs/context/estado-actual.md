@@ -13,6 +13,10 @@ reglas: []
 ---
 # Estado Real de Implementación — GlobalMart OS
 
+## S3-096 — Segundo minimarket en el seed (2026-11-27)
+
+[IMPLEMENTADO] En `Development`, MS-1 siembra `demo`, `donpepe` (CAJERO, ADMIN, sucursal) y el SUPER_ADMIN `superadmin@globalmart.cl` en el tenant de plataforma `globalmart`; MS-3 siembra 30 productos para demo y 8 distintos para donpepe (antes su `SeedData` no se invocaba). Verificado con MS-1 y MS-3 contra bases vacías: los cinco usuarios entran por código, cada ADMIN ve solo sus usuarios y productos, el SUPER_ADMIN lista los tres tenants y un ADMIN recibe 403. Credenciales en [como-ejecutar](proyecto/como-ejecutar.md). El clúster corre MS-1/MS-3 sin `Development`, así que allí el seed no corre [NO VERIFICADO].
+
 ## S3-094 — Alta de minimarket por SUPER_ADMIN (2026-11-27)
 
 [IMPLEMENTADO] `POST /api/tenants` y `GET /api/tenants` en MS-1, solo `SUPER_ADMIN`: crean en una transacción el tenant (CL/CLP/IVA 19), una sucursal inicial y su ADMIN, que inicia sesión de inmediato con el código. ADMIN/CAJERO → 403, código duplicado → 409, un fallo intermedio no deja datos parciales. `--bootstrap-admin` usa el mismo método y validador (nueva variable `GLOBALMART_BOOTSTRAP_TENANT_CODE`). `TenantAltaIntegrationTests` 5/5 sobre PostgreSQL local. Kong local ya enruta `/api/tenants`; clúster [NO VERIFICADO].

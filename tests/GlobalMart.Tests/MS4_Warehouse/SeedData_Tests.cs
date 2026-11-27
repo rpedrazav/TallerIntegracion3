@@ -84,6 +84,26 @@ public class SeedData_Tests : IDisposable
         _catalogContext.Precios.IgnoreQueryFilters().Count().Should().Be(30);
     }
 
+    [Fact]
+    public void CatalogSeedData_DonPepe_TieneCatalogoPropioDistintoDelDemoEIdempotente()
+    {
+        CatalogPricingService.Data.SeedData.Initialize(_catalogContext);
+        CatalogPricingService.Data.SeedData.InitializeDonPepe(_catalogContext);
+        CatalogPricingService.Data.SeedData.InitializeDonPepe(_catalogContext);
+
+        var productos = _catalogContext.Productos.IgnoreQueryFilters().ToList();
+        var donPepe = productos.Where(p => p.TenantId == CatalogPricingService.Data.SeedData.DonPepeTenantId).ToList();
+        var demo = productos.Where(p => p.TenantId == CatalogPricingService.Data.SeedData.DemoTenantId).ToList();
+
+        donPepe.Should().HaveCount(8);
+        demo.Should().HaveCount(30);
+        donPepe.Select(p => p.Nombre).Should().NotIntersectWith(demo.Select(p => p.Nombre));
+        donPepe.Select(p => p.CodigoBarras).Should().NotIntersectWith(demo.Select(p => p.CodigoBarras));
+        _catalogContext.Precios.IgnoreQueryFilters()
+            .Where(p => p.TenantId == CatalogPricingService.Data.SeedData.DonPepeTenantId)
+            .Should().HaveCount(8).And.OnlyContain(p => p.SucursalId == CatalogPricingService.Data.SeedData.DonPepeSucursalId);
+    }
+
     /// <summary>
     /// TI3-257: Verifica que el seed crea 30 registros con cantidades entre 10-100
     /// y stock_minimo = 5 para todos los productos.

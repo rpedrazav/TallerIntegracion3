@@ -5,7 +5,7 @@ titulo: MS-3 · Catalog & Pricing Service
 estado: parcial
 fuentes: [src/CatalogPricingService/]
 verificado_contra_codigo: true
-ultima_revision: 2026-11-24
+ultima_revision: 2026-11-27
 depende_de: [ms1-identity]
 publica: []
 consume: []
@@ -14,7 +14,7 @@ reglas: [RN-01, RN-11, RF-04, RF-11, CP-01, CP-04, CP-05]
 # MS-3 · Catalog & Pricing Service
 
 > Gestiona el catálogo de productos del tenant con búsqueda por nombre (full-text) y lookup por código de barras. Soporta categorías jerárquicas y productos de peso variable. Precios dinámicos y promociones son PLANIFICADOS. Ver [[matriz-rutas]] para el inventario de puertos y prefijos.
-> Gestiona el catálogo de productos del tenant con búsqueda por nombre (full-text) y lookup por código de barras. Soporta categorías jerárquicas y productos de peso variable. Incluye seed de 30 productos variados con códigos de barras y precios (TI3-256). Precios dinámicos y promociones son PLANIFICADOS.
+> Gestiona el catálogo de productos del tenant con búsqueda por nombre (full-text) y lookup por código de barras. Soporta categorías jerárquicas y productos de peso variable. Incluye seed de 30 productos variados con códigos de barras y precios (TI3-256) y, desde S3-096, un catálogo propio de 8 productos para el minimarket `donpepe`; ambos se ejecutan al arrancar en `Development` (antes `SeedData` no se invocaba). Verificado contra una base vacía: el ADMIN de cada minimarket lista solo sus productos (30 y 8). Precios dinámicos y promociones son PLANIFICADOS.
 
 ## Endpoints reales
 

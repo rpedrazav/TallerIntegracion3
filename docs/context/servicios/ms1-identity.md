@@ -319,7 +319,7 @@ Consumidores actuales de `SucursalId` (como `Guid`, sin FK por ser otro microser
 - `sucursal_id` se emite en el JWT tomando la primera asignación de `UsuarioSucursales` (cadena vacía `""` si el usuario no tiene sucursal asignada)
 - Expiración: configurable via `Jwt:ExpirationHours` (default 8 horas)
 - SUPER_ADMIN no puede ser asignado por un ADMIN (protección en UsuarioController)
-- Seed de desarrollo (`Program.cs`): aprovisiona tanto `cajero@demo.cl` (CAJERO) como `admin@demo.cl` (ADMIN) en el tenant demo `aaaaaaaa-0000-0000-0000-000000000001`, asegurando `admin@demo.cl` incluso si el tenant ya existía previamente (`adeeae7`).
+- Seed de desarrollo (`Data/SeedData.cs`, S3-096): minimarkets `demo` y `donpepe` con CAJERO, ADMIN y sucursal, y `superadmin@globalmart.cl` (SUPER_ADMIN) en el tenant de plataforma `globalmart`; cada registro se crea solo si falta. Credenciales e IDs en [[como-ejecutar]].
 
 ## Multi-tenant en MS-1
 
@@ -329,7 +329,7 @@ El TenantMiddleware extrae `tenant_id` del JWT e inyecta en `TenantDbContext.Cur
 
 - Passwords: BCrypt hash [IMPLEMENTADO]
 - JWT: validado en cada endpoint excepto `/auth/login` [IMPLEMENTADO]
-- Seed de dev: `cajero@demo.cl` (ver contraseña en [[como-ejecutar]]) / tenantId: `aaaaaaaa-0000-0000-0000-000000000001` [SOLO EN DESARROLLO]
+- Seed de dev: minimarkets `demo` y `donpepe` y SUPER_ADMIN en `globalmart` (ver [[como-ejecutar]]) [SOLO EN DESARROLLO]
 - Un admin NO puede desactivarse a sí mismo [IMPLEMENTADO]
 
 ## Kong Gateway
@@ -346,7 +346,7 @@ GET/POST/PUT/DELETE /api/tenants
 
 ## Tests
 
-- **Seed de desarrollo:** crea el tenant, `cajero@demo.cl` (CAJERO) y `admin@demo.cl` (ADMIN) si faltan, también en BD ya sembradas (S2-112) [IMPLEMENTADO]
+- **Seed de desarrollo:** crea `demo`, `donpepe` y `globalmart` con sus usuarios si faltan, también en BD ya sembradas (S2-112, S3-096). Verificado el 2026-11-27 contra bases vacías: los cinco usuarios inician sesión por código y cada ADMIN lista solo los usuarios de su minimarket [IMPLEMENTADO]
 - **Tests unitarios:** `CrearUsuarioDtoValidatorTests` (16 casos cubriendo nombre, email y contraseña fuerte) [IMPLEMENTADO]
 - **Tests de integración:** `AuthIntegrationTests` (login y emisión de JWT), `UserIntegrationTests` (POST /users, hasheo BCrypt, asignación tenant_id, validación y control de duplicados) y `SucursalIntegrationTests` (PUT/DELETE, autorización, aislamiento, baja lógica, historial y regresión POST/GET) [IMPLEMENTADO]
 - **Tests manuales:** vía Swagger UI en `/swagger`

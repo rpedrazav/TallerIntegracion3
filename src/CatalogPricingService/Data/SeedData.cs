@@ -22,6 +22,52 @@ public static class SeedData
     public static readonly Guid CatLacteos        = Guid.Parse("10000000-0000-0000-0000-000000000003");
     public static readonly Guid CatSnacks         = Guid.Parse("10000000-0000-0000-0000-000000000004");
 
+    // S3-096: segundo minimarket ("donpepe"), mismos IDs de tenant y sucursal que el seed de MS-1.
+    public static readonly Guid DonPepeTenantId   = Guid.Parse("aaaaaaaa-0000-0000-0000-000000000002");
+    public static readonly Guid DonPepeSucursalId = Guid.Parse("cccccccc-0000-0000-0000-000000000002");
+    public static readonly Guid CatDonPepeAlmacen = Guid.Parse("10000000-0000-0000-0000-000000000101");
+
+    /// <summary>
+    /// Catálogo propio de Don Pepe, distinto del demo (otros nombres, códigos de barras 7802…).
+    /// IDs de producto 30000000-…-0001 a 0008 para el seed de MS-4.
+    /// </summary>
+    public static void InitializeDonPepe(CatalogDbContext context)
+    {
+        if (context.Productos.IgnoreQueryFilters().Any(p => p.TenantId == DonPepeTenantId))
+            return;
+
+        context.Categorias.Add(new Categoria { Id = CatDonPepeAlmacen, TenantId = DonPepeTenantId, Nombre = "Almacén" });
+        (string Nombre, decimal Precio)[] items =
+        [
+            ("Pan Amasado Don Pepe (unidad)", 250m), ("Sopaipilla Casera (unidad)", 200m),
+            ("Empanada de Pino Horneada", 1800m), ("Queso Mantecoso Laminado 250g", 3290m),
+            ("Mermelada de Mora Casera 400g", 2490m), ("Té Ceylán 100 bolsitas", 2990m),
+            ("Harina Sin Polvos 1kg", 1390m), ("Aceite Vegetal 1L", 2190m),
+        ];
+        for (var i = 0; i < items.Length; i++)
+        {
+            var producto = new Producto
+            {
+                Id = Guid.Parse($"30000000-0000-0000-0000-{i + 1:D12}"),
+                TenantId = DonPepeTenantId,
+                Nombre = items[i].Nombre,
+                CodigoBarras = $"7802000000{i + 1:D2}",
+                CategoriaId = CatDonPepeAlmacen,
+                UomBaseId = UomUnidad,
+                PrecioBase = items[i].Precio,
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow
+            };
+            context.Productos.Add(producto);
+            context.Precios.Add(new Precio
+            {
+                ProductoId = producto.Id, SucursalId = DonPepeSucursalId, TenantId = DonPepeTenantId,
+                PrecioLocal = producto.PrecioBase, MonedaFx = "CLP", PrecioFx = producto.PrecioBase
+            });
+        }
+        context.SaveChanges();
+    }
+
     public static void Initialize(CatalogDbContext context)
     {
         // Evita duplicados verificando si ya existen productos para el tenant demo

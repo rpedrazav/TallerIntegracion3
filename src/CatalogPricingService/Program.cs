@@ -124,17 +124,22 @@ app.UseMiddleware<TenantMiddleware>();
 app.MapHealthChecks("/health");
 app.MapControllers();
 
-// Ejecutar migraciones automaticamente
+// Ejecutar migraciones automaticamente y, en desarrollo, el catálogo de los minimarkets demo y donpepe
 using (var scope = app.Services.CreateScope())
 {
+    var db = scope.ServiceProvider.GetRequiredService<CatalogPricingService.Data.CatalogDbContext>();
     try
     {
-        var db = scope.ServiceProvider.GetRequiredService<CatalogPricingService.Data.CatalogDbContext>();
         db.Database.Migrate();
     }
     catch (Npgsql.PostgresException ex) when (ex.SqlState == "42P07")
     {
         // Tablas ya existen en la base de datos
+    }
+    if (app.Environment.IsDevelopment())
+    {
+        CatalogPricingService.Data.SeedData.Initialize(db);
+        CatalogPricingService.Data.SeedData.InitializeDonPepe(db);
     }
 }
 

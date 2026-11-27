@@ -5,7 +5,7 @@ titulo: Cómo Ejecutar GlobalMart OS
 estado: implementado
 fuentes: [Docker/docker-compose.yml, Docker/config/kong.yaml, DOCKER.md, run-apis.bat, .github/workflows/ci.yml]
 verificado_contra_codigo: true
-ultima_revision: 2026-11-24
+ultima_revision: 2026-11-27
 depende_de: [stack, docker-compose]
 publica: []
 consume: []
@@ -95,10 +95,15 @@ API_MODE=local npm start     # Tráfico vía Kong (:8000) hacia los servicios de
 
 `local` requiere `docker compose` (Kong) y `run-apis` en ejecución. Si Kong responde 503/502, el microservicio de ese puerto no está levantado en el host; si responde 401 «No credentials found for given 'iss'», el `kong.yaml` cargado no tiene el consumer JWT (recrear el contenedor: `docker compose -f Docker/docker-compose.yml up -d --force-recreate kong`).
 
-**Seed local de desarrollo (credenciales de prueba):**
-- Cajero: `cajero@demo.cl` / Password: `demo1234`
-- Administrador: `admin@demo.cl` / Password: `demo1234`
-- Tenant ID: `aaaaaaaa-0000-0000-0000-000000000001`
+**Seed local de desarrollo (S3-096).** Lo crean MS-1 (`Data/SeedData.cs`) y MS-3 (`SeedData.Initialize`/`InitializeDonPepe`) al arrancar con `ASPNETCORE_ENVIRONMENT=Development`, solo si faltan. Contraseña de todos: `demo1234`. En el login se escribe el **código de minimarket**:
+
+| Código | Minimarket | Usuarios | Tenant ID | Sucursal | Catálogo MS-3 |
+|---|---|---|---|---|---|
+| `demo` | Minimarket Demo | `cajero@demo.cl` (CAJERO), `admin@demo.cl` (ADMIN) | `aaaaaaaa-0000-0000-0000-000000000001` | `cccccccc-0000-0000-0000-000000000001` | 30 productos `20000000-…-0001..0030`, códigos `7801000000xx` |
+| `donpepe` | Minimarket Don Pepe | `cajero@donpepe.cl` (CAJERO), `admin@donpepe.cl` (ADMIN) | `aaaaaaaa-0000-0000-0000-000000000002` | `cccccccc-0000-0000-0000-000000000002` | 8 productos `30000000-…-0001..0008`, códigos `7802000000xx` |
+| `globalmart` | GlobalMart OS (plataforma) | `superadmin@globalmart.cl` (SUPER_ADMIN, alta de minimarkets) | `aaaaaaaa-0000-0000-0000-000000000099` | — | — |
+
+Los IDs de producto y sucursal de Don Pepe son los que usa el seed de stock de MS-4 (S3-103).
 
 > Para el guion completo de demostración del Sprint 2 (sin dispositivos físicos) y límites de hardware, consultar [`docs/pautas/manual-ejecucion-demo-sprint2.md`](../../pautas/manual-ejecucion-demo-sprint2.md).
 
