@@ -213,7 +213,7 @@ public class UsuarioIntegrationTests : IClassFixture<Ms1WebApplicationFactory>
         using var body = JsonDocument.Parse(await created.Content.ReadAsStringAsync());
         var id = body.RootElement.GetProperty("id").GetGuid();
 
-        var login = new { email, password = "Password123!", tenantId = TenantDemoId };
+        var login = new { email, password = "Password123!", tenantCodigo = "demo" };
         Assert.Equal(HttpStatusCode.OK, (await _client.PostAsJsonAsync("/auth/login", login)).StatusCode);
 
         var delete = new HttpRequestMessage(HttpMethod.Delete, $"/users/{id}");

@@ -28,8 +28,10 @@ public class LoginRequestValidator : AbstractValidator<LoginRequest>
             .MaximumLength(100)
                 .WithMessage("La contraseña no puede superar los 100 caracteres.");
 
-        RuleFor(x => x.TenantId)
+        RuleFor(x => x.TenantCodigo)
             .NotEmpty()
-                .WithMessage("El identificador del tenant es obligatorio.");
+                .WithMessage("El código del minimarket es obligatorio.")
+            .MaximumLength(50)
+                .WithMessage("El código del minimarket no puede superar los 50 caracteres.");
     }
 }

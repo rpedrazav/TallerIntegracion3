@@ -5,13 +5,17 @@ titulo: Estado Real de Implementación — GlobalMart OS
 estado: vigente
 fuentes: [docs/context/_reports/inventario.md, src/, tests/GlobalMart.IntegrationTests/SucursalIntegrationTests.cs, tests/GlobalMart.IntegrationTests/SucursalOperativaIntegrationTests.cs, tests/GlobalMart.IntegrationTests/ReactivarUsuarioIntegrationTests.cs, globalmart-frontend/src/api/client.ts, globalmart-frontend/src/store/useTenantStore.ts, globalmart-frontend/src/pages/Admin.tsx, globalmart-frontend/src/pages/AdminRoles.tsx, globalmart-frontend/src/components/admin/UsuariosList.tsx, globalmart-frontend/src/components/admin/EditarUsuarioModal.tsx, globalmart-frontend/src/hardware/simulated-scale-adapter.ts, globalmart-frontend/src/hardware/serial-scale-adapter.ts, globalmart-frontend/src/hardware/scale-adapter-factory.ts, globalmart-frontend/src/hardware/scale-ipc.ts, globalmart-frontend/src/payments/terminal-ipc.ts, globalmart-frontend/src/payments/synchronizeCardPayment.ts, globalmart-frontend/src/preload.ts, globalmart-frontend/e2e/admin-flows.spec.ts, globalmart-frontend/e2e/admin.spec.ts, globalmart-frontend/e2e/weight-cart.spec.ts, globalmart-frontend/tests/admin-access.test.cjs, globalmart-frontend/tests/user-edit.test.cjs, globalmart-frontend/tests/user-deactivation.test.cjs, globalmart-frontend/tests/simulated-scale-adapter.test.cjs, globalmart-frontend/tests/serial-scale-adapter.test.cjs, globalmart-frontend/tests/scale-ipc.test.cjs, globalmart-frontend/tests/terminal-ipc.test.cjs, globalmart-frontend/tests/synchronized-card-payment.test.cjs, git log, docs/context/_reports/preguntas-abiertas.md, tests/GlobalMart.IntegrationTests/CobroSeguroIntegrationTests.cs, docs/qa/S2-035/reporte.md, docs/qa/TI3-773/reporte.md, docs/qa/TI3-799/reporte.md, docs/qa/TI3-800/reporte.md, new-ingresses.yaml]
 verificado_contra_codigo: true
-ultima_revision: 2026-11-24
+ultima_revision: 2026-11-27
 depende_de: []
 publica: []
 consume: []
 reglas: []
 ---
 # Estado Real de Implementación — GlobalMart OS
+
+## S3-095 — Login por código de minimarket (2026-11-27)
+
+[IMPLEMENTADO] `POST /auth/login` recibe `tenantCodigo` en vez del GUID; `Tenant.Codigo` es único (migración `AddCodigoToTenant`, el tenant demo queda con `demo`). El JWT agrega `tenant_nombre`; el tenant sigue saliendo solo de `tenant_id`. Código inexistente → 401 genérico. 15/15 unitarias MS-1 y 74/74 integración MS-1 sobre PostgreSQL local aprobadas. Clúster [NO VERIFICADO].
 
 ## TI3-802 — Recepción de mercadería en Admin (2026-11-24)
 

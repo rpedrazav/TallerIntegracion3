@@ -17,14 +17,17 @@ public class UsuarioRepository : IUsuarioRepository
         _db = db;
     }
 
-    public async Task<Usuario?> FindByEmailAsync(string email, Guid tenantId)
+    public async Task<Usuario?> FindByEmailAsync(string email, string tenantCodigo)
     {
+        var codigo = tenantCodigo.Trim().ToLowerInvariant();
         return await _db.Usuarios
             .IgnoreQueryFilters()
+            .Include(usuario => usuario.Tenant)
             .Include(usuario => usuario.UsuarioRoles)
                 .ThenInclude(usuarioRol => usuarioRol.Rol)
             .Include(usuario => usuario.UsuarioSucursales)
-            .FirstOrDefaultAsync(usuario => usuario.TenantId == tenantId
+            .FirstOrDefaultAsync(usuario => usuario.Tenant.Codigo == codigo
+                && usuario.Tenant.Activo
                 && usuario.Email.ToLower() == email.ToLower()
                 && usuario.Activo);
     }

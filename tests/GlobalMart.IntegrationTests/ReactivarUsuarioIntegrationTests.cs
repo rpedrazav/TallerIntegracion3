@@ -86,7 +86,7 @@ public class ReactivarUsuarioIntegrationTests : IClassFixture<Ms1WebApplicationF
         await _data.ConfigureLoginAsync(_data.UserA, Password);
         var before = await _data.SnapshotAsync(_data.UserA);
         var rolesBefore = await _data.RoleIdsAsync(_data.UserA);
-        var login = new { email = before.Email, password = Password, tenantId = _data.TenantA };
+        var login = new { email = before.Email, password = Password, tenantCodigo = _data.TenantA.ToString() };
 
         Assert.Equal(HttpStatusCode.OK, (await _data.Client.PostAsJsonAsync("/auth/login", login)).StatusCode);
         Assert.Equal(HttpStatusCode.NoContent,

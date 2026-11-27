@@ -31,7 +31,8 @@ public class AuthController_LoginTests
 
     // ── Datos de prueba reutilizables ──────────────────────────────────────
     private static readonly Guid TenantA = Guid.Parse("aaaaaaaa-0000-0000-0000-000000000001");
-    private static readonly Guid TenantB = Guid.Parse("bbbbbbbb-0000-0000-0000-000000000002");
+    private const string CodigoA = "demo";
+    private const string CodigoB = "donpepe";
     private static readonly Guid UserId  = Guid.Parse("11111111-1111-1111-1111-111111111111");
 
     public AuthController_LoginTests()
@@ -104,7 +105,7 @@ public class AuthController_LoginTests
     {
         using var services = new ServiceCollection().AddControllers().Services.BuildServiceProvider();
         _controller.HttpContext.RequestServices = services;
-        var request = new LoginRequest { Email = "invalido", Password = "", TenantId = Guid.Empty };
+        var request = new LoginRequest { Email = "invalido", Password = "", TenantCodigo = "" };
         _validatorMock
             .Setup(v => v.ValidateAsync(request, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ValidationResult([
@@ -120,7 +121,7 @@ public class AuthController_LoginTests
         problem.Errors.Should().ContainKey(nameof(LoginRequest.Email));
         problem.Errors[nameof(LoginRequest.Email)].Should().Contain("El email no tiene un formato válido.");
         _authServiceMock.Verify(
-            service => service.ValidateCredentialsAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Guid>()),
+            service => service.ValidateCredentialsAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()),
             Times.Never);
         _jwtServiceMock.Verify(service => service.GenerateToken(It.IsAny<Usuario>()), Times.Never);
     }
@@ -137,7 +138,7 @@ public class AuthController_LoginTests
         {
             Email    = "cajero@globalmart.cl",
             Password = "cajero123",
-            TenantId = TenantA
+            TenantCodigo = CodigoA
         };
 
         var usuario = CrearUsuarioDePrueba(TenantA);
@@ -146,7 +147,7 @@ public class AuthController_LoginTests
         SetupValidacionExitosa();
 
         _authServiceMock
-            .Setup(s => s.ValidateCredentialsAsync(request.Email, request.Password, request.TenantId))
+            .Setup(s => s.ValidateCredentialsAsync(request.Email, request.Password, request.TenantCodigo))
             .ReturnsAsync(usuario);
 
         _jwtServiceMock
@@ -189,7 +190,7 @@ public class AuthController_LoginTests
         {
             Email    = "admin@globalmart.cl",
             Password = "admin123",
-            TenantId = TenantA
+            TenantCodigo = CodigoA
         };
 
         var usuario = CrearUsuarioDePrueba(TenantA, "ADMIN", "admin@globalmart.cl");
@@ -198,7 +199,7 @@ public class AuthController_LoginTests
         SetupValidacionExitosa();
 
         _authServiceMock
-            .Setup(s => s.ValidateCredentialsAsync(request.Email, request.Password, request.TenantId))
+            .Setup(s => s.ValidateCredentialsAsync(request.Email, request.Password, request.TenantCodigo))
             .ReturnsAsync(usuario);
 
         _jwtServiceMock
@@ -228,14 +229,14 @@ public class AuthController_LoginTests
         {
             Email    = "cajero@globalmart.cl",
             Password = "contraseña_incorrecta",
-            TenantId = TenantA
+            TenantCodigo = CodigoA
         };
 
         SetupValidacionExitosa();
 
         // AuthService retorna null cuando las credenciales son incorrectas
         _authServiceMock
-            .Setup(s => s.ValidateCredentialsAsync(request.Email, request.Password, request.TenantId))
+            .Setup(s => s.ValidateCredentialsAsync(request.Email, request.Password, request.TenantCodigo))
             .ReturnsAsync((Usuario?)null);
 
         // Act
@@ -254,13 +255,13 @@ public class AuthController_LoginTests
         {
             Email    = "cajero@globalmart.cl",
             Password = "contraseña_incorrecta",
-            TenantId = TenantA
+            TenantCodigo = CodigoA
         };
 
         SetupValidacionExitosa();
 
         _authServiceMock
-            .Setup(s => s.ValidateCredentialsAsync(request.Email, request.Password, request.TenantId))
+            .Setup(s => s.ValidateCredentialsAsync(request.Email, request.Password, request.TenantCodigo))
             .ReturnsAsync((Usuario?)null);
 
         // Act
@@ -289,13 +290,13 @@ public class AuthController_LoginTests
         {
             Email    = "noexiste@globalmart.cl",
             Password = "cualquierPassword1",
-            TenantId = TenantA
+            TenantCodigo = CodigoA
         };
 
         SetupValidacionExitosa();
 
         _authServiceMock
-            .Setup(s => s.ValidateCredentialsAsync(request.Email, request.Password, request.TenantId))
+            .Setup(s => s.ValidateCredentialsAsync(request.Email, request.Password, request.TenantCodigo))
             .ReturnsAsync((Usuario?)null);
 
         // Act
@@ -316,11 +317,11 @@ public class AuthController_LoginTests
         {
             Email = "inactivo@globalmart.cl",
             Password = "password123",
-            TenantId = TenantA
+            TenantCodigo = CodigoA
         };
         SetupValidacionExitosa();
         _authServiceMock
-            .Setup(service => service.ValidateCredentialsAsync(request.Email, request.Password, request.TenantId))
+            .Setup(service => service.ValidateCredentialsAsync(request.Email, request.Password, request.TenantCodigo))
             .ReturnsAsync((Usuario?)null);
 
         var result = await _controller.Login(request, CancellationToken.None);
@@ -345,14 +346,14 @@ public class AuthController_LoginTests
         {
             Email    = "cajero@globalmart.cl",
             Password = "cajero123",
-            TenantId = TenantB  // Tenant distinto al del usuario
+            TenantCodigo = CodigoB  // Minimarket distinto al del usuario
         };
 
         SetupValidacionExitosa();
 
         // AuthService retorna null porque el usuario no pertenece a TenantB
         _authServiceMock
-            .Setup(s => s.ValidateCredentialsAsync(request.Email, request.Password, TenantB))
+            .Setup(s => s.ValidateCredentialsAsync(request.Email, request.Password, CodigoB))
             .ReturnsAsync((Usuario?)null);
 
         // Act
@@ -371,13 +372,13 @@ public class AuthController_LoginTests
         {
             Email    = "cajero@globalmart.cl",
             Password = "cajero123",
-            TenantId = TenantB
+            TenantCodigo = CodigoB
         };
 
         SetupValidacionExitosa();
 
         _authServiceMock
-            .Setup(s => s.ValidateCredentialsAsync(request.Email, request.Password, TenantB))
+            .Setup(s => s.ValidateCredentialsAsync(request.Email, request.Password, CodigoB))
             .ReturnsAsync((Usuario?)null);
 
         // Act

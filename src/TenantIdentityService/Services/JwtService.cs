@@ -14,6 +14,7 @@ namespace TenantIdentityService.Services;
 /// <list type="bullet">
 ///   <item><description><b>sub</b>        — user_id (Guid del usuario)</description></item>
 ///   <item><description><b>tenant_id</b>  — Guid del tenant al que pertenece el usuario</description></item>
+///   <item><description><b>tenant_nombre</b> — Nombre del minimarket, para mostrarlo en la cabecera</description></item>
 ///   <item><description><b>email</b>      — Email del usuario</description></item>
 ///   <item><description><b>nombre</b>     — Nombre completo del usuario</description></item>
 ///   <item><description><b>roles</b>      — Array JSON de todos los roles asignados (ej: ["CAJERO","REPONEDOR"])</description></item>
@@ -54,19 +55,9 @@ public class JwtService : IJwtService
         var audience  = _config["Jwt:Audience"]  ?? "GlobalMartOS_Clients";
         var horasExp  = _config.GetValue<int>("Jwt:ExpirationHours", 8);
 
-        // ── 2. Construir la lista de roles del usuario ────────────────────────
-        var roles = usuario.UsuarioRoles
-            .Where(ur => ur.Rol.TenantId is null || ur.Rol.TenantId == usuario.TenantId)
-            .SelectMany(ur => ur.Rol.RolBase is { Length: > 0 } baseRole
-                ? new[] { ur.Rol.Nombre, baseRole }
-                : new[] { ur.Rol.Nombre })
-            .Distinct(StringComparer.Ordinal)
-            .ToList();
-
-        // ── 3. Determinar el active_role (rol de mayor prioridad) ─────────────
-        //    Si el usuario no tiene roles asignados, se asigna "CAJERO" como fallback seguro.
-        var activeRole = PrioridadRoles
-            .FirstOrDefault(r => roles.Contains(r)) ?? "CAJERO";
+        // ── 2. Roles del usuario y active_role (rol de mayor prioridad) ──────
+        var roles = RolesDe(usuario);
+        var activeRole = RolActivo(roles);
 
         // ── 4. Obtener la primera sucursal asignada al usuario ─────────────────
         var sucursalId = usuario.UsuarioSucursales.FirstOrDefault()?.SucursalId.ToString()
@@ -84,6 +75,7 @@ public class JwtService : IJwtService
 
             // Claims custom del dominio GlobalMart OS
             new("tenant_id",   usuario.TenantId.ToString()),
+            new("tenant_nombre", usuario.Tenant.Nombre),
             new("email",       usuario.Email),
             new("nombre",      usuario.Nombre),
             new("active_role", activeRole),
@@ -118,4 +110,17 @@ public class JwtService : IJwtService
 
         return tokenString;
     }
+
+    /// <summary>Roles del usuario en su tenant, incluido el rol base de los roles propios.</summary>
+    public static List<string> RolesDe(Usuario usuario) => usuario.UsuarioRoles
+        .Where(ur => ur.Rol.TenantId is null || ur.Rol.TenantId == usuario.TenantId)
+        .SelectMany(ur => ur.Rol.RolBase is { Length: > 0 } baseRole
+            ? new[] { ur.Rol.Nombre, baseRole }
+            : new[] { ur.Rol.Nombre })
+        .Distinct(StringComparer.Ordinal)
+        .ToList();
+
+    /// <summary>Rol de mayor prioridad; "CAJERO" si no tiene ninguno conocido.</summary>
+    public static string RolActivo(List<string> roles) =>
+        PrioridadRoles.FirstOrDefault(roles.Contains) ?? "CAJERO";
 }

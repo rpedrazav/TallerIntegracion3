@@ -12,9 +12,6 @@ public sealed record LoginRequest
     /// <summary>Contraseña en texto plano (nunca se almacena, solo se verifica con BCrypt).</summary>
     public string Password { get; init; } = string.Empty;
 
-    /// <summary>
-    /// Identificador del tenant al que el usuario intenta acceder.
-    /// El frontend Electron lo lee desde su configuración local (electron-store).
-    /// </summary>
-    public Guid TenantId { get; init; }
+    /// <summary>Código del minimarket (ej: "demo"). El tenant_id del JWT sale de este código.</summary>
+    public string TenantCodigo { get; init; } = string.Empty;
 }

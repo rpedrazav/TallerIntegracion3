@@ -134,7 +134,7 @@ public class AuthService_RoleTests
 
         var repoMock = new Mock<IUsuarioRepository>();
         repoMock
-            .Setup(r => r.FindByEmailAsync("dual@globalmart.cl", TenantId))
+            .Setup(r => r.FindByEmailAsync("dual@globalmart.cl", "demo"))
             .ReturnsAsync(usuario);
 
         var loggerMock = new Mock<ILogger<AuthService>>();
@@ -142,7 +142,7 @@ public class AuthService_RoleTests
 
         // Act
         var resultado = await authService.ValidateCredentialsAsync(
-            "dual@globalmart.cl", passwordPlano, TenantId);
+            "dual@globalmart.cl", passwordPlano, "demo");
 
         // Assert — El usuario retornado tiene los roles intactos
         resultado.Should().NotBeNull();
@@ -154,7 +154,7 @@ public class AuthService_RoleTests
         resultado.UsuarioSucursales.Should().ContainSingle()
             .Which.SucursalId.Should().Be(sucursalId);
         repoMock.Verify(
-            repository => repository.FindByEmailAsync("dual@globalmart.cl", TenantId),
+            repository => repository.FindByEmailAsync("dual@globalmart.cl", "demo"),
             Times.Once);
     }
 
@@ -190,6 +190,7 @@ public class AuthService_RoleTests
             Id       = UserId,
             TenantId = TenantId,
             Nombre   = "Multi-Rol JWT Test",
+            Tenant   = new Tenant { Id = TenantId, Nombre = "Minimarket Demo" },
             Email    = "jwt@globalmart.cl",
             Activo   = true,
             UsuarioRoles = new List<UsuarioRol>
@@ -218,6 +219,7 @@ public class AuthService_RoleTests
         // Assert — Contiene el claim "sub" con el user_id
         jwt.Claims.Should().Contain(c => c.Type == "sub" && c.Value == UserId.ToString());
         jwt.Claims.Should().Contain(c => c.Type == "tenant_id" && c.Value == TenantId.ToString());
+        jwt.Claims.Should().Contain(c => c.Type == "tenant_nombre" && c.Value == "Minimarket Demo");
         jwt.Claims.Should().Contain(c => c.Type == "email" && c.Value == usuario.Email);
         jwt.Claims.Should().Contain(c => c.Type == "nombre" && c.Value == usuario.Nombre);
         jwt.Claims.Should().Contain(c => c.Type == "sucursal_id" && c.Value == sucursalId.ToString());
@@ -264,6 +266,7 @@ public class AuthService_RoleTests
             Id       = UserId,
             TenantId = TenantId,
             Nombre   = "Solo Cajero",
+            Tenant   = new Tenant { Id = TenantId, Nombre = "Minimarket Demo" },
             Email    = "solcajero@globalmart.cl",
             Activo   = true,
             UsuarioRoles = new List<UsuarioRol>

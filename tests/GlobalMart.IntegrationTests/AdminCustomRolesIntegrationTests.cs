@@ -35,7 +35,7 @@ public sealed class AdminCustomRolesIntegrationTests : IClassFixture<Ms1WebAppli
 
         var login = await _data.Client.PostAsJsonAsync("/auth/login", new
         {
-            tenantId = _data.TenantA, email = "supervisor@example.test", password = "Gm7!Test1234"
+            tenantCodigo = _data.TenantA.ToString(), email = "supervisor@example.test", password = "Gm7!Test1234"
         });
         Assert.Equal(HttpStatusCode.OK, login.StatusCode);
         var session = await login.Content.ReadFromJsonAsync<JsonElement>();

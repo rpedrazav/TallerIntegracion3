@@ -10,6 +10,9 @@ public class Tenant
 
     public string Nombre { get; set; } = string.Empty;
 
+    /// <summary>Código legible y único para iniciar sesión (ej: "demo", "donpepe"), en minúsculas.</summary>
+    public string? Codigo { get; set; }
+
     /// <summary>Código ISO del país (CL, AR, US, etc.). Determina la Entidad Fiscal a usar.</summary>
     public string Pais { get; set; } = string.Empty;
 

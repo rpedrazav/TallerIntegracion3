@@ -59,6 +59,8 @@ public class TenantDbContext : DbContext
             e.Property(t => t.Idioma).HasMaxLength(5).HasDefaultValue("es");
             e.Property(t => t.PorcentajeIva).HasPrecision(5, 2);
             e.HasIndex(t => t.Nombre).IsUnique();
+            e.Property(t => t.Codigo).HasMaxLength(50);
+            e.HasIndex(t => t.Codigo).IsUnique();
         });
 
         // ── Rol ─────────────────────────────────────────────────────────────

@@ -6,13 +6,12 @@ using TenantIdentityService.Services;
 namespace TenantIdentityService.Controllers;
 
 /// <summary>
-/// Controlador de autenticaciÃ³n â€” MS-1 Tenant &amp; Identity Service.
+/// Controlador de autenticación — MS-1 Tenant &amp; Identity Service.
 ///
-/// Endpoint pÃºblico (sin JWT requerido):
-///   POST /auth/login  â†’  retorna JWT si las credenciales son vÃ¡lidas.
+/// Endpoint público (sin JWT requerido):
+///   POST /auth/login  →  retorna JWT si las credenciales y el código del minimarket son válidos.
 ///
-/// Este es el ÃšNICO endpoint del sistema que no requiere token.
-/// Kong estÃ¡ configurado para dejarlo pasar sin validaciÃ³n JWT.
+/// Kong está configurado para dejarlo pasar sin validación JWT.
 /// </summary>
 [ApiController]
 [Route("auth")]
@@ -40,18 +39,13 @@ public class AuthController : ControllerBase
     }
 
     /// <summary>
-    /// Autentica a un usuario y retorna un JWT firmado.
+    /// Autentica a un usuario en su minimarket y retorna un JWT firmado.
     /// </summary>
-    /// <param name="request">Credenciales del usuario y tenant al que accede.</param>
-    /// <param name="cancellationToken">Token de cancelaciÃ³n.</param>
-    /// <returns>
-    /// 200 con <see cref="LoginResponse"/> (JWT + info del usuario) si las credenciales son correctas.<br/>
-    /// 400 si el body tiene errores de validaciÃ³n (email invÃ¡lido, password vacÃ­a, etc.).<br/>
-    /// 401 si las credenciales son incorrectas (mensaje genÃ©rico sin revelar el motivo exacto).
-    /// </returns>
+    /// <param name="request">Email, contraseña y código del minimarket.</param>
+    /// <param name="cancellationToken">Token de cancelación.</param>
     /// <response code="200">Retorna el JWT y datos del usuario si las credenciales son válidas.</response>
-    /// <response code="400">Si el body tiene errores de validación (email inválido, password vacía).</response>
-    /// <response code="401">Si las credenciales son incorrectas.</response>
+    /// <response code="400">Si el body tiene errores de validación (email inválido, password o código vacío).</response>
+    /// <response code="401">Si las credenciales o el código son incorrectos (mensaje genérico).</response>
     [HttpPost("login")]
     [ProducesResponseType(typeof(LoginResponse),          StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
@@ -60,58 +54,35 @@ public class AuthController : ControllerBase
         [FromBody] LoginRequest   request,
         CancellationToken         cancellationToken)
     {
-        // â”€â”€ 1. Validar el request con FluentValidation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         var validacion = await _validator.ValidateAsync(request, cancellationToken);
         if (!validacion.IsValid)
         {
-            _logger.LogDebug("Login rechazado por validaciÃ³n: {Errores}",
-                string.Join(", ", validacion.Errors.Select(e => e.ErrorMessage)));
-
-            // Retorna 400 con el formato estÃ¡ndar de ASP.NET Core ValidationProblemDetails
             foreach (var error in validacion.Errors)
                 ModelState.AddModelError(error.PropertyName, error.ErrorMessage);
-
             return ValidationProblem(ModelState);
         }
 
-        // â”€â”€ 2. Validar credenciales contra la base de datos â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         var usuario = await _authService.ValidateCredentialsAsync(
             request.Email,
             request.Password,
-            request.TenantId);
+            request.TenantCodigo);
 
-        // â”€â”€ 3. Si las credenciales son incorrectas â†’ 401 genÃ©rico â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-        //    NUNCA se indica si fallÃ³ el email, la contraseÃ±a o si el usuario no existe.
+        // Nunca se indica si falló el código, el email o la contraseña (CWE-204).
         if (usuario is null)
         {
             _logger.LogWarning(
-                "Login fallido para email {Email} en tenant {TenantId}. IP: {IP}",
-                request.Email, request.TenantId,
+                "Login fallido para email {Email} en minimarket {TenantCodigo}. IP: {IP}",
+                request.Email, request.TenantCodigo,
                 HttpContext.Connection.RemoteIpAddress?.ToString() ?? "desconocida");
 
             return Unauthorized(new { message = "Credenciales incorrectas." });
         }
 
-        // â”€â”€ 4. Generar el JWT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         var token     = _jwtService.GenerateToken(usuario);
-        var horasExp  = _config.GetValue<int>("Jwt:ExpirationHours", 8);
-        var expiresAt = DateTime.UtcNow.AddHours(horasExp);
+        var expiresAt = DateTime.UtcNow.AddHours(_config.GetValue<int>("Jwt:ExpirationHours", 8));
+        var roles     = JwtService.RolesDe(usuario);
 
-        // â”€â”€ 5. Construir la respuesta â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-        var roles = usuario.UsuarioRoles
-            .Where(ur => ur.Rol.TenantId is null || ur.Rol.TenantId == usuario.TenantId)
-            .SelectMany(ur => ur.Rol.RolBase is { Length: > 0 } baseRole
-                ? new[] { ur.Rol.Nombre, baseRole }
-                : new[] { ur.Rol.Nombre })
-            .Distinct(StringComparer.Ordinal)
-            .ToList();
-
-        // El active_role en la respuesta debe coincidir con el que se grabÃ³ en el JWT.
-        // Usamos la misma lÃ³gica de prioridad que JwtService.
-        string[] prioridadRoles = ["SUPER_ADMIN", "ADMIN", "CAJERO", "REPONEDOR", "CLIENTE_AFILIADO"];
-        var activeRole = prioridadRoles.FirstOrDefault(r => roles.Contains(r)) ?? "CAJERO";
-
-        var response = new LoginResponse
+        return Ok(new LoginResponse
         {
             Token     = token,
             ExpiresAt = expiresAt,
@@ -120,16 +91,9 @@ public class AuthController : ControllerBase
                 Id         = usuario.Id,
                 Nombre     = usuario.Nombre,
                 Email      = usuario.Email,
-                ActiveRole = activeRole,
+                ActiveRole = JwtService.RolActivo(roles),
                 Roles      = roles
             }
-        };
-
-        _logger.LogInformation(
-            "Login exitoso. UsuarioId: {UsuarioId} | ActiveRole: {ActiveRole} | TenantId: {TenantId}",
-            usuario.Id, activeRole, request.TenantId);
-
-        return Ok(response);
+        });
     }
 }
-

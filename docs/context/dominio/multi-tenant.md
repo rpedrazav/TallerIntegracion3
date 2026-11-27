@@ -5,7 +5,7 @@ titulo: Diseño Multi-Tenant — GlobalMart OS
 estado: implementado
 fuentes: [src/TenantIdentityService/Middleware/TenantMiddleware.cs, src/POSCartService/Middleware/TenantMiddleware.cs, GlobalMart_ContextMaster.md#sec14]
 verificado_contra_codigo: true
-ultima_revision: 2026-09-28
+ultima_revision: 2026-11-27
 depende_de: [ms1-identity]
 publica: []
 consume: []
@@ -81,13 +81,14 @@ Cada tenant puede configurar (en MS-1):
 {
   "sub": "<user_id>",
   "tenant_id": "<tenant_id>",  // ← discriminador
+  "tenant_nombre": "Minimarket Demo",  // solo para mostrar
   "roles": ["CAJERO"],
   "active_role": "CAJERO",
   "exp": 1725820800
 }
 ```
 
-Kong valida el JWT antes de llegar al servicio. El TenantMiddleware valida que el `tenant_id` del JWT sea válido para ese tenant.
+El usuario inicia sesión con el código del minimarket (`demo`, `donpepe`); MS-1 lo traduce a `tenant_id` y nunca vuelve a aceptarlo desde el cliente (S3-095). Kong valida el JWT antes de llegar al servicio. El TenantMiddleware valida que el `tenant_id` del JWT sea válido para ese tenant.
 
 ## Reglas críticas de aislamiento
 

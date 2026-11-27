@@ -164,7 +164,7 @@ internal sealed class AdminUsersTestData : IAsyncDisposable
 
     private static Tenant NewTenant(Guid id) => new()
     {
-        Id = id, Nombre = $"Test {id:N}", Pais = "CL", Moneda = "CLP",
+        Id = id, Nombre = $"Test {id:N}", Codigo = id.ToString(), Pais = "CL", Moneda = "CLP",
         Idioma = "es", ZonaHoraria = "America/Santiago", PorcentajeIva = 19
     };
 

@@ -13,10 +13,10 @@ public interface IAuthService
     /// </summary>
     /// <param name="email">Email ingresado por el usuario.</param>
     /// <param name="password">Contraseña en texto plano ingresada por el usuario.</param>
-    /// <param name="tenantId">Tenant al que intenta acceder el usuario.</param>
+    /// <param name="tenantCodigo">Código del minimarket al que intenta acceder el usuario.</param>
     /// <returns>
     /// El <see cref="Usuario"/> con sus roles cargados si las credenciales son correctas,
     /// o <c>null</c> si el usuario no existe, está inactivo o la contraseña es incorrecta.
     /// </returns>
-    Task<Usuario?> ValidateCredentialsAsync(string email, string password, Guid tenantId);
+    Task<Usuario?> ValidateCredentialsAsync(string email, string password, string tenantCodigo);
 }

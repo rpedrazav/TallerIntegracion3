@@ -45,7 +45,7 @@ public class RoutePrefixIntegrationTests :
         {
             Email = "cajero@demo.cl",
             Password = "demo1234",
-            TenantId = "aaaaaaaa-0000-0000-0000-000000000001"
+            TenantCodigo = "demo"
         };
 
         var response = await _clientMs1.PostAsJsonAsync(path, request);

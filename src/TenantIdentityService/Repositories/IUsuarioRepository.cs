@@ -5,7 +5,7 @@ namespace TenantIdentityService.Repositories;
 
 public interface IUsuarioRepository
 {
-    Task<Usuario?> FindByEmailAsync(string email, Guid tenantId);
+    Task<Usuario?> FindByEmailAsync(string email, string tenantCodigo);
     Task<PagedResult<Usuario>> GetActivePagedAsync(Guid tenantId, int page, int pageSize);
     Task<Usuario?> GetByIdAsync(Guid id, Guid tenantId);
     Task<Usuario> CreateAsync(Usuario usuario);

@@ -28,18 +28,18 @@ public class AuthService : IAuthService
     }
 
     /// <inheritdoc />
-    public async Task<Usuario?> ValidateCredentialsAsync(string email, string password, Guid tenantId)
+    public async Task<Usuario?> ValidateCredentialsAsync(string email, string password, string tenantCodigo)
     {
         // 1. Buscar el usuario en la base de datos (incluye roles y sucursales)
-        var usuario = await _usuarioRepository.FindByEmailAsync(email, tenantId);
+        var usuario = await _usuarioRepository.FindByEmailAsync(email, tenantCodigo);
 
         // 2. Si no existe o está inactivo → retornar null sin revelar el motivo
         if (usuario is null)
         {
             // Log interno con detalle (solo visible en logs del servidor, nunca al cliente)
             _logger.LogWarning(
-                "Intento de login fallido: usuario no encontrado. Email: {Email}, TenantId: {TenantId}",
-                email, tenantId);
+                "Intento de login fallido: usuario no encontrado. Email: {Email}, TenantCodigo: {TenantCodigo}",
+                email, tenantCodigo);
             return null;
         }
 
@@ -54,14 +54,14 @@ public class AuthService : IAuthService
         {
             _logger.LogWarning(
                 "Intento de login fallido: contraseña incorrecta. UsuarioId: {UsuarioId}, TenantId: {TenantId}",
-                usuario.Id, tenantId);
+                usuario.Id, usuario.TenantId);
             return null;
         }
 
         // 4. Credenciales válidas → retornar el usuario con sus roles cargados
         _logger.LogInformation(
             "Login exitoso. UsuarioId: {UsuarioId}, Email: {Email}, TenantId: {TenantId}",
-            usuario.Id, email, tenantId);
+            usuario.Id, email, usuario.TenantId);
 
         return usuario;
     }

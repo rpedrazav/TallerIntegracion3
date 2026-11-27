@@ -5,13 +5,17 @@ titulo: MS-1 · Tenant & Identity Service
 estado: parcial
 fuentes: [src/TenantIdentityService/, tests/GlobalMart.IntegrationTests/SucursalIntegrationTests.cs, tests/GlobalMart.IntegrationTests/ReactivarUsuarioIntegrationTests.cs, docs/qa/TI3-799/reporte.md, globalmart-frontend/src/pages/Admin.tsx, globalmart-frontend/src/pages/AdminRoles.tsx, globalmart-frontend/src/components/admin/UsuariosList.tsx, Docker/config/kong.yaml]
 verificado_contra_codigo: true
-ultima_revision: 2026-11-24
+ultima_revision: 2026-11-27
 depende_de: []
 publica: []
 consume: []
 reglas: [RN-01, RN-07, RN-08, RN-12]
 ---
 # MS-1 · Tenant & Identity Service
+
+## Login por código de minimarket — S3-095 (2026-11-27)
+
+`Tenant.Codigo` (único, minúsculas, migración `AddCodigoToTenant`) reemplaza al GUID en el login: `POST /auth/login` recibe `{ email, password, tenantCodigo }`. `UsuarioRepository.FindByEmailAsync` busca por código normalizado (`Trim().ToLowerInvariant()`), tenant activo y usuario activo; un código inexistente devuelve el mismo 401 genérico que una contraseña incorrecta. El JWT agrega `tenant_nombre`; `tenant_id` sigue siendo el único origen del tenant en todos los MS (RN-01). La migración asigna `demo` al tenant `aaaaaaaa-…-0001` y su GUID como código al resto de tenants existentes. `JwtService.RolesDe`/`RolActivo` son la única lógica de roles (antes duplicada en `AuthController`). Pruebas: `AuthIntegrationTests` (código válido, mayúsculas/espacios, código inexistente y contraseña incorrecta) y unitarias de MS-1 aprobadas [IMPLEMENTADO].
 
 ## Administración del tenant (2026-10-27)
 
@@ -94,7 +98,7 @@ src/TenantIdentityService/
 - La pantalla `/admin/*` queda disponible solo para claims `ADMIN` o `SUPER_ADMIN`. CAJERO no ve su acceso y es redirigido a `/pos`; la autorización del controlador conserva `403` como defensa independiente del frontend [IMPLEMENTADO].
 - La UI permite listar, crear, editar y desactivar usuarios. Activos e inactivos permanecen visibles con indicador textual; para inactivos, TI3-733 bloquea en frontend la edición de email y la modificación de roles, sin atribuir ese bloqueo a MS-1. MS-1 expone reactivación desde TI3-799; la acción frontend sigue fuera de alcance.
 - Errores vigentes: `400` para datos inválidos o autodesactivación según la operación; `401` sin autenticación o claims requeridos; `403` sin rol autorizado; `404` para ID inexistente o perteneciente a otro tenant; `409` para email duplicado al editar.
-- `UsuarioRepository.FindByEmailAsync` exige el tenant indicado y `Usuario.Activo=true`, y carga roles y sucursales para autenticar. DELETE marca inactivo ese mismo registro, de modo que el siguiente login falla con el mismo 401 genérico. `IUsuarioRepository` es el único repositorio de usuarios desde S3-003; no se implementó revocación de JWT emitidos.
+- `UsuarioRepository.FindByEmailAsync` exige el código de minimarket (`Tenant.Codigo`, tenant activo) y `Usuario.Activo=true`, y carga roles y sucursales para autenticar. DELETE marca inactivo ese mismo registro, de modo que el siguiente login falla con el mismo 401 genérico. `IUsuarioRepository` es el único repositorio de usuarios desde S3-003; no se implementó revocación de JWT emitidos.
 
 ### PUT /tenants/{id}/config — TI3-458 / TI3-459
 
@@ -243,6 +247,7 @@ bloquea la operación. La integración entre procesos desplegados queda [NO VERI
 Tenant
   id             GUID PK
   nombre         string
+  codigo         string? único, minúsculas (login, ej: "demo")
   pais           string (ej: "CL", "AR", "US")
   moneda         string (ej: "CLP", "ARS", "USD")
   idioma         string (ej: "es", "en")

@@ -145,6 +145,7 @@ if (app.Environment.IsDevelopment())
         {
             Id            = tenantIdDemo,
             Nombre        = "Minimarket Demo",
+            Codigo        = "demo",
             Pais          = "CL",
             Moneda        = "CLP",
             Idioma        = "es",
