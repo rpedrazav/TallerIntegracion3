@@ -13,6 +13,10 @@ reglas: []
 ---
 # Estado Real de Implementación — GlobalMart OS
 
+## S3-094 — Alta de minimarket por SUPER_ADMIN (2026-11-27)
+
+[IMPLEMENTADO] `POST /api/tenants` y `GET /api/tenants` en MS-1, solo `SUPER_ADMIN`: crean en una transacción el tenant (CL/CLP/IVA 19), una sucursal inicial y su ADMIN, que inicia sesión de inmediato con el código. ADMIN/CAJERO → 403, código duplicado → 409, un fallo intermedio no deja datos parciales. `--bootstrap-admin` usa el mismo método y validador (nueva variable `GLOBALMART_BOOTSTRAP_TENANT_CODE`). `TenantAltaIntegrationTests` 5/5 sobre PostgreSQL local. Kong local ya enruta `/api/tenants`; clúster [NO VERIFICADO].
+
 ## S3-095 — Login por código de minimarket (2026-11-27)
 
 [IMPLEMENTADO] `POST /auth/login` recibe `tenantCodigo` en vez del GUID; `Tenant.Codigo` es único (migración `AddCodigoToTenant`, el tenant demo queda con `demo`). El JWT agrega `tenant_nombre`; el tenant sigue saliendo solo de `tenant_id`. Código inexistente → 401 genérico. 15/15 unitarias MS-1 y 74/74 integración MS-1 sobre PostgreSQL local aprobadas. Clúster [NO VERIFICADO].

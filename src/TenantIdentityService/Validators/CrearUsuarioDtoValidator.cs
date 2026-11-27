@@ -20,9 +20,6 @@ namespace TenantIdentityService.Validators;
 /// </summary>
 public class CrearUsuarioDtoValidator : AbstractValidator<CrearUsuarioDto>
 {
-    // Conjunto de caracteres especiales aceptados en la contraseña.
-    private const string CaracteresEspeciales = @"!@#$%^&*()-_=+[]{}|;':"",./<>?\\";
-
     public CrearUsuarioDtoValidator()
     {
         // ── Nombre ──────────────────────────────────────────────────────────
@@ -46,7 +43,18 @@ public class CrearUsuarioDtoValidator : AbstractValidator<CrearUsuarioDto>
                 .WithMessage("El email no puede superar los 200 caracteres.");
 
         // ── Password ─────────────────────────────────────────────────────────
-        RuleFor(x => x.Password)
+        RuleFor(x => x.Password).ContrasenaSegura();
+    }
+}
+
+/// <summary>Política de contraseña fuerte compartida por usuarios y alta de minimarket.</summary>
+public static class ContrasenaSeguraRule
+{
+    // Conjunto de caracteres especiales aceptados en la contraseña.
+    private const string CaracteresEspeciales = @"!@#$%^&*()-_=+[]{}|;':"",./<>?\\";
+
+    public static IRuleBuilderOptions<T, string> ContrasenaSegura<T>(this IRuleBuilder<T, string> rule) =>
+        rule
             .NotEmpty()
                 .WithMessage("La contraseña es obligatoria.")
             .MinimumLength(8)
@@ -63,5 +71,4 @@ public class CrearUsuarioDtoValidator : AbstractValidator<CrearUsuarioDto>
                 .WithMessage(
                     "La contraseña debe contener al menos un carácter especial " +
                     $"({CaracteresEspeciales.Replace("\"", "\\\"")}).");
-    }
 }
