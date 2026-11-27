@@ -1,0 +1,238 @@
+[
+  {
+    "tenant": "demo",
+    "path": "turnos/activo",
+    "status": 404,
+    "response": {
+      "error": "No existe un turno abierto para el cajero autenticado."
+    }
+  },
+  {
+    "tenant": "demo",
+    "path": "turnos/abrir",
+    "status": 200,
+    "response": {
+      "id": "f8a94fa3-0d60-40ca-a16c-6737463ec16a",
+      "tenantId": "aaaaaaaa-0000-0000-0000-000000000001",
+      "cajeroId": "bbbbbbbb-0000-0000-0000-000000000001",
+      "sucursalId": "cccccccc-0000-0000-0000-000000000001",
+      "montoApertura": 0,
+      "montoCierre": null,
+      "estado": 0,
+      "abiertoAt": "2026-11-27T22:28:05.5370729Z",
+      "cerradoAt": null,
+      "ventas": []
+    }
+  },
+  {
+    "tenant": "demo",
+    "path": "ventas",
+    "status": 201,
+    "response": {
+      "id": "d8b30eac-040e-4245-8225-fc5184785fa8",
+      "turno_id": "f8a94fa3-0d60-40ca-a16c-6737463ec16a",
+      "cajero_id": "bbbbbbbb-0000-0000-0000-000000000001",
+      "sucursal_id": "cccccccc-0000-0000-0000-000000000001",
+      "tenant_id": "aaaaaaaa-0000-0000-0000-000000000001",
+      "subtotal": 1200,
+      "impuestos": 228,
+      "total": 1428,
+      "metodo_pago": "EFECTIVO",
+      "estado": "PENDIENTE",
+      "created_at": "2026-11-27T22:28:06.1156608Z",
+      "items": [
+        {
+          "id": "cddc343a-235f-49ba-a736-90e76defa5a9",
+          "producto_id": "4cbf04b3-9f73-4585-a9a7-1c9d5c96933c",
+          "nombre_producto": "Leche Entera 3 Litro",
+          "cantidad": 1,
+          "peso_kg": null,
+          "precio_unitario": 1200,
+          "subtotal": 1200
+        }
+      ]
+    }
+  },
+  {
+    "tenant": "demo",
+    "path": "ventas/d8b30eac-040e-4245-8225-fc5184785fa8/cobrar",
+    "status": 200,
+    "response": {
+      "venta": {
+        "id": "d8b30eac-040e-4245-8225-fc5184785fa8",
+        "turno_id": "f8a94fa3-0d60-40ca-a16c-6737463ec16a",
+        "cajero_id": "bbbbbbbb-0000-0000-0000-000000000001",
+        "sucursal_id": "cccccccc-0000-0000-0000-000000000001",
+        "tenant_id": "aaaaaaaa-0000-0000-0000-000000000001",
+        "subtotal": 1200,
+        "impuestos": 228,
+        "total": 1428,
+        "metodo_pago": "EFECTIVO",
+        "estado": "COMPLETADA",
+        "created_at": "2026-11-27T22:28:06.11566Z",
+        "items": [
+          {
+            "id": "cddc343a-235f-49ba-a736-90e76defa5a9",
+            "producto_id": "4cbf04b3-9f73-4585-a9a7-1c9d5c96933c",
+            "nombre_producto": "Leche Entera 3 Litro",
+            "cantidad": 1,
+            "peso_kg": null,
+            "precio_unitario": 1200,
+            "subtotal": 1200
+          }
+        ]
+      },
+      "montoRecibido": 1428,
+      "vuelto": 0
+    }
+  },
+  {
+    "tenant": "demo",
+    "path": "stock después de venta (6s)",
+    "status": 200,
+    "response": [
+      {
+        "productoId": "4cbf04b3-9f73-4585-a9a7-1c9d5c96933c",
+        "sucursalId": "cccccccc-0000-0000-0000-000000000001",
+        "cantidadActual": 12,
+        "stockMinimo": 2,
+        "tenantId": "aaaaaaaa-0000-0000-0000-000000000001"
+      }
+    ]
+  },
+  {
+    "tenant": "demo",
+    "path": "turnos/cerrar",
+    "status": 200,
+    "response": {
+      "id": "f8a94fa3-0d60-40ca-a16c-6737463ec16a",
+      "tenantId": "aaaaaaaa-0000-0000-0000-000000000001",
+      "cajeroId": "bbbbbbbb-0000-0000-0000-000000000001",
+      "sucursalId": "cccccccc-0000-0000-0000-000000000001",
+      "montoApertura": 0,
+      "montoCierre": null,
+      "estado": 1,
+      "abiertoAt": "2026-11-27T22:28:05.537072Z",
+      "cerradoAt": "2026-11-27T22:28:12.4799037Z",
+      "ventas": []
+    }
+  },
+  {
+    "tenant": "donpepe",
+    "path": "turnos/activo",
+    "status": 404,
+    "response": {
+      "error": "No existe un turno abierto para el cajero autenticado."
+    }
+  },
+  {
+    "tenant": "donpepe",
+    "path": "turnos/abrir",
+    "status": 200,
+    "response": {
+      "id": "a816389c-6bb6-4ff4-8b32-e4cc0a572d20",
+      "tenantId": "aaaaaaaa-0000-0000-0000-000000000002",
+      "cajeroId": "bbbbbbbb-0000-0000-0000-000000000011",
+      "sucursalId": "cccccccc-0000-0000-0000-000000000002",
+      "montoApertura": 0,
+      "montoCierre": null,
+      "estado": 0,
+      "abiertoAt": "2026-11-27T22:28:12.6513321Z",
+      "cerradoAt": null,
+      "ventas": []
+    }
+  },
+  {
+    "tenant": "donpepe",
+    "path": "ventas",
+    "status": 201,
+    "response": {
+      "id": "fae448da-0ce3-4834-bf48-5c98676e9827",
+      "turno_id": "a816389c-6bb6-4ff4-8b32-e4cc0a572d20",
+      "cajero_id": "bbbbbbbb-0000-0000-0000-000000000011",
+      "sucursal_id": "cccccccc-0000-0000-0000-000000000002",
+      "tenant_id": "aaaaaaaa-0000-0000-0000-000000000002",
+      "subtotal": 250,
+      "impuestos": 48,
+      "total": 298,
+      "metodo_pago": "EFECTIVO",
+      "estado": "PENDIENTE",
+      "created_at": "2026-11-27T22:28:12.6890784Z",
+      "items": [
+        {
+          "id": "9bc0a044-a39e-4772-83e9-5862fdbfc70c",
+          "producto_id": "30000000-0000-0000-0000-000000000001",
+          "nombre_producto": "Pan Amasado Don Pepe (unidad)",
+          "cantidad": 1,
+          "peso_kg": null,
+          "precio_unitario": 250,
+          "subtotal": 250
+        }
+      ]
+    }
+  },
+  {
+    "tenant": "donpepe",
+    "path": "ventas/fae448da-0ce3-4834-bf48-5c98676e9827/cobrar",
+    "status": 200,
+    "response": {
+      "venta": {
+        "id": "fae448da-0ce3-4834-bf48-5c98676e9827",
+        "turno_id": "a816389c-6bb6-4ff4-8b32-e4cc0a572d20",
+        "cajero_id": "bbbbbbbb-0000-0000-0000-000000000011",
+        "sucursal_id": "cccccccc-0000-0000-0000-000000000002",
+        "tenant_id": "aaaaaaaa-0000-0000-0000-000000000002",
+        "subtotal": 250,
+        "impuestos": 48,
+        "total": 298,
+        "metodo_pago": "EFECTIVO",
+        "estado": "COMPLETADA",
+        "created_at": "2026-11-27T22:28:12.689078Z",
+        "items": [
+          {
+            "id": "9bc0a044-a39e-4772-83e9-5862fdbfc70c",
+            "producto_id": "30000000-0000-0000-0000-000000000001",
+            "nombre_producto": "Pan Amasado Don Pepe (unidad)",
+            "cantidad": 1,
+            "peso_kg": null,
+            "precio_unitario": 250,
+            "subtotal": 250
+          }
+        ]
+      },
+      "montoRecibido": 298,
+      "vuelto": 0
+    }
+  },
+  {
+    "tenant": "donpepe",
+    "path": "stock después de venta (6s)",
+    "status": 200,
+    "response": [
+      {
+        "productoId": "30000000-0000-0000-0000-000000000001",
+        "sucursalId": "cccccccc-0000-0000-0000-000000000002",
+        "cantidadActual": 12,
+        "stockMinimo": 2,
+        "tenantId": "aaaaaaaa-0000-0000-0000-000000000002"
+      }
+    ]
+  },
+  {
+    "tenant": "donpepe",
+    "path": "turnos/cerrar",
+    "status": 200,
+    "response": {
+      "id": "a816389c-6bb6-4ff4-8b32-e4cc0a572d20",
+      "tenantId": "aaaaaaaa-0000-0000-0000-000000000002",
+      "cajeroId": "bbbbbbbb-0000-0000-0000-000000000011",
+      "sucursalId": "cccccccc-0000-0000-0000-000000000002",
+      "montoApertura": 0,
+      "montoCierre": null,
+      "estado": 1,
+      "abiertoAt": "2026-11-27T22:28:12.651332Z",
+      "cerradoAt": "2026-11-27T22:28:18.7255341Z",
+      "ventas": []
+    }
+  }
+]

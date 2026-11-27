@@ -1,0 +1,58 @@
+[
+  {
+    "tenant": "demo",
+    "product": "4cbf04b3-9f73-4585-a9a7-1c9d5c96933c",
+    "branch": "cccccccc-0000-0000-0000-000000000001",
+    "adjustment": 10,
+    "receipt": 2,
+    "stock": [
+      {
+        "productoId": "4cbf04b3-9f73-4585-a9a7-1c9d5c96933c",
+        "sucursalId": "cccccccc-0000-0000-0000-000000000001",
+        "cantidadActual": 12,
+        "stockMinimo": 2,
+        "tenantId": "aaaaaaaa-0000-0000-0000-000000000001"
+      }
+    ],
+    "lots": [
+      {
+        "id": "6a708cf3-381f-4087-8d75-9e9e310e972f",
+        "productoId": "4cbf04b3-9f73-4585-a9a7-1c9d5c96933c",
+        "sucursalId": "cccccccc-0000-0000-0000-000000000001",
+        "cantidad": 2,
+        "fechaVencimiento": "2026-12-04",
+        "ubicacion": "QA S3-099"
+      }
+    ],
+    "tables": 1,
+    "text": "Inventario por sucursal\nSucursal \nSucursal Demo\n\nInventario actualizado.\n\nProducto\tActual\tMínimo\nLeche Entera 3 Litro\t12\t2\nRegistrar ajuste\nProducto \nLeche Entera 3 Litro\nDoritos 500g\naji picante\nCantidad actual \nStock mínimo \nMotivo \nGuardar ajuste\nRecepción de mercadería\n\nRecepción registrada.\n\nArtículo a recibir \nSelecciona un producto\nLeche Entera 3 Litro\nDoritos 500g\naji picante\nSucursal \nSelecciona una sucursal\nSucursal Demo\nCantidad recibida \nFecha de vencimiento \nUbicación (opcional) \nRegistrar recepción"
+  },
+  {
+    "tenant": "donpepe",
+    "product": "30000000-0000-0000-0000-000000000001",
+    "branch": "cccccccc-0000-0000-0000-000000000002",
+    "adjustment": 10,
+    "receipt": 2,
+    "stock": [
+      {
+        "productoId": "30000000-0000-0000-0000-000000000001",
+        "sucursalId": "cccccccc-0000-0000-0000-000000000002",
+        "cantidadActual": 12,
+        "stockMinimo": 2,
+        "tenantId": "aaaaaaaa-0000-0000-0000-000000000002"
+      }
+    ],
+    "lots": [
+      {
+        "id": "615001dc-6cd0-49f0-b0fb-f71601e18b76",
+        "productoId": "30000000-0000-0000-0000-000000000001",
+        "sucursalId": "cccccccc-0000-0000-0000-000000000002",
+        "cantidad": 2,
+        "fechaVencimiento": "2026-12-04",
+        "ubicacion": "QA S3-099"
+      }
+    ],
+    "tables": 1,
+    "text": "Inventario por sucursal\nSucursal \nSucursal Centro\n\nInventario actualizado.\n\nProducto\tActual\tMínimo\nPan Amasado Don Pepe (unidad)\t12\t2\nRegistrar ajuste\nProducto \nPan Amasado Don Pepe (unidad)\nSopaipilla Casera (unidad)\nEmpanada de Pino Horneada\nQueso Mantecoso Laminado 250g\nMermelada de Mora Casera 400g\nTé Ceylán 100 bolsitas\nHarina Sin Polvos 1kg\nAceite Vegetal 1L\nCantidad actual \nStock mínimo \nMotivo \nGuardar ajuste\nRecepción de mercadería\n\nRecepción registrada.\n\nArtículo a recibir \nSelecciona un producto\nPan Amasado Don Pepe (unidad)\nSopaipilla Casera (unidad)\nEmpanada de Pino Horneada\nQueso Mantecoso Laminado 250g\nMermelada de Mora Casera 400g\nTé Ceylán 100 bolsitas\nHarina Sin Polvos 1kg\nAceite Vegetal 1L\nSucursal \nSelecciona una sucursal\nSucursal Centro\nCantidad recibida \nFecha de vencimiento \nUbicación (opcional) \nRegistrar recepción"
+  }
+]

@@ -1,0 +1,327 @@
+{
+  "date": "2026-11-27T22:26:14.391Z",
+  "results": [
+    {
+      "name": "demo: login local",
+      "url": "http://localhost:5124/api/auth/login",
+      "status": 200,
+      "response": {
+        "tokenReceived": true
+      }
+    },
+    {
+      "name": "demo: sucursales",
+      "url": "http://localhost:5124/api/sucursales",
+      "status": 200,
+      "response": [
+        {
+          "id": "cccccccc-0000-0000-0000-000000000001",
+          "tenantId": "aaaaaaaa-0000-0000-0000-000000000001",
+          "nombre": "Sucursal Demo",
+          "direccion": "Av. Providencia 1234, Santiago",
+          "activa": true,
+          "zonaHoraria": "America/Santiago"
+        }
+      ]
+    },
+    {
+      "name": "demo: catalogo",
+      "url": "http://localhost:5203/api/products?page=1&pageSize=100",
+      "status": 200,
+      "response": {
+        "data": [
+          {
+            "id": "4cbf04b3-9f73-4585-a9a7-1c9d5c96933c",
+            "tenantId": "aaaaaaaa-0000-0000-0000-000000000001",
+            "nombre": "Leche Entera 3 Litro",
+            "descripcion": "Leche entera 3 Litro",
+            "codigoBarras": "78012349332453",
+            "codigoQrUrl": null,
+            "categoriaId": null,
+            "uomBaseId": "00000000-0000-0000-0000-000000000001",
+            "precioBase": 1200,
+            "esPesoVariable": false,
+            "isActive": true,
+            "createdAt": "2026-10-04T02:24:12.006965Z"
+          },
+          {
+            "id": "6a15d639-e336-4307-b330-cb0c63adca7d",
+            "tenantId": "aaaaaaaa-0000-0000-0000-000000000001",
+            "nombre": "Doritos 500g",
+            "descripcion": "Doritos de queso",
+            "codigoBarras": "875937509283402",
+            "codigoQrUrl": null,
+            "categoriaId": null,
+            "uomBaseId": "00000000-0000-0000-0000-000000000001",
+            "precioBase": 2000,
+            "esPesoVariable": false,
+            "isActive": true,
+            "createdAt": "2026-10-04T02:26:12.683493Z"
+          },
+          {
+            "id": "8ae0bc39-3442-446c-9cf1-dbe529a3c175",
+            "tenantId": "aaaaaaaa-0000-0000-0000-000000000001",
+            "nombre": "aji picante",
+            "descripcion": "un aji picante",
+            "codigoBarras": "908423092138904",
+            "codigoQrUrl": null,
+            "categoriaId": null,
+            "uomBaseId": "00000000-0000-0000-0000-000000000001",
+            "precioBase": 1111,
+            "esPesoVariable": false,
+            "isActive": true,
+            "createdAt": "2026-10-06T21:17:39.057235Z"
+          }
+        ],
+        "totalCount": 3,
+        "page": 1,
+        "pageSize": 100
+      }
+    },
+    {
+      "name": "demo: stock directo",
+      "url": "http://localhost:5205/api/stock?sucursal_id=cccccccc-0000-0000-0000-000000000001",
+      "status": 200,
+      "response": []
+    },
+    {
+      "name": "demo: stock Kong",
+      "url": "http://localhost:8000/api/stock?sucursal_id=cccccccc-0000-0000-0000-000000000001",
+      "status": 503,
+      "response": {
+        "message": "name resolution failed",
+        "request_id": "f7137e14106cd35514f51a09074fbf4a"
+      }
+    },
+    {
+      "name": "demo: lotes",
+      "url": "http://localhost:5205/api/lotes?porVencer=30&sucursal_id=cccccccc-0000-0000-0000-000000000001",
+      "status": 200,
+      "response": []
+    },
+    {
+      "name": "demo: stock sucursal ajena",
+      "url": "http://localhost:5205/api/stock?sucursal_id=cccccccc-0000-0000-0000-000000000002",
+      "status": 200,
+      "response": []
+    },
+    {
+      "name": "demo: login remoto contrato actual",
+      "url": "https://auth-rpedraza.dev.censei.cl/api/auth/login",
+      "status": 400,
+      "response": {
+        "type": "https://tools.ietf.org/html/rfc9110#section-15.5.1",
+        "title": "One or more validation errors occurred.",
+        "status": 400,
+        "errors": {
+          "TenantId": [
+            "El identificador del tenant es obligatorio."
+          ]
+        },
+        "traceId": "00-46d9db66b2a9d7c2edc65cf949e716a5-f510f4c210e653ef-00"
+      }
+    },
+    {
+      "name": "donpepe: login local",
+      "url": "http://localhost:5124/api/auth/login",
+      "status": 200,
+      "response": {
+        "tokenReceived": true
+      }
+    },
+    {
+      "name": "donpepe: sucursales",
+      "url": "http://localhost:5124/api/sucursales",
+      "status": 200,
+      "response": [
+        {
+          "id": "cccccccc-0000-0000-0000-000000000002",
+          "tenantId": "aaaaaaaa-0000-0000-0000-000000000002",
+          "nombre": "Sucursal Centro",
+          "direccion": "Av. Alemania 0450, Temuco",
+          "activa": true,
+          "zonaHoraria": "America/Santiago"
+        }
+      ]
+    },
+    {
+      "name": "donpepe: catalogo",
+      "url": "http://localhost:5203/api/products?page=1&pageSize=100",
+      "status": 200,
+      "response": {
+        "data": [
+          {
+            "id": "30000000-0000-0000-0000-000000000001",
+            "tenantId": "aaaaaaaa-0000-0000-0000-000000000002",
+            "nombre": "Pan Amasado Don Pepe (unidad)",
+            "descripcion": null,
+            "codigoBarras": "780200000001",
+            "codigoQrUrl": null,
+            "categoriaId": "10000000-0000-0000-0000-000000000101",
+            "uomBaseId": "cccccccc-0000-0000-0000-000000000001",
+            "precioBase": 250,
+            "esPesoVariable": false,
+            "isActive": true,
+            "createdAt": "2026-11-27T22:23:49.209137Z"
+          },
+          {
+            "id": "30000000-0000-0000-0000-000000000002",
+            "tenantId": "aaaaaaaa-0000-0000-0000-000000000002",
+            "nombre": "Sopaipilla Casera (unidad)",
+            "descripcion": null,
+            "codigoBarras": "780200000002",
+            "codigoQrUrl": null,
+            "categoriaId": "10000000-0000-0000-0000-000000000101",
+            "uomBaseId": "cccccccc-0000-0000-0000-000000000001",
+            "precioBase": 200,
+            "esPesoVariable": false,
+            "isActive": true,
+            "createdAt": "2026-11-27T22:23:49.257718Z"
+          },
+          {
+            "id": "30000000-0000-0000-0000-000000000003",
+            "tenantId": "aaaaaaaa-0000-0000-0000-000000000002",
+            "nombre": "Empanada de Pino Horneada",
+            "descripcion": null,
+            "codigoBarras": "780200000003",
+            "codigoQrUrl": null,
+            "categoriaId": "10000000-0000-0000-0000-000000000101",
+            "uomBaseId": "cccccccc-0000-0000-0000-000000000001",
+            "precioBase": 1800,
+            "esPesoVariable": false,
+            "isActive": true,
+            "createdAt": "2026-11-27T22:23:49.258687Z"
+          },
+          {
+            "id": "30000000-0000-0000-0000-000000000004",
+            "tenantId": "aaaaaaaa-0000-0000-0000-000000000002",
+            "nombre": "Queso Mantecoso Laminado 250g",
+            "descripcion": null,
+            "codigoBarras": "780200000004",
+            "codigoQrUrl": null,
+            "categoriaId": "10000000-0000-0000-0000-000000000101",
+            "uomBaseId": "cccccccc-0000-0000-0000-000000000001",
+            "precioBase": 3290,
+            "esPesoVariable": false,
+            "isActive": true,
+            "createdAt": "2026-11-27T22:23:49.258771Z"
+          },
+          {
+            "id": "30000000-0000-0000-0000-000000000005",
+            "tenantId": "aaaaaaaa-0000-0000-0000-000000000002",
+            "nombre": "Mermelada de Mora Casera 400g",
+            "descripcion": null,
+            "codigoBarras": "780200000005",
+            "codigoQrUrl": null,
+            "categoriaId": "10000000-0000-0000-0000-000000000101",
+            "uomBaseId": "cccccccc-0000-0000-0000-000000000001",
+            "precioBase": 2490,
+            "esPesoVariable": false,
+            "isActive": true,
+            "createdAt": "2026-11-27T22:23:49.259168Z"
+          },
+          {
+            "id": "30000000-0000-0000-0000-000000000006",
+            "tenantId": "aaaaaaaa-0000-0000-0000-000000000002",
+            "nombre": "Té Ceylán 100 bolsitas",
+            "descripcion": null,
+            "codigoBarras": "780200000006",
+            "codigoQrUrl": null,
+            "categoriaId": "10000000-0000-0000-0000-000000000101",
+            "uomBaseId": "cccccccc-0000-0000-0000-000000000001",
+            "precioBase": 2990,
+            "esPesoVariable": false,
+            "isActive": true,
+            "createdAt": "2026-11-27T22:23:49.259227Z"
+          },
+          {
+            "id": "30000000-0000-0000-0000-000000000007",
+            "tenantId": "aaaaaaaa-0000-0000-0000-000000000002",
+            "nombre": "Harina Sin Polvos 1kg",
+            "descripcion": null,
+            "codigoBarras": "780200000007",
+            "codigoQrUrl": null,
+            "categoriaId": "10000000-0000-0000-0000-000000000101",
+            "uomBaseId": "cccccccc-0000-0000-0000-000000000001",
+            "precioBase": 1390,
+            "esPesoVariable": false,
+            "isActive": true,
+            "createdAt": "2026-11-27T22:23:49.259286Z"
+          },
+          {
+            "id": "30000000-0000-0000-0000-000000000008",
+            "tenantId": "aaaaaaaa-0000-0000-0000-000000000002",
+            "nombre": "Aceite Vegetal 1L",
+            "descripcion": null,
+            "codigoBarras": "780200000008",
+            "codigoQrUrl": null,
+            "categoriaId": "10000000-0000-0000-0000-000000000101",
+            "uomBaseId": "cccccccc-0000-0000-0000-000000000001",
+            "precioBase": 2190,
+            "esPesoVariable": false,
+            "isActive": true,
+            "createdAt": "2026-11-27T22:23:49.259357Z"
+          }
+        ],
+        "totalCount": 8,
+        "page": 1,
+        "pageSize": 100
+      }
+    },
+    {
+      "name": "donpepe: stock directo",
+      "url": "http://localhost:5205/api/stock?sucursal_id=cccccccc-0000-0000-0000-000000000002",
+      "status": 200,
+      "response": []
+    },
+    {
+      "name": "donpepe: stock Kong",
+      "url": "http://localhost:8000/api/stock?sucursal_id=cccccccc-0000-0000-0000-000000000002",
+      "status": 503,
+      "response": {
+        "message": "name resolution failed",
+        "request_id": "5c2ef6237b62ab1c79554c73c3e0df7c"
+      }
+    },
+    {
+      "name": "donpepe: lotes",
+      "url": "http://localhost:5205/api/lotes?porVencer=30&sucursal_id=cccccccc-0000-0000-0000-000000000002",
+      "status": 200,
+      "response": []
+    },
+    {
+      "name": "donpepe: seed",
+      "url": "http://localhost:5205/seed",
+      "status": 403,
+      "response": ""
+    },
+    {
+      "name": "donpepe: stock sucursal ajena",
+      "url": "http://localhost:5205/api/stock?sucursal_id=cccccccc-0000-0000-0000-000000000001",
+      "status": 200,
+      "response": []
+    },
+    {
+      "name": "donpepe: login remoto contrato actual",
+      "url": "https://auth-rpedraza.dev.censei.cl/api/auth/login",
+      "status": 400,
+      "response": {
+        "type": "https://tools.ietf.org/html/rfc9110#section-15.5.1",
+        "title": "One or more validation errors occurred.",
+        "status": 400,
+        "errors": {
+          "TenantId": [
+            "El identificador del tenant es obligatorio."
+          ]
+        },
+        "traceId": "00-4b9d038d782c7e24b4d8f2569757ef8d-df0fa317bd443e72-00"
+      }
+    },
+    {
+      "name": "cluster: salud inventario TLS",
+      "url": "https://inventory-rpedraza.dev.censei.cl/health",
+      "error": "fetch failed",
+      "cause": "DEPTH_ZERO_SELF_SIGNED_CERT"
+    }
+  ]
+}

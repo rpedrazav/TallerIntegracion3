@@ -1,0 +1,23 @@
+              tenant_id               |             sucursal_id              | count 
+--------------------------------------+--------------------------------------+-------
+ aaaaaaaa-0000-0000-0000-000000000001 | bbbbbbbb-0000-0000-0000-000000000001 |    30
+ aaaaaaaa-0000-0000-0000-000000000001 | cccccccc-0000-0000-0000-000000000001 |     1
+ f4b0eea8-3101-4a4e-b5d5-c62b1909c186 | 832466b1-8f7d-4d8e-85b0-1e5f9d92ed75 |     1
+ aaaaaaaa-0000-0000-0000-000000000002 | cccccccc-0000-0000-0000-000000000002 |     1
+(4 rows)
+
+ producto_id | sucursal_id | cantidad_actual 
+-------------+-------------+-----------------
+(0 rows)
+
+pg_isready: error: too many command-line arguments (first is "warehouse_db")
+pg_isready: hint: Try "pg_isready --help" for more information.
+pg_isready: error: too many command-line arguments (first is "warehouse_db")
+pg_isready: hint: Try "pg_isready --help" for more information.
+pg_isready: error: too many command-line arguments (first is "warehouse_db")
+pg_isready: hint: Try "pg_isready --help" for more information.
+pg_isready: error: too many command-line arguments (first is "warehouse_db")
+pg_isready: hint: Try "pg_isready --help" for more information.
+pg_isready: error: too many command-line arguments (first is "warehouse_db")
+pg_isready: hint: Try "pg_isready --help" for more information.
+
