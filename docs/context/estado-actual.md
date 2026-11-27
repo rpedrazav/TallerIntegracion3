@@ -13,6 +13,10 @@ reglas: []
 ---
 # Estado Real de Implementación — GlobalMart OS
 
+## S3-100 — Descuento de stock sin lotes (2026-11-27)
+
+[IMPLEMENTADO Y PROBADO UNITARIAMENTE] MS-4 descuenta stock agregado suficiente cuando no existen lotes del producto, tenant y sucursal. Conserva FEFO si hay lotes, rechaza stock/lotes existentes insuficientes sin persistencia parcial y registra movimiento y EventId en la unidad de trabajo existente. Regresión dirigida: 45/45 antes y 52/52 después, con siete casos nuevos sobre repositorio/procesador reales y EF InMemory. No se alteraron offsets ni datos del diagnóstico S3-099. Broker, PostgreSQL y despliegue remoto para esta modificación [NO VERIFICADOS]. [Evidencia](../qa/S3-100/reporte.md).
+
 ## S3-098 — Pantalla de minimarkets para SUPER_ADMIN (2026-11-27)
 
 [IMPLEMENTADO] `/admin/minimarkets` (`AdminMinimarkets.tsx`) lista y da de alta minimarkets con `tenantsApi` de `api/client.ts`; solo SUPER_ADMIN ve la opción y llega ahí tras el login (`rutaInicial`). Kong local ya tenía `/api/tenants`; verificado por HTTP vía Kong: alta 201 y login inmediato del ADMIN nuevo con su código, 403 para ADMIN, 401 sin JWT. E2E `minimarkets.spec.ts` 3/3 y `admin.spec.ts` sin regresiones; `npm run typecheck` OK. Ruta en el Kong del clúster (S3-115) [NO VERIFICADO].

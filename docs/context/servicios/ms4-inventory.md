@@ -5,13 +5,17 @@ titulo: MS-4 · Warehouse & Inventory Service
 estado: parcial
 fuentes: [src/WarehouseInventoryService/, src/WarehouseInventoryService/Repositories/StockRepository.cs, tests/GlobalMart.Tests/MS4_Warehouse/, tests/GlobalMart.IntegrationTests/StockConsumerIntegrationTests.cs, Docker/docker-compose.yml]
 verificado_contra_codigo: true
-ultima_revision: 2026-11-24
+ultima_revision: 2026-11-27
 depende_de: [ms5-pos]
 publica: [sale.completed.error]
 consume: [sale.completed]
 reglas: [RN-04, RN-05, RF-09, RF-10, WI-04, WI-05, WI-13, WI-14]
 ---
 # MS-4 · Warehouse & Inventory Service
+
+## S3-100 — Stock agregado sin lotes
+
+[IMPLEMENTADO Y PROBADO UNITARIAMENTE] `StockRepository.Descontar` permite descontar el agregado cuando no existen lotes del mismo producto, tenant y sucursal. Si existen lotes, incluso agotados, su cantidad debe alcanzar y se conserva FEFO. `SaleEventProcessor` ya registra movimiento VENTA y EventId junto con el descuento en un único SaveChanges; un duplicado no vuelve a descontar. Esta regla precisa las referencias históricas a lotes insuficientes: ausencia de lotes permite usar el agregado; existencia de lotes insuficientes mantiene TransientFailure. Regresión MS-4: 52/52 con EF InMemory; Kafka/PostgreSQL y clúster para este cambio [NO VERIFICADOS]. [Evidencia](../../qa/S3-100/reporte.md).
 
 ## Administración de stock (2026-10-27)
 
@@ -180,7 +184,7 @@ EventoKafkaProcesado
 
 | Brecha | Impacto |
 |--------|---------|
-| Stock agregado sin lotes disponibles | El evento queda en reintento sin cambios hasta que una recepción aporte lotes |
+| Stock insuficiente o lotes existentes insuficientes | El evento queda pendiente; S3-100 permite usar el agregado únicamente si no existen lotes |
 | Sin alertas Kafka | stock.alert/expiry.alert no se generan |
 | No incluido aún en `k8s/manifests/all-services.yaml` | Imagen compilada en `docker-build.yml`, pendiente de desplegar junto con Kafka en K8s |
 

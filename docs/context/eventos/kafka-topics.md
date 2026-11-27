@@ -5,7 +5,7 @@ titulo: Kafka Topics — Diseño vs Implementación Real
 estado: parcial
 fuentes: [src/POSCartService/Services/KafkaProducerService.cs, src/POSCartService/Services/OutboxPublisherWorker.cs, src/POSCartService/Messaging/SaleCompletedEvent.cs, src/WarehouseInventoryService/Messaging/KafkaConsumerService.cs, src/WarehouseInventoryService/Repositories/StockRepository.cs, tests/GlobalMart.IntegrationTests/OutboxBrokerRecoveryIntegrationTests.cs, tests/GlobalMart.Tests/MS4_Warehouse/SaleEventProcessor_MovimientoStockTests.cs, Docker/docker-compose.yml, Docker/scripts/init-kafka-topics.sh]
 verificado_contra_codigo: true
-ultima_revision: 2026-11-24
+ultima_revision: 2026-11-27
 depende_de: [ms5-pos, ms4-inventory]
 publica: [sale.completed, sale.completed.error, sale.reversed]
 consume: [sale.completed]
@@ -137,7 +137,7 @@ S2-100 verificó con Kafka y PostgreSQL locales reales que dos mensajes con el m
 
 El consumidor aplica FEFO dentro de esa misma unidad de trabajo: descuenta `Lote.Cantidad` por `FechaVencimiento ASC, Id ASC` antes de actualizar el stock agregado. Una prueba dirigida con dos lotes verifica el orden y la persistencia del evento; Kafka y PostgreSQL reales para FEFO [NO VERIFICADOS].
 
-Cuando el stock agregado o los lotes no alcanzan, `SaleEventProcessor` devuelve `TransientFailure`: registra el `EventId` en el warning, no confirma el offset y no persiste descuentos, movimientos ni idempotencia. El mensaje permanece en el topic original para recuperarse tras una recepción; no se considera poison message ni se envía a `sale.completed.error`.
+Cuando el stock agregado o los lotes existentes no alcanzan, `SaleEventProcessor` devuelve `TransientFailure`: registra el `EventId` en el warning, no confirma el offset y no persiste descuentos, movimientos ni idempotencia. El mensaje permanece en el topic original para recuperarse tras una recepción; no se considera poison message ni se envía a `sale.completed.error`. Desde S3-100, la ausencia total de lotes del producto/tenant/sucursal permite descontar el agregado suficiente y devolver `Processed`; un lote agotado no equivale a ausencia de lotes. Se conserva movimiento VENTA y deduplicación por EventId. Verificado con procesador/repositorio reales y EF InMemory; entrega por broker para este cambio [NO VERIFICADA].
 
 ## Conexiones
 - Produce → [[ms5-pos]] [IMPLEMENTADO]

@@ -33,13 +33,13 @@ public class StockRepository : IStockRepository
         var lotes = await _context.Lotes
             .Where(l => l.ProductoId == productoId
                      && l.SucursalId == sucursalId
-                     && l.TenantId == tenantId
-                     && l.Cantidad > 0)
+                     && l.TenantId == tenantId)
             .OrderBy(l => l.FechaVencimiento)
             .ThenBy(l => l.Id)
             .ToListAsync();
 
-        if (lotes.Sum(l => l.Cantidad) < cantidad)
+        // Sin lotes registrados se usa el agregado; lotes agotados conservan la validación FEFO.
+        if (lotes.Count > 0 && lotes.Sum(l => l.Cantidad) < cantidad)
         {
             return null;
         }

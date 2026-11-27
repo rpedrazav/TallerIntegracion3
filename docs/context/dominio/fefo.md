@@ -5,7 +5,7 @@ titulo: Contrato mínimo de recepciones y lotes FEFO
 estado: implementado
 fuentes: [src/WarehouseInventoryService/Controllers/RecepcionesController.cs, src/WarehouseInventoryService/Controllers/LotesController.cs, src/WarehouseInventoryService/Services/RecepcionService.cs, src/WarehouseInventoryService/Services/RecepcionValidator.cs, src/WarehouseInventoryService/Services/LoteService.cs, src/WarehouseInventoryService/Repositories/StockRepository.cs, src/WarehouseInventoryService/Models/Lote.cs, src/WarehouseInventoryService/Data/Migrations/20261118181528_AddSucursalToLote.cs, tests/GlobalMart.Tests/MS4_Warehouse/SaleEventProcessor_MovimientoStockTests.cs, tests/GlobalMart.Tests/MS4_Warehouse/LotesController_Tests.cs, tareas/plan_sprint3.xlsx]
 verificado_contra_codigo: true
-ultima_revision: 2026-11-24
+ultima_revision: 2026-11-27
 depende_de: [ms4-inventory]
 publica: []
 consume: []
@@ -72,7 +72,9 @@ La prueba local con dos lotes de 5 unidades y una venta de 8 deja el lote tempra
 
 ### Lotes insuficientes
 
-Si el stock agregado no alcanza o la suma de `Lote.Cantidad` disponible es menor que la cantidad vendida, el evento se clasifica como `TransientFailure`. El consumidor no confirma el offset para permitir recuperación después de una recepción y registra un warning con producto, sucursal, cantidad solicitada y `EventId`. No se persisten descuentos parciales, movimientos ni el registro de idempotencia.
+Desde S3-100, si no existen lotes para el producto, tenant y sucursal, se descuenta únicamente del stock agregado suficiente. Se persisten el movimiento VENTA y el EventId sin crear un lote artificial. Si hay lotes registrados (incluidos agotados), se mantiene FEFO y su suma debe alcanzar; no se completa un faltante de lotes usando el agregado.
+
+Si el stock agregado no alcanza o los lotes existentes son insuficientes, el evento se clasifica como `TransientFailure`. El consumidor no confirma el offset para permitir recuperación después de una reposición y registra un warning con producto, sucursal, cantidad solicitada y `EventId`. No se persisten descuentos parciales, movimientos ni el registro de idempotencia. [Pruebas unitarias S3-100](../../qa/S3-100/reporte.md).
 
 La prueba dirigida con stock agregado 10, lotes por 5 y solicitud de 6 conserva el stock y ambos lotes sin cambios. El evento no se envía a `sale.completed.error`, porque la falta de lotes es recuperable.
 
